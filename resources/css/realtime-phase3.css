@@ -1,0 +1,366 @@
+/* Phase 3 Real-time Feature Styles */
+
+/* Toast Notifications */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    max-width: 400px;
+}
+
+.toast {
+    background: #18181b;
+    border: 1px solid #27272a;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    padding: 16px;
+    color: #f4f4f5;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    transform: translateX(100%);
+    opacity: 0;
+    animation: slideIn 0.3s ease-out forwards;
+    position: relative;
+    overflow: hidden;
+}
+
+.toast::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 4px;
+    background: var(--toast-color, #667eea);
+}
+
+.toast-info {
+    --toast-color: #667eea;
+}
+
+.toast-success {
+    --toast-color: #10b981;
+}
+
+.toast-warning {
+    --toast-color: #f59e0b;
+}
+
+.toast-error {
+    --toast-color: #ef4444;
+}
+
+.toast-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.toast-content i {
+    color: var(--toast-color);
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.toast-content span {
+    flex: 1;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+@keyframes slideIn {
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Real-time Update Animations */
+.team-member.newly-added {
+    animation: memberJoin 0.5s ease-out;
+}
+
+.goal-participant.newly-added {
+    animation: participantJoin 0.5s ease-out;
+}
+
+@keyframes memberJoin {
+    from {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes participantJoin {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Progress Bar Animations */
+.progress-bar {
+    transition: width 0.8s ease-out;
+}
+
+.progress-bar.updating {
+    animation: progressPulse 0.6s ease-in-out;
+}
+
+@keyframes progressPulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+        box-shadow: 0 0 20px var(--progress-color, #667eea);
+    }
+}
+
+/* Team Status Updates */
+.team-status {
+    transition: all 0.3s ease;
+}
+
+.team-status.status-recruiting {
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.team-status.status-full {
+    color: #f59e0b;
+    background: rgba(245, 158, 11, 0.1);
+}
+
+.team-status.status-active {
+    color: #667eea;
+    background: rgba(102, 126, 234, 0.1);
+}
+
+.team-status.status-disbanded {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* Goal Status Updates */
+.goal-status {
+    transition: all 0.3s ease;
+}
+
+.goal-status.status-active {
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.goal-status.status-completed {
+    color: #667eea;
+    background: rgba(102, 126, 234, 0.1);
+}
+
+.goal-status.status-expired {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.goal-status.status-paused {
+    color: #6b7280;
+    background: rgba(107, 114, 128, 0.1);
+}
+
+/* Member Count Updates */
+.member-count {
+    transition: all 0.3s ease;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: #27272a;
+}
+
+.member-count.updated {
+    animation: countUpdate 0.5s ease-out;
+}
+
+@keyframes countUpdate {
+    0% {
+        background: #667eea;
+        transform: scale(1.1);
+    }
+    100% {
+        background: #27272a;
+        transform: scale(1);
+    }
+}
+
+/* Participant Count Updates */
+.participant-count {
+    transition: all 0.3s ease;
+}
+
+.participant-count.updated {
+    animation: countUpdate 0.5s ease-out;
+}
+
+/* Real-time Loading States */
+.refreshing {
+    position: relative;
+    opacity: 0.7;
+}
+
+.refreshing::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 24px;
+    height: 24px;
+    border: 2px solid #667eea;
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
+
+/* Milestone Achievement Celebration */
+.milestone-updated {
+    animation: milestoneAchieved 2s ease-out;
+}
+
+@keyframes milestoneAchieved {
+    0%, 100% {
+        transform: scale(1);
+    }
+    25% {
+        transform: scale(1.05);
+    }
+    50% {
+        transform: scale(1.02);
+    }
+    75% {
+        transform: scale(1.03);
+    }
+}
+
+/* Real-time Indicators */
+.live-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #10b981;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.live-indicator::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    animation: livePulse 2s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(1.2);
+    }
+}
+
+/* Connection Status */
+.connection-status {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+.connection-status.connected {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.connection-status.disconnected {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.connection-status.reconnecting {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .toast-container {
+        left: 20px;
+        right: 20px;
+        max-width: none;
+    }
+    
+    .toast {
+        margin-bottom: 8px;
+        padding: 12px;
+    }
+    
+    .connection-status {
+        bottom: 10px;
+        left: 10px;
+        font-size: 11px;
+        padding: 6px 12px;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .toast {
+        border-width: 2px;
+    }
+    
+    .toast::before {
+        width: 6px;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .toast,
+    .team-member.newly-added,
+    .goal-participant.newly-added,
+    .progress-bar,
+    .member-count,
+    .participant-count {
+        animation: none;
+        transition: none;
+    }
+    
+    .live-indicator::before {
+        animation: none;
+    }
+}

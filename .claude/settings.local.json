@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(php artisan:*)",
+      "Bash(rm:*)",
+      "Bash(del \"C:\\laragon\\www\\socialgaminghub\\app\\Console\\Commands\\DebugSteamData.php\")",
+      "Bash(mysql:*)",
+      "Bash(mkdir:*)",
+      "Bash(tail:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)",
+      "Bash(grep:*)"
+    ],
+    "deny": []
+  }
+}

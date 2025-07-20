@@ -1,0 +1,76 @@
+@extends('layouts.app')
+
+@section('title', 'Link Steam Account - Glyph')
+
+@section('content')
+<nav class="navbar">
+    <div class="container">
+        <div class="navbar-content">
+            <a href="{{ route('dashboard') }}" class="navbar-brand">Glyph</a>
+            <div class="navbar-nav">
+                <a href="{{ route('dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<main>
+    <div class="container">
+        <div style="max-width: 600px; margin: 0 auto;">
+            <div class="auth-box" style="text-align: center;">
+                <h2 style="margin-bottom: 24px;">Link Your Steam Account</h2>
+                
+                <div style="margin-bottom: 32px;">
+                    <div style="width: 100px; height: 100px; margin: 0 auto 24px; background-color: #1b2838; border-radius: 20px; display: flex; align-items: center; justify-content: center;">
+                        <svg width="60" height="60" viewBox="0 0 256 259" fill="none">
+                            <path d="M127.779 0C60.42 0 5.24 52.412 0 119.014l68.724 28.674a35.812 35.812 0 0 1 20.426-6.366c.682 0 1.356.019 2.02.056l30.566-44.71v-.626c0-26.903 21.69-48.796 48.353-48.796 26.662 0 48.352 21.893 48.352 48.796 0 26.902-21.69 48.804-48.352 48.804-.37 0-.73-.009-1.098-.018l-43.593 31.377c.028.582.046 1.163.046 1.735 0 20.204-16.283 36.636-36.294 36.636-17.566 0-32.263-12.658-35.584-29.412L4.41 164.654c15.223 54.313 64.673 94.132 123.369 94.132 70.818 0 128.221-57.938 128.221-129.393C256 57.93 198.597 0 127.779 0zM80.352 196.332l-15.749-6.568c2.787 5.867 7.621 10.775 14.033 13.47 13.857 5.83 29.836-.803 35.612-14.799a27.555 27.555 0 0 0 .046-21.035c-2.768-6.79-7.999-12.086-14.706-14.909-6.67-2.795-13.811-2.694-20.085-.304l16.275 6.79c10.222 4.3 15.056 16.145 10.794 26.461-4.253 10.314-15.998 15.195-26.22 10.894zm121.957-100.29c0-17.925-14.457-32.52-32.217-32.52-17.769 0-32.226 14.595-32.226 32.52 0 17.926 14.457 32.512 32.226 32.512 17.76 0 32.217-14.586 32.217-32.512zm-56.37-.055c0-13.488 10.84-24.42 24.2-24.42 13.368 0 24.208 10.932 24.208 24.42 0 13.488-10.84 24.421-24.209 24.421-13.359 0-24.2-10.933-24.2-24.42z" fill="#FFFFFF"/>
+                        </svg>
+                    </div>
+                    
+                    <h3 style="margin-bottom: 16px; color: #efeff1;">Why Link Your Steam Account?</h3>
+                    
+                    <div style="text-align: left; background-color: #0e0e10; padding: 24px; border-radius: 8px; margin-bottom: 32px;">
+                        <div style="margin-bottom: 16px; display: flex; align-items: start;">
+                            <svg width="20" height="20" fill="#10b981" style="margin-right: 12px; flex-shrink: 0; margin-top: 2px;" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            <span style="color: #b3b3b5;">Display your game library and total playtime on your profile</span>
+                        </div>
+                        <div style="margin-bottom: 16px; display: flex; align-items: start;">
+                            <svg width="20" height="20" fill="#10b981" style="margin-right: 12px; flex-shrink: 0; margin-top: 2px;" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            <span style="color: #b3b3b5;">Show your achievements and game progress</span>
+                        </div>
+                        <div style="margin-bottom: 16px; display: flex; align-items: start;">
+                            <svg width="20" height="20" fill="#10b981" style="margin-right: 12px; flex-shrink: 0; margin-top: 2px;" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            <span style="color: #b3b3b5;">Let friends see what you're currently playing</span>
+                        </div>
+                        <div style="display: flex; align-items: start;">
+                            <svg width="20" height="20" fill="#10b981" style="margin-right: 12px; flex-shrink: 0; margin-top: 2px;" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            <span style="color: #b3b3b5;">Get matched with players who share your gaming interests</span>
+                        </div>
+                    </div>
+                </div>
+
+                <a href="{{ route('steam.auth') }}" class="btn btn-primary" style="background: #1b2838; padding: 16px 32px;">
+                    <span style="display: flex; align-items: center; justify-content: center;">
+                        <svg width="24" height="24" viewBox="0 0 256 259" fill="currentColor" style="margin-right: 12px;">
+                            <path d="M127.779 0C60.42 0 5.24 52.412 0 119.014l68.724 28.674a35.812 35.812 0 0 1 20.426-6.366c.682 0 1.356.019 2.02.056l30.566-44.71v-.626c0-26.903 21.69-48.796 48.353-48.796 26.662 0 48.352 21.893 48.352 48.796 0 26.902-21.69 48.804-48.352 48.804-.37 0-.73-.009-1.098-.018l-43.593 31.377c.028.582.046 1.163.046 1.735 0 20.204-16.283 36.636-36.294 36.636-17.566 0-32.263-12.658-35.584-29.412L4.41 164.654c15.223 54.313 64.673 94.132 123.369 94.132 70.818 0 128.221-57.938 128.221-129.393C256 57.93 198.597 0 127.779 0z"/>
+                        </svg>
+                        Sign in through Steam
+                    </span>
+                </a>
+
+                <p style="margin-top: 24px; color: #71717a; font-size: 14px;">
+                    Your Steam credentials are handled securely by Steam. We only receive your public profile information.
+                </p>
+            </div>
+        </div>
+    </div>
+</main>
+@endsection

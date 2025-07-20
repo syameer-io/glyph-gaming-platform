@@ -1,0 +1,762 @@
+@extends('layouts.app')
+
+@section('title', 'Teams - Glyph')
+
+@push('styles')
+<style>
+    .teams-container {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 24px;
+    }
+    
+    .teams-sidebar {
+        background-color: #18181b;
+        border-radius: 12px;
+        padding: 24px;
+        height: fit-content;
+        position: sticky;
+        top: 24px;
+    }
+    
+    .teams-content {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+    
+    .search-bar {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+    
+    .search-input {
+        flex: 1;
+        padding: 12px 16px;
+        background-color: #0e0e10;
+        border: 2px solid #3f3f46;
+        border-radius: 8px;
+        color: #efeff1;
+        font-size: 16px;
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .filter-section {
+        margin-bottom: 24px;
+    }
+    
+    .filter-section h4 {
+        color: #efeff1;
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 12px;
+    }
+    
+    .filter-group {
+        margin-bottom: 16px;
+    }
+    
+    .filter-group label {
+        display: block;
+        font-size: 14px;
+        color: #b3b3b5;
+        margin-bottom: 6px;
+    }
+    
+    .filter-group select,
+    .filter-group input {
+        width: 100%;
+        padding: 8px 12px;
+        background-color: #0e0e10;
+        border: 1px solid #3f3f46;
+        border-radius: 6px;
+        color: #efeff1;
+        font-size: 14px;
+    }
+    
+    .teams-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 24px;
+    }
+    
+    .team-card {
+        background-color: #18181b;
+        border-radius: 12px;
+        padding: 24px;
+        border: 1px solid #3f3f46;
+        transition: all 0.2s;
+        position: relative;
+    }
+    
+    .team-card:hover {
+        border-color: #667eea;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+    }
+    
+    .team-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 16px;
+    }
+    
+    .team-info {
+        flex: 1;
+    }
+    
+    .team-name {
+        font-size: 20px;
+        font-weight: 600;
+        color: #efeff1;
+        margin-bottom: 4px;
+        line-height: 1.3;
+    }
+    
+    .team-game {
+        font-size: 14px;
+        color: #b3b3b5;
+        margin-bottom: 8px;
+    }
+    
+    .team-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .status-recruiting {
+        background-color: rgba(16, 185, 129, 0.2);
+        color: #10b981;
+    }
+    
+    .status-full {
+        background-color: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+    }
+    
+    .status-private {
+        background-color: rgba(156, 163, 175, 0.2);
+        color: #9ca3af;
+    }
+    
+    .team-stats {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        text-align: right;
+    }
+    
+    .skill-level {
+        font-size: 14px;
+        font-weight: 600;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 4px;
+    }
+    
+    .member-count {
+        font-size: 12px;
+        color: #b3b3b5;
+    }
+    
+    .team-members {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+    }
+    
+    .member-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #3f3f46;
+        transition: all 0.2s;
+    }
+    
+    .member-avatar:hover {
+        border-color: #667eea;
+        transform: scale(1.1);
+    }
+    
+    .member-placeholder {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: #0e0e10;
+        border: 2px dashed #3f3f46;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #71717a;
+        font-size: 14px;
+        font-weight: 600;
+    }
+    
+    .team-description {
+        color: #b3b3b5;
+        font-size: 14px;
+        line-height: 1.5;
+        margin-bottom: 16px;
+        max-height: 60px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .team-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 16px;
+    }
+    
+    .team-tag {
+        font-size: 11px;
+        background-color: #3f3f46;
+        color: #b3b3b5;
+        padding: 4px 8px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        font-weight: 500;
+    }
+    
+    .team-tag.skill {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .team-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+    
+    .results-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+    
+    .results-count {
+        color: #b3b3b5;
+        font-size: 14px;
+    }
+    
+    .sort-controls {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+    
+    .sort-label {
+        color: #b3b3b5;
+        font-size: 14px;
+    }
+    
+    .sort-select {
+        padding: 6px 10px;
+        background-color: #0e0e10;
+        border: 1px solid #3f3f46;
+        border-radius: 6px;
+        color: #efeff1;
+        font-size: 14px;
+    }
+    
+    .create-team-banner {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 12px;
+        padding: 24px;
+        text-align: center;
+        margin-bottom: 24px;
+    }
+    
+    .create-team-banner h3 {
+        color: white;
+        margin-bottom: 8px;
+    }
+    
+    .create-team-banner p {
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 16px;
+    }
+    
+    .create-team-banner .btn {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .create-team-banner .btn:hover {
+        background-color: rgba(255, 255, 255, 0.3);
+        transform: translateY(-1px);
+    }
+    
+    .loading-spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #3f3f46;
+        border-radius: 50%;
+        border-top-color: #667eea;
+        animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    @media (max-width: 768px) {
+        .teams-container {
+            grid-template-columns: 1fr;
+        }
+        
+        .teams-sidebar {
+            position: static;
+        }
+        
+        .teams-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .search-bar {
+            flex-direction: column;
+        }
+        
+        .results-header {
+            flex-direction: column;
+            gap: 12px;
+            align-items: flex-start;
+        }
+        
+        .team-header {
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .team-stats {
+            position: static;
+            text-align: left;
+        }
+    }
+</style>
+@endpush
+
+@section('content')
+<nav class="navbar">
+    <div class="container">
+        <div class="navbar-content">
+            <a href="{{ route('dashboard') }}" class="navbar-brand">Glyph</a>
+            <div class="navbar-nav">
+                <a href="{{ route('dashboard') }}" class="link">Dashboard</a>
+                <a href="{{ route('matchmaking.index') }}" class="link">Matchmaking</a>
+                <a href="{{ route('teams.index') }}" class="link" style="color: #667eea;">Teams</a>
+                <a href="{{ route('servers.discover') }}" class="link">Servers</a>
+                <a href="{{ route('settings') }}" class="link">Settings</a>
+                <div class="navbar-user">
+                    <a href="{{ route('profile.show', auth()->user()->username) }}">
+                        <img src="{{ auth()->user()->profile->avatar_url }}" alt="{{ auth()->user()->display_name }}" class="user-avatar">
+                    </a>
+                    <span>{{ auth()->user()->display_name }}</span>
+                </div>
+                <form method="POST" action="{{ route('logout') }}" style="display: inline;">
+                    @csrf
+                    <button type="submit" class="btn btn-secondary btn-sm">Logout</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<main>
+    <div class="container">
+        @if (session('success'))
+            <div class="alert alert-success">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="alert alert-error">
+                {{ session('error') }}
+            </div>
+        @endif
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
+            <h1>👥 Gaming Teams</h1>
+            <a href="{{ route('teams.create') }}" class="btn btn-primary">Create Team</a>
+        </div>
+
+        @if(!auth()->user()->teams()->exists())
+        <div class="create-team-banner">
+            <h3>🚀 Ready to Form Your Gaming Squad?</h3>
+            <p>Create or join teams to compete together, improve your skills, and dominate the competition.</p>
+            <a href="{{ route('teams.create') }}" class="btn">Create Your First Team</a>
+        </div>
+        @endif
+
+        <div class="teams-container">
+            <!-- Sidebar Filters -->
+            <div class="teams-sidebar">
+                <div class="filter-section">
+                    <h4>Search & Filter</h4>
+                    <div class="filter-group">
+                        <label for="search">Team Name</label>
+                        <input type="text" id="search" placeholder="Search teams..." onkeyup="filterTeams()">
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h4>Game</h4>
+                    <div class="filter-group">
+                        <select id="game-filter" onchange="filterTeams()">
+                            <option value="">All Games</option>
+                            <option value="730">Counter-Strike 2</option>
+                            <option value="570">Dota 2</option>
+                            <option value="230410">Warframe</option>
+                            <option value="1172470">Apex Legends</option>
+                            <option value="252490">Rust</option>
+                            <option value="578080">PUBG</option>
+                            <option value="359550">Rainbow Six Siege</option>
+                            <option value="1097150">Fall Guys</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h4>Criteria</h4>
+                    <div class="filter-group">
+                        <label for="skill-filter">Skill Level</label>
+                        <select id="skill-filter" onchange="filterTeams()">
+                            <option value="">Any Skill</option>
+                            <option value="beginner">Beginner</option>
+                            <option value="intermediate">Intermediate</option>
+                            <option value="advanced">Advanced</option>
+                            <option value="expert">Expert</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="region-filter">Region</label>
+                        <select id="region-filter" onchange="filterTeams()">
+                            <option value="">Any Region</option>
+                            <option value="na_east">NA East</option>
+                            <option value="na_west">NA West</option>
+                            <option value="eu_west">EU West</option>
+                            <option value="eu_east">EU East</option>
+                            <option value="asia">Asia</option>
+                            <option value="oceania">Oceania</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="status-filter">Status</label>
+                        <select id="status-filter" onchange="filterTeams()">
+                            <option value="">Any Status</option>
+                            <option value="recruiting">Recruiting</option>
+                            <option value="full">Full</option>
+                            <option value="private">Private</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h4>My Teams</h4>
+                    @if(auth()->user()->teams()->exists())
+                        @foreach(auth()->user()->teams()->limit(3)->get() as $myTeam)
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                <div style="width: 8px; height: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%;"></div>
+                                <a href="{{ route('teams.show', $myTeam) }}" style="color: #b3b3b5; text-decoration: none; font-size: 14px; flex: 1;">{{ $myTeam->name }}</a>
+                            </div>
+                        @endforeach
+                        @if(auth()->user()->teams()->count() > 3)
+                            <div style="text-align: center; margin-top: 12px;">
+                                <a href="#" style="color: #667eea; font-size: 12px; text-decoration: none;">View all ({{ auth()->user()->teams()->count() }})</a>
+                            </div>
+                        @endif
+                    @else
+                        <div style="text-align: center; padding: 16px; color: #71717a; font-size: 14px;">
+                            No teams yet
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="teams-content">
+                <div class="results-header">
+                    <div class="results-count" id="results-count">
+                        Showing {{ $teams->count() }} teams
+                    </div>
+                    <div class="sort-controls">
+                        <span class="sort-label">Sort by:</span>
+                        <select class="sort-select" id="sort-select" onchange="sortTeams()">
+                            <option value="created_at_desc">Newest First</option>
+                            <option value="created_at_asc">Oldest First</option>
+                            <option value="members_desc">Most Members</option>
+                            <option value="members_asc">Fewest Members</option>
+                            <option value="name_asc">Name A-Z</option>
+                            <option value="name_desc">Name Z-A</option>
+                        </select>
+                    </div>
+                </div>
+
+                @if($teams->isEmpty())
+                <!-- Empty State -->
+                <div class="empty-state">
+                    <div style="font-size: 48px; margin-bottom: 16px;">👥</div>
+                    <h3 style="margin-bottom: 12px; color: #efeff1;">No Teams Found</h3>
+                    <p style="color: #b3b3b5; margin-bottom: 24px;">
+                        Be the first to create a team for your favorite game!
+                    </p>
+                    <a href="{{ route('teams.create') }}" class="btn btn-primary">Create Team</a>
+                </div>
+                @else
+                <div class="teams-grid" id="teams-grid">
+                    @foreach($teams as $team)
+                        <div class="team-card" 
+                             data-team-id="{{ $team->id }}"
+                             data-server-id="{{ $team->server_id }}"
+                             data-game="{{ $team->game_appid }}" 
+                             data-skill="{{ $team->skill_level }}" 
+                             data-region="{{ $team->preferred_region }}" 
+                             data-status="{{ $team->status }}"
+                             data-name="{{ strtolower($team->name) }}"
+                             data-members="{{ $team->activeMembers->count() }}"
+                             data-created="{{ $team->created_at->timestamp }}"
+                             @if(auth()->user() && $team->activeMembers->contains('user_id', auth()->id()))
+                             data-user-member="true"
+                             @endif
+                            
+                            <div class="team-header">
+                                <div class="team-info">
+                                    <div class="team-name">{{ $team->name }}</div>
+                                    <div class="team-game">{{ $team->gameName ?? 'Unknown Game' }}</div>
+                                    <div class="team-status status-{{ $team->status }}">
+                                        @if($team->status === 'recruiting')
+                                            <div style="width: 6px; height: 6px; background-color: #10b981; border-radius: 50%;"></div>
+                                            Recruiting
+                                        @elseif($team->status === 'full')
+                                            <div style="width: 6px; height: 6px; background-color: #f59e0b; border-radius: 50%;"></div>
+                                            Full
+                                        @elseif($team->status === 'active')
+                                            <div style="width: 6px; height: 6px; background-color: #667eea; border-radius: 50%;"></div>
+                                            Active
+                                        @else
+                                            <div style="width: 6px; height: 6px; background-color: #9ca3af; border-radius: 50%;"></div>
+                                            {{ ucfirst($team->status) }}
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="team-stats">
+                                <div class="skill-level">{{ ucfirst($team->skill_level ?? 'Casual') }}</div>
+                                <div class="member-count">{{ $team->current_size }}/{{ $team->max_size }} members</div>
+                            </div>
+
+                            <div class="team-members">
+                                <div class="team-members-list">
+                                    @foreach($team->activeMembers->take(6) as $member)
+                                        <img src="{{ $member->user->profile->avatar_url }}" 
+                                             alt="{{ $member->user->display_name }}" 
+                                             class="member-avatar"
+                                             title="{{ $member->user->display_name }}{{ $member->game_role ? ' (' . ucfirst(str_replace('_', ' ', $member->game_role)) . ')' : '' }}"
+                                             data-user-id="{{ $member->user_id }}">
+                                    @endforeach
+                                    @for($i = $team->activeMembers->count(); $i < min($team->max_size, 6); $i++)
+                                        <div class="member-placeholder">+</div>
+                                    @endfor
+                                </div>
+                                @if($team->activeMembers->count() > 6)
+                                    <div style="display: flex; align-items: center; color: #b3b3b5; font-size: 12px; margin-left: 8px;">
+                                        +{{ $team->activeMembers->count() - 6 }} more
+                                    </div>
+                                @endif
+                            </div>
+
+                            @if($team->description)
+                                <div class="team-description">{{ $team->description }}</div>
+                            @endif
+
+                            <div class="team-tags">
+                                @if($team->skill_level)
+                                    <span class="team-tag skill">{{ ucfirst($team->skill_level) }}</span>
+                                @endif
+                                @if($team->preferred_region)
+                                    <span class="team-tag">{{ ucfirst(str_replace('_', ' ', $team->preferred_region)) }}</span>
+                                @endif
+                                @if($team->activity_time)
+                                    <span class="team-tag">{{ ucfirst(str_replace('_', ' ', $team->activity_time)) }}</span>
+                                @endif
+                                @if($team->communication_required)
+                                    <span class="team-tag">Voice Chat</span>
+                                @endif
+                            </div>
+
+                            <div class="team-actions">
+                                <a href="{{ route('teams.show', $team) }}" class="btn btn-secondary btn-sm">View Team</a>
+                                @if($team->recruitment_status === 'open' && !$team->activeMembers->contains('user_id', auth()->id()))
+                                    <button onclick="requestToJoin({{ $team->id }})" class="btn btn-primary btn-sm">
+                                        <span class="btn-text">Request to Join</span>
+                                        <span class="loading-spinner" style="display: none;"></span>
+                                    </button>
+                                @elseif($team->activeMembers->contains('user_id', auth()->id()))
+                                    <span style="color: #10b981; font-size: 12px; font-weight: 600; padding: 6px 12px; background-color: rgba(16, 185, 129, 0.1); border-radius: 4px;">
+                                        ✓ Member
+                                    </span>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+                @endif
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+let allTeams = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Store all teams for filtering
+    allTeams = Array.from(document.querySelectorAll('.team-card'));
+});
+
+function filterTeams() {
+    const searchTerm = document.getElementById('search').value.toLowerCase();
+    const gameFilter = document.getElementById('game-filter').value;
+    const skillFilter = document.getElementById('skill-filter').value;
+    const regionFilter = document.getElementById('region-filter').value;
+    const statusFilter = document.getElementById('status-filter').value;
+    
+    let visibleCount = 0;
+    
+    allTeams.forEach(card => {
+        let showCard = true;
+        
+        // Search filter
+        if (searchTerm && !card.dataset.name.includes(searchTerm)) {
+            showCard = false;
+        }
+        
+        // Game filter
+        if (gameFilter && card.dataset.game !== gameFilter) {
+            showCard = false;
+        }
+        
+        // Skill filter
+        if (skillFilter && card.dataset.skill !== skillFilter) {
+            showCard = false;
+        }
+        
+        // Region filter
+        if (regionFilter && card.dataset.region !== regionFilter) {
+            showCard = false;
+        }
+        
+        // Status filter
+        if (statusFilter && card.dataset.status !== statusFilter) {
+            showCard = false;
+        }
+        
+        card.style.display = showCard ? 'block' : 'none';
+        if (showCard) visibleCount++;
+    });
+    
+    // Update results count
+    document.getElementById('results-count').textContent = `Showing ${visibleCount} teams`;
+}
+
+function sortTeams() {
+    const sortValue = document.getElementById('sort-select').value;
+    const [sortBy, sortOrder] = sortValue.split('_');
+    
+    const sortedTeams = [...allTeams].sort((a, b) => {
+        let aValue, bValue;
+        
+        switch (sortBy) {
+            case 'created':
+                aValue = parseInt(a.dataset.created);
+                bValue = parseInt(b.dataset.created);
+                break;
+            case 'members':
+                aValue = parseInt(a.dataset.members);
+                bValue = parseInt(b.dataset.members);
+                break;
+            case 'name':
+                aValue = a.dataset.name;
+                bValue = b.dataset.name;
+                break;
+        }
+        
+        if (sortOrder === 'desc') {
+            return aValue < bValue ? 1 : -1;
+        } else {
+            return aValue > bValue ? 1 : -1;
+        }
+    });
+    
+    const container = document.getElementById('teams-grid');
+    sortedTeams.forEach(team => container.appendChild(team));
+}
+
+function requestToJoin(teamId) {
+    const button = event.target;
+    const btnText = button.querySelector('.btn-text');
+    const spinner = button.querySelector('.loading-spinner');
+    
+    // Show loading state
+    btnText.style.display = 'none';
+    spinner.style.display = 'inline-block';
+    button.disabled = true;
+    
+    fetch(`{{ url('/teams') }}/${teamId}/join`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update button to show success state
+            button.innerHTML = '<span style="color: #10b981;">✓ Request Sent</span>';
+            button.classList.remove('btn-primary');
+            button.classList.add('btn-success');
+        } else {
+            // Show error and restore button
+            alert(data.message || 'Error requesting to join team');
+            btnText.style.display = 'inline';
+            spinner.style.display = 'none';
+            button.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error requesting to join team');
+        btnText.style.display = 'inline';
+        spinner.style.display = 'none';
+        button.disabled = false;
+    });
+}
+
+// Real-time search
+document.getElementById('search').addEventListener('input', filterTeams);
+</script>
+@endsection
