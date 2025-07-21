@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('avatar_url')->nullable();
             $table->text('bio')->nullable();
             $table->string('status')->default('offline');
-            $table->json('steam_data')->nullable()->default('null');
+            $table->json('steam_data')->nullable();
             $table->timestamps();
         });
     }
