@@ -16,6 +16,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Gate;
 
 class ServerGoalController extends Controller
 {
@@ -31,7 +32,7 @@ class ServerGoalController extends Controller
      */
     public function index(Server $server): View
     {
-        $this->authorize('admin', $server);
+        Gate::authorize('admin', $server);
 
         $goals = $server->goals()
             ->with(['creator', 'activeParticipants.user', 'milestones'])
@@ -49,7 +50,7 @@ class ServerGoalController extends Controller
      */
     public function create(Server $server): View
     {
-        $this->authorize('admin', $server);
+        Gate::authorize('admin', $server);
 
         // Get server members' gaming data for recommendations
         $memberGames = $server->members()
@@ -75,7 +76,7 @@ class ServerGoalController extends Controller
      */
     public function store(Request $request, Server $server): JsonResponse
     {
-        $this->authorize('admin', $server);
+        Gate::authorize('admin', $server);
 
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
@@ -83,18 +84,18 @@ class ServerGoalController extends Controller
             'game_appid' => 'nullable|string',
             'game_name' => 'nullable|string|max:255',
             'goal_type' => 'required|in:achievement,playtime,participation,community,custom',
-            'target_criteria' => 'required|array',
+            'target_criteria' => 'present', // Must be present but can be empty
             'target_value' => 'required|integer|min:1',
             'difficulty' => 'required|in:easy,medium,hard,extreme',
-            'visibility' => 'required|in:public,private',
+            'visibility' => 'required|in:public,members_only,private',
             'start_date' => 'nullable|date|after_or_equal:today',
             'deadline' => 'nullable|date|after:start_date',
-            'rewards' => 'array',
-            'goal_settings' => 'array',
-            'milestones' => 'array',
-            'milestones.*.milestone_name' => 'required|string|max:255',
-            'milestones.*.progress_required' => 'required|integer|min:1',
-            'milestones.*.percentage_required' => 'required|numeric|min:0|max:100',
+            'rewards' => 'nullable|array',
+            'goal_settings' => 'nullable|array',
+            'milestones' => 'nullable|array',
+            'milestones.*.milestone_name' => 'required_if:milestones,!=,null|string|max:255',
+            'milestones.*.progress_required' => 'required_if:milestones,!=,null|integer|min:1',
+            'milestones.*.percentage_required' => 'required_if:milestones,!=,null|numeric|min:0|max:100',
             'milestones.*.reward_description' => 'nullable|string|max:500',
         ]);
 
@@ -123,7 +124,7 @@ class ServerGoalController extends Controller
      */
     public function show(Server $server, ServerGoal $goal): View
     {
-        $this->authorize('view', $server);
+        Gate::authorize('view', $server);
 
         if ($goal->server_id !== $server->id) {
             abort(404);
@@ -150,7 +151,7 @@ class ServerGoalController extends Controller
             'average_progress' => $goal->activeParticipants()->avg('individual_progress') ?? 0,
         ];
 
-        return view('admin.goals.show', compact('server', 'goal', 'leaderboard', 'participationStats'));
+        return view('goals.show', compact('server', 'goal', 'leaderboard', 'participationStats'));
     }
 
     /**
@@ -158,7 +159,7 @@ class ServerGoalController extends Controller
      */
     public function edit(Server $server, ServerGoal $goal): View
     {
-        $this->authorize('admin', $server);
+        Gate::authorize('admin', $server);
 
         if ($goal->server_id !== $server->id) {
             abort(404);
@@ -172,7 +173,7 @@ class ServerGoalController extends Controller
      */
     public function update(Request $request, Server $server, ServerGoal $goal): JsonResponse
     {
-        $this->authorize('admin', $server);
+        Gate::authorize('admin', $server);
 
         if ($goal->server_id !== $server->id) {
             return response()->json(['error' => 'Goal not found'], 404);
@@ -182,7 +183,7 @@ class ServerGoalController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string|max:1000',
             'difficulty' => 'required|in:easy,medium,hard,extreme',
-            'visibility' => 'required|in:public,private',
+            'visibility' => 'required|in:public,members_only,private',
             'deadline' => 'nullable|date|after:start_date',
             'rewards' => 'array',
             'goal_settings' => 'array',
@@ -222,7 +223,7 @@ class ServerGoalController extends Controller
      */
     public function destroy(Server $server, ServerGoal $goal): JsonResponse
     {
-        $this->authorize('admin', $server);
+        Gate::authorize('admin', $server);
 
         if ($goal->server_id !== $server->id) {
             return response()->json(['error' => 'Goal not found'], 404);
@@ -256,7 +257,7 @@ class ServerGoalController extends Controller
      */
     public function join(Request $request, Server $server, ServerGoal $goal): JsonResponse
     {
-        $this->authorize('view', $server);
+        Gate::authorize('view', $server);
 
         if ($goal->server_id !== $server->id) {
             return response()->json(['error' => 'Goal not found'], 404);
@@ -288,7 +289,7 @@ class ServerGoalController extends Controller
      */
     public function leave(Server $server, ServerGoal $goal): JsonResponse
     {
-        $this->authorize('view', $server);
+        Gate::authorize('view', $server);
 
         if ($goal->server_id !== $server->id) {
             return response()->json(['error' => 'Goal not found'], 404);
@@ -311,11 +312,60 @@ class ServerGoalController extends Controller
     }
 
     /**
+     * Update user's own progress in a goal
+     */
+    public function updateUserProgress(Request $request, Server $server, ServerGoal $goal): JsonResponse
+    {
+        Gate::authorize('view', $server);
+        
+        if ($goal->server_id !== $server->id) {
+            return response()->json(['error' => 'Goal not found'], 404);
+        }
+
+        $user = Auth::user();
+        $participant = $goal->participants()->where('user_id', $user->id)->where('participation_status', 'active')->first();
+        
+        if (!$participant) {
+            return response()->json(['error' => 'You are not participating in this goal'], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'progress' => 'required|integer|min:0|max:' . ($goal->target_value * 2), // Allow some buffer over target
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        try {
+            // Update participant's progress
+            $participant->updateProgress($request->progress);
+
+            // Get updated goal data
+            $goal = $goal->fresh();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Progress updated successfully!',
+                'goal' => [
+                    'id' => $goal->id,
+                    'current_progress' => $goal->current_progress,
+                    'target_value' => $goal->target_value,
+                    'completion_percentage' => $goal->completion_percentage,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error updating user progress: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to update progress: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Update goal progress manually
      */
     public function updateProgress(Request $request, Server $server, ServerGoal $goal): JsonResponse
     {
-        $this->authorize('admin', $server);
+        Gate::authorize('admin', $server);
 
         if ($goal->server_id !== $server->id) {
             return response()->json(['error' => 'Goal not found'], 404);
@@ -355,7 +405,7 @@ class ServerGoalController extends Controller
      */
     public function stats(Server $server, ServerGoal $goal): JsonResponse
     {
-        $this->authorize('view', $server);
+        Gate::authorize('view', $server);
 
         if ($goal->server_id !== $server->id) {
             return response()->json(['error' => 'Goal not found'], 404);
@@ -402,7 +452,7 @@ class ServerGoalController extends Controller
      */
     public function recommendations(Server $server): JsonResponse
     {
-        $this->authorize('admin', $server);
+        Gate::authorize('admin', $server);
 
         $recommendations = $this->goalService->getGoalRecommendations($server);
 
@@ -417,7 +467,7 @@ class ServerGoalController extends Controller
      */
     public function processExpired(Server $server): JsonResponse
     {
-        $this->authorize('admin', $server);
+        Gate::authorize('admin', $server);
 
         $processed = $this->goalService->processExpiredGoals();
 
@@ -433,7 +483,7 @@ class ServerGoalController extends Controller
      */
     public function syncProgress(Server $server, ServerGoal $goal): JsonResponse
     {
-        $this->authorize('admin', $server);
+        Gate::authorize('admin', $server);
 
         if ($goal->server_id !== $server->id) {
             return response()->json(['error' => 'Goal not found'], 404);
@@ -461,7 +511,7 @@ class ServerGoalController extends Controller
      */
     public function export(Server $server, ServerGoal $goal): JsonResponse
     {
-        $this->authorize('admin', $server);
+        Gate::authorize('admin', $server);
 
         if ($goal->server_id !== $server->id) {
             return response()->json(['error' => 'Goal not found'], 404);

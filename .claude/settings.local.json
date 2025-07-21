@@ -10,7 +10,12 @@
       "Bash(tail:*)",
       "Bash(npm install:*)",
       "Bash(npm run build:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(git add:*)",
+      "Bash(ls:*)",
+      "Bash(php:*)",
+      "Bash(composer validate:*)",
+      "Bash(composer:*)"
     ],
     "deny": []
   }

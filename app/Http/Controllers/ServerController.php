@@ -110,9 +110,16 @@ class ServerController extends Controller
             $query->where('user_roles.server_id', $server->id);
         }]);
 
+        // Load active goals with participants
+        $activeGoals = $server->goals()
+            ->where('status', 'active')
+            ->with(['participants.user.profile'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         $defaultChannel = $server->getDefaultChannel();
 
-        return view('servers.show', compact('server', 'defaultChannel'));
+        return view('servers.show', compact('server', 'defaultChannel', 'activeGoals'));
     }
 
     public function join(Request $request)

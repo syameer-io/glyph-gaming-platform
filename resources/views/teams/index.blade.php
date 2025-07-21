@@ -81,8 +81,14 @@
     
     .teams-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-        gap: 24px;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+    
+    @media (max-width: 768px) {
+        .teams-grid {
+            grid-template-columns: 1fr;
+        }
     }
     
     .team-card {
@@ -152,10 +158,8 @@
     }
     
     .team-stats {
-        position: absolute;
-        top: 20px;
-        right: 20px;
         text-align: right;
+        min-width: 120px;
     }
     
     .skill-level {
@@ -433,7 +437,7 @@
                             <option value="252490">Rust</option>
                             <option value="578080">PUBG</option>
                             <option value="359550">Rainbow Six Siege</option>
-                            <option value="1097150">Fall Guys</option>
+                            <option value="433850">Fall Guys</option>
                         </select>
                     </div>
                 </div>

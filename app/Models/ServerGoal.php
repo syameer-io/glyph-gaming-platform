@@ -335,4 +335,32 @@ class ServerGoal extends Model
                     ->whereNotNull('deadline')
                     ->whereBetween('deadline', [now(), now()->addDays($days)]);
     }
+
+    /**
+     * Accessor for game name (fallback if not set in database)
+     */
+    public function getGameNameAttribute($value)
+    {
+        if ($value) {
+            return $value;
+        }
+
+        // Fallback to map app ID to game name
+        if ($this->game_appid) {
+            $gameNames = [
+                '730' => 'Counter-Strike 2',
+                '570' => 'Dota 2',
+                '230410' => 'Warframe',
+                '1172470' => 'Apex Legends',
+                '252490' => 'Rust',
+                '578080' => 'PUBG',
+                '359550' => 'Rainbow Six Siege',
+                '433850' => 'Fall Guys',
+            ];
+            
+            return $gameNames[$this->game_appid] ?? 'Unknown Game';
+        }
+
+        return null;
+    }
 }

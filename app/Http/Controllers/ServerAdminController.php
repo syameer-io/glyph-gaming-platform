@@ -17,7 +17,7 @@ class ServerAdminController extends Controller
     {
         Gate::authorize('manage', $server);
         
-        $server->load(['channels', 'members.profile', 'roles', 'tags']);
+        $server->load(['channels', 'members.profile', 'roles', 'tags', 'goals']);
         
         return view('servers.admin.settings', compact('server'));
     }

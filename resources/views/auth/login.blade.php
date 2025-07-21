@@ -6,7 +6,7 @@
 <div class="auth-container">
     <div class="auth-box">
         <div class="logo">
-            <h1>Glyph</h1>
+            <h1 class="font-gristela text-5xl">Glyph</h1>
             <p style="color: #b3b3b5; margin-top: 8px;">Welcome back!</p>
         </div>
 
@@ -31,7 +31,9 @@
                 <input type="password" id="password" name="password" required>
             </div>
 
-            <button type="submit" class="btn btn-primary">Sign In</button>
+            <div class="form-group flex justify-center">
+                <button type="submit" class="btn btn-primary">Sign In</button>
+            </div>
         </form>
 
         <p class="text-center mt-4" style="color: #b3b3b5;">

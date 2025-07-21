@@ -73,6 +73,62 @@ class Team extends Model
     }
 
     /**
+     * Accessor for game name (fallback to attribute or 'Unknown Game')
+     */
+    public function getGameNameAttribute($value)
+    {
+        if ($value) {
+            return $value;
+        }
+
+        // Map game AppID to game name
+        $gameNames = [
+            '730' => 'CS2',
+            '570' => 'Dota 2', 
+            '230410' => 'Warframe',
+            '1172470' => 'Apex Legends',
+            '252490' => 'Rust',
+            '578080' => 'PUBG',
+            '359550' => 'Rainbow Six Siege',
+            '433850' => 'Fall Guys',
+        ];
+
+        return $gameNames[$this->game_appid] ?? 'Unknown Game';
+    }
+
+    /**
+     * Accessor for preferred region from team_data
+     */
+    public function getPreferredRegionAttribute()
+    {
+        return $this->team_data['preferred_region'] ?? null;
+    }
+
+    /**
+     * Accessor for activity time from team_data
+     */
+    public function getActivityTimeAttribute()
+    {
+        return $this->team_data['activity_time'] ?? null;
+    }
+
+    /**
+     * Accessor for communication required from team_data
+     */
+    public function getCommunicationRequiredAttribute()
+    {
+        return $this->team_data['communication_required'] ?? false;
+    }
+
+    /**
+     * Accessor for recruitment status from team_data
+     */
+    public function getRecruitmentStatusAttribute()
+    {
+        return $this->team_data['recruitment_status'] ?? ($this->status === 'recruiting' ? 'open' : 'closed');
+    }
+
+    /**
      * Check if team is recruiting
      */
     public function isRecruiting(): bool

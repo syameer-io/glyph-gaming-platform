@@ -50,16 +50,21 @@ class GoalParticipant extends Model
 
     public function updateProgress(int $progress): void
     {
-        $this->update([
-            'individual_progress' => $progress,
-            'last_activity_at' => now(),
-        ]);
+        try {
+            $this->update([
+                'individual_progress' => $progress,
+                'last_activity_at' => now(),
+            ]);
 
-        // Update contribution percentage
-        $this->calculateContribution();
-        
-        // Update goal's overall progress
-        $this->goal->updateProgress();
+            // Update contribution percentage
+            $this->calculateContribution();
+            
+            // Update goal's overall progress
+            $this->goal->updateProgress();
+        } catch (\Exception $e) {
+            \Log::error('GoalParticipant updateProgress error: ' . $e->getMessage());
+            throw $e;
+        }
     }
 
     private function calculateContribution(): void

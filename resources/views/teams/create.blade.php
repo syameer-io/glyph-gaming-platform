@@ -411,7 +411,7 @@
                                     <option value="252490" {{ old('game_appid') == '252490' ? 'selected' : '' }}>Rust</option>
                                     <option value="578080" {{ old('game_appid') == '578080' ? 'selected' : '' }}>PUBG</option>
                                     <option value="359550" {{ old('game_appid') == '359550' ? 'selected' : '' }}>Rainbow Six Siege</option>
-                                    <option value="1097150" {{ old('game_appid') == '1097150' ? 'selected' : '' }}>Fall Guys</option>
+                                    <option value="433850" {{ old('game_appid') == '433850' ? 'selected' : '' }}>Fall Guys</option>
                                 </select>
                                 <input type="hidden" id="game_name" name="game_name" value="{{ old('game_name') }}">
                                 <div id="game-info" class="game-info" style="display: none;"></div>

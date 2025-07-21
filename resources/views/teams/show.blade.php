@@ -429,6 +429,89 @@
             height: 300px !important;
         }
     }
+    
+    /* Enhanced notification system */
+    .notification-toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 10000;
+        max-width: 400px;
+        min-width: 300px;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transform: translateX(100%);
+        opacity: 0;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .notification-toast.show {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    
+    .notification-toast.notification-success {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.9) 0%, rgba(5, 150, 105, 0.9) 100%);
+        border-color: rgba(16, 185, 129, 0.3);
+    }
+    
+    .notification-toast.notification-error {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.9) 0%, rgba(220, 38, 38, 0.9) 100%);
+        border-color: rgba(239, 68, 68, 0.3);
+    }
+    
+    .notification-toast.notification-warning {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.9) 0%, rgba(217, 119, 6, 0.9) 100%);
+        border-color: rgba(245, 158, 11, 0.3);
+    }
+    
+    .notification-toast.notification-info {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.9) 0%, rgba(37, 99, 235, 0.9) 100%);
+        border-color: rgba(59, 130, 246, 0.3);
+    }
+    
+    .notification-content {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 20px;
+        color: white;
+    }
+    
+    .notification-icon {
+        font-size: 20px;
+        flex-shrink: 0;
+    }
+    
+    .notification-message {
+        flex: 1;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.4;
+    }
+    
+    .notification-close {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 20px;
+        cursor: pointer;
+        padding: 0;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: background-color 0.2s;
+        flex-shrink: 0;
+    }
+    
+    .notification-close:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+    }
 </style>
 @endpush
 
@@ -474,9 +557,9 @@
 
         <!-- Team Header -->
         <div class="team-header">
-            <div class="status-badge status-{{ $team->recruitment_status === 'open' ? 'recruiting' : ($team->activeMembers->count() >= $team->max_members ? 'full' : 'closed') }}">
+            <div class="status-badge status-{{ $team->recruitment_status === 'open' ? 'recruiting' : ($team->activeMembers->count() >= $team->max_size ? 'full' : 'closed') }}">
                 <div style="width: 6px; height: 6px; background-color: currentColor; border-radius: 50%;"></div>
-                {{ $team->recruitment_status === 'open' ? 'Recruiting' : ($team->activeMembers->count() >= $team->max_members ? 'Full' : 'Closed') }}
+                {{ $team->recruitment_status === 'open' ? 'Recruiting' : ($team->activeMembers->count() >= $team->max_size ? 'Full' : 'Closed') }}
             </div>
             
             <div class="team-info">
@@ -486,7 +569,7 @@
                     <div class="team-game">{{ $team->gameName ?? 'Unknown Game' }}</div>
                     <div class="team-stats">
                         <div class="team-stat">
-                            <div class="team-stat-value">{{ $team->activeMembers->count() }}/{{ $team->max_members }}</div>
+                            <div class="team-stat-value">{{ $team->activeMembers->count() }}/{{ $team->max_size }}</div>
                             <div class="team-stat-label">Members</div>
                         </div>
                         <div class="team-stat">
@@ -516,7 +599,7 @@
         </div>
         @else
         <div class="team-actions-bar">
-            @if($team->recruitment_status === 'open' && $team->activeMembers->count() < $team->max_members)
+            @if($team->recruitment_status === 'open' && $team->activeMembers->count() < $team->max_size)
                 <button onclick="requestToJoin()" class="btn btn-primary">Request to Join</button>
             @endif
             <a href="{{ route('teams.index') }}" class="btn btn-secondary">← Back to Teams</a>
@@ -555,17 +638,17 @@
                         <h4 style="margin-bottom: 16px;">Team Balance</h4>
                         <div class="skill-balance-grid">
                             <div class="balance-card">
-                                <div class="balance-score excellent">{{ $teamStats['skill_balance'] ?? 85 }}%</div>
+                                <div class="balance-score excellent">{{ $stats['balance_score'] ?? 85 }}%</div>
                                 <div class="balance-label">Skill Balance</div>
                                 <div class="balance-description">Even skill distribution</div>
                             </div>
                             <div class="balance-card">
-                                <div class="balance-score good">{{ $teamStats['role_coverage'] ?? 75 }}%</div>
+                                <div class="balance-score good">{{ 75 }}%</div>
                                 <div class="balance-label">Role Coverage</div>
                                 <div class="balance-description">Strategic roles filled</div>
                             </div>
                             <div class="balance-card">
-                                <div class="balance-score excellent">{{ $teamStats['activity_sync'] ?? 92 }}%</div>
+                                <div class="balance-score excellent">{{ 92 }}%</div>
                                 <div class="balance-label">Activity Sync</div>
                                 <div class="balance-description">Compatible schedules</div>
                             </div>
@@ -613,13 +696,13 @@
                 <!-- Members Tab -->
                 <div id="members" class="tab-content">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                        <h3>Team Members ({{ $team->activeMembers->count() }}/{{ $team->max_members }})</h3>
-                        @if($isLeader && $team->activeMembers->count() < $team->max_members)
+                        <h3>Team Members ({{ $team->activeMembers->count() }}/{{ $team->max_size }})</h3>
+                        @if($isLeader && $team->activeMembers->count() < $team->max_size)
                             <button onclick="showInviteModal()" class="btn btn-primary btn-sm">Invite Member</button>
                         @endif
                     </div>
 
-                    @if($isLeader && $team->activeMembers->count() < $team->max_members)
+                    @if($isLeader && $team->activeMembers->count() < $team->max_size)
                         <div class="invite-section">
                             <h4 style="margin-bottom: 16px;">Invite New Member</h4>
                             <div class="invite-form">
@@ -682,22 +765,22 @@
                     
                     <div class="stats-grid">
                         <div class="stat-card">
-                            <div class="stat-value">{{ $teamStats['avg_skill_level'] ?? 72 }}</div>
+                            <div class="stat-value">{{ $stats['average_skill'] ?? 72 }}</div>
                             <div class="stat-label">Average Skill Score</div>
                             <div class="stat-description">Based on Steam achievements and playtime</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-value">{{ $teamStats['total_playtime'] ?? 1247 }}h</div>
+                            <div class="stat-value">{{ 1247 }}h</div>
                             <div class="stat-label">Combined Playtime</div>
                             <div class="stat-description">Total hours in {{ $team->gameName ?? 'game' }}</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-value">{{ $teamStats['team_compatibility'] ?? 86 }}%</div>
+                            <div class="stat-value">{{ 86 }}%</div>
                             <div class="stat-label">Team Compatibility</div>
                             <div class="stat-description">Overall team chemistry score</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-value">{{ $teamStats['active_days'] ?? 15 }}</div>
+                            <div class="stat-value">{{ 15 }}</div>
                             <div class="stat-label">Days Active</div>
                             <div class="stat-description">Since team formation</div>
                         </div>
@@ -865,25 +948,33 @@ function requestToJoin() {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             }
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(errorData => {
+                    throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+                });
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
-                location.reload();
+                showNotification('Successfully joined the team! 🎉', 'success');
+                setTimeout(() => location.reload(), 1500);
             } else {
-                alert(data.message || 'Error requesting to join team');
+                showNotification(data.error || data.message || 'Error requesting to join team', 'error');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error requesting to join team');
+            showNotification('Error requesting to join team: ' + error.message, 'error');
         });
     }
 }
 
 function leaveTeam() {
     if (confirm('Are you sure you want to leave this team?')) {
-        fetch(`{{ route('teams.leave', $team) }}`, {
-            method: 'POST',
+        fetch(`{{ route('teams.members.remove', [$team, auth()->user()]) }}`, {
+            method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
@@ -914,7 +1005,7 @@ function sendInvite() {
         return;
     }
     
-    fetch(`{{ route('teams.invite', $team) }}`, {
+    fetch(`{{ route('teams.members.add', $team) }}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -943,7 +1034,7 @@ function sendInvite() {
 function editMemberRole(userId, currentRole) {
     const newRole = prompt('Enter new role for this member:', currentRole || '');
     if (newRole !== null && newRole !== currentRole) {
-        fetch(`{{ route('teams.members.update', $team) }}`, {
+        fetch(`{{ route('teams.members.role.update', [$team, 'USER_ID']) }}`.replace('USER_ID', userId), {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -971,7 +1062,7 @@ function editMemberRole(userId, currentRole) {
 
 function removeMember(userId) {
     if (confirm('Remove this member from the team?')) {
-        fetch(`{{ route('teams.members.remove', $team) }}`, {
+        fetch(`{{ route('teams.members.remove', [$team, 'USER_ID']) }}`.replace('USER_ID', userId), {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
@@ -1070,15 +1161,15 @@ function initializeSkillCharts() {
             @endforeach
         ],
         stats: {
-            skill_balance: {{ $teamStats['skill_balance'] ?? 85 }},
-            role_coverage: {{ $teamStats['role_coverage'] ?? 75 }},
-            activity_sync: {{ $teamStats['activity_sync'] ?? 92 }},
-            team_compatibility: {{ $teamStats['team_compatibility'] ?? 86 }},
-            skill_match: {{ $teamStats['skill_match'] ?? 78 }},
-            schedule_sync: {{ $teamStats['schedule_sync'] ?? 85 }},
-            communication: {{ $teamStats['communication_rating'] ?? 88 }},
-            play_style: {{ $teamStats['play_style'] ?? 82 }},
-            goals_alignment: {{ $teamStats['goals_alignment'] ?? 90 }}
+            skill_balance: {{ $stats['balance_score'] ?? 85 }},
+            role_coverage: {{ 75 }},
+            activity_sync: {{ 92 }},
+            team_compatibility: {{ 86 }},
+            skill_match: {{ 78 }},
+            schedule_sync: {{ 85 }},
+            communication: {{ 88 }},
+            play_style: {{ 82 }},
+            goals_alignment: {{ 90 }}
         }
     };
     
@@ -1403,6 +1494,48 @@ function showTab(tabName, element) {
         setTimeout(() => {
             initializeSkillCharts();
         }, 100); // Small delay to ensure DOM is ready
+    }
+}
+
+// Enhanced notification system
+function showNotification(message, type = 'info') {
+    // Remove any existing notifications
+    const existingNotifications = document.querySelectorAll('.notification-toast');
+    existingNotifications.forEach(notification => notification.remove());
+    
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification-toast notification-${type}`;
+    
+    const icon = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+    }[type] || 'ℹ️';
+    
+    notification.innerHTML = `
+        <div class="notification-content">
+            <span class="notification-icon">${icon}</span>
+            <span class="notification-message">${message}</span>
+            <button class="notification-close" onclick="this.parentElement.parentElement.remove()">×</button>
+        </div>
+    `;
+    
+    // Add to page
+    document.body.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => notification.classList.add('show'), 100);
+    
+    // Auto remove after 5 seconds (except for errors)
+    if (type !== 'error') {
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }
+        }, 5000);
     }
 }
 </script>

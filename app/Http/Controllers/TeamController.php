@@ -204,6 +204,8 @@ class TeamController extends Controller
         
         // Check if user is a member
         $userMembership = $team->members()->where('user_id', $user->id)->first();
+        $isMember = $userMembership !== null;
+        $isLeader = $isMember && ($userMembership->role === 'leader' || $user->id === $team->creator_id);
         
         // Get team statistics
         $stats = [
@@ -217,7 +219,7 @@ class TeamController extends Controller
         // Get recent team activity (placeholder for now)
         $recentActivity = collect([]);
 
-        return view('teams.show', compact('team', 'userMembership', 'stats', 'recentActivity'));
+        return view('teams.show', compact('team', 'userMembership', 'isMember', 'isLeader', 'stats', 'recentActivity'));
     }
 
     /**

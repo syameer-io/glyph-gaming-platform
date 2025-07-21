@@ -158,6 +158,7 @@ Route::middleware('auth')->group(function () {
         // Goal participation
         Route::post('/{goal}/join', [ServerGoalController::class, 'join'])->name('join');
         Route::post('/{goal}/leave', [ServerGoalController::class, 'leave'])->name('leave');
+        Route::post('/{goal}/my-progress', [ServerGoalController::class, 'updateUserProgress'])->name('my.progress');
         
         // Goal management
         Route::post('/{goal}/progress', [ServerGoalController::class, 'updateProgress'])->name('progress.update');

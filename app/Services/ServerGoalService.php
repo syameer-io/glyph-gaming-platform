@@ -35,7 +35,7 @@ class ServerGoalService
                 'target_value' => $goalData['target_value'],
                 'difficulty' => $goalData['difficulty'] ?? 'medium',
                 'visibility' => $goalData['visibility'] ?? 'public',
-                'status' => $goalData['status'] ?? 'draft',
+                'status' => $goalData['status'] ?? 'active',
                 'rewards' => $goalData['rewards'] ?? null,
                 'goal_settings' => $goalData['goal_settings'] ?? null,
                 'start_date' => $goalData['start_date'] ?? now(),

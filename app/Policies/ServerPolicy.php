@@ -36,4 +36,14 @@ class ServerPolicy
     {
         return $user->isServerAdmin($server->id);
     }
+
+    public function admin(User $user, Server $server)
+    {
+        return $user->isServerAdmin($server->id);
+    }
+
+    public function view(User $user, Server $server)
+    {
+        return $user->servers()->where('server_id', $server->id)->exists();
+    }
 }

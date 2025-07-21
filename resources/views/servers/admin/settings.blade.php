@@ -648,7 +648,7 @@
                                                 </span>
                                                 @if($goal->game_appid)
                                                     <span style="font-size: 12px; background-color: #3f3f46; color: #b3b3b5; padding: 2px 6px; border-radius: 3px;">
-                                                        {{ $goal->gameName ?? 'Game' }}
+                                                        {{ $goal->game_name ?? 'Game' }}
                                                     </span>
                                                 @endif
                                                 @if($goal->deadline)
@@ -940,6 +940,7 @@ function loadTagSuggestions() {
     })
     .then(response => response.json())
     .then(data => {
+        console.log('Tag suggestions response:', data);
         if (data.suggestions && data.suggestions.length > 0) {
             showTagSuggestions(data.suggestions);
         } else {
@@ -963,8 +964,8 @@ function showTagSuggestions(suggestions) {
         button.type = 'button';
         button.className = 'btn btn-sm';
         button.style.cssText = 'background-color: #3f3f46; color: #b3b3b5; padding: 6px 12px; font-size: 12px; margin-right: 8px; margin-bottom: 8px;';
-        button.textContent = `${suggestion.tag_type}: ${suggestion.tag_value}`.replace(/_/g, ' ');
-        button.onclick = () => addSuggestedTag(suggestion.tag_type, suggestion.tag_value);
+        button.textContent = `${suggestion.type}: ${suggestion.value}`.replace(/_/g, ' ');
+        button.onclick = () => addSuggestedTag(suggestion.type, suggestion.value);
         suggestionsList.appendChild(button);
     });
     
@@ -1059,6 +1060,15 @@ function removeTag(tagId) {
 }
 
 // Goals management functions
+const gameAppIdToName = {
+    '730': 'Counter-Strike 2',
+    '570': 'Dota 2', 
+    '230410': 'Warframe',
+    '1172470': 'Apex Legends',
+    '252490': 'Rust',
+    '578080': 'PUBG'
+};
+
 function updateGoalFields() {
     const goalType = document.getElementById('goal_type').value;
     const achievementFields = document.getElementById('achievementFields');
@@ -1079,42 +1089,62 @@ function clearGoalForm() {
 document.getElementById('createGoalForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
-    const formData = new FormData();
-    formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
-    formData.append('title', document.getElementById('goal_title').value);
-    formData.append('goal_type', document.getElementById('goal_type').value);
-    formData.append('description', document.getElementById('goal_description').value);
-    formData.append('target_value', document.getElementById('target_value').value);
-    formData.append('game_appid', document.getElementById('game_appid').value);
-    formData.append('deadline', document.getElementById('deadline').value);
-    
-    if (document.getElementById('goal_type').value === 'achievement') {
-        formData.append('achievement_id', document.getElementById('achievement_id').value);
+    const gameAppId = document.getElementById('game_appid').value;
+    const goalData = {
+        _token: document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        title: document.getElementById('goal_title').value,
+        description: document.getElementById('goal_description').value,
+        goal_type: document.getElementById('goal_type').value,
+        target_value: parseInt(document.getElementById('target_value').value),
+        game_appid: gameAppId,
+        game_name: gameAppId ? gameAppIdToName[gameAppId] : null,
+        deadline: document.getElementById('deadline').value,
+        target_criteria: [], // Default empty array (not object)
+        difficulty: 'medium', // Default value
+        visibility: 'public', // Default value
+        rewards: [], // Add missing rewards array
+        goal_settings: [], // Add missing goal_settings array
+        milestones: [] // Add missing milestones array
+    };
+
+    if (goalData.goal_type === 'achievement') {
+        goalData.target_criteria = {
+            achievement_id: document.getElementById('achievement_id').value
+        };
     }
-    
+
     fetch('{{ route("server.goals.store", $server) }}', {
         method: 'POST',
-        body: formData,
+        body: JSON.stringify(goalData),
         headers: {
-            'Accept': 'application/json'
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': goalData._token
         }
     })
     .then(response => {
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            return response.json().then(err => { throw err; });
         }
         return response.json();
     })
     .then(data => {
         if (data.success) {
-            location.reload(); // Reload to show new goal
+            alert('Goal created successfully!');
+            location.reload();
         } else {
-            alert(data.message || 'Error creating goal');
+            // Handle validation errors
+            if (data.errors) {
+                let errorMessages = Object.values(data.errors).flat().join('\n');
+                alert('Validation failed:\n' + errorMessages);
+            } else {
+                alert(data.message || 'Error creating goal');
+            }
         }
     })
     .catch(error => {
         console.error('Error creating goal:', error);
-        alert('Error creating goal: ' + error.message);
+        alert('An unexpected error occurred. Please check the console for details.');
     });
 });
 
