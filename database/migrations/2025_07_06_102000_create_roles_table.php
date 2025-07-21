@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('color', 7)->default('#99AAB5');
             $table->integer('position')->default(0);
-            $table->json('permissions')->default('[]');
+            $table->json('permissions')->nullable();
             $table->timestamps();
         });
     }
