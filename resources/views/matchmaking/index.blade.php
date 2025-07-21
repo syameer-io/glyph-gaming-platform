@@ -8,6 +8,9 @@
         display: grid;
         grid-template-columns: 280px 1fr;
         gap: 24px;
+        width: 100%;
+        max-width: 100%;
+        overflow: hidden;
     }
     
     .matchmaking-sidebar {
@@ -23,6 +26,9 @@
         display: flex;
         flex-direction: column;
         gap: 24px;
+        width: 100%;
+        max-width: 100%;
+        overflow: hidden;
     }
     
     .filter-section {
@@ -74,6 +80,8 @@
         font-size: 12px;
         font-weight: 600;
         text-transform: uppercase;
+        white-space: nowrap;
+        min-width: fit-content;
     }
     
     .status-active {
@@ -89,6 +97,33 @@
     .status-in-team {
         background-color: rgba(245, 158, 11, 0.2);
         color: #f59e0b;
+    }
+    
+    .live-indicator {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 12px;
+        background-color: rgba(16, 185, 129, 0.2);
+        color: #10b981;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .live-indicator::before {
+        content: '';
+        width: 8px;
+        height: 8px;
+        background-color: #10b981;
+        border-radius: 50%;
+        margin-right: 8px;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
     }
     
     .team-card {
@@ -224,25 +259,55 @@
         gap: 8px;
     }
     
+    .card {
+        background-color: #18181b;
+        border-radius: 12px;
+        padding: 24px;
+        border: 1px solid #3f3f46;
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .card-header {
+        color: #efeff1;
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0 0 20px 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
     .request-card {
         background-color: #18181b;
         border-radius: 12px;
         padding: 20px;
         border: 1px solid #3f3f46;
         position: relative;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .request-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 8px;
     }
     
     .request-status {
-        position: absolute;
-        top: 16px;
-        right: 16px;
+        flex-shrink: 0;
+        margin-left: 16px;
     }
     
     .request-game {
         font-size: 16px;
         font-weight: 600;
         color: #efeff1;
-        margin-bottom: 8px;
+        flex: 1;
+        min-width: 0;
     }
     
     .request-details {
@@ -462,8 +527,13 @@
                         </div>
                         @foreach(auth()->user()->activeMatchmakingRequests as $request)
                             <div style="margin-bottom: 12px;">
-                                <div style="color: #b3b3b5; font-size: 14px;">{{ $request->gameName ?? 'Unknown Game' }}</div>
-                                <div style="color: #efeff1; font-size: 12px;">{{ ucfirst($request->preferred_skill_level) }} • {{ ucfirst(str_replace('_', ' ', $request->preferred_region)) }}</div>
+                                <div style="color: #b3b3b5; font-size: 14px;">{{ $request->game_name ?? 'Unknown Game' }}</div>
+                                <div style="color: #efeff1; font-size: 12px;">
+                                    {{ ucfirst($request->skill_level ?? 'any') }}
+                                    @if($request->preferred_roles && count($request->preferred_roles) > 0)
+                                        • {{ implode(', ', array_map('ucfirst', array_map(fn($role) => str_replace('_', ' ', $role), $request->preferred_roles))) }}
+                                    @endif
+                                </div>
                                 <div style="margin-top: 8px;">
                                     <button onclick="cancelRequest({{ $request->id }})" class="btn btn-danger btn-sm" style="font-size: 12px; padding: 4px 8px;">Cancel Request</button>
                                 </div>
@@ -497,22 +567,30 @@
                         <div style="display: grid; gap: 16px;">
                             @foreach($matchmakingRequests as $request)
                                 <div class="request-card">
-                                    <div class="request-status">
-                                        <span class="status-indicator status-searching">Searching</span>
+                                    <div class="request-header">
+                                        <div class="request-game">{{ $request->game_name ?? 'Unknown Game' }}</div>
+                                        <div class="request-status">
+                                            <span class="status-indicator status-searching">Searching</span>
+                                        </div>
                                     </div>
-                                    <div class="request-game">{{ $request->gameName ?? 'Unknown Game' }}</div>
                                     <div class="request-details">
                                         <div class="request-detail">
                                             <span class="request-detail-label">Skill Level</span>
-                                            <span class="request-detail-value">{{ ucfirst($request->preferred_skill_level) }}</span>
+                                            <span class="request-detail-value">{{ ucfirst($request->skill_level ?? 'any') }}</span>
                                         </div>
                                         <div class="request-detail">
-                                            <span class="request-detail-label">Region</span>
-                                            <span class="request-detail-value">{{ ucfirst(str_replace('_', ' ', $request->preferred_region)) }}</span>
+                                            <span class="request-detail-label">Type</span>
+                                            <span class="request-detail-value">{{ ucfirst($request->request_type ? str_replace('_', ' ', $request->request_type) : 'find team') }}</span>
                                         </div>
                                         <div class="request-detail">
                                             <span class="request-detail-label">Role</span>
-                                            <span class="request-detail-value">{{ ucfirst(str_replace('_', ' ', $request->preferred_role)) }}</span>
+                                            <span class="request-detail-value">
+                                                @if($request->preferred_roles && count($request->preferred_roles) > 0)
+                                                    {{ implode(', ', array_map('ucfirst', array_map(fn($role) => str_replace('_', ' ', $role), $request->preferred_roles))) }}
+                                                @else
+                                                    Any Role
+                                                @endif
+                                            </span>
                                         </div>
                                         <div class="request-detail">
                                             <span class="request-detail-label">Created</span>
@@ -565,7 +643,7 @@
                                     <div class="team-header">
                                         <div>
                                             <div class="team-name">{{ $team->name }}</div>
-                                            <div class="team-game">{{ $team->gameName ?? 'Unknown Game' }}</div>
+                                            <div class="team-game">{{ $team->game_name ?? 'Unknown Game' }}</div>
                                         </div>
                                         <div class="compatibility-score">
                                             <div class="score-value">{{ $team->compatibility_score ?? '85' }}%</div>
@@ -624,21 +702,31 @@
         <form id="createRequestForm" action="{{ route('matchmaking.store') }}" method="POST">
             @csrf
             <div class="form-group">
-                <label for="game_appid">Game</label>
-                <select id="game_appid" name="game_appid" required>
+                <label for="game_appid">Game *</label>
+                <select id="game_appid" name="game_appid" required onchange="updateGameName()">
                     <option value="">Select a game...</option>
-                    <option value="730">Counter-Strike 2</option>
-                    <option value="570">Dota 2</option>
-                    <option value="230410">Warframe</option>
-                    <option value="1172470">Apex Legends</option>
-                    <option value="252490">Rust</option>
-                    <option value="578080">PUBG</option>
+                    <option value="730" data-name="Counter-Strike 2">Counter-Strike 2</option>
+                    <option value="570" data-name="Dota 2">Dota 2</option>
+                    <option value="230410" data-name="Warframe">Warframe</option>
+                    <option value="1172470" data-name="Apex Legends">Apex Legends</option>
+                    <option value="252490" data-name="Rust">Rust</option>
+                    <option value="578080" data-name="PUBG">PUBG</option>
+                </select>
+                <input type="hidden" id="game_name" name="game_name" value="">
+            </div>
+            <div class="form-group">
+                <label for="request_type">Request Type *</label>
+                <select id="request_type" name="request_type" required>
+                    <option value="">Select request type...</option>
+                    <option value="find_team">Find Team to Join</option>
+                    <option value="find_teammates">Find Teammates</option>
+                    <option value="substitute">Substitute Player</option>
                 </select>
             </div>
             <div class="form-group">
-                <label for="preferred_skill_level">Preferred Skill Level</label>
-                <select id="preferred_skill_level" name="preferred_skill_level" required>
-                    <option value="">Select skill level...</option>
+                <label for="skill_level">Skill Level</label>
+                <select id="skill_level" name="skill_level">
+                    <option value="any">Any Skill</option>
                     <option value="beginner">Beginner</option>
                     <option value="intermediate">Intermediate</option>
                     <option value="advanced">Advanced</option>
@@ -646,9 +734,8 @@
                 </select>
             </div>
             <div class="form-group">
-                <label for="preferred_role">Preferred Role</label>
-                <select id="preferred_role" name="preferred_role" required>
-                    <option value="">Select role...</option>
+                <label for="preferred_roles">Preferred Roles</label>
+                <select id="preferred_roles" name="preferred_roles[]" multiple>
                     <option value="entry_fragger">Entry Fragger</option>
                     <option value="support">Support</option>
                     <option value="awper">AWPer</option>
@@ -659,30 +746,20 @@
                     <option value="offlaner">Offlaner</option>
                     <option value="jungler">Jungler</option>
                 </select>
+                <small style="color: #b3b3b5;">Hold Ctrl/Cmd to select multiple roles</small>
             </div>
             <div class="form-group">
-                <label for="preferred_region">Preferred Region</label>
-                <select id="preferred_region" name="preferred_region" required>
-                    <option value="">Select region...</option>
-                    <option value="na_east">NA East</option>
-                    <option value="na_west">NA West</option>
-                    <option value="eu_west">EU West</option>
-                    <option value="eu_east">EU East</option>
-                    <option value="asia">Asia</option>
-                    <option value="oceania">Oceania</option>
+                <label for="priority">Priority</label>
+                <select id="priority" name="priority">
+                    <option value="normal">Normal</option>
+                    <option value="low">Low</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
                 </select>
             </div>
             <div class="form-group">
-                <label for="preferred_activity_time">Preferred Activity Time</label>
-                <select id="preferred_activity_time" name="preferred_activity_time" required>
-                    <option value="">Select activity time...</option>
-                    <option value="morning">Morning</option>
-                    <option value="afternoon">Afternoon</option>
-                    <option value="evening">Evening</option>
-                    <option value="late_night">Late Night</option>
-                    <option value="weekends">Weekends</option>
-                    <option value="weekdays">Weekdays</option>
-                </select>
+                <label for="message">Message (Optional)</label>
+                <textarea id="message" name="message" rows="3" placeholder="Add any additional details about your request..."></textarea>
             </div>
             <div style="display: flex; gap: 12px; margin-top: 24px;">
                 <button type="submit" class="btn btn-primary" style="flex: 1;">Create Request</button>
@@ -700,6 +777,18 @@ function showCreateRequestModal() {
 
 function hideCreateRequestModal() {
     document.getElementById('createRequestModal').style.display = 'none';
+}
+
+function updateGameName() {
+    const gameSelect = document.getElementById('game_appid');
+    const gameNameInput = document.getElementById('game_name');
+    const selectedOption = gameSelect.options[gameSelect.selectedIndex];
+    
+    if (selectedOption && selectedOption.dataset.name) {
+        gameNameInput.value = selectedOption.dataset.name;
+    } else {
+        gameNameInput.value = '';
+    }
 }
 
 function showCreateTeamModal() {
@@ -828,18 +917,26 @@ document.getElementById('createRequestForm').addEventListener('submit', function
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         }
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(errorData => {
+                throw new Error(errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+            });
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             hideCreateRequestModal();
+            alert('Matchmaking request created successfully! 🎮');
             location.reload();
         } else {
-            alert(data.message || 'Error creating request');
+            alert(data.error || data.message || 'Error creating request');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error creating request');
+        alert('Error creating request: ' + error.message);
     });
 });
 </script>

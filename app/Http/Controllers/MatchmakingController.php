@@ -35,7 +35,6 @@ class MatchmakingController extends Controller
         // Get user's active matchmaking requests
         $activeRequests = MatchmakingRequest::where('user_id', $user->id)
             ->active()
-            ->with('server')
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -89,80 +88,95 @@ class MatchmakingController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'game_appid' => 'required|string',
-            'game_name' => 'required|string|max:255',
-            'request_type' => 'required|in:find_teammates,find_team',
-            'server_id' => 'nullable|exists:servers,id',
-            'preferred_roles' => 'array',
-            'preferred_roles.*' => 'string|max:50',
-            'skill_range' => 'integer|min:5|max:50',
-            'message' => 'nullable|string|max:500',
-            'max_team_size' => 'integer|min:2|max:10',
-            'priority' => 'integer|min:1|max:10',
-        ]);
+        try {
+            $validator = Validator::make($request->all(), [
+                'game_appid' => 'required|string',
+                'game_name' => 'required|string|max:255',
+                'request_type' => 'required|in:find_teammates,find_team,substitute',
+                'preferred_roles' => 'array',
+                'preferred_roles.*' => 'string|max:50',
+                'message' => 'nullable|string|max:500',
+                'skill_level' => 'nullable|in:any,beginner,intermediate,advanced,expert',
+                'priority' => 'nullable|in:low,normal,high,urgent',
+            ]);
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $user = Auth::user();
-
-        // Check if user already has an active request for this game
-        $existingRequest = MatchmakingRequest::where('user_id', $user->id)
-            ->where('game_appid', $request->game_appid)
-            ->active()
-            ->first();
-
-        if ($existingRequest) {
-            return response()->json([
-                'error' => 'You already have an active matchmaking request for this game.'
-            ], 409);
-        }
-
-        // Get user's skill score for the game
-        $steamData = $user->profile->steam_data ?? [];
-        $skillMetrics = $steamData['skill_metrics'] ?? [];
-        $skillScore = $skillMetrics[$request->game_appid]['skill_score'] ?? 50;
-
-        $matchmakingRequest = MatchmakingRequest::create([
-            'user_id' => $user->id,
-            'game_appid' => $request->game_appid,
-            'game_name' => $request->game_name,
-            'request_type' => $request->request_type,
-            'server_id' => $request->server_id,
-            'preferred_roles' => $request->preferred_roles ?? [],
-            'skill_score' => $skillScore,
-            'skill_range' => $request->skill_range ?? 20,
-            'message' => $request->message,
-            'max_team_size' => $request->max_team_size ?? 5,
-            'priority' => $request->priority ?? 5,
-            'status' => 'active',
-            'preferences' => [
-                'auto_match' => $request->boolean('auto_match', true),
-                'notifications' => $request->boolean('notifications', true),
-            ],
-        ]);
-
-        // Broadcast matchmaking request created event
-        event(new MatchmakingRequestCreated($matchmakingRequest->load('user')));
-
-        // Find compatible teams immediately and broadcast if high compatibility found
-        $compatibleTeams = $this->matchmakingService->findCompatibleTeams($matchmakingRequest);
-        
-        foreach ($compatibleTeams->take(3) as $team) {
-            $compatibility = $this->matchmakingService->calculateCompatibility($team, $matchmakingRequest);
-            if ($compatibility >= 80) { // High compatibility threshold
-                event(new MatchFound($team->load('server'), $matchmakingRequest, $compatibility));
+            if ($validator->fails()) {
+                return response()->json(['errors' => $validator->errors()], 422);
             }
-        }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Matchmaking request created successfully!',
-            'request' => $matchmakingRequest->load('server'),
-            'compatible_teams_found' => $compatibleTeams->count()
-        ]);
+            $user = Auth::user();
+
+            // Check if user already has an active request for this game
+            $existingRequest = MatchmakingRequest::where('user_id', $user->id)
+                ->where('game_appid', $request->game_appid)
+                ->active()
+                ->first();
+
+            if ($existingRequest) {
+                return response()->json([
+                    'error' => 'You already have an active matchmaking request for this game.'
+                ], 409);
+            }
+
+            // Get user's skill score for the game
+            $steamData = [];
+            if ($user->profile && $user->profile->steam_data) {
+                $steamData = $user->profile->steam_data;
+            }
+            $skillMetrics = $steamData['skill_metrics'] ?? [];
+            $skillScore = $skillMetrics[$request->game_appid]['skill_score'] ?? 50;
+
+            $matchmakingRequest = MatchmakingRequest::create([
+                'user_id' => $user->id,
+                'game_appid' => $request->game_appid,
+                'game_name' => $request->game_name,
+                'request_type' => $request->request_type,
+                'preferred_roles' => $request->preferred_roles ?? [],
+                'skill_level' => $request->skill_level ?? 'any',
+                'skill_score' => $skillScore,
+                'priority' => $request->priority ?? 'normal',
+                'status' => 'active',
+                'description' => $request->message,
+                'expires_at' => now()->addDays(7), // Request expires in 7 days
+                'last_activity_at' => now(),
+            ]);
+
+            // Trigger matchmaking request created event (broadcasting disabled for now)
+            event(new MatchmakingRequestCreated($matchmakingRequest->load('user')));
+
+            // Find compatible teams for the user based on their request
+            $criteria = [
+                'game_appid' => $matchmakingRequest->game_appid,
+                'max_results' => 5
+            ];
+            $compatibleTeams = $this->matchmakingService->findTeams($user, $criteria);
+            
+            // Trigger match found events for available teams (simplified for now)
+            foreach ($compatibleTeams->take(3) as $teamMatch) {
+                $team = $teamMatch['team'] ?? $teamMatch; // Handle different response formats
+                if ($team) {
+                    event(new MatchFound($team->load('server'), $matchmakingRequest, 85)); // Default high compatibility
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Matchmaking request created successfully!',
+                'request' => $matchmakingRequest,
+                'compatible_teams_found' => $compatibleTeams->count()
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Matchmaking request creation error: ' . $e->getMessage(), [
+                'user_id' => auth()->id(),
+                'request_data' => $request->all(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'error' => 'Error creating matchmaking request: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -254,64 +268,86 @@ class MatchmakingController extends Controller
      */
     public function joinTeam(Request $request, Team $team): JsonResponse
     {
-        $user = Auth::user();
+        try {
+            $user = Auth::user();
 
-        // Check if team is still recruiting
-        if ($team->status !== 'recruiting') {
+            // Check if team is still recruiting
+            if (!$team->isRecruiting()) {
+                return response()->json([
+                    'error' => 'This team is not currently recruiting members.'
+                ], 409);
+            }
+
+            // Check if team is full
+            if ($team->isFull()) {
+                return response()->json([
+                    'error' => 'This team is already full.'
+                ], 409);
+            }
+
+            // Check if user is already a member
+            if ($team->users()->where('users.id', $user->id)->exists()) {
+                return response()->json([
+                    'error' => 'You are already a member of this team.'
+                ], 409);
+            }
+
+            // Check if user is already in another team for this game
+            $existingTeam = $user->teams()
+                ->where('game_appid', $team->game_appid)
+                ->whereIn('teams.status', ['recruiting', 'full', 'active'])
+                ->first();
+
+            if ($existingTeam) {
+                return response()->json([
+                    'error' => 'You are already in a team for this game.'
+                ], 409);
+            }
+
+            // Calculate user's skill score
+            $steamData = [];
+            if ($user->profile && $user->profile->steam_data) {
+                $steamData = $user->profile->steam_data;
+            }
+            $skillMetrics = $steamData['skill_metrics'] ?? [];
+            $skillScore = $skillMetrics[$team->game_appid]['skill_score'] ?? 50;
+
+            // Add user to team
+            $addMemberResult = $team->addMember($user, [
+                'role' => 'member',
+                'skill_level' => $this->getSkillLevel($skillScore),
+                'individual_skill_score' => $skillScore,
+            ]);
+
+            if (!$addMemberResult) {
+                return response()->json([
+                    'error' => 'Failed to join the team. Please try again.'
+                ], 500);
+            }
+
+            // Cancel any active matchmaking requests for this game
+            MatchmakingRequest::where('user_id', $user->id)
+                ->where('game_appid', $team->game_appid)
+                ->active()
+                ->update(['status' => 'matched']);
+
             return response()->json([
-                'error' => 'This team is no longer recruiting members.'
-            ], 409);
-        }
-
-        // Check if team is full
-        if ($team->current_size >= $team->max_size) {
+                'success' => true,
+                'message' => 'Successfully joined the team!',
+                'team' => $team->fresh()->load(['activeMembers.user', 'server', 'creator'])
+            ]);
+        
+        } catch (\Exception $e) {
+            \Log::error('Team join error: ' . $e->getMessage(), [
+                'user_id' => auth()->id(),
+                'team_id' => $team->id,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             return response()->json([
-                'error' => 'This team is already full.'
-            ], 409);
+                'error' => 'An error occurred while joining the team: ' . $e->getMessage()
+            ], 500);
         }
-
-        // Check if user is already a member
-        if ($team->members()->where('user_id', $user->id)->exists()) {
-            return response()->json([
-                'error' => 'You are already a member of this team.'
-            ], 409);
-        }
-
-        // Check if user is already in another team for this game
-        $existingTeam = $user->teams()
-            ->where('game_appid', $team->game_appid)
-            ->whereIn('teams.status', ['recruiting', 'full', 'active'])
-            ->first();
-
-        if ($existingTeam) {
-            return response()->json([
-                'error' => 'You are already in a team for this game.'
-            ], 409);
-        }
-
-        // Calculate user's skill score
-        $steamData = $user->profile->steam_data ?? [];
-        $skillMetrics = $steamData['skill_metrics'] ?? [];
-        $skillScore = $skillMetrics[$team->game_appid]['skill_score'] ?? 50;
-
-        // Add user to team
-        $teamMember = $team->addMember($user, [
-            'role' => 'member',
-            'skill_level' => $this->getSkillLevel($skillScore),
-            'individual_skill_score' => $skillScore,
-        ]);
-
-        // Cancel any active matchmaking requests for this game
-        MatchmakingRequest::where('user_id', $user->id)
-            ->where('game_appid', $team->game_appid)
-            ->active()
-            ->update(['status' => 'matched']);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Successfully joined the team!',
-            'team' => $team->fresh()->load(['members.user', 'server', 'creator'])
-        ]);
     }
 
     /**

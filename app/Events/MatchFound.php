@@ -12,7 +12,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class MatchFound implements ShouldBroadcast
+class MatchFound // implements ShouldBroadcast - disabled for now
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
