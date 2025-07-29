@@ -28,6 +28,11 @@ Thumbs.db
 *.tmp
 phase3-logs.md
 
+# Claude AI and documentation files (except README.md)
+.claude/
+*.md
+!README.md
+
 # Storage framework files (keep structure)
 storage/framework/cache/*
 !storage/framework/cache/.gitkeep
