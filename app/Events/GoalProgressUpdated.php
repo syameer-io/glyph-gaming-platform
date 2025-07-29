@@ -47,7 +47,7 @@ class GoalProgressUpdated implements ShouldBroadcast
                 'progress' => $this->goal->progress,
                 'previous_progress' => $this->previousProgress,
                 'target_value' => $this->goal->target_value,
-                'completion_percentage' => $this->goal->getCompletionPercentage(),
+                'completion_percentage' => $this->goal->completion_percentage,
                 'status' => $this->goal->status,
                 'participant_count' => $this->goal->participants()->count(),
                 'updated_at' => $this->goal->updated_at->toISOString(),

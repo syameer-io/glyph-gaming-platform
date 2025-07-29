@@ -45,7 +45,7 @@ class GoalMilestoneReached implements ShouldBroadcast
                 'title' => $this->goal->title,
                 'progress' => $this->goal->progress,
                 'target_value' => $this->goal->target_value,
-                'completion_percentage' => $this->goal->getCompletionPercentage(),
+                'completion_percentage' => $this->goal->completion_percentage,
             ],
             'milestone' => [
                 'id' => $this->milestone->id,

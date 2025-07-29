@@ -417,45 +417,64 @@ function joinGoal(goalId) {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         }
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
+        console.log('Join goal response:', data); // Debug logging
+        
         if (data.success) {
-            // Update button to "Joined" state
-            button.innerHTML = '✓ Joined';
-            button.style.backgroundColor = '#ef4444';
-            button.onclick = () => leaveGoal(goalId);
-            
-            // Update participant count
-            const goalCard = document.querySelector(`[data-goal-id="${goalId}"]`);
-            const participantCount = goalCard.querySelector('.participant-count');
-            const currentCount = parseInt(participantCount.textContent.match(/\d+/)[0]);
-            participantCount.textContent = participantCount.textContent.replace(/\d+/, currentCount + 1);
-            
-            // Add user avatar to participants list
-            const participantsList = goalCard.querySelector('.participants-list');
-            const userAvatar = document.createElement('img');
-            userAvatar.src = '{{ auth()->user()->profile->avatar_url }}';
-            userAvatar.alt = '{{ auth()->user()->display_name }}';
-            userAvatar.style.cssText = 'width: 24px; height: 24px; border-radius: 50%; margin-left: -4px; border: 2px solid #18181b;';
-            userAvatar.title = '{{ auth()->user()->display_name }} - Just joined!';
-            participantsList.appendChild(userAvatar);
-            
-            // Show success message
-            showNotification('Successfully joined the goal!', 'success');
+            try {
+                // Update button to "Joined" state
+                button.innerHTML = '✓ Joined';
+                button.style.backgroundColor = '#ef4444';
+                button.onclick = () => leaveGoal(goalId);
+                
+                // Update participant count
+                const goalCard = document.querySelector(`[data-goal-id="${goalId}"]`);
+                if (goalCard) {
+                    const participantCount = goalCard.querySelector('.participant-count');
+                    if (participantCount) {
+                        const currentCount = parseInt(participantCount.textContent.match(/\d+/)[0]);
+                        participantCount.textContent = participantCount.textContent.replace(/\d+/, currentCount + 1);
+                    }
+                    
+                    // Add user avatar to participants list
+                    const participantsList = goalCard.querySelector('.participants-list');
+                    if (participantsList) {
+                        const userAvatar = document.createElement('img');
+                        userAvatar.src = '{{ auth()->user()->profile->avatar_url }}';
+                        userAvatar.alt = '{{ auth()->user()->display_name }}';
+                        userAvatar.style.cssText = 'width: 24px; height: 24px; border-radius: 50%; margin-left: -4px; border: 2px solid #18181b;';
+                        userAvatar.title = '{{ auth()->user()->display_name }} - Just joined!';
+                        participantsList.appendChild(userAvatar);
+                    }
+                }
+                
+                // Show success message
+                showNotification('Successfully joined the goal!', 'success');
+            } catch (domError) {
+                console.error('DOM manipulation error:', domError);
+                // Still show success message even if DOM update fails
+                showNotification('Successfully joined the goal!', 'success');
+            }
         } else {
             // Reset button on error
             button.disabled = false;
             button.innerHTML = originalText;
             button.style.backgroundColor = '#10b981';
-            showNotification(data.error || 'Failed to join goal', 'error');
+            showNotification(data.error || data.message || 'Failed to join goal', 'error');
         }
     })
     .catch(error => {
-        console.error('Error joining goal:', error);
+        console.error('Network or parsing error:', error);
         button.disabled = false;
         button.innerHTML = originalText;
         button.style.backgroundColor = '#10b981';
-        showNotification('An error occurred while joining the goal', 'error');
+        showNotification('An error occurred while joining the goal: ' + error.message, 'error');
     });
 }
 
@@ -541,29 +560,50 @@ function updateProgress(goalId) {
             progress: parseInt(progressValue)
         })
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
+        console.log('Update progress response:', data); // Debug logging
+        
         if (data.success) {
-            // Update progress bar and text
-            const goalCard = document.querySelector(`[data-goal-id="${goalId}"]`);
-            const progressBar = goalCard.querySelector('.progress-bar');
-            const progressText = goalCard.querySelector('.progress-text');
-            
-            const newProgress = data.goal.current_progress;
-            const targetValue = data.goal.target_value;
-            const percentage = Math.round((newProgress / targetValue) * 100 * 10) / 10;
-            
-            progressBar.style.width = Math.min(percentage, 100) + '%';
-            progressText.textContent = `${newProgress} / ${targetValue} (${percentage}%)`;
-            
-            showNotification('Progress updated successfully!', 'success');
+            try {
+                // Update progress bar and text
+                const goalCard = document.querySelector(`[data-goal-id="${goalId}"]`);
+                if (goalCard) {
+                    const progressBar = goalCard.querySelector('.progress-bar');
+                    const progressText = goalCard.querySelector('.progress-text');
+                    
+                    if (data.goal) {
+                        const newProgress = data.goal.current_progress;
+                        const targetValue = data.goal.target_value;
+                        const percentage = Math.round((newProgress / targetValue) * 100 * 10) / 10;
+                        
+                        if (progressBar) {
+                            progressBar.style.width = Math.min(percentage, 100) + '%';
+                        }
+                        if (progressText) {
+                            progressText.textContent = `${newProgress} / ${targetValue} (${percentage}%)`;
+                        }
+                    }
+                }
+                
+                showNotification('Progress updated successfully!', 'success');
+            } catch (domError) {
+                console.error('DOM manipulation error:', domError);
+                // Still show success message even if DOM update fails
+                showNotification('Progress updated successfully!', 'success');
+            }
         } else {
-            showNotification(data.error || 'Failed to update progress', 'error');
+            showNotification(data.error || data.message || 'Failed to update progress', 'error');
         }
     })
     .catch(error => {
-        console.error('Error updating progress:', error);
-        showNotification('An error occurred while updating progress', 'error');
+        console.error('Network or parsing error:', error);
+        showNotification('An error occurred while updating progress: ' + error.message, 'error');
     });
 }
 

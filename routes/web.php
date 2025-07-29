@@ -14,6 +14,7 @@ use App\Http\Controllers\ServerRecommendationController;
 use App\Http\Controllers\MatchmakingController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\ServerGoalController;
+use App\Http\Controllers\TelegramController;
 
 // Guest routes
 Route::middleware('guest')->group(function () {
@@ -68,6 +69,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/servers/join', [ServerController::class, 'showJoinPage'])->name('server.join');
     Route::post('/servers', [ServerController::class, 'store'])->name('server.store');
     Route::post('/servers/join', [ServerController::class, 'join'])->name('server.join.submit');
+    Route::post('/servers/{server}/join-direct', [ServerController::class, 'joinDirect'])->name('server.join.direct');
     Route::get('/servers/{server}', [ServerController::class, 'show'])->name('server.show');
     Route::post('/servers/{server}/leave', [ServerController::class, 'leave'])->name('server.leave');
     Route::delete('/servers/{server}', [ServerController::class, 'destroy'])->name('server.destroy');
@@ -232,5 +234,80 @@ Route::middleware('auth')->group(function () {
             return \App\Models\User::findOrFail($user)->getGamingStatistics();
         })->name('users.gaming.stats');
     });
+
+    // Telegram Bot Integration routes
+    Route::prefix('servers/{server}/telegram')->name('server.telegram.')->group(function () {
+        Route::get('/status', [TelegramController::class, 'getServerStatus'])->name('status');
+        Route::post('/link', [TelegramController::class, 'linkServer'])->name('link');
+        Route::delete('/unlink', [TelegramController::class, 'unlinkServer'])->name('unlink');
+        Route::patch('/settings', [TelegramController::class, 'updateNotificationSettings'])->name('settings');
+        Route::post('/test', [TelegramController::class, 'testMessage'])->name('test');
+    });
     
+});
+
+// Public Telegram webhook (outside auth middleware)
+Route::post('/telegram/webhook', [TelegramController::class, 'webhook'])->name('telegram.webhook');
+
+// Temporary testing routes for Telegram bot
+Route::get('/test-telegram', function () {
+    $telegramService = app(\App\Services\TelegramBotService::class);
+    
+    // Test bot info
+    $botInfo = $telegramService->getBotInfo();
+    
+    return response()->json([
+        'bot_info' => $botInfo,
+        'webhook_url' => route('telegram.webhook'),
+        'app_url' => config('app.url')
+    ]);
+});
+
+Route::post('/test-telegram-webhook', function (Illuminate\Http\Request $request) {
+    // Simulate a Telegram webhook call for testing
+    $testUpdate = [
+        'update_id' => 123456,
+        'message' => [
+            'message_id' => 1,
+            'from' => [
+                'id' => 12345,
+                'is_bot' => false,
+                'first_name' => 'Test User'
+            ],
+            'chat' => [
+                'id' => $request->input('chat_id', 12345),
+                'type' => 'private'
+            ],
+            'date' => time(),
+            'text' => $request->input('text', '/start')
+        ]
+    ];
+    
+    $telegramController = app(\App\Http\Controllers\TelegramController::class);
+    
+    // Create a request with the test data
+    $webhookRequest = new Illuminate\Http\Request();
+    $webhookRequest->merge($testUpdate);
+    
+    try {
+        $response = $telegramController->webhook($webhookRequest);
+        return response()->json([
+            'status' => 'success',
+            'webhook_response' => $response->getData(),
+            'test_update' => $testUpdate
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+    }
+});
+
+// Admin Telegram management routes (for bot setup)
+Route::middleware('auth')->prefix('admin/telegram')->name('admin.telegram.')->group(function () {
+    Route::get('/info', [TelegramController::class, 'getBotInfo'])->name('info');
+    Route::post('/webhook/set', [TelegramController::class, 'setWebhook'])->name('webhook.set');
+    Route::delete('/webhook', [TelegramController::class, 'removeWebhook'])->name('webhook.remove');
 });

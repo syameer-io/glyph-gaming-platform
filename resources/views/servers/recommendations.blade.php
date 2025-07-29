@@ -123,7 +123,10 @@
                         <div style="display: flex; gap: 12px; align-items: center;">
                             <a href="{{ route('server.show', $recommendation['server']) }}" class="btn btn-primary">View Server</a>
                             @if(!$recommendation['server']->members->contains(auth()->user()))
-                                <a href="{{ route('server.join') }}?invite={{ $recommendation['server']->invite_code }}" class="btn btn-secondary">Join Server</a>
+                                <form method="POST" action="{{ route('server.join.direct', $recommendation['server']) }}" style="display: inline;">
+                                    @csrf
+                                    <button type="submit" class="btn btn-secondary">Join Server</button>
+                                </form>
                             @else
                                 <span style="color: #10b981; font-weight: 600; padding: 8px 16px; background-color: rgba(16, 185, 129, 0.1); border-radius: 6px; font-size: 14px;">Already a member</span>
                             @endif
@@ -145,4 +148,56 @@
         @endif
     </div>
 </main>
+
+<script>
+// Handle direct join with AJAX for better UX
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('form[action*="join-direct"]').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const button = form.querySelector('button[type="submit"]');
+            const originalText = button.textContent;
+            
+            // Show loading state
+            button.disabled = true;
+            button.textContent = 'Joining...';
+            
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success state
+                    button.textContent = '✓ Joined!';
+                    button.style.backgroundColor = '#10b981';
+                    
+                    // Redirect after short delay
+                    setTimeout(() => {
+                        window.location.href = data.redirect_url;
+                    }, 1000);
+                } else {
+                    // Show error and restore button
+                    alert(data.message || 'Failed to join server');
+                    button.disabled = false;
+                    button.textContent = originalText;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while joining the server');
+                button.disabled = false;
+                button.textContent = originalText;
+            });
+        });
+    });
+});
+</script>
 @endsection

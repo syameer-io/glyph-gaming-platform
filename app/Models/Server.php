@@ -16,6 +16,14 @@ class Server extends Model
         'invite_code',
         'icon_url',
         'creator_id',
+        'telegram_chat_id',
+        'telegram_linked_at',
+        'telegram_settings',
+    ];
+
+    protected $casts = [
+        'telegram_linked_at' => 'datetime',
+        'telegram_settings' => 'array',
     ];
 
     protected static function boot()

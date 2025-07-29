@@ -216,4 +216,50 @@ class ServerController extends Controller
     {
         return view('servers.join');
     }
+
+    public function joinDirect(Request $request, Server $server)
+    {
+        $user = Auth::user();
+
+        // Check if already a member
+        if ($server->members->contains($user->id)) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'You are already a member of this server.'], 409);
+            }
+            return redirect()->route('server.show', $server)->with('info', 'You are already a member of this server.');
+        }
+
+        // Check if banned
+        $membership = $server->members()->where('user_id', $user->id)->first();
+        if ($membership && $membership->pivot->is_banned) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'You are banned from this server.'], 403);
+            }
+            return redirect()->back()->with('error', 'You are banned from this server.');
+        }
+
+        // Add user as member
+        $server->members()->attach($user->id, [
+            'joined_at' => now(),
+            'is_banned' => false,
+            'is_muted' => false,
+        ]);
+
+        // Assign default member role
+        $memberRole = $server->roles()->where('name', 'Member')->first();
+        if ($memberRole) {
+            $user->roles()->attach($memberRole->id, ['server_id' => $server->id]);
+        }
+
+        // Return JSON response for AJAX requests
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Successfully joined the server!',
+                'redirect_url' => route('server.show', $server)
+            ]);
+        }
+
+        return redirect()->route('server.show', $server)->with('success', 'Successfully joined the server!');
+    }
 }
