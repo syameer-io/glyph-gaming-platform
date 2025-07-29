@@ -51,7 +51,7 @@ class UserJoinedGoal implements ShouldBroadcast
                 'id' => $this->participant->id,
                 'user_id' => $this->participant->user_id,
                 'contribution' => $this->participant->contribution,
-                'contribution_percentage' => $this->participant->getContributionPercentage(),
+                'contribution_percentage' => $this->participant->contribution_percentage,
                 'joined_at' => $this->participant->created_at->toISOString(),
                 'user' => [
                     'id' => $this->participant->user->id,

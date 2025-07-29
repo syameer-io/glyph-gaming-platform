@@ -184,6 +184,7 @@
                     <a href="#roles" class="sidebar-link" onclick="showTab('roles', this)">Roles</a>
                     <a href="#tags" class="sidebar-link" onclick="showTab('tags', this)">Tags</a>
                     <a href="#goals" class="sidebar-link" onclick="showTab('goals', this)">Goals</a>
+                    <a href="#telegram" class="sidebar-link" onclick="showTab('telegram', this)">Telegram Bot</a>
                 </div>
             </div>
 
@@ -763,6 +764,159 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Telegram Bot Tab -->
+                <div id="telegram" class="tab-content">
+                    <h3 style="margin-bottom: 24px;">Telegram Bot Integration</h3>
+                    <p style="color: #b3b3b5; margin-bottom: 24px; font-size: 14px;">Connect your server to Telegram to receive goal notifications and updates in your Telegram group or channel.</p>
+                    
+                    <!-- Bot Status Card -->
+                    <div id="telegramStatusCard" style="background-color: #0e0e10; border-radius: 8px; padding: 20px; margin-bottom: 32px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <h4 style="margin: 0;">Connection Status</h4>
+                            <div id="statusIndicator" class="status-indicator" style="padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 600;">
+                                <span id="statusText">Checking...</span>
+                            </div>
+                        </div>
+                        
+                        <div id="telegramInfo" style="display: none;">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 16px;">
+                                <div>
+                                    <div style="font-size: 14px; color: #b3b3b5;">Chat ID</div>
+                                    <div style="font-weight: 600; color: #efeff1;" id="chatId">-</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 14px; color: #b3b3b5;">Linked</div>
+                                    <div style="font-weight: 600; color: #efeff1;" id="linkedAt">-</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 14px; color: #b3b3b5;">Notifications</div>
+                                    <div style="font-weight: 600; color: #efeff1;" id="notificationsEnabled">-</div>
+                                </div>
+                            </div>
+                            
+                            <div style="display: flex; gap: 8px;">
+                                <button id="unlinkBtn" class="btn btn-danger btn-sm" onclick="unlinkTelegram()" style="display: none;">Unlink</button>
+                                <button id="testBtn" class="btn btn-secondary btn-sm" onclick="testTelegramMessage()" style="display: none;">Send Test Message</button>
+                            </div>
+                        </div>
+                        
+                        <div id="setupInstructions" style="display: none;">
+                            <div style="background-color: #18181b; border-radius: 6px; padding: 16px; border-left: 4px solid #667eea;">
+                                <h5 style="margin-bottom: 12px; color: #efeff1;">How to Connect</h5>
+                                <ol style="margin: 0; padding-left: 20px; color: #b3b3b5; font-size: 14px; line-height: 1.6;">
+                                    <li>Add <code style="background-color: #0e0e10; padding: 2px 6px; border-radius: 4px; color: #efeff1;">@YourBotName</code> to your Telegram group</li>
+                                    <li>Send the command: <code style="background-color: #0e0e10; padding: 2px 6px; border-radius: 4px; color: #efeff1;">/link {{ $server->invite_code }}</code></li>
+                                    <li>The bot will automatically link and start sending notifications</li>
+                                </ol>
+                                <p style="margin-top: 12px; margin-bottom: 0; font-size: 13px; color: #71717a;">
+                                    <strong>Note:</strong> Make sure the bot has permission to send messages in your group.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notification Settings -->
+                    <div style="background-color: #0e0e10; border-radius: 8px; padding: 20px; margin-bottom: 32px;">
+                        <h4 style="margin-bottom: 16px;">Notification Settings</h4>
+                        
+                        <div id="notificationSettings" style="display: none;">
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: flex; align-items: center; cursor: pointer;">
+                                    <input type="checkbox" id="notificationsToggle" onchange="updateNotificationSettings()" style="margin-right: 12px;">
+                                    <span style="font-weight: 600; color: #efeff1;">Enable Telegram Notifications</span>
+                                </label>
+                                <small style="color: #71717a; font-size: 12px; margin-left: 24px;">Turn off to disable all Telegram notifications for this server</small>
+                            </div>
+                            
+                            <div id="notificationTypes" style="display: none; margin-left: 24px; margin-top: 16px;">
+                                <p style="font-size: 14px; font-weight: 600; color: #efeff1; margin-bottom: 12px;">Notification Types</p>
+                                
+                                <div style="display: grid; gap: 12px;">
+                                    <label style="display: flex; align-items: center; cursor: pointer;">
+                                        <input type="checkbox" id="goalCompleted" onchange="updateNotificationSettings()" style="margin-right: 12px;">
+                                        <div>
+                                            <div style="font-weight: 600; color: #efeff1;">Goal Completed</div>
+                                            <div style="font-size: 12px; color: #71717a;">When a community goal is completed</div>
+                                        </div>
+                                    </label>
+                                    
+                                    <label style="display: flex; align-items: center; cursor: pointer;">
+                                        <input type="checkbox" id="goalProgress" onchange="updateNotificationSettings()" style="margin-right: 12px;">
+                                        <div>
+                                            <div style="font-weight: 600; color: #efeff1;">Goal Progress</div>
+                                            <div style="font-size: 12px; color: #71717a;">Milestone progress updates (every 10%)</div>
+                                        </div>
+                                    </label>
+                                    
+                                    <label style="display: flex; align-items: center; cursor: pointer;">
+                                        <input type="checkbox" id="newGoal" onchange="updateNotificationSettings()" style="margin-right: 12px;">
+                                        <div>
+                                            <div style="font-weight: 600; color: #efeff1;">New Goals</div>
+                                            <div style="font-size: 12px; color: #71717a;">When new community goals are created</div>
+                                        </div>
+                                    </label>
+                                    
+                                    <label style="display: flex; align-items: center; cursor: pointer;">
+                                        <input type="checkbox" id="userJoined" onchange="updateNotificationSettings()" style="margin-right: 12px;">
+                                        <div>
+                                            <div style="font-weight: 600; color: #efeff1;">Member Joined</div>
+                                            <div style="font-size: 12px; color: #71717a;">When members join goals</div>
+                                        </div>
+                                    </label>
+                                    
+                                    <label style="display: flex; align-items: center; cursor: pointer;">
+                                        <input type="checkbox" id="milestoneReached" onchange="updateNotificationSettings()" style="margin-right: 12px;">
+                                        <div>
+                                            <div style="font-weight: 600; color: #efeff1;">Milestone Reached</div>
+                                            <div style="font-size: 12px; color: #71717a;">When goal milestones are achieved</div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="settingsDisabled" style="color: #71717a; font-style: italic;">
+                            Connect to Telegram first to configure notification settings.
+                        </div>
+                    </div>
+
+                    <!-- Bot Commands Help -->
+                    <div style="background-color: #0e0e10; border-radius: 8px; padding: 20px;">
+                        <h4 style="margin-bottom: 16px;">Bot Commands</h4>
+                        <p style="color: #b3b3b5; margin-bottom: 16px; font-size: 14px;">Available commands for your Telegram bot:</p>
+                        
+                        <div style="display: grid; gap: 12px;">
+                            <div style="padding: 12px; background-color: #18181b; border-radius: 6px;">
+                                <code style="background-color: #0e0e10; padding: 4px 8px; border-radius: 4px; color: #10b981;">/start</code>
+                                <span style="color: #b3b3b5; margin-left: 8px;">Show welcome message and available commands</span>
+                            </div>
+                            
+                            <div style="padding: 12px; background-color: #18181b; border-radius: 6px;">
+                                <code style="background-color: #0e0e10; padding: 4px 8px; border-radius: 4px; color: #10b981;">/link {invite_code}</code>
+                                <span style="color: #b3b3b5; margin-left: 8px;">Link the bot to your server</span>
+                            </div>
+                            
+                            <div style="padding: 12px; background-color: #18181b; border-radius: 6px;">
+                                <code style="background-color: #0e0e10; padding: 4px 8px; border-radius: 4px; color: #10b981;">/goals</code>
+                                <span style="color: #b3b3b5; margin-left: 8px;">View all active community goals</span>
+                            </div>
+                            
+                            <div style="padding: 12px; background-color: #18181b; border-radius: 6px;">
+                                <code style="background-color: #0e0e10; padding: 4px 8px; border-radius: 4px; color: #10b981;">/help</code>
+                                <span style="color: #b3b3b5; margin-left: 8px;">Show detailed help and commands</span>
+                            </div>
+                        </div>
+                        
+                        <div style="background-color: #18181b; border-radius: 6px; padding: 16px; margin-top: 16px; border-left: 4px solid #f59e0b;">
+                            <p style="margin: 0; color: #b3b3b5; font-size: 14px;">
+                                <strong style="color: #efeff1;">Server Invite Code:</strong> 
+                                <code style="background-color: #0e0e10; padding: 4px 8px; border-radius: 4px; color: #efeff1;">{{ $server->invite_code }}</code>
+                                <br><small style="color: #71717a;">Use this code with the /link command</small>
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -849,7 +1003,7 @@ function showTabFromHash() {
     // Check for session active tab first (from server redirect)
     const sessionTab = '{{ session("active_tab") }}';
     const hash = window.location.hash.substring(1); // Remove the # symbol
-    const validTabs = ['overview', 'channels', 'members', 'roles', 'tags', 'goals'];
+    const validTabs = ['overview', 'channels', 'members', 'roles', 'tags', 'goals', 'telegram'];
     
     // Priority: 1. Session tab, 2. URL hash, 3. Default to overview
     let tabToShow = 'overview';
@@ -1277,5 +1431,231 @@ document.addEventListener('click', function(event) {
         });
     }
 });
+
+// Telegram Bot Functions
+function loadTelegramStatus() {
+    fetch('{{ route("server.telegram.status", $server) }}', {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateTelegramUI(data.status);
+        } else {
+            console.error('Error loading Telegram status:', data);
+            showTelegramStatus('Error', '#dc2626');
+        }
+    })
+    .catch(error => {
+        console.error('Error loading Telegram status:', error);
+        showTelegramStatus('Error', '#dc2626');
+    });
+}
+
+function updateTelegramUI(status) {
+    const isLinked = status.is_linked;
+    
+    // Update status indicator
+    if (isLinked) {
+        showTelegramStatus('Connected', '#10b981');
+        
+        // Show connection info
+        document.getElementById('telegramInfo').style.display = 'block';
+        document.getElementById('setupInstructions').style.display = 'none';
+        
+        // Populate connection details
+        document.getElementById('chatId').textContent = status.chat_id || 'Unknown';
+        document.getElementById('linkedAt').textContent = status.linked_at 
+            ? new Date(status.linked_at).toLocaleDateString() 
+            : 'Unknown';
+        document.getElementById('notificationsEnabled').textContent = 
+            (status.settings && status.settings.notifications_enabled) ? 'Enabled' : 'Disabled';
+        
+        // Show action buttons
+        document.getElementById('unlinkBtn').style.display = 'inline-block';
+        document.getElementById('testBtn').style.display = 'inline-block';
+        
+        // Show notification settings
+        document.getElementById('notificationSettings').style.display = 'block';
+        document.getElementById('settingsDisabled').style.display = 'none';
+        
+        // Update notification checkboxes
+        updateNotificationCheckboxes(status.settings);
+        
+    } else {
+        showTelegramStatus('Not Connected', '#71717a');
+        
+        // Show setup instructions
+        document.getElementById('telegramInfo').style.display = 'none';
+        document.getElementById('setupInstructions').style.display = 'block';
+        
+        // Hide notification settings
+        document.getElementById('notificationSettings').style.display = 'none';
+        document.getElementById('settingsDisabled').style.display = 'block';
+    }
+}
+
+function showTelegramStatus(text, color) {
+    const statusIndicator = document.getElementById('statusIndicator');
+    const statusText = document.getElementById('statusText');
+    
+    statusText.textContent = text;
+    statusIndicator.style.backgroundColor = color;
+    statusIndicator.style.color = color === '#71717a' ? '#efeff1' : '#ffffff';
+}
+
+function updateNotificationCheckboxes(settings) {
+    if (!settings) return;
+    
+    // Main toggle
+    document.getElementById('notificationsToggle').checked = settings.notifications_enabled || false;
+    
+    // Notification types
+    const types = settings.notification_types || {};
+    document.getElementById('goalCompleted').checked = types.goal_completed || false;
+    document.getElementById('goalProgress').checked = types.goal_progress || false;
+    document.getElementById('newGoal').checked = types.new_goal || false;
+    document.getElementById('userJoined').checked = types.user_joined || false;
+    document.getElementById('milestoneReached').checked = types.milestone_reached || false;
+    
+    // Show/hide notification types based on main toggle
+    const notificationTypes = document.getElementById('notificationTypes');
+    notificationTypes.style.display = settings.notifications_enabled ? 'block' : 'none';
+}
+
+function updateNotificationSettings() {
+    const notificationsEnabled = document.getElementById('notificationsToggle').checked;
+    
+    // Show/hide notification types
+    const notificationTypes = document.getElementById('notificationTypes');
+    notificationTypes.style.display = notificationsEnabled ? 'block' : 'none';
+    
+    // Collect settings
+    const settings = {
+        _token: document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        notifications_enabled: notificationsEnabled,
+        notification_types: {
+            goal_completed: document.getElementById('goalCompleted').checked,
+            goal_progress: document.getElementById('goalProgress').checked,
+            new_goal: document.getElementById('newGoal').checked,
+            user_joined: document.getElementById('userJoined').checked,
+            milestone_reached: document.getElementById('milestoneReached').checked,
+        }
+    };
+    
+    // Send update request
+    fetch('{{ route("server.telegram.settings", $server) }}', {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': settings._token
+        },
+        body: JSON.stringify(settings)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('Notification settings updated successfully');
+        } else {
+            alert('Error updating settings: ' + (data.message || 'Unknown error'));
+            // Reload to reset checkboxes on error
+            loadTelegramStatus();
+        }
+    })
+    .catch(error => {
+        console.error('Error updating notification settings:', error);
+        alert('Error updating settings');
+        // Reload to reset checkboxes on error
+        loadTelegramStatus();
+    });
+}
+
+function unlinkTelegram() {
+    if (!confirm('Are you sure you want to unlink this server from Telegram? Notifications will stop immediately.')) {
+        return;
+    }
+    
+    fetch('{{ route("server.telegram.unlink", $server) }}', {
+        method: 'DELETE',
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Server unlinked from Telegram successfully');
+            loadTelegramStatus(); // Refresh status
+        } else {
+            alert('Error unlinking server: ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error unlinking Telegram:', error);
+        alert('Error unlinking server');
+    });
+}
+
+function testTelegramMessage() {
+    const testMessage = '🤖 <b>Test Message from Glyph Bot</b>\\n\\nThis is a test notification from your {{ $server->name }} server!\\n\\n✅ Telegram integration is working correctly.';
+    
+    fetch('{{ route("server.telegram.test", $server) }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({
+            chat_id: document.getElementById('chatId').textContent,
+            message: testMessage
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Test message sent successfully! Check your Telegram chat.');
+        } else {
+            alert('Error sending test message: ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error sending test message:', error);
+        alert('Error sending test message');
+    });
+}
+
+// Load Telegram status when the telegram tab is shown
+function showTab(tabName, element) {
+    // Hide all tabs
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Remove active class from all links
+    document.querySelectorAll('.sidebar-link').forEach(link => {
+        link.classList.remove('active');
+    });
+    
+    // Show selected tab
+    document.getElementById(tabName).classList.add('active');
+    
+    // Add active class to clicked link
+    element.classList.add('active');
+    
+    // Update URL hash to preserve tab state
+    window.location.hash = tabName;
+    
+    // Load Telegram status if telegram tab is selected
+    if (tabName === 'telegram') {
+        loadTelegramStatus();
+    }
+}
 </script>
 @endsection

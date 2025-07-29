@@ -178,17 +178,17 @@
                                 <div class="rank-badge {{ $index + 1 <= 3 ? 'rank-' . ($index + 1) : 'rank-other' }}">
                                     {{ $index + 1 }}
                                 </div>
-                                <img src="{{ $participant->user->profile->avatar_url }}" alt="{{ $participant->user->display_name }}" 
+                                <img src="{{ $participant['user']->profile->avatar_url }}" alt="{{ $participant['user']->display_name }}" 
                                      style="width: 48px; height: 48px; border-radius: 50%; margin-right: 16px;">
                                 <div style="flex: 1;">
-                                    <div style="font-weight: 600; color: #efeff1; margin-bottom: 4px;">{{ $participant->user->display_name }}</div>
+                                    <div style="font-weight: 600; color: #efeff1; margin-bottom: 4px;">{{ $participant['user']->display_name }}</div>
                                     <div style="font-size: 14px; color: #b3b3b5;">
-                                        Progress: {{ $participant->individual_progress }} • 
-                                        Contribution: {{ round($participant->contribution_percentage, 1) }}%
+                                        Progress: {{ $participant['progress'] }} • 
+                                        Contribution: {{ round($participant['contribution'], 1) }}%
                                     </div>
                                 </div>
                                 <div style="text-align: right;">
-                                    <div style="font-size: 20px; font-weight: 700; color: #10b981;">{{ $participant->individual_progress }}</div>
+                                    <div style="font-size: 20px; font-weight: 700; color: #10b981;">{{ $participant['progress'] }}</div>
                                     <div style="font-size: 12px; color: #71717a;">points</div>
                                 </div>
                             </div>
@@ -278,18 +278,25 @@ function joinGoal(goalId) {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         }
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
+        console.log('Join goal response:', data); // Debug logging
+        
         if (data.success) {
             showNotification('Successfully joined the goal!', 'success');
             setTimeout(() => location.reload(), 1000);
         } else {
-            showNotification(data.error || 'Failed to join goal', 'error');
+            showNotification(data.error || data.message || 'Failed to join goal', 'error');
         }
     })
     .catch(error => {
-        console.error('Error joining goal:', error);
-        showNotification('An error occurred while joining the goal', 'error');
+        console.error('Network or parsing error:', error);
+        showNotification('An error occurred while joining the goal: ' + error.message, 'error');
     });
 }
 
@@ -342,18 +349,25 @@ function updateProgress(goalId) {
             progress: parseInt(progressValue)
         })
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
+        console.log('Update progress response:', data); // Debug logging
+        
         if (data.success) {
             showNotification('Progress updated successfully!', 'success');
             setTimeout(() => location.reload(), 1000);
         } else {
-            showNotification(data.error || 'Failed to update progress', 'error');
+            showNotification(data.error || data.message || 'Failed to update progress', 'error');
         }
     })
     .catch(error => {
-        console.error('Error updating progress:', error);
-        showNotification('An error occurred while updating progress', 'error');
+        console.error('Network or parsing error:', error);
+        showNotification('An error occurred while updating progress: ' + error.message, 'error');
     });
 }
 

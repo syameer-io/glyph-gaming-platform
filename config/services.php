@@ -36,8 +36,13 @@ return [
     ],
 
     'steam' => [
-    'api_key' => env('STEAM_API_KEY'),
-    'callback_url' => env('STEAM_CALLBACK_URL'),
+        'api_key' => env('STEAM_API_KEY'),
+        'callback_url' => env('STEAM_CALLBACK_URL'),
+    ],
+
+    'telegram' => [
+        'bot_token' => env('TELEGRAM_BOT_TOKEN'),
+        'webhook_secret' => env('TELEGRAM_WEBHOOK_SECRET'),
     ],
 
 ];

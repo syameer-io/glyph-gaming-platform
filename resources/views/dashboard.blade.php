@@ -110,7 +110,10 @@
                             <div style="display: flex; gap: 8px;">
                                 <a href="{{ route('server.show', $recommendation['server']) }}" class="btn btn-sm" style="background-color: #667eea; color: white; padding: 6px 12px; font-size: 12px;">View Server</a>
                                 @if(!$recommendation['server']->members->contains(auth()->user()))
-                                    <a href="{{ route('server.join') }}?invite={{ $recommendation['server']->invite_code }}" class="btn btn-sm" style="background-color: #10b981; color: white; padding: 6px 12px; font-size: 12px;">Join Server</a>
+                                    <form method="POST" action="{{ route('server.join.direct', $recommendation['server']) }}" style="display: inline;">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm" style="background-color: #10b981; color: white; padding: 6px 12px; font-size: 12px;">Join Server</button>
+                                    </form>
                                 @endif
                             </div>
                         </div>
@@ -372,5 +375,55 @@ function cancelMatchmakingRequest(requestId) {
         });
     }
 }
+
+// Handle direct join with AJAX for better UX
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('form[action*="join-direct"]').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const button = form.querySelector('button[type="submit"]');
+            const originalText = button.textContent;
+            
+            // Show loading state
+            button.disabled = true;
+            button.textContent = 'Joining...';
+            
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success state
+                    button.textContent = '✓ Joined!';
+                    button.style.backgroundColor = '#10b981';
+                    
+                    // Redirect after short delay
+                    setTimeout(() => {
+                        window.location.href = data.redirect_url;
+                    }, 1000);
+                } else {
+                    // Show error and restore button
+                    alert(data.message || 'Failed to join server');
+                    button.disabled = false;
+                    button.textContent = originalText;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while joining the server');
+                button.disabled = false;
+                button.textContent = originalText;
+            });
+        });
+    });
+});
 </script>
 @endsection
