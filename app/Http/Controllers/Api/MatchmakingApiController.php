@@ -25,29 +25,42 @@ class MatchmakingApiController extends Controller
      */
     public function getActiveRequests(): JsonResponse
     {
-        $user = Auth::user();
-        
-        $requests = $user->activeMatchmakingRequests()
-            ->with(['preferredRoles'])
-            ->get()
-            ->map(function ($request) {
-                return [
-                    'id' => $request->id,
-                    'game_appid' => $request->game_appid,
-                    'game_name' => $request->game_name,
-                    'skill_level' => $request->skill_level,
-                    'preferred_roles' => $request->preferredRoles->pluck('role_name')->toArray(),
-                    'region_preference' => $request->region_preference,
-                    'activity_times' => $request->activity_times,
-                    'status' => $request->status,
-                    'created_at' => $request->created_at->toISOString(),
-                ];
-            });
+        try {
+            $user = Auth::user();
 
-        return response()->json([
-            'success' => true,
-            'requests' => $requests
-        ]);
+            $requests = $user->activeMatchmakingRequests()
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($request) {
+                    return [
+                        'id' => $request->id,
+                        'game_appid' => $request->game_appid,
+                        'game_name' => $request->game_name,
+                        'request_type' => $request->request_type,
+                        'preferred_roles' => $request->preferred_roles ?? [],
+                        'skill_level' => $request->skill_level,
+                        'skill_score' => $request->skill_score,
+                        'status' => $request->status,
+                        'created_at' => $request->created_at->toISOString(),
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'requests' => $requests
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error fetching active matchmaking requests: ' . $e->getMessage(), [
+                'user_id' => auth()->id(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Error fetching active requests: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -55,74 +68,105 @@ class MatchmakingApiController extends Controller
      */
     public function findCompatibleTeams(Request $request): JsonResponse
     {
-        $user = Auth::user();
-        
-        $request->validate([
-            'request_id' => 'required|exists:matchmaking_requests,id',
-            'live_update' => 'boolean'
-        ]);
+        try {
+            $user = Auth::user();
 
-        $matchmakingRequest = MatchmakingRequest::where('id', $request->request_id)
-            ->where('user_id', $user->id)
-            ->first();
+            $request->validate([
+                'request_id' => 'required|exists:matchmaking_requests,id',
+                'live_update' => 'boolean'
+            ]);
 
-        if (!$matchmakingRequest) {
+            $requestId = $request->input('request_id');
+            $liveUpdate = $request->input('live_update', false);
+
+            $matchmakingRequest = MatchmakingRequest::where('id', $requestId)
+                ->where('user_id', $user->id)
+                ->first();
+
+            if (!$matchmakingRequest) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Matchmaking request not found or unauthorized'
+                ], 404);
+            }
+
+            // Check cache if not a live update
+            $cacheKey = "compatible_teams_request_{$requestId}";
+
+            if (!$liveUpdate && \Cache::has($cacheKey)) {
+                $cachedTeams = \Cache::get($cacheKey);
+
+                return response()->json([
+                    'success' => true,
+                    'teams' => $cachedTeams,
+                    'cached' => true
+                ]);
+            }
+
+            // Find compatible teams using MatchmakingService
+            $compatibleTeams = $this->matchmakingService->findCompatibleTeams($matchmakingRequest);
+
+            // Calculate detailed compatibility scores
+            $teamsWithDetails = $compatibleTeams->map(function ($team) use ($matchmakingRequest) {
+                $compatibility = $this->matchmakingService->calculateDetailedCompatibility($team, $matchmakingRequest);
+
+                // Get needed roles
+                $neededRoles = $team->getNeededRoles();
+                $roleNeedsList = [];
+                foreach ($neededRoles as $role => $count) {
+                    $roleNeedsList[] = ucfirst(str_replace('_', ' ', $role));
+                }
+
+                return [
+                    'id' => $team->id,
+                    'name' => $team->name,
+                    'game_name' => $team->game_name,
+                    'game_appid' => $team->game_appid,
+                    'skill_level' => $team->skill_level,
+                    'current_size' => $team->current_size,
+                    'max_size' => $team->max_size,
+                    'status' => $team->status,
+                    'compatibility_score' => $compatibility['total_score'],
+                    'match_reasons' => $compatibility['reasons'],
+                    'role_needs' => $roleNeedsList,
+                    'server' => [
+                        'id' => $team->server->id,
+                        'name' => $team->server->name,
+                    ],
+                    'creator' => [
+                        'id' => $team->creator->id,
+                        'display_name' => $team->creator->display_name ?? $team->creator->name,
+                    ],
+                    'members' => $team->activeMembers->take(5)->map(function ($member) {
+                        return [
+                            'avatar_url' => $member->user->avatar_url ?? '/images/default-avatar.png',
+                            'display_name' => $member->user->display_name ?? $member->user->name,
+                        ];
+                    })->toArray(),
+                ];
+            })->toArray();
+
+            // Cache the results for 30 seconds
+            \Cache::put($cacheKey, $teamsWithDetails, now()->addSeconds(30));
+
+            return response()->json([
+                'success' => true,
+                'teams' => $teamsWithDetails,
+                'cached' => false
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error finding compatible teams: ' . $e->getMessage(), [
+                'user_id' => auth()->id(),
+                'request_id' => $request->input('request_id'),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Matchmaking request not found'
-            ], 404);
+                'error' => 'Error finding compatible teams: ' . $e->getMessage()
+            ], 500);
         }
-
-        // Find compatible teams
-        $compatibleTeams = $this->matchmakingService->findCompatibleTeams($matchmakingRequest);
-
-        // Calculate detailed compatibility scores
-        $teamsWithDetails = $compatibleTeams->map(function ($team) use ($matchmakingRequest) {
-            $compatibility = $this->matchmakingService->calculateDetailedCompatibility($team, $matchmakingRequest);
-            
-            return [
-                'id' => $team->id,
-                'name' => $team->name,
-                'description' => $team->description,
-                'game_appid' => $team->game_appid,
-                'game_name' => $team->game_name,
-                'skill_level' => $team->skill_level,
-                'current_size' => $team->current_size,
-                'max_size' => $team->max_size,
-                'status' => $team->status,
-                'compatibility_score' => $compatibility['total_score'],
-                'match_reasons' => $compatibility['reasons'],
-                'role_needs' => $this->getTeamRoleNeeds($team),
-                'members' => $team->activeMembers->take(5)->map(function ($member) {
-                    return [
-                        'user_id' => $member->user_id,
-                        'display_name' => $member->user->display_name,
-                        'avatar_url' => $member->user->profile->avatar_url ?? null,
-                        'role' => $member->role,
-                        'game_role' => $member->game_role,
-                    ];
-                }),
-                'server' => [
-                    'id' => $team->server->id,
-                    'name' => $team->server->name,
-                ],
-                'created_at' => $team->created_at->toISOString(),
-            ];
-        });
-
-        // Sort by compatibility score
-        $teamsWithDetails = $teamsWithDetails->sortByDesc('compatibility_score')->values();
-
-        return response()->json([
-            'success' => true,
-            'teams' => $teamsWithDetails,
-            'total_found' => $teamsWithDetails->count(),
-            'search_criteria' => [
-                'game' => $matchmakingRequest->game_name,
-                'skill_level' => $matchmakingRequest->skill_level,
-                'region' => $matchmakingRequest->region_preference,
-            ]
-        ]);
     }
 
     /**
@@ -177,8 +221,8 @@ class MatchmakingApiController extends Controller
                         'members' => $team->activeMembers->take(5)->map(function ($member) {
                             return [
                                 'user_id' => $member->user_id,
-                                'display_name' => $member->user->display_name,
-                                'avatar_url' => $member->user->profile->avatar_url ?? null,
+                                'display_name' => $member->user->display_name ?? $member->user->name,
+                                'avatar_url' => $member->user->avatar_url ?? ($member->user->profile->avatar_url ?? null),
                                 'role' => $member->role,
                                 'game_role' => $member->game_role,
                             ];

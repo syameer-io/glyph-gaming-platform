@@ -162,12 +162,17 @@ class TeamController extends Controller
             $skillMetrics = $steamData['skill_metrics'] ?? [];
             $skillScore = $skillMetrics[$request->game_appid]['skill_score'] ?? 50;
 
-            $team->addMember($user, [
+            $addResult = $team->addMember($user, [
                 'role' => 'leader',
                 'skill_level' => $request->skill_level,
                 'individual_skill_score' => $skillScore,
                 'joined_at' => now(),
             ]);
+
+            if (!$addResult) {
+                DB::rollback();
+                return response()->json(['error' => 'Failed to add creator as team leader.'], 500);
+            }
 
             DB::commit();
 
@@ -334,23 +339,51 @@ class TeamController extends Controller
      */
     public function addMember(Request $request, Team $team): JsonResponse
     {
+        \Log::info('TeamController::addMember called', [
+            'request_data' => $request->all(),
+            'team_id' => $team->id,
+            'auth_user_id' => Auth::id()
+        ]);
+
         $user = Auth::user();
 
         if (!$this->canManageTeam($user, $team)) {
+            \Log::error('TeamController::addMember - Unauthorized', [
+                'user_id' => $user->id,
+                'team_id' => $team->id
+            ]);
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
+        // Validation accepts either user_id or username
         $validator = Validator::make($request->all(), [
-            'user_id' => 'required|exists:users,id',
+            'user_id' => 'required_without:username|nullable|exists:users,id',
+            'username' => 'required_without:user_id|nullable|exists:users,username',
             'role' => 'nullable|in:member,co_leader',
             'game_role' => 'nullable|string|max:50',
         ]);
 
         if ($validator->fails()) {
+            \Log::error('TeamController::addMember - Validation failed', [
+                'errors' => $validator->errors()->toArray()
+            ]);
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $targetUser = User::find($request->user_id);
+        // Find user by user_id or username
+        if ($request->filled('user_id')) {
+            $targetUser = User::find($request->user_id);
+        } else {
+            $targetUser = User::where('username', $request->username)->first();
+        }
+
+        if (!$targetUser) {
+            \Log::error('TeamController::addMember - User not found', [
+                'user_id' => $request->user_id,
+                'username' => $request->username
+            ]);
+            return response()->json(['error' => 'User not found'], 404);
+        }
 
         // Check if team is full
         if ($team->current_size >= $team->max_size) {
@@ -374,11 +407,33 @@ class TeamController extends Controller
         $skillMetrics = $steamData['skill_metrics'] ?? [];
         $skillScore = $skillMetrics[$team->game_appid]['skill_score'] ?? 50;
 
-        $teamMember = $team->addMember($targetUser, [
+        $memberData = [
             'role' => $request->role ?? 'member',
             'game_role' => $request->game_role,
             'skill_level' => $this->getSkillLevel($skillScore),
             'individual_skill_score' => $skillScore,
+        ];
+
+        \Log::info('TeamController::addMember - Calling team->addMember()', [
+            'target_user_id' => $targetUser->id,
+            'member_data' => $memberData
+        ]);
+
+        $addResult = $team->addMember($targetUser, $memberData);
+
+        if (!$addResult) {
+            \Log::error('TeamController::addMember - Failed to add member', [
+                'team_id' => $team->id,
+                'target_user_id' => $targetUser->id
+            ]);
+            return response()->json(['error' => 'Failed to add member to team.'], 500);
+        }
+
+        // Get the created team member for the event
+        $teamMember = $team->members()->where('user_id', $targetUser->id)->first();
+
+        \Log::info('TeamController::addMember - Member added successfully', [
+            'team_member_id' => $teamMember->id ?? null
         ]);
 
         // Broadcast team member joined event
@@ -393,23 +448,45 @@ class TeamController extends Controller
 
     /**
      * Remove a member from the team
+     *
+     * @param Team $team - Route model binding for {team}
+     * @param User $user - Route model binding for {user} - the member to remove
      */
-    public function removeMember(Team $team, User $targetUser): JsonResponse
+    public function removeMember(Team $team, User $user): JsonResponse
     {
-        $user = Auth::user();
+        \Log::info('TeamController::removeMember called', [
+            'team_id' => $team->id,
+            'target_user_id' => $user->id,
+            'auth_user_id' => Auth::id()
+        ]);
 
-        if (!$this->canManageTeam($user, $team) && $user->id !== $targetUser->id) {
+        $authUser = Auth::user();
+
+        if (!$this->canManageTeam($authUser, $team) && $authUser->id !== $user->id) {
+            \Log::error('TeamController::removeMember - Unauthorized', [
+                'auth_user_id' => $authUser->id,
+                'team_id' => $team->id,
+                'target_user_id' => $user->id
+            ]);
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
         // Cannot remove the team creator/leader
-        if ($targetUser->id === $team->creator_id) {
+        if ($user->id === $team->creator_id) {
+            \Log::error('TeamController::removeMember - Cannot remove creator', [
+                'target_user_id' => $user->id,
+                'creator_id' => $team->creator_id
+            ]);
             return response()->json(['error' => 'Cannot remove team creator'], 409);
         }
 
-        $member = $team->members()->where('user_id', $targetUser->id)->first();
+        $member = $team->members()->where('user_id', $user->id)->first();
 
         if (!$member) {
+            \Log::error('TeamController::removeMember - Member not found', [
+                'team_id' => $team->id,
+                'target_user_id' => $user->id
+            ]);
             return response()->json(['error' => 'User is not a member of this team'], 404);
         }
 
@@ -420,10 +497,25 @@ class TeamController extends Controller
             'skill_score' => $member->individual_skill_score,
         ];
 
-        $team->removeMember($targetUser);
+        \Log::info('TeamController::removeMember - Calling team->removeMember()', [
+            'member_id' => $member->id,
+            'member_data' => $memberData
+        ]);
+
+        $removeResult = $team->removeMember($user);
+
+        if (!$removeResult) {
+            \Log::error('TeamController::removeMember - Failed to remove member', [
+                'team_id' => $team->id,
+                'target_user_id' => $user->id
+            ]);
+            return response()->json(['error' => 'Failed to remove member from team.'], 500);
+        }
+
+        \Log::info('TeamController::removeMember - Member removed successfully');
 
         // Broadcast team member left event
-        event(new TeamMemberLeft($team->fresh(), $targetUser, $memberData));
+        event(new TeamMemberLeft($team->fresh(), $user, $memberData));
 
         return response()->json([
             'success' => true,
@@ -434,12 +526,15 @@ class TeamController extends Controller
 
     /**
      * Update member role
+     *
+     * @param Team $team - Route model binding for {team}
+     * @param User $user - Route model binding for {user} - the member whose role to update
      */
-    public function updateMemberRole(Request $request, Team $team, User $targetUser): JsonResponse
+    public function updateMemberRole(Request $request, Team $team, User $user): JsonResponse
     {
-        $user = Auth::user();
+        $authUser = Auth::user();
 
-        if (!$this->canManageTeam($user, $team)) {
+        if (!$this->canManageTeam($authUser, $team)) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -452,14 +547,14 @@ class TeamController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $member = $team->members()->where('user_id', $targetUser->id)->first();
+        $member = $team->members()->where('user_id', $user->id)->first();
 
         if (!$member) {
             return response()->json(['error' => 'User is not a member of this team'], 404);
         }
 
         // Cannot change creator's role
-        if ($targetUser->id === $team->creator_id) {
+        if ($user->id === $team->creator_id) {
             return response()->json(['error' => 'Cannot change team creator role'], 409);
         }
 

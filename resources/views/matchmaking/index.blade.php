@@ -616,11 +616,160 @@
                             </div>
                         </div>
                         <div id="live-recommendations-content">
-                            <div style="text-align: center; padding: 40px; color: #b3b3b5;">
-                                <div style="font-size: 24px; margin-bottom: 12px;">🎯</div>
-                                <p>Looking for compatible teams...</p>
-                                <p style="font-size: 14px; margin-top: 8px;">Create a matchmaking request to get personalized recommendations</p>
-                            </div>
+                            @php
+                                // Collect all recommendations across all requests
+                                $allRecommendations = [];
+                                foreach($recommendations as $requestId => $requestRecs) {
+                                    foreach($requestRecs as $rec) {
+                                        $rec['request_id'] = $requestId;
+                                        $allRecommendations[] = $rec;
+                                    }
+                                }
+                                // Sort by compatibility score (highest first)
+                                usort($allRecommendations, function($a, $b) {
+                                    return ($b['compatibility_score'] ?? 0) <=> ($a['compatibility_score'] ?? 0);
+                                });
+                                // Take top 3 overall recommendations
+                                $topRecommendations = array_slice($allRecommendations, 0, 3);
+                            @endphp
+
+                            @if(empty($topRecommendations))
+                                <div style="text-align: center; padding: 40px; color: #b3b3b5;">
+                                    <div style="font-size: 24px; margin-bottom: 12px;">🎯</div>
+                                    <p>No active matchmaking requests</p>
+                                    <p style="font-size: 14px; margin-top: 8px;">Create a matchmaking request to get personalized recommendations</p>
+                                    <button onclick="showCreateRequestModal()" class="btn btn-primary" style="margin-top: 16px;">
+                                        Find Teammates
+                                    </button>
+                                </div>
+                            @else
+                                <div style="display: grid; gap: 16px;">
+                                    @foreach($topRecommendations as $recommendation)
+                                        @php
+                                            $team = $recommendation['team'];
+                                            $compatScore = $recommendation['compatibility_score'];
+                                            $matchReasons = $recommendation['match_reasons'] ?? [];
+                                            $roleNeeds = $recommendation['role_needs'] ?? [];
+                                            $breakdown = $recommendation['breakdown'] ?? [];
+
+                                            // Determine compatibility color
+                                            if ($compatScore >= 80) {
+                                                $compatColor = '#10b981'; // green
+                                            } elseif ($compatScore >= 60) {
+                                                $compatColor = '#f59e0b'; // yellow
+                                            } elseif ($compatScore >= 40) {
+                                                $compatColor = '#f97316'; // orange
+                                            } else {
+                                                $compatColor = '#ef4444'; // red
+                                            }
+                                        @endphp
+
+                                        <div class="team-card" style="position: relative; overflow: hidden; background: linear-gradient(135deg, #18181b 0%, #27272a 100%);">
+                                            <!-- Compatibility indicator bar -->
+                                            <div style="position: absolute; top: 0; right: 0; width: 4px; height: 100%; background: {{ $compatColor }};"></div>
+
+                                            <div class="team-header">
+                                                <div style="flex: 1;">
+                                                    <div class="team-name">{{ $team->name }}</div>
+                                                    <div class="team-game">{{ $team->game_name ?? 'Unknown Game' }}</div>
+                                                    <div style="display: flex; gap: 8px; align-items: center; margin-top: 8px;">
+                                                        <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px; font-weight: 600; text-transform: uppercase;">
+                                                            {{ ucfirst($team->skill_level ?? 'casual') }}
+                                                        </span>
+                                                        @if(!empty($roleNeeds))
+                                                            <span style="background-color: #3f3f46; color: #b3b3b5; padding: 2px 6px; border-radius: 3px; font-size: 11px;">
+                                                                Needs: {{ implode(', ', array_slice($roleNeeds, 0, 2)) }}{{ count($roleNeeds) > 2 ? '...' : '' }}
+                                                            </span>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                                <div class="compatibility-score">
+                                                    <div style="font-size: 32px; font-weight: 700; color: {{ $compatColor }}; line-height: 1;">
+                                                        {{ round($compatScore) }}%
+                                                    </div>
+                                                    <div class="score-label">Match</div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Team Members Preview -->
+                                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                                                <div style="display: flex; margin-right: 8px;">
+                                                    @foreach($team->activeMembers->take(3) as $member)
+                                                        <img src="{{ $member->user->profile->avatar_url ?? '/images/default-avatar.png' }}"
+                                                             alt="{{ $member->user->display_name }}"
+                                                             style="width: 28px; height: 28px; border-radius: 50%; margin-left: -4px; border: 2px solid #18181b;"
+                                                             title="{{ $member->user->display_name }}">
+                                                    @endforeach
+                                                </div>
+                                                <span style="color: #b3b3b5; font-size: 13px;">
+                                                    {{ $team->current_size ?? 0 }}/{{ $team->max_size ?? 5 }} members
+                                                </span>
+                                            </div>
+
+                                            <!-- Compatibility Breakdown (Compact) -->
+                                            @if(!empty($breakdown))
+                                                <div style="background-color: #0e0e10; border-radius: 6px; padding: 10px; margin-bottom: 12px;">
+                                                    <div style="font-size: 10px; color: #71717a; margin-bottom: 6px; font-weight: 600;">COMPATIBILITY BREAKDOWN</div>
+                                                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;">
+                                                        @if(isset($breakdown['skill']))
+                                                            <div style="display: flex; justify-content: space-between; font-size: 11px;">
+                                                                <span style="color: #b3b3b5;">Skill</span>
+                                                                <span style="color: {{ $breakdown['skill'] >= 75 ? '#10b981' : ($breakdown['skill'] >= 50 ? '#f59e0b' : '#ef4444') }}; font-weight: 600;">
+                                                                    {{ round($breakdown['skill']) }}%
+                                                                </span>
+                                                            </div>
+                                                        @endif
+                                                        @if(isset($breakdown['role']))
+                                                            <div style="display: flex; justify-content: space-between; font-size: 11px;">
+                                                                <span style="color: #b3b3b5;">Role Fit</span>
+                                                                <span style="color: {{ $breakdown['role'] >= 75 ? '#10b981' : ($breakdown['role'] >= 50 ? '#f59e0b' : '#ef4444') }}; font-weight: 600;">
+                                                                    {{ round($breakdown['role']) }}%
+                                                                </span>
+                                                            </div>
+                                                        @endif
+                                                        @if(isset($breakdown['region']))
+                                                            <div style="display: flex; justify-content: space-between; font-size: 11px;">
+                                                                <span style="color: #b3b3b5;">Region</span>
+                                                                <span style="color: {{ $breakdown['region'] >= 75 ? '#10b981' : ($breakdown['region'] >= 50 ? '#f59e0b' : '#ef4444') }}; font-weight: 600;">
+                                                                    {{ round($breakdown['region']) }}%
+                                                                </span>
+                                                            </div>
+                                                        @endif
+                                                        @if(isset($breakdown['activity']))
+                                                            <div style="display: flex; justify-content: space-between; font-size: 11px;">
+                                                                <span style="color: #b3b3b5;">Activity</span>
+                                                                <span style="color: {{ $breakdown['activity'] >= 75 ? '#10b981' : ($breakdown['activity'] >= 50 ? '#f59e0b' : '#ef4444') }}; font-weight: 600;">
+                                                                    {{ round($breakdown['activity']) }}%
+                                                                </span>
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            @endif
+
+                                            <!-- Match Reasons -->
+                                            @if(!empty($matchReasons))
+                                                <div style="margin-bottom: 12px; padding: 10px; border-left: 3px solid {{ $compatColor }}; background-color: rgba(102, 126, 234, 0.05);">
+                                                    <div style="font-size: 10px; color: #71717a; margin-bottom: 4px; font-weight: 600;">WHY IT'S A GOOD MATCH</div>
+                                                    <div style="font-size: 12px; color: #d4d4d8; line-height: 1.5;">
+                                                        {{ implode(' • ', array_slice($matchReasons, 0, 2)) }}
+                                                    </div>
+                                                </div>
+                                            @endif
+
+                                            <!-- Actions -->
+                                            <div class="team-actions">
+                                                <a href="{{ route('teams.show', $team) }}" class="btn btn-secondary btn-sm" style="flex: 1;">
+                                                    View Team
+                                                </a>
+                                                <button onclick="requestToJoin({{ $team->id }})" class="btn btn-primary btn-sm" style="flex: 1;">
+                                                    Request to Join
+                                                </button>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
                         </div>
                     </div>
 

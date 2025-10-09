@@ -313,26 +313,394 @@ class MatchmakingService
     }
 
     /**
-     * Additional helper methods for matchmaking algorithms
+     * Find compatible teams for a matchmaking request
+     *
+     * @param MatchmakingRequest $request The matchmaking request
+     * @return Collection Collection of Team models matching the criteria
+     */
+    public function findCompatibleTeams(MatchmakingRequest $request): Collection
+    {
+        // Start with base query for recruiting teams in the same game
+        $query = Team::recruiting()
+            ->byGame($request->game_appid)
+            ->with(['server', 'creator', 'activeMembers.user.profile']);
+
+        // Filter by server preferences if provided
+        if (!empty($request->server_preferences) && is_array($request->server_preferences)) {
+            $query->whereIn('server_id', $request->server_preferences);
+        }
+
+        $teams = $query->get();
+
+        // Calculate compatibility for each team and filter
+        $compatibleTeams = collect();
+
+        foreach ($teams as $team) {
+            // Check if user is already a member
+            if ($team->members()->where('user_id', $request->user_id)->exists()) {
+                continue;
+            }
+
+            try {
+                $compatibility = $this->calculateDetailedCompatibility($team, $request);
+
+                // Only include teams with at least 50% compatibility
+                if ($compatibility['total_score'] >= 50) {
+                    // Store compatibility score as a property for sorting
+                    $team->compatibility_score = $compatibility['total_score'];
+                    $compatibleTeams->push($team);
+                }
+            } catch (\Exception $e) {
+                \Log::error('Error calculating team compatibility', [
+                    'team_id' => $team->id,
+                    'request_id' => $request->id,
+                    'error' => $e->getMessage()
+                ]);
+                continue;
+            }
+        }
+
+        // Sort by compatibility score (descending) and take top 10
+        return $compatibleTeams->sortByDesc('compatibility_score')->take(10)->values();
+    }
+
+    /**
+     * Calculate detailed compatibility between a team and matchmaking request
+     *
+     * @param Team $team The team to evaluate
+     * @param MatchmakingRequest $request The matchmaking request
+     * @return array Contains 'total_score', 'reasons', and 'breakdown'
+     */
+    public function calculateDetailedCompatibility(Team $team, MatchmakingRequest $request): array
+    {
+        $scores = [];
+        $reasons = [];
+        $breakdown = [];
+
+        // 1. Skill Compatibility (40% weight)
+        $skillScore = $this->calculateSkillCompatibilityForTeam($team, $request);
+        $scores['skill'] = $skillScore * 0.4;
+        $breakdown['skill'] = round($skillScore, 1);
+
+        if ($skillScore >= 90) {
+            $reasons[] = "Perfect skill level match ({$request->skill_level})";
+        } elseif ($skillScore >= 70) {
+            $reasons[] = "Good skill level compatibility";
+        }
+
+        // 2. Role Match (30% weight)
+        $roleScore = $this->calculateRoleMatchForTeam($team, $request);
+        $scores['role'] = $roleScore * 0.3;
+        $breakdown['role'] = round($roleScore, 1);
+
+        if ($roleScore >= 80) {
+            $neededRoles = $team->getNeededRoles();
+            if (!empty($neededRoles)) {
+                $requestRoles = $request->preferred_roles ?? [];
+                $matchingRoles = array_intersect(array_keys($neededRoles), $requestRoles);
+                if (!empty($matchingRoles)) {
+                    $roleNames = implode(', ', array_map('ucfirst', $matchingRoles));
+                    $reasons[] = "Team needs your preferred role: {$roleNames}";
+                }
+            }
+        }
+
+        // 3. Server/Region Compatibility (15% weight)
+        $regionScore = $this->calculateRegionCompatibilityForTeam($team, $request);
+        $scores['region'] = $regionScore * 0.15;
+        $breakdown['region'] = round($regionScore, 1);
+
+        if ($regionScore >= 80) {
+            $teamRegion = $team->team_data['preferred_region'] ?? null;
+            if ($teamRegion) {
+                $reasons[] = "Same region preference: {$teamRegion}";
+            }
+        }
+
+        // 4. Team Size Preference (10% weight)
+        $sizeScore = $this->calculateTeamSizeScore($team);
+        $scores['size'] = $sizeScore * 0.1;
+        $breakdown['size'] = round($sizeScore, 1);
+
+        if ($team->current_size <= 3) {
+            $reasons[] = "Small team - easier to integrate";
+        } elseif ($team->current_size >= $team->max_size - 1) {
+            $reasons[] = "Team almost full - join quickly!";
+        }
+
+        // 5. Activity Time Match (5% weight)
+        $activityScore = $this->calculateActivityTimeMatch($team, $request);
+        $scores['activity'] = $activityScore * 0.05;
+        $breakdown['activity'] = round($activityScore, 1);
+
+        if ($activityScore >= 80) {
+            $reasons[] = "Active during your preferred hours";
+        }
+
+        // Calculate total score
+        $totalScore = array_sum($scores);
+
+        // Add team balance information
+        $balanceScore = $team->calculateBalanceScore();
+        if ($balanceScore >= 70) {
+            $reasons[] = "Well-balanced team composition";
+        }
+
+        return [
+            'total_score' => round($totalScore, 1),
+            'reasons' => $reasons,
+            'breakdown' => $breakdown
+        ];
+    }
+
+    /**
+     * Calculate skill compatibility between team and request
+     */
+    protected function calculateSkillCompatibilityForTeam(Team $team, MatchmakingRequest $request): float
+    {
+        $teamAverage = $team->average_skill_score ?? 50;
+        $requestScore = $request->skill_score ?? 50;
+
+        $skillDiff = abs($teamAverage - $requestScore);
+
+        // Perfect match at 0 difference, decreasing to 0 at 50 points difference
+        return max(0, 100 - ($skillDiff * 2));
+    }
+
+    /**
+     * Calculate role match between team needs and request preferences
+     */
+    protected function calculateRoleMatchForTeam(Team $team, MatchmakingRequest $request): float
+    {
+        $neededRoles = $team->getNeededRoles();
+        $requestRoles = $request->preferred_roles ?? [];
+
+        if (empty($neededRoles)) {
+            // Team doesn't need specific roles
+            return 70; // Neutral-positive score
+        }
+
+        if (empty($requestRoles)) {
+            // Request has no role preferences
+            return 60; // Slightly lower neutral score
+        }
+
+        // Check if any of the user's preferred roles match team needs
+        $matchingRoles = array_intersect(array_keys($neededRoles), $requestRoles);
+
+        if (!empty($matchingRoles)) {
+            // Strong match - user can fill a needed role
+            return 100;
+        } else {
+            // No direct match, but user is flexible
+            return 40;
+        }
+    }
+
+    /**
+     * Calculate region/server compatibility
+     */
+    protected function calculateRegionCompatibilityForTeam(Team $team, MatchmakingRequest $request): float
+    {
+        $teamRegion = $team->team_data['preferred_region'] ?? null;
+        $requestPrefs = $request->server_preferences ?? [];
+        $requestReqs = $request->additional_requirements ?? [];
+
+        // Check if request specifies server preferences
+        if (!empty($requestPrefs) && is_array($requestPrefs)) {
+            // Check if team's server is in the preferred list
+            if (in_array($team->server_id, $requestPrefs)) {
+                return 100;
+            } else {
+                return 40; // Different server
+            }
+        }
+
+        // Check for region compatibility in additional requirements
+        $requestRegion = $requestReqs['preferred_region'] ?? null;
+
+        if ($teamRegion && $requestRegion) {
+            if (strtolower($teamRegion) === strtolower($requestRegion)) {
+                return 100;
+            } else {
+                return 30; // Different region
+            }
+        }
+
+        // No specific preferences - neutral score
+        return 70;
+    }
+
+    /**
+     * Calculate team size score (prefer teams 30-70% full)
+     */
+    protected function calculateTeamSizeScore(Team $team): float
+    {
+        $fillPercentage = ($team->current_size / $team->max_size) * 100;
+
+        if ($fillPercentage >= 30 && $fillPercentage <= 70) {
+            return 100; // Optimal range
+        } elseif ($fillPercentage < 30) {
+            // Too empty - less established
+            return 50 + ($fillPercentage * 1.67); // Scale from 50-100
+        } else {
+            // Too full - less room for integration
+            return 100 - (($fillPercentage - 70) * 2); // Scale from 100 down
+        }
+    }
+
+    /**
+     * Calculate activity time match between team and request
+     */
+    protected function calculateActivityTimeMatch(Team $team, MatchmakingRequest $request): float
+    {
+        $teamActivityTime = $team->team_data['activity_time'] ?? null;
+        $requestAvailability = $request->availability_hours ?? [];
+
+        if (!$teamActivityTime || empty($requestAvailability)) {
+            return 70; // Neutral score if no data
+        }
+
+        // If activity times match
+        if (is_array($requestAvailability) && in_array($teamActivityTime, $requestAvailability)) {
+            return 100;
+        }
+
+        // Partial match logic based on time ranges
+        $timeRangeMap = [
+            'morning' => ['morning', 'afternoon'],
+            'afternoon' => ['morning', 'afternoon', 'evening'],
+            'evening' => ['afternoon', 'evening', 'night'],
+            'night' => ['evening', 'night'],
+            'flexible' => ['morning', 'afternoon', 'evening', 'night'],
+        ];
+
+        $compatibleTimes = $timeRangeMap[strtolower($teamActivityTime)] ?? [$teamActivityTime];
+
+        foreach ($requestAvailability as $availTime) {
+            if (in_array(strtolower($availTime), $compatibleTimes)) {
+                return 80; // Good match
+            }
+        }
+
+        return 40; // Poor match
+    }
+
+    /**
+     * Calculate schedule compatibility between users based on gaming preferences
      */
     protected function calculateScheduleCompatibility(User $user1, User $user2): float
     {
-        // Implementation for schedule compatibility
-        return 75; // Placeholder
+        // Get recent gaming sessions to determine play patterns
+        $user1Sessions = $user1->gamingSessions()
+            ->where('session_end', '>', now()->subDays(30))
+            ->get();
+
+        $user2Sessions = $user2->gamingSessions()
+            ->where('session_end', '>', now()->subDays(30))
+            ->get();
+
+        if ($user1Sessions->isEmpty() || $user2Sessions->isEmpty()) {
+            return 70; // Neutral score if no session data
+        }
+
+        // Extract hour distributions (0-23)
+        $user1Hours = $user1Sessions->map(function($session) {
+            return $session->session_start->hour;
+        })->countBy()->toArray();
+
+        $user2Hours = $user2Sessions->map(function($session) {
+            return $session->session_start->hour;
+        })->countBy()->toArray();
+
+        // Calculate overlap in active hours
+        $commonHours = array_intersect_key($user1Hours, $user2Hours);
+
+        if (empty($commonHours)) {
+            return 40; // No overlapping hours
+        }
+
+        // Calculate overlap percentage
+        $totalHours = array_unique(array_merge(array_keys($user1Hours), array_keys($user2Hours)));
+        $overlapRatio = count($commonHours) / count($totalHours);
+
+        return min(100, $overlapRatio * 120); // Scale up to 100%
     }
 
+    /**
+     * Calculate server preference compatibility between users
+     */
     protected function calculateServerPreferenceCompatibility(User $user1, User $user2): float
     {
-        // Implementation for server preference compatibility
-        return 80; // Placeholder
+        $user1Servers = $user1->servers()->pluck('servers.id')->toArray();
+        $user2Servers = $user2->servers()->pluck('servers.id')->toArray();
+
+        if (empty($user1Servers) || empty($user2Servers)) {
+            return 60; // Neutral score if no server memberships
+        }
+
+        // Calculate common servers
+        $commonServers = array_intersect($user1Servers, $user2Servers);
+
+        if (!empty($commonServers)) {
+            // Already in same communities - strong compatibility
+            return 100;
+        }
+
+        // No common servers but both are active in communities
+        return 50;
     }
 
+    /**
+     * Calculate gaming style compatibility based on playtime patterns
+     */
     protected function calculateGamingStyleCompatibility(User $user1, User $user2, string $gameAppId): float
     {
-        // Implementation for gaming style compatibility
-        return 70; // Placeholder
+        $user1Pref = $user1->gamingPreferences()
+            ->where('game_appid', $gameAppId)
+            ->first();
+
+        $user2Pref = $user2->gamingPreferences()
+            ->where('game_appid', $gameAppId)
+            ->first();
+
+        if (!$user1Pref || !$user2Pref) {
+            return 60; // Neutral if no preference data
+        }
+
+        // Compare play intensity (hours played)
+        $user1Playtime = $user1Pref->playtime_forever ?? 0;
+        $user2Playtime = $user2Pref->playtime_forever ?? 0;
+
+        // Categorize play styles
+        $getPlayStyle = function($playtime) {
+            if ($playtime > 500) return 'hardcore';
+            if ($playtime > 200) return 'dedicated';
+            if ($playtime > 50) return 'casual';
+            return 'beginner';
+        };
+
+        $style1 = $getPlayStyle($user1Playtime);
+        $style2 = $getPlayStyle($user2Playtime);
+
+        if ($style1 === $style2) {
+            return 100; // Perfect match
+        }
+
+        // Adjacent styles are compatible
+        $compatibilityMatrix = [
+            'beginner' => ['beginner' => 100, 'casual' => 80, 'dedicated' => 50, 'hardcore' => 30],
+            'casual' => ['beginner' => 80, 'casual' => 100, 'dedicated' => 80, 'hardcore' => 50],
+            'dedicated' => ['beginner' => 50, 'casual' => 80, 'dedicated' => 100, 'hardcore' => 80],
+            'hardcore' => ['beginner' => 30, 'casual' => 50, 'dedicated' => 80, 'hardcore' => 100],
+        ];
+
+        return $compatibilityMatrix[$style1][$style2] ?? 50;
     }
 
+    /**
+     * Calculate role compatibility between two users for team formation
+     */
     protected function calculateRoleCompatibility(array $roles1, array $roles2): float
     {
         if (empty($roles1) || empty($roles2)) {
@@ -341,11 +709,100 @@ class MatchmakingService
 
         $overlap = array_intersect($roles1, $roles2);
         $overlapRatio = count($overlap) / max(count($roles1), count($roles2));
-        
-        // Lower overlap is better for team formation
+
+        // Lower overlap is better for team formation (complementary roles)
         return (1 - $overlapRatio) * 100;
     }
 
+    /**
+     * Get user's preferred roles for a specific game
+     */
+    protected function getUserPreferredRoles(User $user, string $gameAppId): array
+    {
+        // Use the User model's existing method
+        return $user->getPreferredRoles($gameAppId);
+    }
+
+    /**
+     * Calculate projected team balance after adding a user
+     */
+    protected function calculateProjectedBalance(Team $team, User $user, string $gameAppId): float
+    {
+        $currentMembers = $team->activeMembers()->get();
+        $userSkillScore = $this->getUserSkillScore($user, $gameAppId);
+
+        // Collect all skill scores including the new user
+        $allSkillScores = $currentMembers
+            ->whereNotNull('individual_skill_score')
+            ->pluck('individual_skill_score')
+            ->push($userSkillScore)
+            ->toArray();
+
+        if (count($allSkillScores) < 2) {
+            return 100; // Perfect balance with 0-1 members
+        }
+
+        // Calculate standard deviation with new member
+        $mean = array_sum($allSkillScores) / count($allSkillScores);
+        $variance = array_sum(array_map(function($score) use ($mean) {
+            return pow($score - $mean, 2);
+        }, $allSkillScores)) / count($allSkillScores);
+
+        $standardDeviation = sqrt($variance);
+
+        // Convert to balance score (lower std dev = better balance)
+        $balanceScore = max(0, 100 - ($standardDeviation / 30 * 100));
+
+        return round($balanceScore, 1);
+    }
+
+    /**
+     * Find compatible users for a matchmaking request
+     */
+    protected function findCompatibleUsersForRequest(MatchmakingRequest $request, array $excludeUserIds): Collection
+    {
+        // Find other active requests for the same game
+        $compatibleRequests = MatchmakingRequest::active()
+            ->byGame($request->game_appid)
+            ->where('user_id', '!=', $request->user_id)
+            ->whereNotIn('user_id', $excludeUserIds)
+            ->where('request_type', 'find_teammates')
+            ->with('user.profile', 'user.gamingPreferences')
+            ->get();
+
+        $matches = collect();
+
+        foreach ($compatibleRequests as $otherRequest) {
+            try {
+                $compatibility = $this->calculateUserCompatibility(
+                    $request->user,
+                    $otherRequest->user,
+                    $request->game_appid
+                );
+
+                if ($compatibility >= 60) { // Minimum 60% compatibility
+                    $matches->push([
+                        'user' => $otherRequest->user,
+                        'request' => $otherRequest,
+                        'compatibility_score' => $compatibility,
+                    ]);
+                }
+            } catch (\Exception $e) {
+                \Log::error('Error calculating user compatibility', [
+                    'user1_id' => $request->user_id,
+                    'user2_id' => $otherRequest->user_id,
+                    'error' => $e->getMessage()
+                ]);
+                continue;
+            }
+        }
+
+        return $matches->sortByDesc('compatibility_score');
+    }
+
+    /**
+     * Additional helper methods for matchmaking algorithms
+     */
     protected function isUserInActiveTeam(User $user, string $gameAppId): bool
     {
         return $user->teams()
@@ -373,7 +830,7 @@ class MatchmakingService
     protected function determineTeamSkillLevel(Collection $users, string $gameAppId): string
     {
         $avgSkill = $users->map(fn($user) => $this->getUserSkillScore($user, $gameAppId))->avg();
-        
+
         return match(true) {
             $avgSkill >= 80 => 'expert',
             $avgSkill >= 60 => 'advanced',
@@ -394,30 +851,29 @@ class MatchmakingService
 
     protected function assignOptimalRoles(Collection $users, string $gameAppId): array
     {
-        // Implementation for optimal role assignment
         $assignments = [];
+        $usedRoles = [];
+
+        // First pass: assign preferred roles where possible
         foreach ($users as $user) {
-            $assignments[$user->id] = $this->getUserPreferredRoles($user, $gameAppId)[0] ?? 'flex';
+            $preferredRoles = $this->getUserPreferredRoles($user, $gameAppId);
+
+            // Find first available preferred role
+            foreach ($preferredRoles as $role) {
+                if (!in_array($role, $usedRoles)) {
+                    $assignments[$user->id] = $role;
+                    $usedRoles[] = $role;
+                    break;
+                }
+            }
+
+            // If no preferred role available, assign 'flex'
+            if (!isset($assignments[$user->id])) {
+                $assignments[$user->id] = 'flex';
+            }
         }
+
         return $assignments;
-    }
-
-    protected function getUserPreferredRoles(User $user, string $gameAppId): array
-    {
-        // Implementation to get user's preferred roles
-        return ['dps', 'support']; // Placeholder
-    }
-
-    protected function calculateProjectedBalance(Team $team, User $user, string $gameAppId): float
-    {
-        // Implementation for projected team balance calculation
-        return $team->calculateBalanceScore() + 5; // Slight improvement assumption
-    }
-
-    protected function findCompatibleUsersForRequest(MatchmakingRequest $request, array $excludeUserIds): Collection
-    {
-        // Implementation for finding compatible users
-        return collect(); // Placeholder
     }
 
     protected function findSuitableServer(User $user, string $gameAppId): ?Server
@@ -429,7 +885,7 @@ class MatchmakingService
     protected function calculateSkillMatch(float $userSkill, ?float $teamAverage): float
     {
         if (!$teamAverage) return 50;
-        
+
         $diff = abs($userSkill - $teamAverage);
         return max(0, 100 - ($diff * 2));
     }

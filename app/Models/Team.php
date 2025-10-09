@@ -51,25 +51,12 @@ class Team extends Model
         return $this->hasMany(TeamMember::class)->where('status', 'active');
     }
 
-    public function users(): BelongsToMany
+    /**
+     * Helper accessor to get User models directly from active members
+     */
+    public function getMembersUsersAttribute()
     {
-        return $this->belongsToMany(User::class, 'team_members')
-            ->withPivot([
-                'role', 'game_role', 'skill_level', 'individual_skill_score',
-                'status', 'member_data', 'joined_at', 'last_active_at'
-            ])
-            ->withTimestamps();
-    }
-
-    public function activeUsers(): BelongsToMany
-    {
-        return $this->belongsToMany(User::class, 'team_members')
-            ->wherePivot('status', 'active')
-            ->withPivot([
-                'role', 'game_role', 'skill_level', 'individual_skill_score',
-                'status', 'member_data', 'joined_at', 'last_active_at'
-            ])
-            ->withTimestamps();
+        return $this->activeMembers()->with('user')->get()->pluck('user');
     }
 
     /**
@@ -151,11 +138,36 @@ class Team extends Model
      */
     public function addMember(User $user, array $memberData = []): bool
     {
+        \Log::info('Team::addMember called', [
+            'team_id' => $this->id,
+            'user_id' => $user->id,
+            'is_full' => $this->isFull(),
+            'is_recruiting' => $this->isRecruiting(),
+            'current_size' => $this->current_size,
+            'max_size' => $this->max_size
+        ]);
+
+        // Check if team can accept members
         if ($this->isFull() || !$this->isRecruiting()) {
+            \Log::error('Team::addMember - Team cannot accept members', [
+                'is_full' => $this->isFull(),
+                'is_recruiting' => $this->isRecruiting()
+            ]);
             return false;
         }
 
+        // Check if user is already a member
+        if ($this->members()->where('user_id', $user->id)->exists()) {
+            \Log::error('Team::addMember - User already a member', [
+                'user_id' => $user->id
+            ]);
+            return false;
+        }
+
+        // Prepare member data with defaults
         $defaultData = [
+            'user_id' => $user->id,
+            'team_id' => $this->id,
             'role' => 'member',
             'game_role' => null,
             'skill_level' => null,
@@ -166,16 +178,43 @@ class Team extends Model
             'last_active_at' => now(),
         ];
 
-        $this->users()->attach($user->id, array_merge($defaultData, $memberData));
-        
-        $this->increment('current_size');
-        $this->updateAverageSkillScore();
-        
-        if ($this->isFull()) {
-            $this->update(['status' => 'full']);
-        }
+        $finalData = array_merge($defaultData, $memberData);
+        \Log::info('Team::addMember - Creating TeamMember', ['data' => $finalData]);
 
-        return true;
+        try {
+            // Create TeamMember record
+            $teamMember = TeamMember::create($finalData);
+
+            if (!$teamMember) {
+                \Log::error('Team::addMember - TeamMember::create returned null');
+                return false;
+            }
+
+            \Log::info('Team::addMember - TeamMember created', [
+                'team_member_id' => $teamMember->id
+            ]);
+
+            // Update team statistics
+            $this->increment('current_size');
+            $this->updateAverageSkillScore();
+
+            // Update status if team is now full
+            if ($this->isFull()) {
+                $this->update(['status' => 'full']);
+            }
+
+            \Log::info('Team::addMember - Success', [
+                'new_current_size' => $this->fresh()->current_size
+            ]);
+
+            return true;
+        } catch (\Exception $e) {
+            \Log::error('Team::addMember - Exception', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return false;
+        }
     }
 
     /**
@@ -183,18 +222,58 @@ class Team extends Model
      */
     public function removeMember(User $user): bool
     {
-        $removed = $this->users()->detach($user->id);
-        
-        if ($removed) {
-            $this->decrement('current_size');
-            $this->updateAverageSkillScore();
-            
-            if ($this->status === 'full' && $this->current_size < $this->max_size) {
-                $this->update(['status' => 'recruiting']);
-            }
+        \Log::info('Team::removeMember called', [
+            'team_id' => $this->id,
+            'user_id' => $user->id,
+            'current_size' => $this->current_size
+        ]);
+
+        // Find the team member record
+        $teamMember = $this->members()->where('user_id', $user->id)->first();
+
+        if (!$teamMember) {
+            \Log::error('Team::removeMember - TeamMember not found', [
+                'team_id' => $this->id,
+                'user_id' => $user->id
+            ]);
+            return false;
         }
 
-        return $removed > 0;
+        \Log::info('Team::removeMember - Deleting TeamMember', [
+            'team_member_id' => $teamMember->id
+        ]);
+
+        try {
+            // Hard delete - completely remove the record
+            $removed = $teamMember->delete();
+
+            if ($removed) {
+                \Log::info('Team::removeMember - TeamMember deleted successfully');
+
+                // Update team statistics
+                $this->decrement('current_size');
+                $this->updateAverageSkillScore();
+
+                // Update team status if was full
+                if ($this->status === 'full' && $this->current_size < $this->max_size) {
+                    $this->update(['status' => 'recruiting']);
+                }
+
+                \Log::info('Team::removeMember - Success', [
+                    'new_current_size' => $this->fresh()->current_size
+                ]);
+            } else {
+                \Log::error('Team::removeMember - Delete returned false');
+            }
+
+            return (bool) $removed;
+        } catch (\Exception $e) {
+            \Log::error('Team::removeMember - Exception', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return false;
+        }
     }
 
     /**

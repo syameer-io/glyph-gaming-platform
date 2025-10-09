@@ -52,7 +52,15 @@ class TeamMember extends Model
      */
     public function isLeader(): bool
     {
-        return in_array($this->role, ['leader', 'co-leader']);
+        return $this->role === 'leader';
+    }
+
+    /**
+     * Check if member is a co-leader
+     */
+    public function isCoLeader(): bool
+    {
+        return $this->role === 'co_leader';
     }
 
     /**
@@ -60,7 +68,7 @@ class TeamMember extends Model
      */
     public function canManageTeam(): bool
     {
-        return $this->role === 'leader';
+        return $this->isLeader();
     }
 
     /**
@@ -143,6 +151,14 @@ class TeamMember extends Model
     public function scopeActive($query)
     {
         return $query->where('status', 'active');
+    }
+
+    /**
+     * Scope for leader and co-leader members
+     */
+    public function scopeLeaders($query)
+    {
+        return $query->whereIn('role', ['leader', 'co_leader']);
     }
 
     /**

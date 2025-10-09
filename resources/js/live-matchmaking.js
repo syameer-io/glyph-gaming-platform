@@ -1,6 +1,12 @@
 /**
  * Live Matchmaking System
  * Handles real-time team recommendations and compatibility updates
+ *
+ * Features:
+ * - Real-time WebSocket updates via Laravel Echo
+ * - Automatic reconnection handling
+ * - Graceful degradation when WebSocket unavailable
+ * - Comprehensive error handling and user feedback
  */
 
 class LiveMatchmakingManager {
@@ -9,49 +15,222 @@ class LiveMatchmakingManager {
         this.activeRequests = new Map();
         this.recommendations = new Map();
         this.updateInterval = null;
+        this.echoConnected = false;
+        this.reconnectAttempts = 0;
+        this.maxReconnectAttempts = 5;
         this.init();
     }
 
     init() {
-        if (!window.Echo || !this.userId) {
-            console.warn('Echo or user ID not available for live matchmaking');
+        console.log('[LiveMatchmaking] Initializing...');
+
+        if (!this.userId) {
+            console.error('[LiveMatchmaking] User ID not available');
+            this.showConnectionStatus('error', 'User authentication required');
             return;
         }
+
+        // Listen for Echo connection events
+        this.setupEchoConnectionListeners();
+
+        // Try to initialize with current Echo state
+        if (window.Echo) {
+            this.onEchoConnected();
+        } else {
+            console.warn('[LiveMatchmaking] Waiting for Echo connection...');
+            this.showConnectionStatus('warning', 'Connecting to real-time server...');
+        }
+    }
+
+    setupEchoConnectionListeners() {
+        // Listen for Echo connection events from bootstrap.js
+        window.addEventListener('echo:connected', () => {
+            console.log('[LiveMatchmaking] Echo connected event received');
+            this.onEchoConnected();
+        });
+
+        window.addEventListener('echo:disconnected', () => {
+            console.warn('[LiveMatchmaking] Echo disconnected event received');
+            this.onEchoDisconnected();
+        });
+
+        window.addEventListener('echo:failed', () => {
+            console.error('[LiveMatchmaking] Echo connection permanently failed');
+            this.onEchoFailed();
+        });
+
+        window.addEventListener('echo:unavailable', () => {
+            console.warn('[LiveMatchmaking] Echo temporarily unavailable');
+            this.showConnectionStatus('warning', 'Real-time connection temporarily unavailable');
+        });
+    }
+
+    onEchoConnected() {
+        if (this.echoConnected) return; // Already connected
+
+        console.log('[LiveMatchmaking] ✅ Echo connection established');
+        this.echoConnected = true;
+        this.reconnectAttempts = 0;
+
+        this.showConnectionStatus('success', 'Connected to live matchmaking');
+
+        // Auto-hide success message after 3 seconds
+        setTimeout(() => this.hideConnectionStatus(), 3000);
 
         this.setupEventListeners();
         this.loadActiveRequests();
         this.startRecommendationUpdates();
     }
 
-    setupEventListeners() {
-        // Listen for team creation/updates
-        window.Echo.private('teams.global')
-            .listen('.team.created', (e) => this.handleTeamCreated(e))
-            .listen('.team.status.changed', (e) => this.handleTeamStatusChanged(e))
-            .listen('.team.member.joined', (e) => this.handleTeamMemberChanged(e))
-            .listen('.team.member.left', (e) => this.handleTeamMemberChanged(e));
+    onEchoDisconnected() {
+        console.warn('[LiveMatchmaking] ⚠️ Echo connection lost');
+        this.echoConnected = false;
 
-        // Listen for user-specific matchmaking events
-        window.Echo.private(`user.${this.userId}`)
-            .listen('.matchmaking.request.created', (e) => this.handleRequestCreated(e))
-            .listen('.matchmaking.request.updated', (e) => this.handleRequestUpdated(e))
-            .listen('.matchmaking.match.found', (e) => this.handleMatchFound(e));
+        if (this.reconnectAttempts < this.maxReconnectAttempts) {
+            this.reconnectAttempts++;
+            this.showConnectionStatus('warning', `Connection lost. Reconnecting (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
+        } else {
+            this.showConnectionStatus('error', 'Connection lost. Please refresh the page.');
+        }
+    }
+
+    onEchoFailed() {
+        console.error('[LiveMatchmaking] ❌ Echo permanently failed');
+        this.echoConnected = false;
+        this.showConnectionStatus('error', 'Real-time updates unavailable. Recommendations will update periodically.');
+
+        // Fall back to polling mode only
+        this.loadActiveRequests();
+        this.startRecommendationUpdates();
+    }
+
+    showConnectionStatus(type, message) {
+        const statusEl = document.getElementById('matchmaking-connection-status');
+        if (!statusEl) {
+            // Create status element if it doesn't exist
+            const status = document.createElement('div');
+            status.id = 'matchmaking-connection-status';
+            status.style.cssText = `
+                position: fixed;
+                top: 80px;
+                right: 20px;
+                padding: 12px 20px;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 500;
+                z-index: 9998;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                animation: slideInRight 0.3s ease;
+            `;
+            document.body.appendChild(status);
+        }
+
+        const el = document.getElementById('matchmaking-connection-status');
+
+        const colors = {
+            success: { bg: '#065f46', text: '#6ee7b7', border: '#047857' },
+            warning: { bg: '#78350f', text: '#fbbf24', border: '#92400e' },
+            error: { bg: '#7f1d1d', text: '#fca5a5', border: '#991b1b' }
+        };
+
+        const icons = {
+            success: '✓',
+            warning: '⚠',
+            error: '✕'
+        };
+
+        const color = colors[type] || colors.warning;
+
+        el.style.backgroundColor = color.bg;
+        el.style.color = color.text;
+        el.style.border = `1px solid ${color.border}`;
+        el.style.display = 'flex';
+
+        el.innerHTML = `
+            <span style="font-weight: 700;">${icons[type]}</span>
+            <span>${message}</span>
+        `;
+    }
+
+    hideConnectionStatus() {
+        const el = document.getElementById('matchmaking-connection-status');
+        if (el) {
+            el.style.opacity = '0';
+            el.style.transform = 'translateX(100%)';
+            el.style.transition = 'all 0.3s ease';
+            setTimeout(() => {
+                el.style.display = 'none';
+            }, 300);
+        }
+    }
+
+    setupEventListeners() {
+        if (!window.Echo) {
+            console.warn('[LiveMatchmaking] Cannot setup event listeners - Echo not available');
+            return;
+        }
+
+        try {
+            // Listen for team creation/updates
+            window.Echo.private('teams.global')
+                .listen('.team.created', (e) => this.handleTeamCreated(e))
+                .listen('.team.status.changed', (e) => this.handleTeamStatusChanged(e))
+                .listen('.team.member.joined', (e) => this.handleTeamMemberChanged(e))
+                .listen('.team.member.left', (e) => this.handleTeamMemberChanged(e));
+
+            // Listen for user-specific matchmaking events
+            window.Echo.private(`user.${this.userId}`)
+                .listen('.matchmaking.request.created', (e) => this.handleRequestCreated(e))
+                .listen('.matchmaking.request.updated', (e) => this.handleRequestUpdated(e))
+                .listen('.matchmaking.match.found', (e) => this.handleMatchFound(e));
+
+            console.log('[LiveMatchmaking] ✅ Event listeners registered');
+        } catch (error) {
+            console.error('[LiveMatchmaking] ❌ Failed to setup event listeners:', error);
+        }
     }
 
     loadActiveRequests() {
+        console.log('[LiveMatchmaking] Loading active requests...');
+
         // Load user's active matchmaking requests
-        fetch('/api/matchmaking/active-requests')
-            .then(response => response.json())
+        fetch('/api/matchmaking/active-requests', {
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': window.Laravel?.csrfToken || document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+            }
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
-                    data.requests.forEach(request => {
-                        this.activeRequests.set(request.id, request);
-                        this.findCompatibleTeams(request);
-                    });
+                    console.log(`[LiveMatchmaking] ✅ Loaded ${data.requests?.length || 0} active requests`);
+
+                    if (data.requests && data.requests.length > 0) {
+                        data.requests.forEach(request => {
+                            this.activeRequests.set(request.id, request);
+                            this.findCompatibleTeams(request);
+                        });
+                    }
+
+                    this.updateRecommendationsDisplay();
+                } else {
+                    console.warn('[LiveMatchmaking] ⚠️ No active requests found');
                     this.updateRecommendationsDisplay();
                 }
             })
-            .catch(error => console.error('Error loading active requests:', error));
+            .catch(error => {
+                console.error('[LiveMatchmaking] ❌ Error loading active requests:', error);
+                // Don't show error to user - gracefully degrade
+                this.updateRecommendationsDisplay();
+            });
     }
 
     startRecommendationUpdates() {
@@ -68,24 +247,42 @@ class LiveMatchmakingManager {
     }
 
     findCompatibleTeams(request) {
+        if (!request || !request.id) {
+            console.error('[LiveMatchmaking] Invalid request object');
+            return;
+        }
+
         fetch('/api/matchmaking/find-compatible-teams', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': window.Laravel.csrfToken
+                'X-CSRF-TOKEN': window.Laravel?.csrfToken || document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
             },
             body: JSON.stringify({
                 request_id: request.id,
                 live_update: true
             })
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
-                this.updateRecommendations(request.id, data.teams);
+                console.log(`[LiveMatchmaking] ✅ Found ${data.teams?.length || 0} compatible teams for request ${request.id}`);
+                this.updateRecommendations(request.id, data.teams || []);
+            } else {
+                console.warn(`[LiveMatchmaking] ⚠️ No compatible teams found for request ${request.id}`);
+                this.updateRecommendations(request.id, []);
             }
         })
-        .catch(error => console.error('Error finding compatible teams:', error));
+        .catch(error => {
+            console.error('[LiveMatchmaking] ❌ Error finding compatible teams:', error);
+            // Gracefully handle by showing empty recommendations for this request
+            this.updateRecommendations(request.id, []);
+        });
     }
 
     updateRecommendations(requestId, teams) {
@@ -378,26 +575,99 @@ class LiveMatchmakingManager {
     }
 
     requestToJoin(teamId) {
+        if (!teamId) {
+            console.error('[LiveMatchmaking] Invalid team ID');
+            this.showUserNotification('error', 'Invalid team selection');
+            return;
+        }
+
+        console.log(`[LiveMatchmaking] Sending join request for team ${teamId}...`);
+
         // Implement join request logic
-        fetch(`/teams/${teamId}/request-join`, {
+        fetch(`/teams/${teamId}/join`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': window.Laravel.csrfToken
+                'X-CSRF-TOKEN': window.Laravel?.csrfToken || document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
             }
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(errorData => {
+                    throw new Error(errorData.message || errorData.error || `HTTP ${response.status}`);
+                });
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
-                alert('Join request sent successfully!');
+                console.log('[LiveMatchmaking] ✅ Join request sent successfully');
+                this.showUserNotification('success', 'Join request sent successfully! The team will be notified.');
+
+                // Reload page after 2 seconds to show updated state
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
             } else {
-                alert(data.message || 'Failed to send join request');
+                throw new Error(data.message || data.error || 'Failed to send join request');
             }
         })
         .catch(error => {
-            console.error('Error sending join request:', error);
-            alert('Error sending join request');
+            console.error('[LiveMatchmaking] ❌ Error sending join request:', error);
+            this.showUserNotification('error', error.message || 'Failed to send join request. Please try again.');
         });
+    }
+
+    showUserNotification(type, message) {
+        // Create toast notification for user actions
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            animation: slideInUp 0.3s ease;
+            max-width: 400px;
+        `;
+
+        const colors = {
+            success: { bg: '#065f46', text: '#6ee7b7', border: '#047857' },
+            error: { bg: '#7f1d1d', text: '#fca5a5', border: '#991b1b' }
+        };
+
+        const icons = {
+            success: '✓',
+            error: '✕'
+        };
+
+        const color = colors[type] || colors.success;
+
+        toast.style.backgroundColor = color.bg;
+        toast.style.color = color.text;
+        toast.style.border = `1px solid ${color.border}`;
+
+        toast.innerHTML = `
+            <span style="font-weight: 700; font-size: 18px;">${icons[type]}</span>
+            <span>${message}</span>
+        `;
+
+        document.body.appendChild(toast);
+
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(20px)';
+            toast.style.transition = 'all 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, 5000);
     }
 
     showAllRecommendations() {

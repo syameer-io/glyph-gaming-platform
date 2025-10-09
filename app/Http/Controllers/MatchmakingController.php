@@ -31,10 +31,11 @@ class MatchmakingController extends Controller
     public function index(Request $request): View
     {
         $user = Auth::user();
-        
-        // Get user's active matchmaking requests
+
+        // Get user's active matchmaking requests with user relationship
         $activeRequests = MatchmakingRequest::where('user_id', $user->id)
             ->active()
+            ->with('user')
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -69,9 +70,74 @@ class MatchmakingController extends Controller
                 'game_appid' => $preference->game_appid,
                 'max_results' => 5
             ]);
-            
+
             if ($teammates->isNotEmpty()) {
                 $suggestions[$preference->game_name] = $teammates;
+            }
+        }
+
+        // Build team recommendations with real compatibility scores for each active request
+        $recommendations = [];
+
+        foreach ($activeRequests as $matchmakingRequest) {
+            try {
+                // Find compatible teams for this request using MatchmakingService
+                $compatibleTeams = $this->matchmakingService->findCompatibleTeams($matchmakingRequest);
+
+                // Limit to top 3 most compatible teams per request
+                $topTeams = $compatibleTeams->take(3);
+
+                $requestRecommendations = [];
+
+                foreach ($topTeams as $team) {
+                    try {
+                        // Calculate detailed compatibility breakdown
+                        $compatibility = $this->matchmakingService->calculateDetailedCompatibility(
+                            $team,
+                            $matchmakingRequest
+                        );
+
+                        // Get team's needed roles
+                        $roleNeeds = $team->getNeededRoles();
+                        $roleNeedsList = [];
+                        foreach ($roleNeeds as $role => $count) {
+                            $roleNeedsList[] = ucfirst(str_replace('_', ' ', $role));
+                        }
+
+                        // Build recommendation data structure
+                        $requestRecommendations[] = [
+                            'team' => $team, // Full team model with eager-loaded relations
+                            'compatibility_score' => $compatibility['total_score'],
+                            'match_reasons' => $compatibility['reasons'],
+                            'role_needs' => $roleNeedsList,
+                            'breakdown' => $compatibility['breakdown']
+                        ];
+
+                    } catch (\Exception $e) {
+                        // Log error for this specific team but continue with others
+                        \Log::error('Error calculating team compatibility in index: ' . $e->getMessage(), [
+                            'team_id' => $team->id,
+                            'request_id' => $matchmakingRequest->id,
+                            'user_id' => $user->id,
+                            'trace' => $e->getTraceAsString()
+                        ]);
+                        continue;
+                    }
+                }
+
+                // Store recommendations keyed by request ID
+                $recommendations[$matchmakingRequest->id] = $requestRecommendations;
+
+            } catch (\Exception $e) {
+                // Log error for this request but continue with other requests
+                \Log::error('Error finding compatible teams in index: ' . $e->getMessage(), [
+                    'request_id' => $matchmakingRequest->id,
+                    'user_id' => $user->id,
+                    'trace' => $e->getTraceAsString()
+                ]);
+
+                // Set empty array for this request to avoid view errors
+                $recommendations[$matchmakingRequest->id] = [];
             }
         }
 
@@ -79,7 +145,8 @@ class MatchmakingController extends Controller
             'matchmakingRequests' => $activeRequests,
             'teams' => $availableTeams,
             'recentMatches' => $recentMatches,
-            'suggestions' => $suggestions
+            'suggestions' => $suggestions,
+            'recommendations' => $recommendations // New: team recommendations with compatibility scores
         ]);
     }
 
@@ -286,7 +353,7 @@ class MatchmakingController extends Controller
             }
 
             // Check if user is already a member
-            if ($team->users()->where('users.id', $user->id)->exists()) {
+            if ($team->members()->where('user_id', $user->id)->exists()) {
                 return response()->json([
                     'error' => 'You are already a member of this team.'
                 ], 409);
@@ -485,6 +552,166 @@ class MatchmakingController extends Controller
             'success' => true,
             'games' => $games
         ]);
+    }
+
+    /**
+     * Get active matchmaking requests for authenticated user
+     */
+    public function getActiveRequests(): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+
+            $activeRequests = MatchmakingRequest::where('user_id', $user->id)
+                ->active()
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($request) {
+                    return [
+                        'id' => $request->id,
+                        'game_appid' => $request->game_appid,
+                        'game_name' => $request->game_name,
+                        'request_type' => $request->request_type,
+                        'preferred_roles' => $request->preferred_roles ?? [],
+                        'skill_level' => $request->skill_level,
+                        'skill_score' => $request->skill_score,
+                        'status' => $request->status,
+                        'created_at' => $request->created_at->toISOString(),
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'requests' => $activeRequests
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error fetching active matchmaking requests: ' . $e->getMessage(), [
+                'user_id' => auth()->id(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Error fetching active requests: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Find compatible teams for a matchmaking request
+     */
+    public function findCompatibleTeamsForRequest(Request $request): JsonResponse
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'request_id' => 'required|integer|exists:matchmaking_requests,id',
+                'live_update' => 'boolean',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $user = Auth::user();
+            $requestId = $request->input('request_id');
+            $liveUpdate = $request->input('live_update', false);
+
+            // Fetch the matchmaking request
+            $matchmakingRequest = MatchmakingRequest::find($requestId);
+
+            // Verify user owns the request
+            if ($matchmakingRequest->user_id !== $user->id) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Unauthorized - You do not own this request.'
+                ], 403);
+            }
+
+            // Check cache if not a live update
+            $cacheKey = "compatible_teams_request_{$requestId}";
+
+            if (!$liveUpdate && \Cache::has($cacheKey)) {
+                $cachedTeams = \Cache::get($cacheKey);
+
+                return response()->json([
+                    'success' => true,
+                    'teams' => $cachedTeams,
+                    'cached' => true
+                ]);
+            }
+
+            // Use MatchmakingService to find compatible teams
+            $compatibleTeams = $this->matchmakingService->findCompatibleTeams($matchmakingRequest);
+
+            // Build response with detailed compatibility data
+            $formattedTeams = $compatibleTeams->map(function ($team) use ($matchmakingRequest) {
+                // Get detailed compatibility breakdown
+                $compatibility = $this->matchmakingService->calculateDetailedCompatibility($team, $matchmakingRequest);
+
+                // Get needed roles
+                $neededRoles = $team->getNeededRoles();
+                $roleNeedsList = [];
+                foreach ($neededRoles as $role => $count) {
+                    $roleNeedsList[] = ucfirst(str_replace('_', ' ', $role));
+                }
+
+                // Get team members with avatars
+                $members = $team->activeMembers->map(function ($member) {
+                    return [
+                        'avatar_url' => $member->user->avatar_url ?? '/images/default-avatar.png',
+                        'display_name' => $member->user->name ?? $member->user->email,
+                    ];
+                })->take(5)->toArray();
+
+                return [
+                    'id' => $team->id,
+                    'name' => $team->name,
+                    'game_name' => $team->game_name,
+                    'game_appid' => $team->game_appid,
+                    'skill_level' => $team->skill_level,
+                    'current_size' => $team->current_size,
+                    'max_size' => $team->max_size,
+                    'status' => $team->status,
+                    'compatibility_score' => $compatibility['total_score'],
+                    'match_reasons' => $compatibility['reasons'],
+                    'role_needs' => $roleNeedsList,
+                    'server' => [
+                        'id' => $team->server->id,
+                        'name' => $team->server->name,
+                    ],
+                    'creator' => [
+                        'id' => $team->creator->id,
+                        'display_name' => $team->creator->name ?? $team->creator->email,
+                    ],
+                    'members' => $members,
+                ];
+            })->toArray();
+
+            // Cache the results for 30 seconds
+            \Cache::put($cacheKey, $formattedTeams, now()->addSeconds(30));
+
+            return response()->json([
+                'success' => true,
+                'teams' => $formattedTeams,
+                'cached' => false
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error finding compatible teams: ' . $e->getMessage(), [
+                'user_id' => auth()->id(),
+                'request_id' => $request->input('request_id'),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Error finding compatible teams: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
