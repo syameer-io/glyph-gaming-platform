@@ -82,7 +82,7 @@ class MatchmakingService
 
         foreach ($teams as $team) {
             // Check if user is already a member
-            if ($team->users()->where('user_id', $user->id)->exists()) {
+            if ($team->members()->where('user_id', $user->id)->exists()) {
                 continue;
             }
 
@@ -320,48 +320,120 @@ class MatchmakingService
      */
     public function findCompatibleTeams(MatchmakingRequest $request): Collection
     {
+        \Log::info('MatchmakingService::findCompatibleTeams START', [
+            'request_id' => $request->id,
+            'user_id' => $request->user_id,
+            'game_appid' => $request->game_appid,
+            'request_type' => $request->request_type,
+            'skill_level' => $request->skill_level,
+            'skill_score' => $request->skill_score,
+            'server_preferences' => $request->server_preferences,
+        ]);
+
         // Start with base query for recruiting teams in the same game
         $query = Team::recruiting()
             ->byGame($request->game_appid)
             ->with(['server', 'creator', 'activeMembers.user.profile']);
 
+        \Log::info('Built base query for recruiting teams', [
+            'game_appid' => $request->game_appid,
+        ]);
+
         // Filter by server preferences if provided
         if (!empty($request->server_preferences) && is_array($request->server_preferences)) {
             $query->whereIn('server_id', $request->server_preferences);
+            \Log::info('Filtered by server preferences', [
+                'server_ids' => $request->server_preferences,
+            ]);
         }
 
         $teams = $query->get();
 
+        \Log::info('Teams retrieved from database', [
+            'total_teams' => $teams->count(),
+            'team_ids' => $teams->pluck('id')->toArray(),
+        ]);
+
         // Calculate compatibility for each team and filter
         $compatibleTeams = collect();
+        $filteredReasons = [];
 
         foreach ($teams as $team) {
+            \Log::info('Evaluating team', [
+                'team_id' => $team->id,
+                'team_name' => $team->name,
+                'status' => $team->status,
+                'current_size' => $team->current_size,
+                'max_size' => $team->max_size,
+                'server_id' => $team->server_id,
+            ]);
+
             // Check if user is already a member
-            if ($team->members()->where('user_id', $request->user_id)->exists()) {
+            $isMember = $team->members()->where('user_id', $request->user_id)->exists();
+
+            if ($isMember) {
+                \Log::info('Team filtered: User already a member', [
+                    'team_id' => $team->id,
+                    'team_name' => $team->name,
+                ]);
+                $filteredReasons[$team->id] = 'User already a member';
                 continue;
             }
 
             try {
                 $compatibility = $this->calculateDetailedCompatibility($team, $request);
 
+                \Log::info('Compatibility calculated', [
+                    'team_id' => $team->id,
+                    'team_name' => $team->name,
+                    'compatibility_score' => $compatibility['total_score'],
+                    'breakdown' => $compatibility['breakdown'],
+                    'reasons' => $compatibility['reasons'],
+                ]);
+
                 // Only include teams with at least 50% compatibility
                 if ($compatibility['total_score'] >= 50) {
                     // Store compatibility score as a property for sorting
                     $team->compatibility_score = $compatibility['total_score'];
                     $compatibleTeams->push($team);
+                    \Log::info('Team added to compatible list', [
+                        'team_id' => $team->id,
+                        'compatibility_score' => $compatibility['total_score'],
+                    ]);
+                } else {
+                    \Log::info('Team filtered: Compatibility too low', [
+                        'team_id' => $team->id,
+                        'team_name' => $team->name,
+                        'compatibility_score' => $compatibility['total_score'],
+                        'minimum_required' => 50,
+                    ]);
+                    $filteredReasons[$team->id] = "Low compatibility: {$compatibility['total_score']}%";
                 }
             } catch (\Exception $e) {
                 \Log::error('Error calculating team compatibility', [
                     'team_id' => $team->id,
                     'request_id' => $request->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
                 ]);
+                $filteredReasons[$team->id] = 'Error: ' . $e->getMessage();
                 continue;
             }
         }
 
         // Sort by compatibility score (descending) and take top 10
-        return $compatibleTeams->sortByDesc('compatibility_score')->take(10)->values();
+        $sortedTeams = $compatibleTeams->sortByDesc('compatibility_score')->take(10)->values();
+
+        \Log::info('MatchmakingService::findCompatibleTeams COMPLETE', [
+            'request_id' => $request->id,
+            'total_teams_evaluated' => $teams->count(),
+            'compatible_teams_found' => $compatibleTeams->count(),
+            'teams_after_limit' => $sortedTeams->count(),
+            'filtered_reasons' => $filteredReasons,
+            'final_team_ids' => $sortedTeams->pluck('id')->toArray(),
+        ]);
+
+        return $sortedTeams;
     }
 
     /**

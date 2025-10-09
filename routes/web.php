@@ -119,7 +119,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [MatchmakingController::class, 'index'])->name('index');
         Route::post('/', [MatchmakingController::class, 'store'])->name('store');
         Route::post('/find-teammates', [MatchmakingController::class, 'findTeammates'])->name('find.teammates');
-        Route::post('/find-teams', [MatchmakingController::class, 'findTeams'])->name('find.teams');
+        Route::post('/find-teams', [MatchmakingController::class, 'findCompatibleTeamsForRequest'])->name('find.teams');
         Route::post('/auto-match', [MatchmakingController::class, 'autoMatch'])->name('auto.match');
         Route::delete('/requests/{request}', [MatchmakingController::class, 'cancelRequest'])->name('cancel');
         Route::get('/stats', [MatchmakingController::class, 'stats'])->name('stats');

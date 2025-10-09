@@ -155,12 +155,38 @@ class User extends Authenticatable
 
     public function getPreferredRoles($gameAppId)
     {
-        return $this->playerGameRoles()
+        // Get the player game role record for this game
+        $playerGameRole = $this->playerGameRoles()
             ->where('game_appid', $gameAppId)
-            ->where('is_active', true)
-            ->orderBy('preference_level', 'desc')
-            ->pluck('role_name')
-            ->toArray();
+            ->first();
+
+        if (!$playerGameRole) {
+            return [];
+        }
+
+        // Build preferred roles array from the schema fields
+        $preferredRoles = [];
+
+        // Add primary role if exists
+        if ($playerGameRole->primary_role) {
+            $preferredRoles[] = $playerGameRole->primary_role;
+        }
+
+        // Add secondary role if exists and different from primary
+        if ($playerGameRole->secondary_role && $playerGameRole->secondary_role !== $playerGameRole->primary_role) {
+            $preferredRoles[] = $playerGameRole->secondary_role;
+        }
+
+        // Add any additional roles from the JSON preferred_roles field
+        if ($playerGameRole->preferred_roles && is_array($playerGameRole->preferred_roles)) {
+            foreach ($playerGameRole->preferred_roles as $role) {
+                if (!in_array($role, $preferredRoles)) {
+                    $preferredRoles[] = $role;
+                }
+            }
+        }
+
+        return $preferredRoles;
     }
 
     // Phase 3: Goal Participation

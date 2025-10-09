@@ -918,6 +918,20 @@
     </div>
 </div>
 
+<!-- Find Teams Results Modal -->
+<div id="findTeamsModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.8); z-index: 2000; align-items: center; justify-content: center;">
+    <div style="background-color: #18181b; border-radius: 12px; padding: 32px; max-width: 900px; width: 90%; max-height: 90vh; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h3 style="margin: 0; color: #efeff1;">🎯 Compatible Teams Found</h3>
+            <button onclick="hideFindTeamsModal()" style="background: none; border: none; color: #71717a; font-size: 24px; cursor: pointer; padding: 0; line-height: 1; transition: color 0.2s;" onmouseover="this.style.color='#efeff1'" onmouseout="this.style.color='#71717a'">×</button>
+        </div>
+
+        <div id="findTeamsResults" style="display: grid; gap: 16px;">
+            <!-- Results will be populated here -->
+        </div>
+    </div>
+</div>
+
 <script>
 // Modal functions
 function showCreateRequestModal() {
@@ -1023,6 +1037,9 @@ function cancelRequest(requestId) {
 }
 
 function findTeams(requestId) {
+    // Show loading state in modal
+    showFindTeamsLoading();
+
     fetch(`{{ url('/matchmaking/find-teams') }}`, {
         method: 'POST',
         headers: {
@@ -1031,20 +1048,171 @@ function findTeams(requestId) {
         },
         body: JSON.stringify({ request_id: requestId })
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(errorData => {
+                throw new Error(errorData.error || errorData.message || 'Failed to find teams');
+            });
+        }
+        return response.json();
+    })
     .then(data => {
-        if (data.success) {
-            alert(`Found ${data.teams.length} compatible teams!`);
-            // You could show a modal with the teams here
+        if (data.success && data.teams && data.teams.length > 0) {
+            displayFindTeamsResults(data.teams);
         } else {
-            alert(data.message || 'No compatible teams found');
+            showNoTeamsFound();
         }
     })
     .catch(error => {
-        console.error('Error:', error);
-        alert('Error finding teams');
+        console.error('Error finding teams:', error);
+        showFindTeamsError(error.message);
     });
 }
+
+// Find Teams Modal Helper Functions
+function showFindTeamsLoading() {
+    const modal = document.getElementById('findTeamsModal');
+    const results = document.getElementById('findTeamsResults');
+
+    results.innerHTML = `
+        <div style="text-align: center; padding: 60px 40px; color: #b3b3b5;">
+            <div style="width: 48px; height: 48px; border: 4px solid #3f3f46; border-top-color: #667eea; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+            <p style="font-size: 16px; margin: 0;">Searching for compatible teams...</p>
+            <p style="font-size: 14px; color: #71717a; margin-top: 8px;">This may take a moment</p>
+        </div>
+    `;
+
+    modal.style.display = 'flex';
+}
+
+function displayFindTeamsResults(teams) {
+    const results = document.getElementById('findTeamsResults');
+
+    let html = `<div style="margin-bottom: 16px; color: #10b981; font-size: 14px; font-weight: 600;">✓ Found ${teams.length} compatible team${teams.length !== 1 ? 's' : ''}</div>`;
+
+    teams.forEach(team => {
+        // Backend returns flat structure: { id, name, game_name, compatibility_score, match_reasons, role_needs, ... }
+        const compatibility = team.compatibility_score || 0;
+        const matchReasons = team.match_reasons || [];
+        const roleNeeds = team.role_needs || [];
+
+        // Determine compatibility color
+        let compatColor = '#ef4444'; // red
+        if (compatibility >= 80) compatColor = '#10b981'; // green
+        else if (compatibility >= 60) compatColor = '#f59e0b'; // yellow
+        else if (compatibility >= 40) compatColor = '#f97316'; // orange
+
+        html += `
+            <div class="team-card" style="padding: 20px; background-color: #0e0e10; border-radius: 8px; border: 1px solid #3f3f46; position: relative; overflow: hidden;">
+                <!-- Compatibility indicator bar -->
+                <div style="position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: ${compatColor};"></div>
+
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; padding-left: 12px;">
+                    <div style="flex: 1;">
+                        <div style="font-size: 18px; font-weight: 600; color: #efeff1; margin-bottom: 4px;">
+                            ${team.name}
+                        </div>
+                        <div style="font-size: 14px; color: #b3b3b5;">
+                            ${team.game_name || 'Unknown Game'}
+                        </div>
+                        <div style="display: flex; gap: 6px; margin-top: 8px;">
+                            <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase;">
+                                ${team.skill_level ? team.skill_level.charAt(0).toUpperCase() + team.skill_level.slice(1) : 'Casual'}
+                            </span>
+                            <span style="background-color: #3f3f46; color: #b3b3b5; padding: 3px 8px; border-radius: 4px; font-size: 11px;">
+                                ${team.current_size || 0}/${team.max_size || 5} Members
+                            </span>
+                            ${roleNeeds.length > 0 ? `
+                                <span style="background-color: rgba(102, 126, 234, 0.2); color: #667eea; padding: 3px 8px; border-radius: 4px; font-size: 11px;">
+                                    Needs: ${roleNeeds.slice(0, 2).join(', ')}${roleNeeds.length > 2 ? '...' : ''}
+                                </span>
+                            ` : ''}
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 32px; font-weight: 700; color: ${compatColor}; line-height: 1;">
+                            ${Math.round(compatibility)}%
+                        </div>
+                        <div style="font-size: 12px; color: #b3b3b5; text-transform: uppercase; margin-top: 4px;">Match</div>
+                    </div>
+                </div>
+
+                ${matchReasons.length > 0 ? `
+                    <div style="margin-bottom: 12px; padding: 10px; border-left: 3px solid ${compatColor}; background-color: rgba(102, 126, 234, 0.05);">
+                        <div style="font-size: 10px; color: #71717a; margin-bottom: 4px; font-weight: 600;">WHY IT'S A GOOD MATCH</div>
+                        <div style="font-size: 12px; color: #d4d4d8; line-height: 1.5;">
+                            ${matchReasons.slice(0, 3).join(' • ')}
+                        </div>
+                    </div>
+                ` : ''}
+
+                <div style="display: flex; gap: 8px; margin-top: 16px;">
+                    <a href="/teams/${team.id}" class="btn btn-secondary btn-sm" style="flex: 1;">View Team</a>
+                    <button onclick="requestToJoinFromModal(${team.id})" class="btn btn-primary btn-sm" style="flex: 1;">Request to Join</button>
+                </div>
+            </div>
+        `;
+    });
+
+    document.getElementById('findTeamsResults').innerHTML = html;
+}
+
+function showNoTeamsFound() {
+    const results = document.getElementById('findTeamsResults');
+    results.innerHTML = `
+        <div style="text-align: center; padding: 60px 40px; color: #b3b3b5;">
+            <div style="font-size: 64px; margin-bottom: 20px; opacity: 0.5;">🔍</div>
+            <p style="font-size: 18px; color: #efeff1; margin-bottom: 8px; font-weight: 600;">No compatible teams found</p>
+            <p style="font-size: 14px; margin-bottom: 24px;">Try adjusting your matchmaking preferences or create your own team.</p>
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <button onclick="hideFindTeamsModal()" class="btn btn-secondary">Close</button>
+                <a href="{{ route('teams.create') }}" class="btn btn-primary">Create Team</a>
+            </div>
+        </div>
+    `;
+}
+
+function showFindTeamsError(errorMessage) {
+    const results = document.getElementById('findTeamsResults');
+    results.innerHTML = `
+        <div style="text-align: center; padding: 60px 40px;">
+            <div style="font-size: 64px; margin-bottom: 20px;">⚠️</div>
+            <p style="font-size: 18px; color: #ef4444; margin-bottom: 8px; font-weight: 600;">Error Finding Teams</p>
+            <p style="font-size: 14px; color: #b3b3b5; margin-bottom: 24px;">${errorMessage || 'An unexpected error occurred. Please try again.'}</p>
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <button onclick="hideFindTeamsModal()" class="btn btn-secondary">Close</button>
+                <button onclick="location.reload()" class="btn btn-primary">Retry</button>
+            </div>
+        </div>
+    `;
+}
+
+function hideFindTeamsModal() {
+    document.getElementById('findTeamsModal').style.display = 'none';
+}
+
+function requestToJoinFromModal(teamId) {
+    // Close the modal first
+    hideFindTeamsModal();
+    // Call the existing requestToJoin function
+    requestToJoin(teamId);
+}
+
+// Close modal when clicking background
+document.getElementById('findTeamsModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        hideFindTeamsModal();
+    }
+});
+
+// Add spin animation for loading spinner
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+`;
+document.head.appendChild(style);
 
 // Close modal when clicking outside
 document.getElementById('createRequestModal').addEventListener('click', function(e) {

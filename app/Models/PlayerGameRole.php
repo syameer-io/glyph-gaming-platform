@@ -11,26 +11,31 @@ class PlayerGameRole extends Model
         'user_id',
         'game_appid',
         'game_name',
-        'role_name',
-        'role_type',
-        'skill_level',
-        'preference_level',
-        'experience_hours',
-        'performance_stats',
-        'role_settings',
-        'is_primary',
-        'is_active',
-        'last_played',
+        'preferred_roles',
+        'role_ratings',
+        'primary_role',
+        'secondary_role',
+        'experience_level',
+        'overall_skill_rating',
+        'availability_pattern',
+        'playstyle_preferences',
+        'communication_preferences',
+        'open_to_coaching',
+        'open_to_leading',
+        'additional_notes',
+        'last_updated_from_steam',
     ];
 
     protected $casts = [
-        'preference_level' => 'decimal:2',
-        'experience_hours' => 'decimal:2',
-        'performance_stats' => 'array',
-        'role_settings' => 'array',
-        'is_primary' => 'boolean',
-        'is_active' => 'boolean',
-        'last_played' => 'datetime',
+        'preferred_roles' => 'array',
+        'role_ratings' => 'array',
+        'overall_skill_rating' => 'decimal:2',
+        'availability_pattern' => 'array',
+        'playstyle_preferences' => 'array',
+        'communication_preferences' => 'array',
+        'open_to_coaching' => 'boolean',
+        'open_to_leading' => 'boolean',
+        'last_updated_from_steam' => 'datetime',
     ];
 
     public function user(): BelongsTo
@@ -43,7 +48,7 @@ class PlayerGameRole extends Model
      */
     public function getSkillLevelColor(): string
     {
-        return match($this->skill_level) {
+        return match($this->experience_level) {
             'beginner' => 'text-green-500',
             'intermediate' => 'text-yellow-500',
             'advanced' => 'text-orange-500',
@@ -53,14 +58,16 @@ class PlayerGameRole extends Model
     }
 
     /**
-     * Get preference level badge class
+     * Get skill rating badge class
      */
-    public function getPreferenceBadgeClass(): string
+    public function getSkillRatingBadgeClass(): string
     {
+        $rating = $this->overall_skill_rating ?? 0;
+
         return match(true) {
-            $this->preference_level >= 90 => 'bg-red-100 text-red-800',
-            $this->preference_level >= 70 => 'bg-yellow-100 text-yellow-800',
-            $this->preference_level >= 50 => 'bg-blue-100 text-blue-800',
+            $rating >= 80 => 'bg-red-100 text-red-800',
+            $rating >= 60 => 'bg-yellow-100 text-yellow-800',
+            $rating >= 40 => 'bg-blue-100 text-blue-800',
             default => 'bg-gray-100 text-gray-800'
         };
     }
@@ -70,14 +77,14 @@ class PlayerGameRole extends Model
      */
     public function getCompatibilityWith(self $otherRole): float
     {
-        if ($this->role_name === $otherRole->role_name) {
+        if ($this->primary_role === $otherRole->primary_role) {
             return 20; // Same role = low compatibility (need diversity)
         }
 
         // Check for complementary roles
         $complementaryRoles = $this->getComplementaryRoles();
-        
-        if (in_array($otherRole->role_name, $complementaryRoles)) {
+
+        if (in_array($otherRole->primary_role, $complementaryRoles)) {
             return 90; // High compatibility for complementary roles
         }
 
@@ -93,20 +100,22 @@ class PlayerGameRole extends Model
      */
     public function getComplementaryRoles(): array
     {
-        return match($this->role_name) {
+        $role = $this->primary_role ?? '';
+
+        return match($role) {
             // FPS games (CS2, Valorant, R6S)
-            'entry_fragger' => ['support', 'igl', 'anchor'],
-            'support' => ['entry_fragger', 'awper', 'lurker'],
-            'awper' => ['support', 'entry_fragger', 'igl'],
-            'igl' => ['entry_fragger', 'support', 'anchor'],
+            'entry_fragger', 'entry' => ['support', 'igl', 'anchor'],
+            'support' => ['entry_fragger', 'awper', 'lurker', 'entry', 'rifler'],
+            'awper' => ['support', 'entry_fragger', 'igl', 'entry'],
+            'igl' => ['entry_fragger', 'support', 'anchor', 'entry'],
             'lurker' => ['support', 'anchor', 'igl'],
-            'anchor' => ['entry_fragger', 'igl', 'lurker'],
+            'anchor' => ['entry_fragger', 'igl', 'lurker', 'entry'],
+            'rifler' => ['support', 'awper', 'igl'],
 
             // MOBA games (Dota 2, LoL)
             'carry' => ['support', 'initiator', 'jungler'],
             'mid' => ['support', 'carry', 'offlaner'],
             'offlaner' => ['support', 'carry', 'mid'],
-            'support' => ['carry', 'mid', 'offlaner'],
             'jungler' => ['carry', 'support', 'mid'],
             'initiator' => ['carry', 'support', 'mid'],
 
@@ -122,6 +131,9 @@ class PlayerGameRole extends Model
             'scout' => ['fragger', 'support', 'igl'],
             'sniper' => ['support', 'scout', 'fragger'],
 
+            // Flex role
+            'flex' => ['dps', 'support', 'tank', 'carry', 'entry', 'anchor'],
+
             default => []
         };
     }
@@ -131,7 +143,12 @@ class PlayerGameRole extends Model
      */
     public function getSkillScore(): float
     {
-        return match($this->skill_level) {
+        // Use overall_skill_rating if available, otherwise derive from experience_level
+        if ($this->overall_skill_rating !== null) {
+            return (float) $this->overall_skill_rating;
+        }
+
+        return match($this->experience_level) {
             'expert' => 85,
             'advanced' => 65,
             'intermediate' => 45,
@@ -141,23 +158,23 @@ class PlayerGameRole extends Model
     }
 
     /**
-     * Update role statistics from gameplay data
+     * Update role ratings from gameplay data
      */
-    public function updateStats(array $newStats): void
+    public function updateRoleRatings(array $newRatings): void
     {
-        $currentStats = $this->performance_stats ?? [];
-        
-        // Merge new stats with existing
-        $updatedStats = array_merge($currentStats, $newStats);
-        
+        $currentRatings = $this->role_ratings ?? [];
+
+        // Merge new ratings with existing
+        $updatedRatings = array_merge($currentRatings, $newRatings);
+
         // Calculate running averages if applicable
-        if (isset($newStats['kd_ratio']) && isset($currentStats['kd_ratio'])) {
-            $updatedStats['avg_kd_ratio'] = ($currentStats['kd_ratio'] + $newStats['kd_ratio']) / 2;
+        if (isset($newRatings['performance_score']) && isset($currentRatings['performance_score'])) {
+            $updatedRatings['avg_performance'] = ($currentRatings['performance_score'] + $newRatings['performance_score']) / 2;
         }
 
         $this->update([
-            'performance_stats' => $updatedStats,
-            'last_played' => now(),
+            'role_ratings' => $updatedRatings,
+            'last_updated_from_steam' => now(),
         ]);
     }
 
@@ -166,9 +183,10 @@ class PlayerGameRole extends Model
      */
     public function isSuitableForTeam(): bool
     {
-        return $this->is_active && 
-               $this->preference_level >= 30 && // At least 30% preference
-               ($this->last_played === null || $this->last_played >= now()->subDays(30)); // Played within 30 days
+        // Check if has primary role and reasonable skill rating
+        return $this->primary_role !== null &&
+               ($this->overall_skill_rating === null || $this->overall_skill_rating >= 20) && // At least 20% skill rating
+               ($this->last_updated_from_steam === null || $this->last_updated_from_steam >= now()->subDays(60)); // Updated within 60 days
     }
 
     /**
@@ -181,31 +199,31 @@ class PlayerGameRole extends Model
 
     public function scopeByRole($query, string $roleName)
     {
-        return $query->where('role_name', $roleName);
+        return $query->where('primary_role', $roleName);
     }
 
-    public function scopeActive($query)
+    public function scopeByExperienceLevel($query, string $experienceLevel)
     {
-        return $query->where('is_active', true);
+        return $query->where('experience_level', $experienceLevel);
     }
 
-    public function scopePrimary($query)
+    public function scopeHighSkillRating($query, float $minRating = 60)
     {
-        return $query->where('is_primary', true);
+        return $query->where('overall_skill_rating', '>=', $minRating);
     }
 
-    public function scopeBySkillLevel($query, string $skillLevel)
+    public function scopeRecentlyUpdated($query, int $days = 60)
     {
-        return $query->where('skill_level', $skillLevel);
+        return $query->where('last_updated_from_steam', '>=', now()->subDays($days));
     }
 
-    public function scopeHighPreference($query, float $minPreference = 70)
+    public function scopeOpenToCoaching($query)
     {
-        return $query->where('preference_level', '>=', $minPreference);
+        return $query->where('open_to_coaching', true);
     }
 
-    public function scopeRecentlyPlayed($query, int $days = 30)
+    public function scopeOpenToLeading($query)
     {
-        return $query->where('last_played', '>=', now()->subDays($days));
+        return $query->where('open_to_leading', true);
     }
 }
