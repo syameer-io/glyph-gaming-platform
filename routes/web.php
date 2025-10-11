@@ -137,7 +137,8 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{team}', [TeamController::class, 'destroy'])->name('destroy');
         
         // Team member management
-        Route::post('/{team}/join', [MatchmakingController::class, 'joinTeam'])->name('join');
+        Route::post('/{team}/join-direct', [TeamController::class, 'joinTeamDirect'])->name('join.direct'); // Direct join from teams page
+        Route::post('/{team}/join', [MatchmakingController::class, 'joinTeam'])->name('join'); // Matchmaking join
         Route::post('/{team}/members', [TeamController::class, 'addMember'])->name('members.add');
         Route::delete('/{team}/members/{user}', [TeamController::class, 'removeMember'])->name('members.remove');
         Route::put('/{team}/members/{user}/role', [TeamController::class, 'updateMemberRole'])->name('members.role.update');

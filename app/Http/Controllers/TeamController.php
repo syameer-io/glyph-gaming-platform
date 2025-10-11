@@ -6,6 +6,7 @@ use App\Models\Team;
 use App\Models\TeamMember;
 use App\Models\User;
 use App\Models\Server;
+use App\Services\TeamService;
 use App\Events\TeamCreated;
 use App\Events\TeamMemberJoined;
 use App\Events\TeamMemberLeft;
@@ -19,9 +20,11 @@ use Illuminate\Support\Facades\DB;
 
 class TeamController extends Controller
 {
-    public function __construct()
+    protected TeamService $teamService;
+
+    public function __construct(TeamService $teamService)
     {
-        // Middleware handled in routes
+        $this->teamService = $teamService;
     }
 
     /**
@@ -335,7 +338,41 @@ class TeamController extends Controller
     }
 
     /**
-     * Add a member to the team
+     * Direct team join (from teams page, not via matchmaking)
+     *
+     * This method is called when a user directly joins a team from the teams listing page.
+     * It uses the TeamService for shared logic and validation.
+     */
+    public function joinTeamDirect(Request $request, Team $team): JsonResponse
+    {
+        $user = Auth::user();
+
+        \Log::info('TeamController::joinTeamDirect called', [
+            'team_id' => $team->id,
+            'user_id' => $user->id,
+        ]);
+
+        // Use TeamService for shared team join logic
+        $result = $this->teamService->addMemberToTeam($team, $user);
+
+        if ($result['success']) {
+            return response()->json([
+                'success' => true,
+                'message' => $result['message'],
+                'team' => $team->fresh()->load(['activeMembers.user', 'server', 'creator'])
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'error' => $result['message']
+        ], 409);
+    }
+
+    /**
+     * Add a member to the team (by team leader/co-leader)
+     *
+     * This method is called when a team leader/co-leader manually adds a user to the team.
      */
     public function addMember(Request $request, Team $team): JsonResponse
     {
@@ -347,6 +384,7 @@ class TeamController extends Controller
 
         $user = Auth::user();
 
+        // Check authorization - only team leaders/co-leaders can add members
         if (!$this->canManageTeam($user, $team)) {
             \Log::error('TeamController::addMember - Unauthorized', [
                 'user_id' => $user->id,
@@ -385,65 +423,42 @@ class TeamController extends Controller
             return response()->json(['error' => 'User not found'], 404);
         }
 
-        // Check if team is full
-        if ($team->current_size >= $team->max_size) {
-            return response()->json(['error' => 'Team is full'], 409);
-        }
-
-        // Check if user is already a member
-        if ($team->members()->where('user_id', $targetUser->id)->exists()) {
-            return response()->json(['error' => 'User is already a member'], 409);
-        }
-
-        // Check if user is in another team for this game
-        if ($targetUser->teams()->where('game_appid', $team->game_appid)
-                ->whereIn('teams.status', ['recruiting', 'full', 'active'])
-                ->exists()) {
-            return response()->json(['error' => 'User is already in another team for this game'], 409);
-        }
-
-        // Get user's skill score
-        $steamData = $targetUser->profile->steam_data ?? [];
-        $skillMetrics = $steamData['skill_metrics'] ?? [];
-        $skillScore = $skillMetrics[$team->game_appid]['skill_score'] ?? 50;
-
+        // Prepare custom member data for leader-added members
         $memberData = [
             'role' => $request->role ?? 'member',
             'game_role' => $request->game_role,
-            'skill_level' => $this->getSkillLevel($skillScore),
-            'individual_skill_score' => $skillScore,
         ];
 
-        \Log::info('TeamController::addMember - Calling team->addMember()', [
+        \Log::info('TeamController::addMember - Calling TeamService', [
             'target_user_id' => $targetUser->id,
             'member_data' => $memberData
         ]);
 
-        $addResult = $team->addMember($targetUser, $memberData);
+        // Use TeamService for shared validation and logic
+        $result = $this->teamService->addMemberToTeam($team, $targetUser, $memberData);
 
-        if (!$addResult) {
-            \Log::error('TeamController::addMember - Failed to add member', [
-                'team_id' => $team->id,
-                'target_user_id' => $targetUser->id
+        if ($result['success']) {
+            \Log::info('TeamController::addMember - Member added successfully', [
+                'team_member_id' => $result['member']->id ?? null
             ]);
-            return response()->json(['error' => 'Failed to add member to team.'], 500);
+
+            return response()->json([
+                'success' => true,
+                'message' => $result['message'],
+                'team' => $team->fresh()->load(['activeMembers.user'])
+            ]);
         }
 
-        // Get the created team member for the event
-        $teamMember = $team->members()->where('user_id', $targetUser->id)->first();
-
-        \Log::info('TeamController::addMember - Member added successfully', [
-            'team_member_id' => $teamMember->id ?? null
+        \Log::error('TeamController::addMember - Failed to add member', [
+            'team_id' => $team->id,
+            'target_user_id' => $targetUser->id,
+            'error' => $result['message']
         ]);
-
-        // Broadcast team member joined event
-        event(new TeamMemberJoined($team->fresh(), $teamMember->load('user')));
 
         return response()->json([
-            'success' => true,
-            'message' => 'Member added successfully!',
-            'team' => $team->fresh()->load(['activeMembers.user'])
-        ]);
+            'success' => false,
+            'error' => $result['message']
+        ], 409);
     }
 
     /**

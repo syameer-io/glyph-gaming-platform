@@ -7,6 +7,7 @@ use App\Models\Team;
 use App\Models\Server;
 use App\Models\MatchmakingRequest;
 use App\Services\MatchmakingService;
+use App\Services\TeamService;
 use App\Events\MatchmakingRequestCreated;
 use App\Events\MatchFound;
 use Illuminate\Http\Request;
@@ -19,10 +20,14 @@ use Illuminate\Support\Facades\DB;
 class MatchmakingController extends Controller
 {
     protected MatchmakingService $matchmakingService;
+    protected TeamService $teamService;
 
-    public function __construct(MatchmakingService $matchmakingService)
-    {
+    public function __construct(
+        MatchmakingService $matchmakingService,
+        TeamService $teamService
+    ) {
         $this->matchmakingService = $matchmakingService;
+        $this->teamService = $teamService;
     }
 
     /**
@@ -331,88 +336,78 @@ class MatchmakingController extends Controller
     }
 
     /**
-     * Join a team
+     * Join a team via matchmaking (from matchmaking recommendations)
+     *
+     * This method is called when a user joins a team from the matchmaking page.
+     * It uses the TeamService and automatically marks the matchmaking request as matched.
      */
     public function joinTeam(Request $request, Team $team): JsonResponse
     {
         try {
             $user = Auth::user();
 
-            // Check if team is still recruiting
-            if (!$team->isRecruiting()) {
-                return response()->json([
-                    'error' => 'This team is not currently recruiting members.'
-                ], 409);
-            }
-
-            // Check if team is full
-            if ($team->isFull()) {
-                return response()->json([
-                    'error' => 'This team is already full.'
-                ], 409);
-            }
-
-            // Check if user is already a member
-            if ($team->members()->where('user_id', $user->id)->exists()) {
-                return response()->json([
-                    'error' => 'You are already a member of this team.'
-                ], 409);
-            }
-
-            // Check if user is already in another team for this game
-            $existingTeam = $user->teams()
-                ->where('game_appid', $team->game_appid)
-                ->whereIn('teams.status', ['recruiting', 'full', 'active'])
-                ->first();
-
-            if ($existingTeam) {
-                return response()->json([
-                    'error' => 'You are already in a team for this game.'
-                ], 409);
-            }
-
-            // Calculate user's skill score
-            $steamData = [];
-            if ($user->profile && $user->profile->steam_data) {
-                $steamData = $user->profile->steam_data;
-            }
-            $skillMetrics = $steamData['skill_metrics'] ?? [];
-            $skillScore = $skillMetrics[$team->game_appid]['skill_score'] ?? 50;
-
-            // Add user to team
-            $addMemberResult = $team->addMember($user, [
-                'role' => 'member',
-                'skill_level' => $this->getSkillLevel($skillScore),
-                'individual_skill_score' => $skillScore,
+            \Log::info('MatchmakingController::joinTeam called', [
+                'team_id' => $team->id,
+                'user_id' => $user->id,
+                'game_appid' => $team->game_appid,
             ]);
 
-            if (!$addMemberResult) {
-                return response()->json([
-                    'error' => 'Failed to join the team. Please try again.'
-                ], 500);
-            }
-
-            // Cancel any active matchmaking requests for this game
-            MatchmakingRequest::where('user_id', $user->id)
+            // Find active matchmaking request for this game
+            $matchmakingRequest = MatchmakingRequest::where('user_id', $user->id)
                 ->where('game_appid', $team->game_appid)
                 ->active()
-                ->update(['status' => 'matched']);
+                ->first();
+
+            \Log::info('MatchmakingController::joinTeam - Matchmaking request found', [
+                'matchmaking_request_id' => $matchmakingRequest?->id ?? 'none',
+                'has_request' => $matchmakingRequest !== null,
+            ]);
+
+            // Use TeamService for shared validation and logic
+            // Pass matchmaking request for auto-marking as matched
+            $result = $this->teamService->addMemberToTeam(
+                $team,
+                $user,
+                [], // No custom member data for matchmaking joins
+                $matchmakingRequest // Pass request to mark as matched
+            );
+
+            if ($result['success']) {
+                \Log::info('MatchmakingController::joinTeam - Successfully joined team', [
+                    'team_member_id' => $result['member']->id ?? null,
+                    'matchmaking_request_fulfilled' => $matchmakingRequest !== null,
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => $result['message'],
+                    'team' => $team->fresh()->load(['activeMembers.user', 'server', 'creator']),
+                    'matchmaking_request_fulfilled' => $matchmakingRequest !== null,
+                ]);
+            }
+
+            \Log::warning('MatchmakingController::joinTeam - Failed to join team', [
+                'team_id' => $team->id,
+                'user_id' => $user->id,
+                'error' => $result['message'],
+            ]);
 
             return response()->json([
-                'success' => true,
-                'message' => 'Successfully joined the team!',
-                'team' => $team->fresh()->load(['activeMembers.user', 'server', 'creator'])
-            ]);
-        
+                'success' => false,
+                'error' => $result['message']
+            ], 409);
+
         } catch (\Exception $e) {
-            \Log::error('Team join error: ' . $e->getMessage(), [
+            \Log::error('MatchmakingController::joinTeam - Exception occurred', [
                 'user_id' => auth()->id(),
                 'team_id' => $team->id,
-                'trace' => $e->getTraceAsString()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
-            
+
             return response()->json([
-                'error' => 'An error occurred while joining the team: ' . $e->getMessage()
+                'success' => false,
+                'error' => 'An error occurred while joining the team. Please try again later.'
             ], 500);
         }
     }

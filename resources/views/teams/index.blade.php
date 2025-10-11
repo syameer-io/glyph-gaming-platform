@@ -614,7 +614,7 @@
                             <div class="team-actions">
                                 <a href="{{ route('teams.show', $team) }}" class="btn btn-secondary btn-sm">View Team</a>
                                 @if($team->recruitment_status === 'open' && !$team->activeMembers->contains('user_id', auth()->id()))
-                                    <button onclick="requestToJoin({{ $team->id }})" class="btn btn-primary btn-sm">
+                                    <button onclick="requestToJoin({{ $team->id }}, event)" class="btn btn-primary btn-sm">
                                         <span class="btn-text">Request to Join</span>
                                         <span class="loading-spinner" style="display: none;"></span>
                                     </button>
@@ -719,17 +719,24 @@ function sortTeams() {
     sortedTeams.forEach(team => container.appendChild(team));
 }
 
-function requestToJoin(teamId) {
-    const button = event.target;
+function requestToJoin(teamId, event) {
+    // Get the button element (use currentTarget to always get the button, not child elements)
+    const button = event ? event.currentTarget : window.event.srcElement;
+    if (!button) {
+        console.error('requestToJoin: Could not find button element');
+        return;
+    }
+
     const btnText = button.querySelector('.btn-text');
     const spinner = button.querySelector('.loading-spinner');
-    
+
     // Show loading state
-    btnText.style.display = 'none';
-    spinner.style.display = 'inline-block';
+    if (btnText) btnText.style.display = 'none';
+    if (spinner) spinner.style.display = 'inline-block';
     button.disabled = true;
-    
-    fetch(`{{ url('/teams') }}/${teamId}/join`, {
+
+    // Use direct join route (not matchmaking join)
+    fetch(`{{ url('/teams') }}/${teamId}/join-direct`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -740,22 +747,42 @@ function requestToJoin(teamId) {
     .then(data => {
         if (data.success) {
             // Update button to show success state
-            button.innerHTML = '<span style="color: #10b981;">✓ Request Sent</span>';
+            button.innerHTML = '<span style="color: #10b981;">✓ Joined Team</span>';
             button.classList.remove('btn-primary');
             button.classList.add('btn-success');
+
+            // Show success toast
+            if (typeof Toast !== 'undefined') {
+                Toast.success(data.message || 'Successfully joined the team!');
+            }
+
+            // Reload after a moment to show the toast
+            setTimeout(() => location.reload(), 1500);
         } else {
             // Show error and restore button
-            alert(data.message || 'Error requesting to join team');
-            btnText.style.display = 'inline';
-            spinner.style.display = 'none';
+            if (typeof Toast !== 'undefined') {
+                Toast.error(data.error || data.message || 'Error requesting to join team');
+            } else {
+                alert(data.error || data.message || 'Error requesting to join team');
+            }
+
+            if (btnText) btnText.style.display = 'inline';
+            if (spinner) spinner.style.display = 'none';
             button.disabled = false;
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error requesting to join team');
-        btnText.style.display = 'inline';
-        spinner.style.display = 'none';
+
+        // Show error toast or fallback to alert
+        if (typeof Toast !== 'undefined') {
+            Toast.error('An error occurred while joining the team. Please try again.');
+        } else {
+            alert('Error requesting to join team');
+        }
+
+        if (btnText) btnText.style.display = 'inline';
+        if (spinner) spinner.style.display = 'none';
         button.disabled = false;
     });
 }
