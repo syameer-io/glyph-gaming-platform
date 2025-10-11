@@ -531,12 +531,36 @@
                 @else
                 <div class="teams-grid" id="teams-grid">
                     @foreach($teams as $team)
-                        <div class="team-card" 
+                        @php
+                            // Get user's active matchmaking requests
+                            $userRequests = auth()->user()->activeMatchmakingRequests;
+
+                            // Calculate compatibility for this team if user has matching request
+                            $compatibility = null;
+                            foreach($userRequests as $request) {
+                                if ($request->game_appid == $team->game_appid) {
+                                    $compatibilityData = app(\App\Services\MatchmakingService::class)
+                                        ->calculateDetailedCompatibility($team, $request);
+                                    $compatibility = $compatibilityData['total_score'] ?? null;
+                                    break;
+                                }
+                            }
+
+                            // Determine color
+                            $compatColor = '#71717a'; // default gray
+                            if ($compatibility !== null) {
+                                if ($compatibility >= 75) $compatColor = '#10b981'; // green
+                                elseif ($compatibility >= 50) $compatColor = '#f59e0b'; // yellow
+                                else $compatColor = '#ef4444'; // red
+                            }
+                        @endphp
+
+                        <div class="team-card"
                              data-team-id="{{ $team->id }}"
                              data-server-id="{{ $team->server_id }}"
-                             data-game="{{ $team->game_appid }}" 
-                             data-skill="{{ $team->skill_level }}" 
-                             data-region="{{ $team->preferred_region }}" 
+                             data-game="{{ $team->game_appid }}"
+                             data-skill="{{ $team->skill_level }}"
+                             data-region="{{ $team->preferred_region }}"
                              data-status="{{ $team->status }}"
                              data-name="{{ strtolower($team->name) }}"
                              data-members="{{ $team->activeMembers->count() }}"
@@ -544,7 +568,7 @@
                              @if(auth()->user() && $team->activeMembers->contains('user_id', auth()->id()))
                              data-user-member="true"
                              @endif
-                            
+
                             <div class="team-header">
                                 <div class="team-info">
                                     <div class="team-name">{{ $team->name }}</div>
@@ -565,6 +589,18 @@
                                         @endif
                                     </div>
                                 </div>
+
+                                <!-- Compatibility Badge (only if user has active request for this game) -->
+                                @if($compatibility !== null)
+                                    <div style="text-align: center; padding: 8px 12px; background-color: rgba(14, 14, 16, 0.8); border-radius: 8px; border: 2px solid {{ $compatColor }}; min-width: 70px;">
+                                        <div style="font-size: 24px; font-weight: 700; color: {{ $compatColor }}; line-height: 1;">
+                                            {{ round($compatibility) }}%
+                                        </div>
+                                        <div style="font-size: 10px; color: #b3b3b5; text-transform: uppercase; margin-top: 2px; font-weight: 600; letter-spacing: 0.5px;">
+                                            Match
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
 
                             <div class="team-stats">

@@ -757,6 +757,132 @@
                                                 </div>
                                             @endif
 
+                                            <!-- Why This Team? Expandable Section -->
+                                            <div style="margin-bottom: 12px;">
+                                                <button
+                                                    onclick="toggleWhyThisTeam({{ $team->id }})"
+                                                    style="width: 100%; background-color: #0e0e10; border: 1px solid #3f3f46; border-radius: 6px; padding: 10px 12px; color: #efeff1; font-size: 12px; font-weight: 600; text-align: left; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s;"
+                                                    onmouseover="this.style.borderColor='#667eea'; this.style.backgroundColor='#18181b';"
+                                                    onmouseout="this.style.borderColor='#3f3f46'; this.style.backgroundColor='#0e0e10';">
+                                                    <span>Why this team?</span>
+                                                    <span id="toggle-icon-{{ $team->id }}">▼</span>
+                                                </button>
+
+                                                <div id="why-this-team-{{ $team->id }}" style="display: none; margin-top: 8px; padding: 12px; background-color: #0e0e10; border-radius: 6px; border: 1px solid #3f3f46;">
+                                                    <div style="font-size: 11px; color: #71717a; margin-bottom: 10px; font-weight: 600; text-transform: uppercase;">Detailed Compatibility Breakdown</div>
+
+                                                    @if(!empty($breakdown))
+                                                        <!-- Skill Match -->
+                                                        @if(isset($breakdown['skill']))
+                                                            @php
+                                                                $skillScore = $breakdown['skill'];
+                                                                $skillColor = $skillScore >= 75 ? '#10b981' : ($skillScore >= 50 ? '#f59e0b' : '#ef4444');
+                                                            @endphp
+                                                            <div style="margin-bottom: 12px;">
+                                                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                                                    <span style="font-size: 12px; color: #b3b3b5; font-weight: 500;">Skill Match</span>
+                                                                    <span style="font-size: 12px; color: {{ $skillColor }}; font-weight: 700;">{{ round($skillScore) }}%</span>
+                                                                </div>
+                                                                <div style="width: 100%; height: 6px; background-color: #27272a; border-radius: 3px; overflow: hidden;">
+                                                                    <div style="width: {{ $skillScore }}%; height: 100%; background-color: {{ $skillColor }}; transition: width 0.3s ease;"></div>
+                                                                </div>
+                                                                <div style="font-size: 10px; color: #71717a; margin-top: 4px; line-height: 1.4;">
+                                                                    Your skill level aligns well with the team's average player skill.
+                                                                </div>
+                                                            </div>
+                                                        @endif
+
+                                                        <!-- Role Fit -->
+                                                        @if(isset($breakdown['role']))
+                                                            @php
+                                                                $roleScore = $breakdown['role'];
+                                                                $roleColor = $roleScore >= 75 ? '#10b981' : ($roleScore >= 50 ? '#f59e0b' : '#ef4444');
+                                                            @endphp
+                                                            <div style="margin-bottom: 12px;">
+                                                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                                                    <span style="font-size: 12px; color: #b3b3b5; font-weight: 500;">Role Fit</span>
+                                                                    <span style="font-size: 12px; color: {{ $roleColor }}; font-weight: 700;">{{ round($roleScore) }}%</span>
+                                                                </div>
+                                                                <div style="width: 100%; height: 6px; background-color: #27272a; border-radius: 3px; overflow: hidden;">
+                                                                    <div style="width: {{ $roleScore }}%; height: 100%; background-color: {{ $roleColor }}; transition: width 0.3s ease;"></div>
+                                                                </div>
+                                                                <div style="font-size: 10px; color: #71717a; margin-top: 4px; line-height: 1.4;">
+                                                                    @if(!empty($roleNeeds))
+                                                                        Team needs: {{ implode(', ', $roleNeeds) }}. Your preferred roles match their requirements.
+                                                                    @else
+                                                                        Your preferred roles align with the team's needs.
+                                                                    @endif
+                                                                </div>
+                                                            </div>
+                                                        @endif
+
+                                                        <!-- Region Match -->
+                                                        @if(isset($breakdown['region']))
+                                                            @php
+                                                                $regionScore = $breakdown['region'];
+                                                                $regionColor = $regionScore >= 75 ? '#10b981' : ($regionScore >= 50 ? '#f59e0b' : '#ef4444');
+                                                            @endphp
+                                                            <div style="margin-bottom: 12px;">
+                                                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                                                    <span style="font-size: 12px; color: #b3b3b5; font-weight: 500;">Region Match</span>
+                                                                    <span style="font-size: 12px; color: {{ $regionColor }}; font-weight: 700;">{{ round($regionScore) }}%</span>
+                                                                </div>
+                                                                <div style="width: 100%; height: 6px; background-color: #27272a; border-radius: 3px; overflow: hidden;">
+                                                                    <div style="width: {{ $regionScore }}%; height: 100%; background-color: {{ $regionColor }}; transition: width 0.3s ease;"></div>
+                                                                </div>
+                                                                <div style="font-size: 10px; color: #71717a; margin-top: 4px; line-height: 1.4;">
+                                                                    Good regional match means lower latency and better play times together.
+                                                                </div>
+                                                            </div>
+                                                        @endif
+
+                                                        <!-- Activity Time Match -->
+                                                        @if(isset($breakdown['activity']))
+                                                            @php
+                                                                $activityScore = $breakdown['activity'];
+                                                                $activityColor = $activityScore >= 75 ? '#10b981' : ($activityScore >= 50 ? '#f59e0b' : '#ef4444');
+                                                            @endphp
+                                                            <div style="margin-bottom: 12px;">
+                                                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                                                    <span style="font-size: 12px; color: #b3b3b5; font-weight: 500;">Activity Time Match</span>
+                                                                    <span style="font-size: 12px; color: {{ $activityColor }}; font-weight: 700;">{{ round($activityScore) }}%</span>
+                                                                </div>
+                                                                <div style="width: 100%; height: 6px; background-color: #27272a; border-radius: 3px; overflow: hidden;">
+                                                                    <div style="width: {{ $activityScore }}%; height: 100%; background-color: {{ $activityColor }}; transition: width 0.3s ease;"></div>
+                                                                </div>
+                                                                <div style="font-size: 10px; color: #71717a; margin-top: 4px; line-height: 1.4;">
+                                                                    Your active hours align with when this team typically plays together.
+                                                                </div>
+                                                            </div>
+                                                        @endif
+
+                                                        <!-- Team Balance (if available) -->
+                                                        @if(isset($breakdown['balance']))
+                                                            @php
+                                                                $balanceScore = $breakdown['balance'];
+                                                                $balanceColor = $balanceScore >= 75 ? '#10b981' : ($balanceScore >= 50 ? '#f59e0b' : '#ef4444');
+                                                            @endphp
+                                                            <div style="margin-bottom: 0;">
+                                                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                                                    <span style="font-size: 12px; color: #b3b3b5; font-weight: 500;">Team Balance</span>
+                                                                    <span style="font-size: 12px; color: {{ $balanceColor }}; font-weight: 700;">{{ round($balanceScore) }}%</span>
+                                                                </div>
+                                                                <div style="width: 100%; height: 6px; background-color: #27272a; border-radius: 3px; overflow: hidden;">
+                                                                    <div style="width: {{ $balanceScore }}%; height: 100%; background-color: {{ $balanceColor }}; transition: width 0.3s ease;"></div>
+                                                                </div>
+                                                                <div style="font-size: 10px; color: #71717a; margin-top: 4px; line-height: 1.4;">
+                                                                    Adding you would improve the team's overall role and skill balance.
+                                                                </div>
+                                                            </div>
+                                                        @endif
+                                                    @else
+                                                        <div style="text-align: center; padding: 20px; color: #71717a; font-size: 12px;">
+                                                            No detailed breakdown available for this team.
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            </div>
+
                                             <!-- Actions -->
                                             <div class="team-actions">
                                                 <a href="{{ route('teams.show', $team) }}" class="btn btn-secondary btn-sm" style="flex: 1;">
@@ -1256,5 +1382,19 @@ document.getElementById('createRequestForm').addEventListener('submit', function
         alert('Error creating request: ' + error.message);
     });
 });
+
+// Toggle "Why This Team?" expandable section
+function toggleWhyThisTeam(teamId) {
+    const section = document.getElementById('why-this-team-' + teamId);
+    const icon = document.getElementById('toggle-icon-' + teamId);
+
+    if (section.style.display === 'none') {
+        section.style.display = 'block';
+        icon.textContent = '▲';
+    } else {
+        section.style.display = 'none';
+        icon.textContent = '▼';
+    }
+}
 </script>
 @endsection
