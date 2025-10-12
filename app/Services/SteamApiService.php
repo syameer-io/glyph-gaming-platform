@@ -125,6 +125,19 @@ class SteamApiService
         }
     }
 
+    /**
+     * Get player summary from Steam API with enhanced connectable detection.
+     *
+     * Fetches player data from Steam Web API and enriches it with connectable
+     * server detection for CS2 lobby integration. This determines if the player
+     * is currently on a server that can be joined via Steam connect protocol.
+     *
+     * @param string $steamId The Steam ID of the player
+     * @return array Player data with additional fields:
+     *               - is_connectable (bool): Whether player is on a joinable server
+     *               - connect_url (string|null): Steam connect URL if available
+     * @throws \GuzzleHttp\Exception\GuzzleException If API request fails
+     */
     protected function getPlayerSummary($steamId)
     {
         $response = $this->client->get('ISteamUser/GetPlayerSummaries/v0002/', [
@@ -135,7 +148,90 @@ class SteamApiService
         ]);
 
         $data = json_decode($response->getBody()->getContents(), true);
-        return $data['response']['players'][0] ?? [];
+        $playerData = $data['response']['players'][0] ?? [];
+
+        // Enhance player data with connectable detection
+        if (!empty($playerData)) {
+            $playerData['is_connectable'] = $this->isConnectable($playerData);
+            $playerData['connect_url'] = $this->getConnectUrl($playerData);
+        }
+
+        return $playerData;
+    }
+
+    /**
+     * Determine if a player is on a connectable game server.
+     *
+     * Checks if the player data contains valid game server IP information
+     * that can be used to join their current session. A server is considered
+     * connectable if the gameserverip field exists, is not empty, and is not
+     * the default invalid value '0.0.0.0:0'.
+     *
+     * @param array $playerData Player data from Steam API
+     * @return bool True if player is on a connectable server, false otherwise
+     */
+    protected function isConnectable(array $playerData): bool
+    {
+        // Check if gameserverip field exists
+        if (!isset($playerData['gameserverip'])) {
+            return false;
+        }
+
+        $serverIp = $playerData['gameserverip'];
+
+        // Check if field is empty
+        if (empty($serverIp)) {
+            return false;
+        }
+
+        // Check if it's the default invalid value
+        if ($serverIp === '0.0.0.0:0') {
+            return false;
+        }
+
+        // Additional validation: Ensure it's a valid IP:port format
+        if (!preg_match('/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+$/', $serverIp)) {
+            Log::warning("Invalid game server IP format: {$serverIp}", [
+                'steam_id' => $playerData['steamid'] ?? 'unknown',
+                'game_id' => $playerData['gameid'] ?? 'unknown'
+            ]);
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Generate Steam connect URL for joining a player's server.
+     *
+     * Creates a steam://connect/ protocol URL that can be used to join
+     * the game server where the player is currently playing. This URL
+     * can be clicked or triggered to launch Steam and connect directly
+     * to the server.
+     *
+     * @param array $playerData Player data from Steam API
+     * @return string|null Steam connect URL if server is connectable, null otherwise
+     */
+    protected function getConnectUrl(array $playerData): ?string
+    {
+        // Validate that the server is connectable
+        if (!$this->isConnectable($playerData)) {
+            return null;
+        }
+
+        $serverIp = $playerData['gameserverip'];
+
+        // Generate Steam connect URL
+        $connectUrl = "steam://connect/{$serverIp}";
+
+        Log::info("Generated Steam connect URL", [
+            'steam_id' => $playerData['steamid'] ?? 'unknown',
+            'game_id' => $playerData['gameid'] ?? 'unknown',
+            'server_ip' => $serverIp,
+            'connect_url' => $connectUrl
+        ]);
+
+        return $connectUrl;
     }
 
     protected function getOwnedGames($steamId)

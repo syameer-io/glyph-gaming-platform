@@ -29,15 +29,8 @@ Thumbs.db
 phase3-logs.md
 .claude
 
-# Documentation and planning files
-CLAUDE.md
-MATCHMAKING-TEAMS-REWORK-PLAN.md
-MATCHMAKING-VS-TEAMS-ANALYSIS.md
-SUPERVISOR-PRESENTATION.md
-SYSTEM-COMPLEXITIES.md
-TASK-2.1-TEST-RESULTS.md
-glyph-api-architecture.md
-voice-chat-implementation.md
+# Documentation and planning files (exclude all markdown files)
+*.md
 
 # Storage framework files (keep structure)
 storage/framework/cache/*

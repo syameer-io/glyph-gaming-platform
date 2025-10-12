@@ -49,6 +49,13 @@ Route::middleware('auth')->group(function () {
     Route::put('/settings/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('/profile/refresh-steam', [ProfileController::class, 'refreshSteamData'])->name('profile.steam.refresh');
 
+    // CS2 Lobby link management (Phase 4)
+    Route::post('/profile/lobby-link', [ProfileController::class, 'updateLobbyLink'])
+        ->name('profile.lobby-link.update')
+        ->middleware('throttle:10,1'); // 10 updates per minute
+    Route::post('/profile/lobby-link/clear', [ProfileController::class, 'clearLobbyLink'])
+        ->name('profile.lobby-link.clear');
+
     // Friend routes
     Route::get('/friends', [FriendController::class, 'index'])->name('friends.index');
     Route::get('/friends/search', [FriendController::class, 'search'])->name('friends.search');
