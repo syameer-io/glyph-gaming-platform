@@ -384,11 +384,45 @@
                                 </div>
                             @endif
                             
-                            {{-- Join lobby button --}}
-                            @if($member->profile->current_game && $member->profile->steam_data && $member->id !== auth()->id())
-                                <button class="btn btn-success btn-sm" style="margin-top: 4px; font-size: 11px; padding: 4px 8px;">
-                                    Join Lobby
-                                </button>
+                            {{-- Join lobby button (Phase 4) --}}
+                            @if($member->profile->current_game && $member->id !== auth()->id())
+                                @php
+                                    // Priority system:
+                                    // 1. User-provided lobby link (highest priority)
+                                    // 2. Server IP from Steam API (community servers)
+                                    // 3. Not joinable (matchmaking/offline)
+
+                                    $hasLobbyLink = $member->profile && $member->profile->hasActiveLobby();
+                                    $hasServerIP = isset($member->profile->current_game['connect']) && !empty($member->profile->current_game['connect']);
+                                    $isJoinable = $hasLobbyLink || $hasServerIP;
+
+                                    $joinUrl = null;
+                                    $buttonText = 'Not Joinable';
+                                    $buttonClass = 'btn-secondary';
+                                    $isDisabled = true;
+
+                                    if ($hasLobbyLink) {
+                                        $joinUrl = $member->profile->steam_lobby_link;
+                                        $buttonText = '🚀 Join Lobby';
+                                        $buttonClass = 'btn-success';
+                                        $isDisabled = false;
+                                    } elseif ($hasServerIP) {
+                                        $joinUrl = 'steam://connect/' . $member->profile->current_game['connect'];
+                                        $buttonText = '🎮 Join Server';
+                                        $buttonClass = 'btn-primary';
+                                        $isDisabled = false;
+                                    }
+                                @endphp
+
+                                @if($isJoinable)
+                                    <a href="{{ $joinUrl }}" class="btn {{ $buttonClass }} btn-sm" style="margin-top: 4px; font-size: 11px; padding: 4px 8px; text-decoration: none; display: inline-block;">
+                                        {{ $buttonText }}
+                                    </a>
+                                @else
+                                    <button class="btn {{ $buttonClass }} btn-sm" style="margin-top: 4px; font-size: 11px; padding: 4px 8px; opacity: 0.5;" disabled title="Player is in matchmaking or offline">
+                                        ⚠️ {{ $buttonText }}
+                                    </button>
+                                @endif
                             @endif
                         </div>
                     </div>

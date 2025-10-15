@@ -606,6 +606,86 @@
         </div>
         @endif
 
+        {{-- Members Playing Now Section (Phase 4) --}}
+        @php
+            $playingMembers = $team->activeMembers->filter(function($member) use ($team) {
+                return $member->user->profile &&
+                       isset($member->user->profile->current_game) &&
+                       $member->user->profile->current_game['appid'] == $team->game_id;
+            });
+        @endphp
+
+        @if($playingMembers->count() > 0)
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+            <h3 style="color: white; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                <span>🎮</span>
+                <span>Members Playing Now</span>
+                <span style="background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 12px; font-size: 14px; font-weight: 600;">
+                    {{ $playingMembers->count() }}
+                </span>
+            </h3>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px;">
+                @foreach($playingMembers as $member)
+                    <div style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 8px; padding: 16px; border: 1px solid rgba(255,255,255,0.2);">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                            <img src="{{ $member->user->profile->avatar_url }}" alt="{{ $member->user->display_name }}" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3);">
+                            <div style="flex: 1;">
+                                <div style="color: white; font-weight: 600; font-size: 14px;">
+                                    {{ $member->user->display_name }}
+                                </div>
+                                <div style="color: rgba(255,255,255,0.8); font-size: 12px;">
+                                    {{ $member->user->profile->current_game['name'] ?? 'Playing' }}
+                                </div>
+                            </div>
+                        </div>
+
+                        @if($member->user->id !== auth()->id())
+                            @php
+                                $hasLobbyLink = $member->user->profile && $member->user->profile->hasActiveLobby();
+                                $hasServerIP = isset($member->user->profile->current_game['connect']) && !empty($member->user->profile->current_game['connect']);
+
+                                $joinUrl = null;
+                                $buttonText = 'Not Joinable';
+                                $buttonClass = 'rgba(255,255,255,0.2)';
+                                $buttonHoverClass = 'rgba(255,255,255,0.3)';
+                                $isJoinable = false;
+
+                                if ($hasLobbyLink) {
+                                    $joinUrl = $member->user->profile->steam_lobby_link;
+                                    $buttonText = '🚀 Join Lobby';
+                                    $buttonClass = 'rgba(16, 185, 129, 0.9)';
+                                    $buttonHoverClass = 'rgba(16, 185, 129, 1)';
+                                    $isJoinable = true;
+                                } elseif ($hasServerIP) {
+                                    $joinUrl = 'steam://connect/' . $member->user->profile->current_game['connect'];
+                                    $buttonText = '🎮 Join Server';
+                                    $buttonClass = 'rgba(102, 126, 234, 0.9)';
+                                    $buttonHoverClass = 'rgba(102, 126, 234, 1)';
+                                    $isJoinable = true;
+                                }
+                            @endphp
+
+                            @if($isJoinable)
+                                <a href="{{ $joinUrl }}" style="display: block; width: 100%; padding: 8px 12px; background: {{ $buttonClass }}; color: white; text-align: center; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; transition: all 0.2s;" onmouseover="this.style.background='{{ $buttonHoverClass }}'" onmouseout="this.style.background='{{ $buttonClass }}'">
+                                    {{ $buttonText }}
+                                </a>
+                            @else
+                                <button style="display: block; width: 100%; padding: 8px 12px; background: {{ $buttonClass }}; color: rgba(255,255,255,0.6); text-align: center; border-radius: 6px; font-size: 13px; font-weight: 600; border: none; cursor: not-allowed; opacity: 0.5;" disabled title="Player is in matchmaking or offline">
+                                    ⚠️ {{ $buttonText }}
+                                </button>
+                            @endif
+                        @else
+                            <div style="padding: 8px 12px; background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); text-align: center; border-radius: 6px; font-size: 13px; font-style: italic;">
+                                This is you
+                            </div>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
         <div class="team-container" data-team-id="{{ $team->id }}" data-server-id="{{ $team->server_id }}">
             <!-- Sidebar -->
             <div class="team-sidebar">
