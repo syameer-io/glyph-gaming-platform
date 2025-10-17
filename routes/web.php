@@ -15,6 +15,7 @@ use App\Http\Controllers\MatchmakingController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\ServerGoalController;
 use App\Http\Controllers\TelegramController;
+use App\Http\Controllers\VoiceController;
 
 // Guest routes
 Route::middleware('guest')->group(function () {
@@ -251,7 +252,16 @@ Route::middleware('auth')->group(function () {
         Route::patch('/settings', [TelegramController::class, 'updateNotificationSettings'])->name('settings');
         Route::post('/test', [TelegramController::class, 'testMessage'])->name('test');
     });
-    
+
+    // Voice chat routes (Agora.io WebRTC integration)
+    Route::prefix('voice')->name('voice.')->group(function () {
+        Route::post('/join', [VoiceController::class, 'join'])->name('join');
+        Route::post('/leave', [VoiceController::class, 'leave'])->name('leave');
+        Route::post('/mute', [VoiceController::class, 'toggleMute'])->name('mute');
+        Route::get('/channel/{channelId}/participants', [VoiceController::class, 'getParticipants'])->name('participants');
+        Route::get('/stats', [VoiceController::class, 'getUserStats'])->name('stats');
+    });
+
 });
 
 // Public Telegram webhook (outside auth middleware)
