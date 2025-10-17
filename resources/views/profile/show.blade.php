@@ -242,13 +242,21 @@
                                                 How to get your lobby link?
                                             </summary>
                                             <div style="margin-top: 8px; padding: 12px; background-color: #0e0e10; border-radius: 6px; font-size: 12px; color: #b3b3b5; line-height: 1.6;">
-                                                <ol style="margin: 0; padding-left: 20px;">
-                                                    <li>Open CS2 and create a lobby</li>
-                                                    <li>Press <code style="background: #3f3f46; padding: 2px 6px; border-radius: 3px;">Shift+Tab</code> for Steam Overlay</li>
-                                                    <li>Click "View Players" → "Friends" → Right-click your name</li>
-                                                    <li>Select "Copy Lobby Link" or "Invite to Lobby"</li>
-                                                    <li>Paste the link here (starts with steam://joinlobby/730/)</li>
-                                                </ol>
+                                                <div style="margin-bottom: 12px;">
+                                                    <strong style="color: #efeff1;">Method 1: Steam Desktop (Easiest)</strong>
+                                                    <ol style="margin: 4px 0 0 20px; padding: 0;">
+                                                        <li>Create a lobby in CS2</li>
+                                                        <li><strong>Alt+Tab</strong> to minimize CS2 (don't use Steam Overlay)</li>
+                                                        <li>Open <strong>Steam desktop app</strong></li>
+                                                        <li>Go to <strong>Friends List</strong></li>
+                                                        <li>Right-click <strong>YOUR name</strong> → "Invite to Lobby" or "Copy Invite Link"</li>
+                                                    </ol>
+                                                </div>
+                                                <div style="padding: 8px; background-color: #3f3f46; border-radius: 4px;">
+                                                    <strong style="color: #efeff1;">Quick Test Link:</strong><br>
+                                                    <code style="color: #10b981; font-size: 11px;">steam://joinlobby/730/109775241255964925/76561199234567890</code><br>
+                                                    <span style="color: #71717a; font-size: 11px;">Use this to test the UI without creating a real lobby</span>
+                                                </div>
                                             </div>
                                         </details>
                                     </div>
