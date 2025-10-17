@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "daea65bbb977f727c2f01a41fe0c32f9",
+    "content-hash": "68c9c600b8f4e3883629c483df5c7f94",
     "packages": [
         {
             "name": "brick/math",
@@ -6505,6 +6505,47 @@
                 }
             ],
             "time": "2025-06-27T19:55:54+00:00"
+        },
+        {
+            "name": "taylanunutmaz/agora-token-builder",
+            "version": "v1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/taylanunutmaz/agora-token-builder.git",
+                "reference": "53f127d63a396cfba063ba3e9cb07d855dd67502"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/taylanunutmaz/agora-token-builder/zipball/53f127d63a396cfba063ba3e9cb07d855dd67502",
+                "reference": "53f127d63a396cfba063ba3e9cb07d855dd67502",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": ">=1.0",
+                "php": ">=7.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "TaylanUnutmaz\\AgoraTokenBuilder\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Taylan Unutmaz",
+                    "email": "taylanunutmaz@gmail.com"
+                }
+            ],
+            "description": "Token builder for agora.io",
+            "support": {
+                "issues": "https://github.com/taylanunutmaz/agora-token-builder/issues",
+                "source": "https://github.com/taylanunutmaz/agora-token-builder/tree/v1.1"
+            },
+            "time": "2021-01-25T16:34:58+00:00"
         },
         {
             "name": "telegram-bot/api",
