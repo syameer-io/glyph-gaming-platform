@@ -2,6 +2,11 @@
 
 @section('title', $server->name . ' - Glyph')
 
+@push('head')
+    <!-- Agora App ID for Voice Chat (Public - Safe to expose) -->
+    <meta name="agora-app-id" content="{{ config('services.agora.app_id') }}">
+@endpush
+
 @push('styles')
 <style>
     .kebab-menu {
@@ -82,7 +87,136 @@
         background-color: #3f3f46 !important;
         color: #ffffff !important;
     }
+
+    /* Voice Chat Styles */
+    .voice-channel-link:hover {
+        background-color: #3f3f46;
+        border-radius: 4px;
+        padding: 4px 8px;
+        margin-left: -8px;
+        margin-right: -8px;
+    }
+
+    .voice-user-count {
+        transition: all 0.2s ease;
+    }
+
+    .voice-channel-link.active {
+        background-color: #667eea;
+        color: #ffffff;
+        border-radius: 4px;
+        padding: 4px 8px;
+        margin-left: -8px;
+        margin-right: -8px;
+    }
+
+    /* Voice Controls Panel */
+    #voice-controls-panel {
+        animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes slideUp {
+        from {
+            transform: translateY(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    #mute-toggle-btn:hover {
+        background-color: #52525b !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    #mute-toggle-btn.muted {
+        background-color: #ef4444 !important;
+        color: white !important;
+    }
+
+    #disconnect-btn:hover {
+        background-color: #dc2626 !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+
+    /* Network Quality Indicators */
+    .network-quality-excellent {
+        background-color: #10b981 !important;
+    }
+
+    .network-quality-good {
+        background-color: #f59e0b !important;
+    }
+
+    .network-quality-poor {
+        background-color: #ef4444 !important;
+    }
+
+    /* Voice Speaking Animation */
+    @keyframes pulse-ring {
+        0% {
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+        }
+        50% {
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.3);
+        }
+        100% {
+            box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+        }
+    }
+
+    .voice-speaking-indicator {
+        animation: pulse-ring 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    .member-avatar.speaking {
+        border: 2px solid #10b981;
+        box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
+    }
+
+    /* In Voice Badge Animation */
+    .in-voice-badge {
+        animation: fadeInScale 0.3s ease-out;
+    }
+
+    @keyframes fadeInScale {
+        from {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    /* Connection Quality Pulse */
+    #voice-connection-indicator.connecting {
+        background-color: #f59e0b !important;
+        animation: pulse 1s ease-in-out infinite;
+    }
+
+    #voice-connection-indicator.disconnected {
+        background-color: #ef4444 !important;
+    }
+
+    @keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.5;
+        }
+    }
 </style>
+@endpush
+
+@push('scripts')
+    @vite(['resources/js/voice-chat.js'])
 @endpush
 
 @section('content')
@@ -122,9 +256,18 @@
             <div>
                 <p style="font-size: 12px; font-weight: 600; color: #71717a; text-transform: uppercase; margin-bottom: 8px;">Voice Channels</p>
                 @foreach($server->channels->where('type', 'voice') as $ch)
-                    <div class="sidebar-link" style="opacity: 0.5; cursor: not-allowed;">
-                        <span style="color: #71717a; margin-right: 8px;">🔊</span>
-                        {{ $ch->name }}
+                    <div class="sidebar-link voice-channel-link"
+                         data-channel-id="{{ $ch->id }}"
+                         data-channel-name="{{ $ch->name }}"
+                         style="cursor: pointer; display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;"
+                         onclick="joinVoiceChannel({{ $server->id }}, {{ $ch->id }}, '{{ $ch->name }}')">
+                        <div style="display: flex; align-items: center;">
+                            <span style="color: #71717a; margin-right: 8px;">🔊</span>
+                            {{ $ch->name }}
+                        </div>
+                        <div class="voice-user-count" data-channel-id="{{ $ch->id }}" style="display: none; font-size: 11px; color: #71717a; background-color: #3f3f46; padding: 2px 6px; border-radius: 4px;">
+                            <span class="count">0</span>
+                        </div>
                     </div>
                 @endforeach
             </div>
@@ -355,11 +498,18 @@
                     {{ strtoupper($role->name) }} — {{ $roleMembers->count() }}
                 </p>
                 @foreach($roleMembers as $member)
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                        <img src="{{ $member->profile->avatar_url }}" alt="{{ $member->display_name }}" 
-                             style="width: 32px; height: 32px; border-radius: 50%;">
-                        <div>
-                            <div style="font-size: 14px; color: {{ $role->color }};">{{ $member->display_name }}</div>
+                    <div class="member-item" data-user-id="{{ $member->id }}" style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; position: relative;">
+                        <div style="position: relative;">
+                            <img src="{{ $member->profile->avatar_url }}" alt="{{ $member->display_name }}"
+                                 class="member-avatar"
+                                 style="width: 32px; height: 32px; border-radius: 50%;">
+                            <div class="voice-speaking-indicator" style="display: none; position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px; border: 2px solid #10b981; border-radius: 50%; animation: pulse-ring 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;"></div>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 14px; color: {{ $role->color }}; display: flex; align-items: center; gap: 6px;">
+                                {{ $member->display_name }}
+                                <span class="in-voice-badge" data-user-id="{{ $member->id }}" style="display: none; font-size: 10px; background-color: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 600;">IN VOICE</span>
+                            </div>
                             <div style="font-size: 12px; color: #71717a;">
                                 <span class="status-indicator {{ $member->profile->status === 'online' ? 'status-online' : 'status-offline' }}"></span>
                                 {{ ucfirst($member->profile->status) }}
@@ -369,6 +519,36 @@
                 @endforeach
             @endif
         @endforeach
+    </div>
+</div>
+
+<!-- Voice Controls Panel (Fixed Bottom Bar) -->
+<div id="voice-controls-panel" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background-color: #18181b; border-top: 2px solid #3f3f46; padding: 12px 20px; z-index: 1000; box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);">
+    <div style="max-width: 1400px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 8px; height: 8px; border-radius: 50%; background-color: #10b981;" id="voice-connection-indicator"></div>
+                <div>
+                    <div style="font-size: 12px; color: #71717a; font-weight: 600;">VOICE CONNECTED</div>
+                    <div style="font-size: 14px; color: #efeff1; font-weight: 600;" id="voice-channel-name">Voice Channel</div>
+                </div>
+            </div>
+            <div id="voice-network-quality" style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; background-color: #0e0e10; border-radius: 6px;">
+                <div style="width: 6px; height: 6px; border-radius: 50%; background-color: #10b981;" id="network-quality-indicator"></div>
+                <span style="font-size: 12px; color: #71717a;">Connection: <span id="network-quality-text" style="color: #10b981; font-weight: 600;">Excellent</span></span>
+            </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <button id="mute-toggle-btn" onclick="toggleMute()" style="background-color: #3f3f46; color: #efeff1; border: none; padding: 10px 20px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px;">
+                <span id="mute-icon">🎤</span>
+                <span id="mute-text">Mute</span>
+            </button>
+            <button id="disconnect-btn" onclick="disconnectVoice()" style="background-color: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px;">
+                <span>📞</span>
+                <span>Disconnect</span>
+            </button>
+        </div>
     </div>
 </div>
 
@@ -694,5 +874,289 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
     document.head.appendChild(style);
 });
+
+// Voice Chat Global Variables
+let voiceChat = null;
+let currentVoiceChannel = null;
+let isMuted = false;
+
+// Join Voice Channel
+async function joinVoiceChannel(serverId, channelId, channelName) {
+    try {
+        // Check if already connected to a voice channel
+        if (voiceChat && voiceChat.isConnected) {
+            if (currentVoiceChannel === channelId) {
+                showNotification('You are already connected to this voice channel', 'info');
+                return;
+            }
+
+            // Disconnect from current channel first
+            await disconnectVoice();
+        }
+
+        // Show connecting state
+        const connectionIndicator = document.getElementById('voice-connection-indicator');
+        if (connectionIndicator) {
+            connectionIndicator.classList.add('connecting');
+        }
+
+        showNotification('Connecting to voice channel...', 'info');
+
+        // Import the VoiceChat class (check if already loaded globally)
+        if (typeof window.VoiceChat === 'undefined') {
+            showNotification('Voice chat module not loaded. Please refresh the page.', 'error');
+            return;
+        }
+
+        // Create new voice chat instance
+        voiceChat = new window.VoiceChat();
+
+        // Set up callbacks for UI updates
+        voiceChat.on('connectionStateChange', (state) => {
+            updateConnectionUI(state);
+        });
+
+        voiceChat.on('networkQualityChange', (quality) => {
+            updateNetworkQualityUI(quality);
+        });
+
+        voiceChat.on('userJoined', (userId) => {
+            updateVoiceUserIndicators();
+        });
+
+        voiceChat.on('userLeft', (userId) => {
+            updateVoiceUserIndicators();
+        });
+
+        voiceChat.on('notification', (message, type) => {
+            showNotification(message, type);
+        });
+
+        // Join the channel
+        await voiceChat.joinChannel(channelId);
+
+        // Update UI
+        currentVoiceChannel = channelId;
+        document.getElementById('voice-channel-name').textContent = channelName;
+        document.getElementById('voice-controls-panel').style.display = 'block';
+
+        // Mark voice channel as active
+        document.querySelectorAll('.voice-channel-link').forEach(link => {
+            link.classList.remove('active');
+        });
+        const activeLink = document.querySelector(`.voice-channel-link[data-channel-id="${channelId}"]`);
+        if (activeLink) {
+            activeLink.classList.add('active');
+        }
+
+        // Show user's own "In Voice" badge
+        const myBadge = document.querySelector(`.in-voice-badge[data-user-id="{{ auth()->id() }}"]`);
+        if (myBadge) {
+            myBadge.style.display = 'inline-block';
+        }
+
+        if (connectionIndicator) {
+            connectionIndicator.classList.remove('connecting');
+        }
+
+        showNotification(`Connected to ${channelName}`, 'success');
+    } catch (error) {
+        console.error('Error joining voice channel:', error);
+        showNotification('Failed to join voice channel: ' + error.message, 'error');
+
+        const connectionIndicator = document.getElementById('voice-connection-indicator');
+        if (connectionIndicator) {
+            connectionIndicator.classList.remove('connecting');
+            connectionIndicator.classList.add('disconnected');
+        }
+    }
+}
+
+// Disconnect from Voice
+async function disconnectVoice() {
+    if (!voiceChat) {
+        return;
+    }
+
+    try {
+        await voiceChat.leaveChannel();
+
+        // Update UI
+        document.getElementById('voice-controls-panel').style.display = 'none';
+        document.querySelectorAll('.voice-channel-link').forEach(link => {
+            link.classList.remove('active');
+        });
+
+        // Hide user's own "In Voice" badge
+        const myBadge = document.querySelector(`.in-voice-badge[data-user-id="{{ auth()->id() }}"]`);
+        if (myBadge) {
+            myBadge.style.display = 'none';
+        }
+
+        voiceChat = null;
+        currentVoiceChannel = null;
+        isMuted = false;
+
+        // Reset mute button
+        document.getElementById('mute-toggle-btn').classList.remove('muted');
+        document.getElementById('mute-icon').textContent = '🎤';
+        document.getElementById('mute-text').textContent = 'Mute';
+
+        showNotification('Disconnected from voice channel', 'info');
+    } catch (error) {
+        console.error('Error disconnecting from voice:', error);
+        showNotification('Error disconnecting: ' + error.message, 'error');
+    }
+}
+
+// Toggle Mute
+async function toggleMute() {
+    if (!voiceChat) {
+        return;
+    }
+
+    try {
+        isMuted = await voiceChat.toggleMute();
+
+        // Update mute button UI
+        const muteBtn = document.getElementById('mute-toggle-btn');
+        const muteIcon = document.getElementById('mute-icon');
+        const muteText = document.getElementById('mute-text');
+
+        if (isMuted) {
+            muteBtn.classList.add('muted');
+            muteIcon.textContent = '🔇';
+            muteText.textContent = 'Unmute';
+            showNotification('Microphone muted', 'info');
+        } else {
+            muteBtn.classList.remove('muted');
+            muteIcon.textContent = '🎤';
+            muteText.textContent = 'Mute';
+            showNotification('Microphone unmuted', 'success');
+        }
+    } catch (error) {
+        console.error('Error toggling mute:', error);
+        showNotification('Error toggling mute: ' + error.message, 'error');
+    }
+}
+
+// Update Connection State UI
+function updateConnectionUI(state) {
+    const indicator = document.getElementById('voice-connection-indicator');
+    if (!indicator) return;
+
+    indicator.classList.remove('connecting', 'disconnected');
+
+    switch (state) {
+        case 'CONNECTING':
+            indicator.classList.add('connecting');
+            break;
+        case 'CONNECTED':
+            indicator.style.backgroundColor = '#10b981';
+            break;
+        case 'DISCONNECTED':
+            indicator.classList.add('disconnected');
+            break;
+        case 'RECONNECTING':
+            indicator.classList.add('connecting');
+            break;
+    }
+}
+
+// Update Network Quality UI
+function updateNetworkQualityUI(quality) {
+    const qualityIndicator = document.getElementById('network-quality-indicator');
+    const qualityText = document.getElementById('network-quality-text');
+
+    if (!qualityIndicator || !qualityText) return;
+
+    qualityIndicator.classList.remove('network-quality-excellent', 'network-quality-good', 'network-quality-poor');
+
+    if (quality >= 4) {
+        qualityIndicator.classList.add('network-quality-excellent');
+        qualityText.textContent = 'Excellent';
+        qualityText.style.color = '#10b981';
+    } else if (quality >= 2) {
+        qualityIndicator.classList.add('network-quality-good');
+        qualityText.textContent = 'Good';
+        qualityText.style.color = '#f59e0b';
+    } else {
+        qualityIndicator.classList.add('network-quality-poor');
+        qualityText.textContent = 'Poor';
+        qualityText.style.color = '#ef4444';
+    }
+}
+
+// Update Voice User Indicators
+function updateVoiceUserIndicators() {
+    // This will be updated via Laravel Echo real-time events
+    // Placeholder for future real-time updates
+}
+
+// Laravel Echo Real-Time Voice Presence Listeners
+@if(isset($server))
+document.addEventListener('DOMContentLoaded', function() {
+    const serverId = {{ $server->id }};
+
+    // Listen for voice user joined events
+    window.Echo.private(`server.${serverId}`)
+        .listen('.voice.user.joined', (event) => {
+            console.log('User joined voice:', event);
+
+            // Show "In Voice" badge for the user
+            const badge = document.querySelector(`.in-voice-badge[data-user-id="${event.user_id}"]`);
+            if (badge) {
+                badge.style.display = 'inline-block';
+            }
+
+            // Update voice channel user count
+            const channelCount = document.querySelector(`.voice-user-count[data-channel-id="${event.channel_id}"]`);
+            if (channelCount) {
+                const countSpan = channelCount.querySelector('.count');
+                const currentCount = parseInt(countSpan.textContent) || 0;
+                countSpan.textContent = currentCount + 1;
+                channelCount.style.display = 'block';
+            }
+
+            // Show notification if not the current user
+            if (event.user_id !== {{ auth()->id() }}) {
+                showNotification(`${event.user_name} joined ${event.channel_name}`, 'info');
+            }
+        })
+        .listen('.voice.user.left', (event) => {
+            console.log('User left voice:', event);
+
+            // Hide "In Voice" badge for the user
+            const badge = document.querySelector(`.in-voice-badge[data-user-id="${event.user_id}"]`);
+            if (badge) {
+                badge.style.display = 'none';
+            }
+
+            // Update voice channel user count
+            const channelCount = document.querySelector(`.voice-user-count[data-channel-id="${event.channel_id}"]`);
+            if (channelCount) {
+                const countSpan = channelCount.querySelector('.count');
+                const currentCount = parseInt(countSpan.textContent) || 0;
+                const newCount = Math.max(0, currentCount - 1);
+                countSpan.textContent = newCount;
+
+                if (newCount === 0) {
+                    channelCount.style.display = 'none';
+                }
+            }
+
+            // Show notification if not the current user
+            if (event.user_id !== {{ auth()->id() }}) {
+                showNotification(`${event.user_name} left ${event.channel_name}`, 'info');
+            }
+        })
+        .listen('.voice.user.muted', (event) => {
+            console.log('User mute status changed:', event);
+
+            // Could add muted icon next to user
+            // For now, just log it
+        });
+});
+@endif
 </script>
 @endsection

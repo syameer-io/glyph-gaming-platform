@@ -106,50 +106,86 @@ class AgoraService
      * If the user already has an active session in this channel, returns the existing
      * session instead of creating a duplicate.
      *
+     * Handles cleanup of orphaned sessions where the user may have disconnected
+     * without properly leaving (e.g., browser crash, network loss).
+     *
      * @param int $userId The user ID joining the channel
      * @param int $channelId The voice channel ID being joined
      * @param int $serverId The server ID where the channel belongs
      * @return VoiceSession The created or existing voice session
+     * @throws Exception If session creation fails
      */
     public function trackJoin(int $userId, int $channelId, int $serverId): VoiceSession
     {
-        // Check if user already has an active session in this channel
-        $existingSession = VoiceSession::getActiveUserSession($userId, $channelId);
+        try {
+            // Check if user already has an active session in this channel
+            $existingSession = VoiceSession::getActiveUserSession($userId, $channelId);
 
-        if ($existingSession) {
-            Log::info('User already has active voice session in channel', [
+            if ($existingSession) {
+                Log::info('User already has active voice session in channel', [
+                    'user_id' => $userId,
+                    'channel_id' => $channelId,
+                    'session_id' => $existingSession->id,
+                    'joined_at' => $existingSession->joined_at->toDateTimeString()
+                ]);
+
+                // Load relationships for consistent return format
+                return $existingSession->load(['user', 'channel', 'server']);
+            }
+
+            // Check for orphaned sessions from the same user in other channels
+            // This handles cases where the user disconnected without proper cleanup
+            $orphanedSessions = VoiceSession::active()
+                ->forUser($userId)
+                ->where('joined_at', '<', Carbon::now()->subHours(1))
+                ->get();
+
+            if ($orphanedSessions->count() > 0) {
+                Log::warning('Found orphaned voice sessions for user, cleaning up', [
+                    'user_id' => $userId,
+                    'orphaned_count' => $orphanedSessions->count()
+                ]);
+
+                foreach ($orphanedSessions as $orphanedSession) {
+                    $orphanedSession->endSession();
+                }
+            }
+
+            // Create new voice session
+            $session = VoiceSession::create([
                 'user_id' => $userId,
                 'channel_id' => $channelId,
-                'session_id' => $existingSession->id,
-                'joined_at' => $existingSession->joined_at->toDateTimeString()
+                'server_id' => $serverId,
+                'agora_channel_name' => "voice-channel-{$channelId}",
+                'joined_at' => Carbon::now(),
+                'is_muted' => false,
             ]);
 
-            // Load relationships for consistent return format
-            return $existingSession->load(['user', 'channel', 'server']);
+            // Load relationships
+            $session->load(['user', 'channel', 'server']);
+
+            Log::info('Voice session created', [
+                'session_id' => $session->id,
+                'user_id' => $userId,
+                'channel_id' => $channelId,
+                'server_id' => $serverId,
+                'agora_channel_name' => $session->agora_channel_name,
+                'joined_at' => $session->joined_at->toDateTimeString()
+            ]);
+
+            return $session;
+
+        } catch (Exception $e) {
+            Log::error('Failed to track voice session join', [
+                'user_id' => $userId,
+                'channel_id' => $channelId,
+                'server_id' => $serverId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            throw $e;
         }
-
-        // Create new voice session
-        $session = VoiceSession::create([
-            'user_id' => $userId,
-            'channel_id' => $channelId,
-            'server_id' => $serverId,
-            'agora_channel_name' => "voice-channel-{$channelId}",
-            'joined_at' => Carbon::now(),
-            'is_muted' => false,
-        ]);
-
-        // Load relationships
-        $session->load(['user', 'channel', 'server']);
-
-        Log::info('Voice session created', [
-            'session_id' => $session->id,
-            'user_id' => $userId,
-            'channel_id' => $channelId,
-            'server_id' => $serverId,
-            'joined_at' => $session->joined_at->toDateTimeString()
-        ]);
-
-        return $session;
     }
 
     /**

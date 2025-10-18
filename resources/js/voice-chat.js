@@ -60,6 +60,47 @@ class VoiceChat {
         };
 
         console.log('VoiceChat instance created');
+
+        // Check secure context on initialization and warn user
+        this.warnIfInsecureContext();
+    }
+
+    /**
+     * Check and warn user if running in insecure context
+     * This runs on page load to give early warning
+     */
+    warnIfInsecureContext() {
+        if (!window.isSecureContext) {
+            console.warn(
+                '%c Voice Chat Warning: Insecure Context Detected',
+                'background: #ff6b6b; color: white; font-size: 14px; padding: 8px; border-radius: 4px;',
+                '\n\nYour site is running on HTTP, but voice chat requires HTTPS to access the microphone.\n\n' +
+                'Current URL:', window.location.href, '\n' +
+                'Secure Context:', window.isSecureContext, '\n\n' +
+                'To fix this issue:\n' +
+                '1. Enable HTTPS in Laragon (Menu > Apache > SSL > Enabled)\n' +
+                '2. Generate SSL certificate for your domain\n' +
+                '3. Update APP_URL in .env to https://\n' +
+                '4. Clear config cache: php artisan config:clear\n\n' +
+                'See HTTPS_SETUP_GUIDE.md in project root for detailed instructions.\n\n' +
+                'Alternative quick fix (development only): Access site via https://127.0.0.1'
+            );
+
+            // Show warning notification to user (delayed so UI is ready)
+            setTimeout(() => {
+                this.showNotification(
+                    'Voice chat requires HTTPS to work. Please enable SSL in Laragon. See browser console for details.',
+                    'warning'
+                );
+            }, 2000);
+        } else {
+            console.log(
+                '%c Voice Chat: Secure Context Detected ✓',
+                'background: #51cf66; color: white; font-size: 12px; padding: 4px; border-radius: 4px;',
+                '\n\nSecure context is available. Voice chat should work correctly.\n' +
+                'Current URL:', window.location.href
+            );
+        }
     }
 
     /**
@@ -409,6 +450,37 @@ class VoiceChat {
     }
 
     /**
+     * Check if browser supports secure context for getUserMedia
+     *
+     * @returns {Object} Support status and error message
+     */
+    checkSecureContext() {
+        // Check if running in secure context (HTTPS or localhost)
+        if (!window.isSecureContext) {
+            return {
+                supported: false,
+                error: 'Voice chat requires a secure connection (HTTPS). Your site is running on HTTP.\n\n' +
+                       'To fix this:\n' +
+                       '1. Enable HTTPS in Laragon (Menu > Apache > SSL > Enabled)\n' +
+                       '2. Generate SSL certificate for your domain\n' +
+                       '3. Update APP_URL in .env to use https://\n' +
+                       '4. Clear config cache: php artisan config:clear\n\n' +
+                       'See HTTPS_SETUP_GUIDE.md for detailed instructions.'
+            };
+        }
+
+        // Check if getUserMedia API is available
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            return {
+                supported: false,
+                error: 'Your browser does not support voice chat. Please use Chrome, Edge, Firefox, or Safari.'
+            };
+        }
+
+        return { supported: true };
+    }
+
+    /**
      * Join a voice channel
      *
      * @param {number} channelId - The voice channel ID to join
@@ -418,6 +490,14 @@ class VoiceChat {
         if (this.isConnected || this.isConnecting) {
             console.warn('Already connected or connecting to a voice channel');
             this.showNotification('You are already in a voice channel. Please leave first.', 'warning');
+            return false;
+        }
+
+        // Check secure context BEFORE attempting to join
+        const secureCheck = this.checkSecureContext();
+        if (!secureCheck.supported) {
+            console.error('Secure context check failed:', secureCheck.error);
+            this.showError(secureCheck.error);
             return false;
         }
 
@@ -483,14 +563,33 @@ class VoiceChat {
 
             let errorMessage = 'Failed to join voice channel.';
 
-            if (error.message) {
-                errorMessage = error.message;
-            } else if (error.code === 'PERMISSION_DENIED') {
-                errorMessage = 'Microphone permission denied. Please allow microphone access and try again.';
-            } else if (error.code === 'DEVICE_NOT_FOUND') {
-                errorMessage = 'No microphone found. Please connect a microphone and try again.';
+            // Enhanced error handling with specific messages
+            if (error.code === 'NOT_SUPPORTED') {
+                // This error occurs when getUserMedia is not available
+                errorMessage = 'Voice chat is not supported in this context.\n\n' +
+                              'This usually happens when:\n' +
+                              '1. Site is running on HTTP instead of HTTPS\n' +
+                              '2. Browser does not support WebRTC\n\n' +
+                              'Solution: Enable HTTPS in Laragon.\n' +
+                              'See HTTPS_SETUP_GUIDE.md for instructions.';
+            } else if (error.code === 'PERMISSION_DENIED' || error.name === 'NotAllowedError') {
+                errorMessage = 'Microphone permission denied.\n\n' +
+                              'Please allow microphone access in your browser settings and try again.\n\n' +
+                              'Chrome: Click the camera icon in address bar\n' +
+                              'Edge: Site settings > Microphone > Allow';
+            } else if (error.code === 'DEVICE_NOT_FOUND' || error.name === 'NotFoundError') {
+                errorMessage = 'No microphone found.\n\n' +
+                              'Please:\n' +
+                              '1. Connect a microphone to your computer\n' +
+                              '2. Ensure it is enabled in system settings\n' +
+                              '3. Try again';
+            } else if (error.code === 'NOT_READABLE' || error.name === 'NotReadableError') {
+                errorMessage = 'Microphone is already in use by another application.\n\n' +
+                              'Please close other apps using your microphone and try again.';
             } else if (error.code === 'INVALID_PARAMS') {
                 errorMessage = 'Invalid channel parameters. Please contact support.';
+            } else if (error.message) {
+                errorMessage = error.message;
             }
 
             this.showError(errorMessage);
