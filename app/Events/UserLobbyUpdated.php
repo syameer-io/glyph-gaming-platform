@@ -45,17 +45,26 @@ class UserLobbyUpdated implements ShouldBroadcast
     /**
      * Get the channels the event should broadcast on.
      *
-     * Broadcasts to:
-     * - Private user channel for the user's profile/dashboard
-     * - Team members can listen to this channel if implementing team notifications
+     * Broadcasts to ALL servers the user is a member of.
+     * This ensures real-time lobby notifications appear to all server members
+     * regardless of which server the user is currently viewing.
      *
      * @return array<int, \Illuminate\Broadcasting\Channel>
      */
     public function broadcastOn(): array
     {
-        return [
-            new PrivateChannel('user.' . $this->userId),
-        ];
+        $user = \App\Models\User::find($this->userId);
+
+        if (!$user) {
+            return [];
+        }
+
+        // Broadcast to all servers the user is a member of
+        $channels = $user->servers->map(function ($server) {
+            return new PrivateChannel('server.' . $server->id);
+        })->toArray();
+
+        return $channels;
     }
 
     /**

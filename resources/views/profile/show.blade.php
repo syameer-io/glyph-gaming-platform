@@ -210,7 +210,7 @@
                                             <span style="color: white; font-weight: 600;">Lobby Active</span>
                                         </div>
                                         <div style="font-size: 12px; color: rgba(255,255,255,0.9); margin-bottom: 12px;">
-                                            Expires in <span id="lobby-timer">{{ $user->profile->lobbyTimeRemaining() }}</span> minutes
+                                            Expires in <span id="lobby-timer">{{ $user->profile->lobbyTimeRemaining() ?? 0 }}</span> minutes
                                         </div>
                                         <button onclick="clearLobby()" class="btn btn-danger btn-sm" style="width: 100%;">
                                             Clear Lobby
@@ -624,7 +624,10 @@ function startLobbyTimer(initialMinutes) {
 // Initialize timer if lobby is active
 @if($user->profile && $user->profile->hasActiveLobby())
 document.addEventListener('DOMContentLoaded', function() {
-    startLobbyTimer({{ $user->profile->lobbyTimeRemaining() }});
+    const remainingTime = {{ $user->profile->lobbyTimeRemaining() ?? 0 }};
+    if (remainingTime > 0) {
+        startLobbyTimer(remainingTime);
+    }
 });
 @endif
 @endif

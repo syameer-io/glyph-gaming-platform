@@ -4,6 +4,8 @@ use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 use App\Services\TelegramBotService;
+use App\Models\Profile;
+use Carbon\Carbon;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -20,6 +22,71 @@ Schedule::command('app:fetch-steam-data')
 Schedule::call(function () {
     \Log::info('Scheduler is running at ' . now()->format('Y-m-d H:i:s'));
 })->everyMinute();
+
+// Clear expired Steam lobby links (older than 30 minutes)
+Schedule::call(function () {
+    $expirationThreshold = Carbon::now()->subMinutes(Profile::LOBBY_EXPIRATION_MINUTES);
+
+    $expiredCount = Profile::whereNotNull('steam_lobby_link')
+        ->whereNotNull('steam_lobby_link_updated_at')
+        ->where('steam_lobby_link_updated_at', '<', $expirationThreshold)
+        ->update([
+            'steam_lobby_link' => null,
+            'steam_lobby_link_updated_at' => null,
+        ]);
+
+    if ($expiredCount > 0) {
+        \Log::info("Cleared {$expiredCount} expired Steam lobby link(s) at " . now()->format('Y-m-d H:i:s'));
+    }
+})->everyFiveMinutes()->name('clear-expired-lobby-links');
+
+// Manual command to test lobby link expiration clearing
+Artisan::command('lobby:clear-expired', function () {
+    $this->info('Checking for expired Steam lobby links...');
+
+    $expirationThreshold = Carbon::now()->subMinutes(Profile::LOBBY_EXPIRATION_MINUTES);
+
+    // Show what will be cleared
+    $expiredProfiles = Profile::whereNotNull('steam_lobby_link')
+        ->whereNotNull('steam_lobby_link_updated_at')
+        ->where('steam_lobby_link_updated_at', '<', $expirationThreshold)
+        ->with('user:id,username,display_name')
+        ->get();
+
+    if ($expiredProfiles->isEmpty()) {
+        $this->info('No expired lobby links found.');
+        return 0;
+    }
+
+    $this->table(
+        ['User', 'Lobby Link', 'Updated At', 'Age (minutes)'],
+        $expiredProfiles->map(function ($profile) {
+            return [
+                $profile->user->display_name ?? $profile->user->username ?? 'Unknown',
+                substr($profile->steam_lobby_link, 0, 50) . '...',
+                $profile->steam_lobby_link_updated_at->format('Y-m-d H:i:s'),
+                Carbon::now()->diffInMinutes($profile->steam_lobby_link_updated_at, true)
+            ];
+        })
+    );
+
+    if ($this->confirm("Clear {$expiredProfiles->count()} expired lobby link(s)?", true)) {
+        $expiredCount = Profile::whereNotNull('steam_lobby_link')
+            ->whereNotNull('steam_lobby_link_updated_at')
+            ->where('steam_lobby_link_updated_at', '<', $expirationThreshold)
+            ->update([
+                'steam_lobby_link' => null,
+                'steam_lobby_link_updated_at' => null,
+            ]);
+
+        $this->info("✅ Cleared {$expiredCount} expired lobby link(s)");
+        \Log::info("Manually cleared {$expiredCount} expired Steam lobby link(s)");
+        return 0;
+    }
+
+    $this->warn('Operation cancelled.');
+    return 1;
+})->purpose('Manually clear expired Steam lobby links');
 
 Artisan::command('test:telegram', function () {
     try {
