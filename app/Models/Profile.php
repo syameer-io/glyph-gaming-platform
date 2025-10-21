@@ -200,4 +200,40 @@ class Profile extends Model
 
         return $this->save();
     }
+
+    /**
+     * Get the remaining time (in minutes) until the lobby expires.
+     *
+     * Returns the number of minutes left before the lobby link expires.
+     * Useful for displaying countdown timers to users.
+     *
+     * Calculation: LOBBY_EXPIRATION_MINUTES - age of lobby
+     *
+     * Returns null if:
+     * - No lobby exists
+     * - Lobby has already expired
+     * - Timestamp is missing
+     *
+     * @return int|null Remaining minutes (rounded down), or null if no active lobby
+     */
+    public function lobbyTimeRemaining(): ?int
+    {
+        // No lobby or already expired
+        if (!$this->hasActiveLobby()) {
+            return null;
+        }
+
+        // Get age in minutes
+        $ageInMinutes = $this->getLobbyAgeInMinutes();
+
+        if (is_null($ageInMinutes)) {
+            return null;
+        }
+
+        // Calculate remaining time (floor to avoid showing partial minutes)
+        $remaining = self::LOBBY_EXPIRATION_MINUTES - $ageInMinutes;
+
+        // Return as integer (rounded down), ensuring it's never negative
+        return max(0, (int) floor($remaining));
+    }
 }

@@ -384,11 +384,45 @@
                                 </div>
                             @endif
                             
-                            {{-- Join lobby button --}}
-                            @if($member->profile->current_game && $member->profile->steam_data && $member->id !== auth()->id())
-                                <button class="btn btn-success btn-sm" style="margin-top: 4px; font-size: 11px; padding: 4px 8px;">
-                                    Join Lobby
-                                </button>
+                            {{-- Join lobby button (Phase 4) --}}
+                            @if($member->id !== auth()->id())
+                                @php
+                                    // Priority system:
+                                    // 1. User-provided lobby link (highest priority)
+                                    // 2. Server IP from Steam API (community servers)
+                                    // 3. Not joinable (matchmaking/offline)
+
+                                    $hasLobbyLink = $member->profile && $member->profile->hasActiveLobby();
+                                    $hasServerIP = $member->profile->current_game && isset($member->profile->current_game['connect']) && !empty($member->profile->current_game['connect']);
+                                    $isJoinable = $hasLobbyLink || $hasServerIP;
+
+                                    $joinUrl = null;
+                                    $buttonText = 'Not Joinable';
+                                    $buttonClass = 'btn-secondary';
+                                    $isDisabled = true;
+
+                                    if ($hasLobbyLink) {
+                                        $joinUrl = $member->profile->steam_lobby_link;
+                                        $buttonText = '🚀 Join Lobby';
+                                        $buttonClass = 'btn-success';
+                                        $isDisabled = false;
+                                    } elseif ($hasServerIP) {
+                                        $joinUrl = 'steam://connect/' . $member->profile->current_game['connect'];
+                                        $buttonText = '🎮 Join Server';
+                                        $buttonClass = 'btn-primary';
+                                        $isDisabled = false;
+                                    }
+                                @endphp
+
+                                @if($isJoinable)
+                                    <a href="{{ $joinUrl }}" class="btn {{ $buttonClass }} btn-sm" style="margin-top: 4px; font-size: 11px; padding: 4px 8px; text-decoration: none; display: inline-block;">
+                                        {{ $buttonText }}
+                                    </a>
+                                @elseif($member->profile->current_game)
+                                    <button class="btn {{ $buttonClass }} btn-sm" style="margin-top: 4px; font-size: 11px; padding: 4px 8px; opacity: 0.5;" disabled title="Player is in matchmaking or offline">
+                                        ⚠️ {{ $buttonText }}
+                                    </button>
+                                @endif
                             @endif
                         </div>
                     </div>
@@ -427,13 +461,13 @@ const currentUserId = {{ auth()->id() }};
 const serverId = {{ $server->id }};
 const channelId = {{ $channel->id }};
 
-// Initialize Echo listener
+// Initialize Echo listener for chat messages
 if (window.Echo) {
     console.log('Setting up Echo listener for channel:', `server.${serverId}.channel.${channelId}`);
-    
-    const channel = window.Echo.private(`server.${serverId}.channel.${channelId}`);
-    
-    channel.listen('.message.posted', (e) => {
+
+    const chatChannel = window.Echo.private(`server.${serverId}.channel.${channelId}`);
+
+    chatChannel.listen('.message.posted', (e) => {
         console.log('Received message broadcast:', e);
         appendMessage(e.message);
     })
@@ -448,20 +482,51 @@ if (window.Echo) {
     .error((error) => {
         console.error('Echo channel error:', error);
     });
-    
+
+    // Initialize Echo listener for server-wide events (lobby notifications)
+    console.log('Setting up Echo listener for server-wide events:', `server.${serverId}`);
+
+    const serverChannel = window.Echo.private(`server.${serverId}`);
+
+    serverChannel.listen('.user.lobby.updated', (e) => {
+        console.log('Received lobby updated broadcast:', e);
+
+        // Don't show notification for own lobby creation
+        if (e.user_id !== currentUserId) {
+            showLobbyNotification(e);
+        }
+
+        // Update member list UI regardless
+        updateMemberLobbyStatus(e.user_id, e.lobby_link, e.display_name);
+    })
+    .listen('.user.lobby.cleared', (e) => {
+        console.log('Received lobby cleared broadcast:', e);
+
+        // Don't show notification for own lobby clear
+        if (e.user_id !== currentUserId) {
+            showLobbyCleared(e);
+        }
+
+        // Update member list UI regardless
+        updateMemberLobbyStatus(e.user_id, null, e.display_name);
+    })
+    .error((error) => {
+        console.error('Echo server channel error:', error);
+    });
+
     // Add connection status logging
     window.Echo.connector.pusher.connection.bind('connected', () => {
         console.log('WebSocket connected successfully');
     });
-    
+
     window.Echo.connector.pusher.connection.bind('disconnected', () => {
         console.log('WebSocket disconnected');
     });
-    
+
     window.Echo.connector.pusher.connection.bind('error', (error) => {
         console.error('WebSocket connection error:', error);
     });
-    
+
 } else {
     console.error('Echo not initialized!');
 }
@@ -771,6 +836,181 @@ document.addEventListener('keydown', function(event) {
         cancelEdit();
     }
 });
+
+// ==========================================
+// Lobby Notification Functions
+// ==========================================
+
+/**
+ * Show a lobby notification when a user creates a lobby
+ * Displays both a toast message and an interactive popup
+ */
+function showLobbyNotification(data) {
+    const { user_id, display_name, lobby_link, team, message } = data;
+
+    // Create toast notification
+    showToast(`${display_name} created a CS2 lobby!`, 'success');
+
+    // Create interactive popup notification
+    const notification = createLobbyPopup(user_id, display_name, lobby_link, team);
+
+    // Auto-dismiss after 10 seconds
+    setTimeout(() => {
+        if (notification && notification.parentElement) {
+            notification.style.opacity = '0';
+            setTimeout(() => notification.remove(), 300);
+        }
+    }, 10000);
+}
+
+/**
+ * Show a notification when a user clears their lobby
+ */
+function showLobbyCleared(data) {
+    const { display_name } = data;
+    showToast(`${display_name} left their lobby`, 'info');
+}
+
+/**
+ * Create an interactive lobby join popup notification
+ */
+function createLobbyPopup(userId, displayName, lobbyLink, team) {
+    // Check if notification already exists
+    const existingNotification = document.getElementById(`lobby-notification-${userId}`);
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+
+    const notification = document.createElement('div');
+    notification.id = `lobby-notification-${userId}`;
+    notification.style.cssText = `
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 16px 20px;
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        z-index: 9999;
+        min-width: 320px;
+        max-width: 400px;
+        animation: slideInRight 0.3s ease-out;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    `;
+
+    notification.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+            <div style="font-weight: 700; font-size: 16px;">CS2 Lobby Available!</div>
+            <button onclick="event.stopPropagation(); this.closest('[id^=lobby-notification-]').remove();" style="background: none; border: none; color: white; font-size: 20px; cursor: pointer; padding: 0; line-height: 1; opacity: 0.7;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">&times;</button>
+        </div>
+        <div style="font-size: 14px; opacity: 0.95; margin-bottom: 12px;">
+            <strong>${escapeHtml(displayName)}</strong> has created a lobby
+            ${team ? `<br><span style="opacity: 0.8;">Team: ${escapeHtml(team.name)}</span>` : ''}
+        </div>
+        <div style="font-size: 13px; background: rgba(255,255,255,0.15); padding: 8px 12px; border-radius: 8px; margin-bottom: 12px;">
+            Click to join or dismiss
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <button onclick="joinLobby('${escapeHtml(lobbyLink)}', '${escapeHtml(displayName)}'); this.closest('[id^=lobby-notification-]').remove();" style="flex: 1; background: white; color: #667eea; border: none; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                Join Lobby
+            </button>
+            <button onclick="this.closest('[id^=lobby-notification-]').remove();" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                Dismiss
+            </button>
+        </div>
+    `;
+
+    document.body.appendChild(notification);
+    return notification;
+}
+
+/**
+ * Join a CS2 lobby with confirmation
+ */
+function joinLobby(lobbyLink, displayName) {
+    if (confirm(`Join ${displayName}'s CS2 lobby?\n\nThis will open Steam and connect you to the game.`)) {
+        window.location.href = lobbyLink;
+        showToast('Opening Steam...', 'success');
+    }
+}
+
+/**
+ * Update member list UI when a user's lobby status changes
+ */
+function updateMemberLobbyStatus(userId, lobbyLink, displayName) {
+    // Find member in the member list sidebar
+    const memberElement = document.querySelector(`[data-member-id="${userId}"]`);
+
+    if (!memberElement) {
+        console.log('Member not found in list:', userId);
+        return;
+    }
+
+    // Remove existing lobby button if present
+    const existingButton = memberElement.querySelector('.lobby-join-button');
+    if (existingButton) {
+        existingButton.remove();
+    }
+
+    // If lobby link exists, add join button
+    if (lobbyLink) {
+        const joinButton = document.createElement('a');
+        joinButton.href = lobbyLink;
+        joinButton.className = 'btn btn-success btn-sm lobby-join-button';
+        joinButton.style.cssText = 'margin-top: 4px; font-size: 11px; padding: 4px 8px; text-decoration: none; display: inline-block;';
+        joinButton.textContent = '🚀 Join Lobby';
+        joinButton.onclick = function(e) {
+            e.preventDefault();
+            joinLobby(lobbyLink, displayName);
+        };
+
+        memberElement.appendChild(joinButton);
+        console.log(`Added lobby button for ${displayName}`);
+    } else {
+        console.log(`Removed lobby button for ${displayName}`);
+    }
+}
+
+/**
+ * Simple toast notification system
+ */
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        z-index: 10000;
+        animation: slideInUp 0.3s ease-out;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    `;
+
+    // Set background color based on type
+    const colors = {
+        success: '#059669',
+        error: '#dc2626',
+        info: '#3b82f6',
+        warning: '#f59e0b'
+    };
+
+    toast.style.backgroundColor = colors[type] || colors.info;
+    toast.textContent = message;
+
+    document.body.appendChild(toast);
+
+    // Auto-dismiss after 3 seconds
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(20px)';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
 </script>
 @endpush
 

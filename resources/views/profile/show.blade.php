@@ -194,6 +194,95 @@
             </div>
 
             <div>
+                {{-- CS2 Lobby Management (Phase 4) --}}
+                @if(auth()->check())
+                    @if(auth()->id() === $user->id)
+                        {{-- Own profile: Lobby management --}}
+                        <div class="card" style="margin-bottom: 24px;">
+                            <h3 class="card-header">🎮 CS2 Lobby</h3>
+
+                            <div id="lobby-management">
+                                @if($user->profile && $user->profile->hasActiveLobby())
+                                    {{-- Active lobby display --}}
+                                    <div id="active-lobby-display" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 8px; padding: 16px; margin-bottom: 12px;">
+                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                            <div style="width: 8px; height: 8px; background: #fff; border-radius: 50%; animation: pulse 2s infinite;"></div>
+                                            <span style="color: white; font-weight: 600;">Lobby Active</span>
+                                        </div>
+                                        <div style="font-size: 12px; color: rgba(255,255,255,0.9); margin-bottom: 12px;">
+                                            Expires in <span id="lobby-timer">{{ $user->profile->lobbyTimeRemaining() ?? 0 }}</span> minutes
+                                        </div>
+                                        <button onclick="clearLobby()" class="btn btn-danger btn-sm" style="width: 100%;">
+                                            Clear Lobby
+                                        </button>
+                                    </div>
+                                @else
+                                    {{-- Lobby link input form --}}
+                                    <div id="lobby-input-form">
+                                        <p style="color: #b3b3b5; font-size: 14px; margin-bottom: 12px;">
+                                            Share your CS2 lobby link so friends can join your game.
+                                        </p>
+
+                                        <div class="form-group" style="margin-bottom: 12px;">
+                                            <input
+                                                type="text"
+                                                id="lobby-link-input"
+                                                placeholder="steam://joinlobby/730/..."
+                                                style="width: 100%; padding: 10px 12px; background-color: #0e0e10; border: 1px solid #3f3f46; border-radius: 6px; color: #efeff1; font-size: 14px;"
+                                            >
+                                        </div>
+
+                                        <button onclick="saveLobbyLink()" class="btn btn-primary btn-sm" style="width: 100%; margin-bottom: 8px;">
+                                            Save Lobby Link
+                                        </button>
+
+                                        {{-- How to get lobby link instructions --}}
+                                        <details style="margin-top: 12px;">
+                                            <summary style="color: #667eea; cursor: pointer; font-size: 13px; user-select: none;">
+                                                How to get your lobby link?
+                                            </summary>
+                                            <div style="margin-top: 8px; padding: 12px; background-color: #0e0e10; border-radius: 6px; font-size: 12px; color: #b3b3b5; line-height: 1.6;">
+                                                <div style="margin-bottom: 12px;">
+                                                    <strong style="color: #efeff1;">Method 1: Steam Desktop (Easiest)</strong>
+                                                    <ol style="margin: 4px 0 0 20px; padding: 0;">
+                                                        <li>Create a lobby in CS2</li>
+                                                        <li><strong>Alt+Tab</strong> to minimize CS2 (don't use Steam Overlay)</li>
+                                                        <li>Open <strong>Steam desktop app</strong></li>
+                                                        <li>Go to <strong>Friends List</strong></li>
+                                                        <li>Right-click <strong>YOUR name</strong> → "Invite to Lobby" or "Copy Invite Link"</li>
+                                                    </ol>
+                                                </div>
+                                                <div style="padding: 8px; background-color: #3f3f46; border-radius: 4px;">
+                                                    <strong style="color: #efeff1;">Quick Test Link:</strong><br>
+                                                    <code style="color: #10b981; font-size: 11px;">steam://joinlobby/730/109775241255964925/76561199234567890</code><br>
+                                                    <span style="color: #71717a; font-size: 11px;">Use this to test the UI without creating a real lobby</span>
+                                                </div>
+                                            </div>
+                                        </details>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    @elseif($user->profile && $user->profile->hasActiveLobby())
+                        {{-- Other user's profile: Join lobby button --}}
+                        <div class="card" style="margin-bottom: 24px;">
+                            <h3 class="card-header">🎮 CS2 Lobby</h3>
+                            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; padding: 16px;">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                    <div style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulse 2s infinite;"></div>
+                                    <span style="color: white; font-weight: 600;">Lobby Available</span>
+                                </div>
+                                <div style="font-size: 12px; color: rgba(255,255,255,0.9); margin-bottom: 12px;">
+                                    {{ $user->display_name }} has an active CS2 lobby
+                                </div>
+                                <a href="{{ $user->profile->steam_lobby_link }}" class="btn btn-success" style="width: 100%; text-align: center; text-decoration: none;">
+                                    Join {{ $user->display_name }}'s Lobby
+                                </a>
+                            </div>
+                        </div>
+                    @endif
+                @endif
+
                 <div class="card" style="margin-bottom: 24px;">
                     <h3 class="card-header">Stats</h3>
                     <div style="display: flex; flex-direction: column; gap: 16px;">
@@ -329,7 +418,7 @@ if (window.Echo) {
 function updateGamingStatus(gameName, richPresence) {
     const statusElement = document.querySelector('[data-gaming-status]');
     if (!statusElement) return;
-    
+
     if (gameName) {
         let statusText = `Playing ${gameName}`;
         if (richPresence && richPresence.server_name) {
@@ -344,5 +433,247 @@ function updateGamingStatus(gameName, richPresence) {
         statusElement.style.display = 'none';
     }
 }
+
+// CS2 Lobby Management Functions (Phase 4)
+@if(auth()->check() && auth()->id() === $user->id)
+function saveLobbyLink() {
+    const input = document.getElementById('lobby-link-input');
+    const lobbyLink = input.value.trim();
+
+    // Validate lobby link format
+    if (!lobbyLink) {
+        showToast('Please enter a lobby link', 'error');
+        return;
+    }
+
+    if (!lobbyLink.startsWith('steam://joinlobby/730/')) {
+        showToast('Invalid CS2 lobby link format. Must start with steam://joinlobby/730/', 'error');
+        return;
+    }
+
+    // Disable button and show loading state
+    const saveBtn = event.target;
+    const originalText = saveBtn.textContent;
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
+
+    fetch('{{ route("profile.lobby-link.update") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ lobby_link: lobbyLink })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Lobby link saved successfully!', 'success');
+
+            // Update UI to show active lobby
+            const lobbyManagement = document.getElementById('lobby-management');
+            lobbyManagement.innerHTML = `
+                <div id="active-lobby-display" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 8px; padding: 16px; margin-bottom: 12px;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                        <div style="width: 8px; height: 8px; background: #fff; border-radius: 50%; animation: pulse 2s infinite;"></div>
+                        <span style="color: white; font-weight: 600;">Lobby Active</span>
+                    </div>
+                    <div style="font-size: 12px; color: rgba(255,255,255,0.9); margin-bottom: 12px;">
+                        Expires in <span id="lobby-timer">30</span> minutes
+                    </div>
+                    <button onclick="clearLobby()" class="btn btn-danger btn-sm" style="width: 100%;">
+                        Clear Lobby
+                    </button>
+                </div>
+            `;
+
+            // Start countdown timer
+            startLobbyTimer(30);
+        } else {
+            showToast(data.error || 'Failed to save lobby link', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error saving lobby link:', error);
+        showToast('Failed to save lobby link. Please try again.', 'error');
+    })
+    .finally(() => {
+        saveBtn.disabled = false;
+        saveBtn.textContent = originalText;
+    });
+}
+
+function clearLobby() {
+    if (!confirm('Clear your active lobby link?')) {
+        return;
+    }
+
+    fetch('{{ route("profile.lobby-link.clear") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Lobby link cleared', 'success');
+
+            // Update UI to show input form
+            const lobbyManagement = document.getElementById('lobby-management');
+            lobbyManagement.innerHTML = `
+                <div id="lobby-input-form">
+                    <p style="color: #b3b3b5; font-size: 14px; margin-bottom: 12px;">
+                        Share your CS2 lobby link so friends can join your game.
+                    </p>
+
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <input
+                            type="text"
+                            id="lobby-link-input"
+                            placeholder="steam://joinlobby/730/..."
+                            style="width: 100%; padding: 10px 12px; background-color: #0e0e10; border: 1px solid #3f3f46; border-radius: 6px; color: #efeff1; font-size: 14px;"
+                        >
+                    </div>
+
+                    <button onclick="saveLobbyLink()" class="btn btn-primary btn-sm" style="width: 100%; margin-bottom: 8px;">
+                        Save Lobby Link
+                    </button>
+
+                    <details style="margin-top: 12px;">
+                        <summary style="color: #667eea; cursor: pointer; font-size: 13px; user-select: none;">
+                            How to get your lobby link?
+                        </summary>
+                        <div style="margin-top: 8px; padding: 12px; background-color: #0e0e10; border-radius: 6px; font-size: 12px; color: #b3b3b5; line-height: 1.6;">
+                            <ol style="margin: 0; padding-left: 20px;">
+                                <li>Open CS2 and create a lobby</li>
+                                <li>Press <code style="background: #3f3f46; padding: 2px 6px; border-radius: 3px;">Shift+Tab</code> for Steam Overlay</li>
+                                <li>Click "View Players" → "Friends" → Right-click your name</li>
+                                <li>Select "Copy Lobby Link" or "Invite to Lobby"</li>
+                                <li>Paste the link here (starts with steam://joinlobby/730/)</li>
+                            </ol>
+                        </div>
+                    </details>
+                </div>
+            `;
+        } else {
+            showToast(data.error || 'Failed to clear lobby link', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error clearing lobby link:', error);
+        showToast('Failed to clear lobby link. Please try again.', 'error');
+    });
+}
+
+// Lobby countdown timer
+let lobbyTimerInterval = null;
+
+function startLobbyTimer(initialMinutes) {
+    // Clear any existing timer
+    if (lobbyTimerInterval) {
+        clearInterval(lobbyTimerInterval);
+    }
+
+    let remainingMinutes = initialMinutes;
+
+    lobbyTimerInterval = setInterval(() => {
+        remainingMinutes--;
+
+        const timerElement = document.getElementById('lobby-timer');
+        if (timerElement) {
+            timerElement.textContent = remainingMinutes;
+        }
+
+        // Auto-clear when expired
+        if (remainingMinutes <= 0) {
+            clearInterval(lobbyTimerInterval);
+            showToast('Your lobby link has expired', 'warning');
+
+            // Update UI to show input form
+            const lobbyManagement = document.getElementById('lobby-management');
+            if (lobbyManagement) {
+                lobbyManagement.innerHTML = `
+                    <div id="lobby-input-form">
+                        <p style="color: #b3b3b5; font-size: 14px; margin-bottom: 12px;">
+                            Share your CS2 lobby link so friends can join your game.
+                        </p>
+
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <input
+                                type="text"
+                                id="lobby-link-input"
+                                placeholder="steam://joinlobby/730/..."
+                                style="width: 100%; padding: 10px 12px; background-color: #0e0e10; border: 1px solid #3f3f46; border-radius: 6px; color: #efeff1; font-size: 14px;"
+                            >
+                        </div>
+
+                        <button onclick="saveLobbyLink()" class="btn btn-primary btn-sm" style="width: 100%; margin-bottom: 8px;">
+                            Save Lobby Link
+                        </button>
+                    </div>
+                `;
+            }
+        }
+    }, 60000); // Update every minute
+}
+
+// Initialize timer if lobby is active
+@if($user->profile && $user->profile->hasActiveLobby())
+document.addEventListener('DOMContentLoaded', function() {
+    const remainingTime = {{ $user->profile->lobbyTimeRemaining() ?? 0 }};
+    if (remainingTime > 0) {
+        startLobbyTimer(remainingTime);
+    }
+});
+@endif
+@endif
+
+// Simple toast notification function
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#667eea'};
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 10000;
+        animation: slideInRight 0.3s ease-out;
+        max-width: 400px;
+    `;
+    toast.textContent = message;
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.animation = 'slideOutRight 0.3s ease-in';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// Add animation styles
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideInRight {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOutRight {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+`;
+document.head.appendChild(style);
 </script>
 @endsection
