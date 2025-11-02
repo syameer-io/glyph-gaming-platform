@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Team extends Model
 {
+    use HasFactory;
     protected $fillable = [
         'name',
         'description',
@@ -353,24 +355,53 @@ class Team extends Model
     }
 
     /**
-     * Check if team needs specific roles
+     * Get roles that the team currently needs
+     *
+     * Compares current member roles against desired composition from team_data.
+     * Falls back to game-specific requirements if no custom roles defined.
+     * Returns associative array of role => count_needed.
+     *
+     * Phase 3 Enhancement: Uses custom team preferences when available.
+     *
+     * @return array Role names and counts needed (e.g., ['awper' => 1, 'support' => 1])
      */
     public function getNeededRoles(): array
     {
-        $distribution = $this->getRoleDistribution();
-        $needed = [];
+        // Get desired role distribution from team_data (custom team preferences)
+        $desiredRoles = $this->team_data['desired_roles'] ?? null;
 
-        // Game-specific role requirements
-        $gameRoleRequirements = $this->getGameRoleRequirements();
-
-        foreach ($gameRoleRequirements as $role => $minRequired) {
-            $currentCount = $distribution[$role] ?? 0;
-            if ($currentCount < $minRequired) {
-                $needed[$role] = $minRequired - $currentCount;
-            }
+        // If team_data is explicitly empty or desired_roles not set, team is flexible (no specific needs)
+        if ($desiredRoles === null || (is_array($this->team_data) && empty($this->team_data))) {
+            return []; // Team has no specific role requirements
         }
 
-        return $needed;
+        // If team has custom role preferences, use those
+        if (!empty($desiredRoles)) {
+            // Get current member roles
+            $currentRoles = $this->activeMembers()
+                ->whereNotNull('game_role')
+                ->get()
+                ->pluck('game_role')
+                ->countBy()
+                ->toArray();
+
+            // Calculate gaps between desired and current
+            $neededRoles = [];
+
+            foreach ($desiredRoles as $role => $desiredCount) {
+                $currentCount = $currentRoles[$role] ?? 0;
+                $needed = $desiredCount - $currentCount;
+
+                if ($needed > 0) {
+                    $neededRoles[$role] = $needed;
+                }
+            }
+
+            return $neededRoles;
+        }
+
+        // If desired_roles is set but empty array, team is flexible
+        return [];
     }
 
     /**

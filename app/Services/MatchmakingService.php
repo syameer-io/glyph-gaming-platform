@@ -331,9 +331,10 @@ class MatchmakingService
         ]);
 
         // Start with base query for recruiting teams in the same game
+        // Phase 3: Added playerGameRoles eager loading to prevent N+1 in getUserFlexibleRoles()
         $query = Team::recruiting()
             ->byGame($request->game_appid)
-            ->with(['server', 'creator', 'activeMembers.user.profile']);
+            ->with(['server', 'creator', 'activeMembers.user.profile', 'activeMembers.user.playerGameRoles']);
 
         \Log::info('Built base query for recruiting teams', [
             'game_appid' => $request->game_appid,
@@ -470,16 +471,27 @@ class MatchmakingService
         // 2. Role/Composition Match (already returns [0, 1])
         $normalizedScores['composition'] = $this->calculateRoleMatchForTeam($team, $request);
 
-        if ($normalizedScores['composition'] >= 0.80) {
+        // Phase 3 Enhanced Reason Messages
+        if ($normalizedScores['composition'] >= 0.95) {
             $neededRoles = $team->getNeededRoles();
             if (!empty($neededRoles)) {
-                $requestRoles = $request->preferred_roles ?? [];
-                $matchingRoles = array_intersect(array_keys($neededRoles), $requestRoles);
+                $userRoles = $this->getUserFlexibleRoles($request->user, $request->game_appid, $request);
+                $matchingRoles = array_intersect(array_keys($neededRoles), $userRoles);
                 if (!empty($matchingRoles)) {
                     $roleNames = implode(', ', array_map('ucfirst', $matchingRoles));
-                    $reasons[] = "Team needs your preferred role: {$roleNames}";
+                    $reasons[] = "Perfect role fit: Can fill {$roleNames}";
                 }
             }
+        } elseif ($normalizedScores['composition'] >= 0.70) {
+            // Check if user has no role preferences (flexible player case)
+            $userRoles = $this->getUserFlexibleRoles($request->user, $request->game_appid, $request);
+            if (empty($request->preferred_roles ?? [])) {
+                $reasons[] = "Flexible player - can adapt to team needs";
+            } else {
+                $reasons[] = "Good role compatibility";
+            }
+        } elseif ($normalizedScores['composition'] >= 0.50) {
+            $reasons[] = "Flexible player - can adapt to team needs";
         }
 
         // 3. Region Compatibility (already returns [0, 1])
@@ -654,7 +666,17 @@ class MatchmakingService
      * Calculate role match between team needs and request preferences
      *
      * Uses Jaccard similarity for role overlap when both team and user specify roles.
+     * Accounts for flexible players and partial role matches.
      * Returns normalized score [0, 1].
+     *
+     * Scoring Logic (Phase 3 - Jaccard-based):
+     * - Perfect match (user fills ALL needed roles): 1.0
+     * - Partial fill (user fills some roles): 0.70 + (fillRatio * 0.25) → [0.70, 0.95]
+     * - Flexible player (3+ roles): 0.60
+     * - Jaccard similarity (partial overlap): 0.40 + (jaccard * 0.30) → [0.40, 0.70]
+     * - Team has no needs: 0.80
+     * - User has no preferences: 0.70
+     * - No overlap at all: 0.30
      *
      * @param Team $team The team to evaluate
      * @param MatchmakingRequest $request The matchmaking request
@@ -662,29 +684,128 @@ class MatchmakingService
      */
     protected function calculateRoleMatchForTeam(Team $team, MatchmakingRequest $request): float
     {
-        $neededRoles = $team->getNeededRoles();
+        $neededRoles = $team->getNeededRoles(); // Returns array of role => count
         $requestRoles = $request->preferred_roles ?? [];
 
+        // Case 1: Team has no specific role needs
         if (empty($neededRoles)) {
-            // Team doesn't need specific roles - neutral-positive score
-            return 0.70;
+            // Team is flexible - any player is good
+            \Log::debug('Role matching: Team has no role needs', [
+                'team_id' => $team->id,
+                'case' => 'flexible_team',
+                'score' => 0.80,
+            ]);
+            return 0.80; // High neutral score
         }
 
+        // Case 2: User has no role preferences (total flex player)
         if (empty($requestRoles)) {
-            // Request has no role preferences - slightly lower neutral score
-            return 0.60;
+            // Flex player can fill any role - good for teams with needs
+            \Log::debug('Role matching: User has no role preferences', [
+                'team_id' => $team->id,
+                'request_id' => $request->id,
+                'case' => 'flexible_player',
+                'score' => 0.70,
+            ]);
+            return 0.70; // Decent neutral score (lower than team flexibility)
         }
 
-        // Check if any of the user's preferred roles match team needs
-        $matchingRoles = array_intersect(array_keys($neededRoles), $requestRoles);
+        // Case 3: Both have specified roles - calculate overlap
+
+        // Get roles user can play (includes flexible roles if skilled)
+        $userRoles = $this->getUserFlexibleRoles($request->user, $request->game_appid, $request);
+
+        // Extract role names from team needs (getNeededRoles returns role => count)
+        $neededRoleNames = array_keys($neededRoles);
+
+        // Check for exact matches first
+        $matchingRoles = array_intersect($neededRoleNames, $userRoles);
 
         if (!empty($matchingRoles)) {
-            // Strong match - user can fill a needed role
-            return 1.0;
-        } else {
-            // No direct match, but user is flexible
-            return 0.40;
+            // User can fill at least one needed role
+
+            // Calculate what percentage of needed roles user can fill
+            $fillRatio = count($matchingRoles) / count($neededRoleNames);
+
+            // Perfect fill (can cover all needs)
+            if ($fillRatio >= 1.0) {
+                \Log::debug('Role matching: Perfect fill', [
+                    'team_id' => $team->id,
+                    'request_id' => $request->id,
+                    'needed_roles' => $neededRoleNames,
+                    'user_roles' => $userRoles,
+                    'matching_roles' => $matchingRoles,
+                    'fill_ratio' => $fillRatio,
+                    'case' => 'perfect_fill',
+                    'score' => 1.0,
+                ]);
+                return 1.0;
+            }
+
+            // Partial fill - scale between 0.7 and 0.95
+            $score = 0.70 + ($fillRatio * 0.25);
+
+            \Log::debug('Role matching: Partial fill', [
+                'team_id' => $team->id,
+                'request_id' => $request->id,
+                'needed_roles' => $neededRoleNames,
+                'user_roles' => $userRoles,
+                'matching_roles' => $matchingRoles,
+                'fill_ratio' => $fillRatio,
+                'case' => 'partial_fill',
+                'score' => $score,
+            ]);
+
+            return $score;
         }
+
+        // Case 4: No direct match - use Jaccard similarity for partial overlap potential
+
+        // If user has many roles (flexible), give benefit of doubt
+        if (count($userRoles) >= 3) {
+            \Log::debug('Role matching: Flexible player with many roles', [
+                'team_id' => $team->id,
+                'request_id' => $request->id,
+                'needed_roles' => $neededRoleNames,
+                'user_roles' => $userRoles,
+                'user_role_count' => count($userRoles),
+                'case' => 'multi_role_player',
+                'score' => 0.60,
+            ]);
+            return 0.60; // Flexible player might adapt
+        }
+
+        // Calculate Jaccard similarity between all roles
+        $jaccardScore = $this->calculateJaccardSimilarity($neededRoleNames, $userRoles);
+
+        if ($jaccardScore > 0) {
+            // Some overlap in role space (similar playstyle)
+            $score = 0.40 + ($jaccardScore * 0.30); // Scale from 0.4 to 0.7
+
+            \Log::debug('Role matching: Jaccard similarity applied', [
+                'team_id' => $team->id,
+                'request_id' => $request->id,
+                'needed_roles' => $neededRoleNames,
+                'user_roles' => $userRoles,
+                'jaccard_score' => $jaccardScore,
+                'case' => 'jaccard_overlap',
+                'score' => $score,
+            ]);
+
+            return $score;
+        }
+
+        // Case 5: No overlap at all
+        \Log::debug('Role matching: No overlap', [
+            'team_id' => $team->id,
+            'request_id' => $request->id,
+            'needed_roles' => $neededRoleNames,
+            'user_roles' => $userRoles,
+            'case' => 'no_overlap',
+            'score' => 0.30,
+        ]);
+
+        return 0.30; // Poor match - user can't fill needed roles
     }
 
     /**
@@ -1085,6 +1206,137 @@ class MatchmakingService
             $skillScore >= 40 => 'intermediate',
             default => 'beginner'
         };
+    }
+
+    /**
+     * Calculate Jaccard similarity between two sets
+     *
+     * Jaccard Index = |A ∩ B| / |A ∪ B|
+     * Used for role overlap, language overlap, and schedule compatibility.
+     *
+     * This is a standard set similarity metric from research literature
+     * (Awesomenauts matchmaking paper, TrueSkill 2). It provides gradual
+     * scoring for partial overlaps, unlike binary matching.
+     *
+     * @param array $set1 First set
+     * @param array $set2 Second set
+     * @return float Jaccard similarity [0.0, 1.0]
+     */
+    protected function calculateJaccardSimilarity(array $set1, array $set2): float
+    {
+        // Handle empty sets
+        if (empty($set1) && empty($set2)) {
+            return 1.0; // Both empty = perfect match
+        }
+
+        if (empty($set1) || empty($set2)) {
+            return 0.0; // One empty = no overlap
+        }
+
+        // Calculate intersection and union
+        $intersection = array_intersect($set1, $set2);
+        $union = array_unique(array_merge($set1, $set2));
+
+        $intersectionCount = count($intersection);
+        $unionCount = count($union);
+
+        if ($unionCount === 0) {
+            return 0.0;
+        }
+
+        $jaccardScore = $intersectionCount / $unionCount;
+
+        \Log::debug('Jaccard similarity calculated', [
+            'set1' => $set1,
+            'set2' => $set2,
+            'intersection' => $intersection,
+            'union' => $union,
+            'intersection_count' => $intersectionCount,
+            'union_count' => $unionCount,
+            'jaccard_score' => $jaccardScore,
+        ]);
+
+        return $jaccardScore;
+    }
+
+    /**
+     * Get roles user can flexibly play based on preferences and skill level
+     *
+     * Higher skill players tend to be more flexible. This method returns
+     * both preferred roles and roles the user is willing to fill.
+     *
+     * Expert players (skill >= 70) with limited roles get expanded to
+     * common game roles, as they typically have the skill to flex.
+     *
+     * @param User $user The user
+     * @param string $gameAppId Game app ID
+     * @param MatchmakingRequest|null $request Optional request with flexible_roles
+     * @return array Array of role names user can play
+     */
+    protected function getUserFlexibleRoles(User $user, string $gameAppId, ?MatchmakingRequest $request = null): array
+    {
+        // Start with preferred roles - check request first (most specific), then user's gaming preferences
+        $preferredRoles = [];
+
+        // Priority 1: Use request's preferred_roles if available (this is what user wants NOW)
+        if ($request && !empty($request->preferred_roles)) {
+            $preferredRoles = is_array($request->preferred_roles) ? $request->preferred_roles : [];
+        } else {
+            // Priority 2: Fallback to user's stored gaming preferences
+            $preferredRoles = $this->getUserPreferredRoles($user, $gameAppId);
+        }
+
+        // Add flexible roles from matchmaking request if provided and column exists
+        if ($request && isset($request->flexible_roles) && !empty($request->flexible_roles)) {
+            $flexibleRoles = is_array($request->flexible_roles) ? $request->flexible_roles : [];
+            $preferredRoles = array_unique(array_merge($preferredRoles, $flexibleRoles));
+        }
+
+        // If user has high skill, assume more flexibility
+        // Expert players can often fill multiple roles effectively
+        $userSkill = $this->getUserSkillScore($user, $gameAppId);
+
+        if ($userSkill >= 70 && count($preferredRoles) <= 1) {
+            // Expert with one or no roles can likely flex to others
+            // Add common flex roles based on game
+            $commonRoles = $this->getCommonRolesForGame($gameAppId);
+            $preferredRoles = array_unique(array_merge($preferredRoles, $commonRoles));
+
+            \Log::debug('Expert player flexibility applied', [
+                'user_id' => $user->id,
+                'user_skill' => $userSkill,
+                'original_roles' => $preferredRoles,
+                'expanded_roles' => $preferredRoles,
+            ]);
+        }
+
+        return array_values($preferredRoles); // Re-index array
+    }
+
+    /**
+     * Get common roles for a game (fallback for flexible matching)
+     *
+     * These are standard roles that experienced players in each game
+     * are typically capable of playing. Used when expanding expert
+     * player flexibility.
+     *
+     * @param string $gameAppId Game app ID
+     * @return array Common role names
+     */
+    protected function getCommonRolesForGame(string $gameAppId): array
+    {
+        // Common roles by game (can be moved to config in Phase 6)
+        $gameRoles = [
+            '730' => ['entry', 'support', 'awper', 'igl', 'lurker'], // CS2
+            '570' => ['carry', 'mid', 'offlane', 'support', 'hard_support'], // Dota 2
+            '230410' => ['dps', 'support', 'tank', 'cc'], // Warframe
+            '1172470' => ['assault', 'support', 'recon', 'controller'], // Apex Legends
+            '252490' => ['builder', 'raider', 'farmer', 'defender'], // Rust
+            '578080' => ['fragger', 'support', 'igl', 'flex'], // PUBG
+            '359550' => ['entry', 'support', 'anchor', 'flex'], // Rainbow Six Siege
+        ];
+
+        return $gameRoles[$gameAppId] ?? ['flex'];
     }
 
     protected function assignOptimalRoles(Collection $users, string $gameAppId): array
