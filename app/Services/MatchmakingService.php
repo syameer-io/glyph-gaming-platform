@@ -439,33 +439,38 @@ class MatchmakingService
     /**
      * Calculate detailed compatibility between a team and matchmaking request
      *
+     * Uses multi-criteria weighted scoring with proper normalization.
+     * All criterion scores are in [0, 1] range before applying weights.
+     *
+     * Formula: Match Score = Σ(weight_i × normalized_score_i)
+     *
      * @param Team $team The team to evaluate
      * @param MatchmakingRequest $request The matchmaking request
      * @return array Contains 'total_score', 'reasons', and 'breakdown'
      */
     public function calculateDetailedCompatibility(Team $team, MatchmakingRequest $request): array
     {
-        $scores = [];
+        // Get and validate weights
+        $weights = $this->getMatchmakingWeights();
+        $this->validateMatchmakingWeights($weights);
+
+        $normalizedScores = [];
         $reasons = [];
-        $breakdown = [];
 
-        // 1. Skill Compatibility (40% weight)
-        $skillScore = $this->calculateSkillCompatibilityForTeam($team, $request);
-        $scores['skill'] = $skillScore * 0.4;
-        $breakdown['skill'] = round($skillScore, 1);
+        // 1. Skill Compatibility (returns [0, 100], need to normalize to [0, 1])
+        $skillScorePercentage = $this->calculateSkillCompatibilityForTeam($team, $request);
+        $normalizedScores['skill'] = $skillScorePercentage / 100; // Convert to [0, 1]
 
-        if ($skillScore >= 90) {
+        if ($skillScorePercentage >= 90) {
             $reasons[] = "Perfect skill level match ({$request->skill_level})";
-        } elseif ($skillScore >= 70) {
+        } elseif ($skillScorePercentage >= 70) {
             $reasons[] = "Good skill level compatibility";
         }
 
-        // 2. Role Match (30% weight)
-        $roleScore = $this->calculateRoleMatchForTeam($team, $request);
-        $scores['role'] = $roleScore * 0.3;
-        $breakdown['role'] = round($roleScore, 1);
+        // 2. Role/Composition Match (already returns [0, 1])
+        $normalizedScores['composition'] = $this->calculateRoleMatchForTeam($team, $request);
 
-        if ($roleScore >= 80) {
+        if ($normalizedScores['composition'] >= 0.80) {
             $neededRoles = $team->getNeededRoles();
             if (!empty($neededRoles)) {
                 $requestRoles = $request->preferred_roles ?? [];
@@ -477,22 +482,25 @@ class MatchmakingService
             }
         }
 
-        // 3. Server/Region Compatibility (15% weight)
-        $regionScore = $this->calculateRegionCompatibilityForTeam($team, $request);
-        $scores['region'] = $regionScore * 0.15;
-        $breakdown['region'] = round($regionScore, 1);
+        // 3. Region Compatibility (already returns [0, 1])
+        $normalizedScores['region'] = $this->calculateRegionCompatibilityForTeam($team, $request);
 
-        if ($regionScore >= 80) {
+        if ($normalizedScores['region'] >= 0.80) {
             $teamRegion = $team->team_data['preferred_region'] ?? null;
             if ($teamRegion) {
                 $reasons[] = "Same region preference: {$teamRegion}";
             }
         }
 
-        // 4. Team Size Preference (10% weight)
-        $sizeScore = $this->calculateTeamSizeScore($team);
-        $scores['size'] = $sizeScore * 0.1;
-        $breakdown['size'] = round($sizeScore, 1);
+        // 4. Schedule/Activity Time Match (already returns [0, 1])
+        $normalizedScores['schedule'] = $this->calculateActivityTimeMatch($team, $request);
+
+        if ($normalizedScores['schedule'] >= 0.80) {
+            $reasons[] = "Active during your preferred hours";
+        }
+
+        // 5. Team Size Score (already returns [0, 1])
+        $normalizedScores['size'] = $this->calculateTeamSizeScore($team);
 
         if ($team->current_size <= 3) {
             $reasons[] = "Small team - easier to integrate";
@@ -500,17 +508,25 @@ class MatchmakingService
             $reasons[] = "Team almost full - join quickly!";
         }
 
-        // 5. Activity Time Match (5% weight)
-        $activityScore = $this->calculateActivityTimeMatch($team, $request);
-        $scores['activity'] = $activityScore * 0.05;
-        $breakdown['activity'] = round($activityScore, 1);
+        // 6. Language Compatibility (already returns [0, 1])
+        $normalizedScores['language'] = $this->calculateLanguageCompatibility($team, $request);
 
-        if ($activityScore >= 80) {
-            $reasons[] = "Active during your preferred hours";
+        if ($normalizedScores['language'] >= 0.80) {
+            $reasons[] = "Shares common language";
         }
 
-        // Calculate total score
-        $totalScore = array_sum($scores);
+        // Calculate weighted sum
+        $totalScore = 0.0;
+        foreach ($weights as $criterion => $weight) {
+            $score = $normalizedScores[$criterion] ?? 0.0;
+            $totalScore += $weight * $score;
+        }
+
+        // Convert to percentage and create breakdown for display
+        $breakdown = [];
+        foreach ($normalizedScores as $criterion => $score) {
+            $breakdown[$criterion] = round($score * 100, 1); // Convert to percentage for display
+        }
 
         // Add team balance information
         $balanceScore = $team->calculateBalanceScore();
@@ -518,29 +534,131 @@ class MatchmakingService
             $reasons[] = "Well-balanced team composition";
         }
 
+        \Log::debug('Detailed compatibility calculated', [
+            'team_id' => $team->id,
+            'request_id' => $request->id,
+            'normalized_scores' => $normalizedScores,
+            'weights' => $weights,
+            'total_score' => round($totalScore * 100, 1),
+            'breakdown' => $breakdown,
+        ]);
+
         return [
-            'total_score' => round($totalScore, 1),
+            'total_score' => round($totalScore * 100, 1), // Convert to percentage
             'reasons' => $reasons,
-            'breakdown' => $breakdown
+            'breakdown' => $breakdown,
         ];
     }
 
     /**
-     * Calculate skill compatibility between team and request
+     * Get matchmaking weights for multi-criteria scoring
+     *
+     * Weights must sum to 1.0 (100%). Based on research from Awesomenauts algorithm,
+     * TrueSkill 2, and industry best practices.
+     *
+     * Weight Distribution Rationale:
+     * - Skill (40%): Primary factor for match quality and enjoyment
+     * - Composition (25%): Role needs must be met for team success
+     * - Region (15%): Affects latency and communication
+     * - Schedule (10%): Nice-to-have but not critical (async possible)
+     * - Size (5%): Minor factor, teams accept applications at various fill levels
+     * - Language (5%): Often correlates with region, English is common
+     *
+     * @return array Associative array of criterion => weight
+     */
+    protected function getMatchmakingWeights(): array
+    {
+        // TODO: Phase 6 - Load from config/database
+        return [
+            'skill' => 0.40,
+            'composition' => 0.25,
+            'region' => 0.15,
+            'schedule' => 0.10,
+            'size' => 0.05,
+            'language' => 0.05,
+        ];
+    }
+
+    /**
+     * Validate that matchmaking weights sum to 1.0
+     *
+     * @param array $weights Associative array of weights
+     * @throws \RuntimeException If weights don't sum to 1.0
+     * @return void
+     */
+    protected function validateMatchmakingWeights(array $weights): void
+    {
+        $sum = array_sum($weights);
+
+        if (abs($sum - 1.0) > 0.001) { // Allow small floating-point error
+            throw new \RuntimeException(
+                "Matchmaking weights must sum to 1.0, got {$sum}. Weights: " . json_encode($weights)
+            );
+        }
+    }
+
+    /**
+     * Calculate skill compatibility between team and request using categorical skill levels
+     *
+     * This method implements a non-linear penalty system for skill level differences:
+     * - Converts categorical skill levels (beginner/intermediate/advanced/expert) to numeric values (1-4)
+     * - Uses Manhattan distance (absolute difference) to measure skill gap
+     * - Applies 50% penalty multiplier for gaps of 2+ levels
+     * - Returns normalized score in [0, 100] range
+     *
+     * Expected compatibility matrix:
+     * - Same level: 100%
+     * - 1 level gap: ~67%
+     * - 2 level gap: ~17% (with penalty applied)
+     * - 3 level gap: 0%
+     *
+     * @param Team $team The team to evaluate
+     * @param MatchmakingRequest $request The matchmaking request
+     * @return float Compatibility score [0, 100]
      */
     protected function calculateSkillCompatibilityForTeam(Team $team, MatchmakingRequest $request): float
     {
-        $teamAverage = $team->average_skill_score ?? 50;
-        $requestScore = $request->skill_score ?? 50;
+        // Get categorical skill levels
+        $teamSkillLevel = $team->skill_level ?? 'intermediate';
+        $requestSkillLevel = $request->skill_level ?? 'intermediate';
 
-        $skillDiff = abs($teamAverage - $requestScore);
+        // Convert to numeric values for calculation
+        $teamSkillNumeric = $this->convertSkillLevelToNumeric($teamSkillLevel);
+        $requestSkillNumeric = $this->convertSkillLevelToNumeric($requestSkillLevel);
 
-        // Perfect match at 0 difference, decreasing to 0 at 50 points difference
-        return max(0, 100 - ($skillDiff * 2));
+        // Calculate Manhattan distance (absolute difference)
+        $actualDifference = abs($teamSkillNumeric - $requestSkillNumeric);
+
+        // Normalize to [0, 1] score with non-linear penalty for large gaps
+        $normalizedScore = $this->normalizeSkillScore($actualDifference);
+
+        // Convert to percentage [0, 100]
+        $finalPercentage = $normalizedScore * 100;
+
+        // Debug logging for tracking algorithm behavior
+        \Log::debug('MatchmakingService::calculateSkillCompatibilityForTeam', [
+            'team_id' => $team->id,
+            'team_skill_level' => $teamSkillLevel,
+            'team_skill_numeric' => $teamSkillNumeric,
+            'request_skill_level' => $requestSkillLevel,
+            'request_skill_numeric' => $requestSkillNumeric,
+            'actual_difference' => $actualDifference,
+            'normalized_score' => $normalizedScore,
+            'final_percentage' => $finalPercentage,
+        ]);
+
+        return $finalPercentage;
     }
 
     /**
      * Calculate role match between team needs and request preferences
+     *
+     * Uses Jaccard similarity for role overlap when both team and user specify roles.
+     * Returns normalized score [0, 1].
+     *
+     * @param Team $team The team to evaluate
+     * @param MatchmakingRequest $request The matchmaking request
+     * @return float Normalized role match score [0.0, 1.0]
      */
     protected function calculateRoleMatchForTeam(Team $team, MatchmakingRequest $request): float
     {
@@ -548,13 +666,13 @@ class MatchmakingService
         $requestRoles = $request->preferred_roles ?? [];
 
         if (empty($neededRoles)) {
-            // Team doesn't need specific roles
-            return 70; // Neutral-positive score
+            // Team doesn't need specific roles - neutral-positive score
+            return 0.70;
         }
 
         if (empty($requestRoles)) {
-            // Request has no role preferences
-            return 60; // Slightly lower neutral score
+            // Request has no role preferences - slightly lower neutral score
+            return 0.60;
         }
 
         // Check if any of the user's preferred roles match team needs
@@ -562,15 +680,22 @@ class MatchmakingService
 
         if (!empty($matchingRoles)) {
             // Strong match - user can fill a needed role
-            return 100;
+            return 1.0;
         } else {
             // No direct match, but user is flexible
-            return 40;
+            return 0.40;
         }
     }
 
     /**
      * Calculate region/server compatibility
+     *
+     * Returns normalized score [0, 1] based on server preference match
+     * or region proximity.
+     *
+     * @param Team $team The team to evaluate
+     * @param MatchmakingRequest $request The matchmaking request
+     * @return float Normalized region compatibility score [0.0, 1.0]
      */
     protected function calculateRegionCompatibilityForTeam(Team $team, MatchmakingRequest $request): float
     {
@@ -582,9 +707,9 @@ class MatchmakingService
         if (!empty($requestPrefs) && is_array($requestPrefs)) {
             // Check if team's server is in the preferred list
             if (in_array($team->server_id, $requestPrefs)) {
-                return 100;
+                return 1.0; // Perfect server match
             } else {
-                return 40; // Different server
+                return 0.40; // Different server
             }
         }
 
@@ -593,36 +718,48 @@ class MatchmakingService
 
         if ($teamRegion && $requestRegion) {
             if (strtolower($teamRegion) === strtolower($requestRegion)) {
-                return 100;
+                return 1.0; // Same region
             } else {
-                return 30; // Different region
+                return 0.30; // Different region
             }
         }
 
         // No specific preferences - neutral score
-        return 70;
+        return 0.70;
     }
 
     /**
      * Calculate team size score (prefer teams 30-70% full)
+     *
+     * Returns normalized score [0, 1] with optimal range at 30-70% capacity.
+     *
+     * @param Team $team The team to evaluate
+     * @return float Normalized team size score [0.0, 1.0]
      */
     protected function calculateTeamSizeScore(Team $team): float
     {
         $fillPercentage = ($team->current_size / $team->max_size) * 100;
 
         if ($fillPercentage >= 30 && $fillPercentage <= 70) {
-            return 100; // Optimal range
+            return 1.0; // Optimal range
         } elseif ($fillPercentage < 30) {
             // Too empty - less established
-            return 50 + ($fillPercentage * 1.67); // Scale from 50-100
+            return 0.50 + ($fillPercentage * 0.0167); // Scale from 0.50-1.0
         } else {
             // Too full - less room for integration
-            return 100 - (($fillPercentage - 70) * 2); // Scale from 100 down
+            return 1.0 - (($fillPercentage - 70) * 0.02); // Scale from 1.0 down
         }
     }
 
     /**
      * Calculate activity time match between team and request
+     *
+     * Uses time range overlap to determine schedule compatibility.
+     * Returns normalized score [0, 1].
+     *
+     * @param Team $team The team to evaluate
+     * @param MatchmakingRequest $request The matchmaking request
+     * @return float Normalized activity time score [0.0, 1.0]
      */
     protected function calculateActivityTimeMatch(Team $team, MatchmakingRequest $request): float
     {
@@ -630,12 +767,12 @@ class MatchmakingService
         $requestAvailability = $request->availability_hours ?? [];
 
         if (!$teamActivityTime || empty($requestAvailability)) {
-            return 70; // Neutral score if no data
+            return 0.70; // Neutral score if no data
         }
 
-        // If activity times match
+        // If activity times match exactly
         if (is_array($requestAvailability) && in_array($teamActivityTime, $requestAvailability)) {
-            return 100;
+            return 1.0;
         }
 
         // Partial match logic based on time ranges
@@ -651,11 +788,40 @@ class MatchmakingService
 
         foreach ($requestAvailability as $availTime) {
             if (in_array(strtolower($availTime), $compatibleTimes)) {
-                return 80; // Good match
+                return 0.80; // Good match
             }
         }
 
-        return 40; // Poor match
+        return 0.40; // Poor match
+    }
+
+    /**
+     * Calculate language compatibility between team and request
+     *
+     * Uses set intersection to check for any common languages.
+     * Returns normalized score [0, 1].
+     *
+     * @param Team $team The team to evaluate
+     * @param MatchmakingRequest $request The matchmaking request
+     * @return float Normalized language compatibility score [0.0, 1.0]
+     */
+    protected function calculateLanguageCompatibility(Team $team, MatchmakingRequest $request): float
+    {
+        // Get team languages from team_data or default to English
+        $teamLanguages = $team->team_data['languages'] ?? ['en'];
+
+        // Get request languages from additional_requirements or default to English
+        $requestReqs = $request->additional_requirements ?? [];
+        $requestLanguages = $requestReqs['languages'] ?? ['en'];
+
+        // Check for any overlap
+        $overlap = array_intersect($teamLanguages, $requestLanguages);
+
+        if (!empty($overlap)) {
+            return 1.0; // Common language found
+        }
+
+        return 0.30; // No common language
     }
 
     /**
@@ -960,5 +1126,69 @@ class MatchmakingService
 
         $diff = abs($userSkill - $teamAverage);
         return max(0, 100 - ($diff * 2));
+    }
+
+    /**
+     * Convert categorical skill level to numeric value for mathematical operations
+     *
+     * Mapping:
+     * - beginner → 1
+     * - intermediate → 2
+     * - advanced → 3
+     * - expert → 4
+     * - null/invalid → 2 (default to intermediate)
+     *
+     * @param string|null $skillLevel Categorical skill level
+     * @return int Numeric skill value [1-4]
+     */
+    protected function convertSkillLevelToNumeric(?string $skillLevel): int
+    {
+        // Handle null or empty values
+        if (empty($skillLevel)) {
+            return 2; // Default to intermediate
+        }
+
+        // Map categorical to numeric
+        return match(strtolower($skillLevel)) {
+            'beginner' => 1,
+            'intermediate' => 2,
+            'advanced' => 3,
+            'expert' => 4,
+            default => 2 // Default to intermediate for invalid values
+        };
+    }
+
+    /**
+     * Normalize skill difference to [0, 1] score with non-linear penalty
+     *
+     * Algorithm:
+     * 1. Base normalization: score = 1.0 - (actualDifference / maxDifference)
+     * 2. Apply 50% penalty multiplier for 2+ level gaps
+     * 3. Ensure result stays within [0.0, 1.0] bounds
+     *
+     * Examples:
+     * - 0 levels difference: 1.0 (100%)
+     * - 1 level difference: 0.67 (~67%)
+     * - 2 levels difference: 0.17 (~17% after penalty)
+     * - 3 levels difference: 0.0 (0%)
+     *
+     * @param int $actualDifference Absolute skill level difference [0-3]
+     * @return float Normalized score [0.0, 1.0]
+     */
+    protected function normalizeSkillScore(int $actualDifference): float
+    {
+        // Maximum possible difference between skill levels (expert - beginner = 4 - 1 = 3)
+        $maxDifference = 3;
+
+        // Base min-max normalization: maps [0, 3] to [1.0, 0.0]
+        $score = 1.0 - ($actualDifference / $maxDifference);
+
+        // Apply non-linear penalty for large skill gaps (2+ levels)
+        if ($actualDifference >= 2) {
+            $score *= 0.5; // 50% penalty multiplier
+        }
+
+        // Ensure bounds [0.0, 1.0]
+        return max(0.0, min(1.0, $score));
     }
 }

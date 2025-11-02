@@ -721,4 +721,112 @@ class MatchmakingController extends Controller
             default => 'beginner'
         };
     }
+
+    /**
+     * Test Phase 1 implementation - Skill compatibility calculations
+     * Temporary method to validate the 76% bug fix
+     */
+    public function testPhase1(): JsonResponse
+    {
+        try {
+            $skillLevels = ['beginner', 'intermediate', 'advanced', 'expert'];
+            $results = [];
+            $bugFixValidation = [];
+
+            // Test all skill level combinations
+            foreach ($skillLevels as $teamSkill) {
+                foreach ($skillLevels as $requestSkill) {
+                    // Create temporary test team and request
+                    $team = new Team([
+                        'name' => "Test {$teamSkill} Team",
+                        'skill_level' => $teamSkill,
+                        'status' => 'recruiting',
+                    ]);
+                    $team->id = rand(1000, 9999); // Fake ID for testing
+
+                    $request = new MatchmakingRequest([
+                        'skill_level' => $requestSkill,
+                        'status' => 'active',
+                    ]);
+                    $request->id = rand(1000, 9999); // Fake ID for testing
+
+                    // Calculate skill compatibility using new algorithm
+                    $skillScore = $this->matchmakingService->calculateDetailedCompatibility($team, $request);
+
+                    $results[] = [
+                        'team_skill' => strtoupper($teamSkill),
+                        'request_skill' => strtoupper($requestSkill),
+                        'skill_score' => $skillScore['breakdown']['skill'] ?? 0,
+                        'total_score' => $skillScore['total_score'] ?? 0,
+                    ];
+                }
+            }
+
+            // Test the specific bug case: INTERMEDIATE vs EXPERT
+            $intermediateTeam = new Team([
+                'name' => 'INTERMEDIATE Test Team',
+                'skill_level' => 'intermediate',
+                'status' => 'recruiting',
+            ]);
+            $intermediateTeam->id = 8888;
+
+            $expertRequest = new MatchmakingRequest([
+                'skill_level' => 'expert',
+                'status' => 'active',
+            ]);
+            $expertRequest->id = 9999;
+
+            $bugTestResult = $this->matchmakingService->calculateDetailedCompatibility($intermediateTeam, $expertRequest);
+
+            $bugFixValidation = [
+                'team_skill' => 'INTERMEDIATE',
+                'request_skill' => 'EXPERT',
+                'skill_score' => $bugTestResult['breakdown']['skill'] ?? 0,
+                'total_score' => $bugTestResult['total_score'] ?? 0,
+                'expected_skill_score' => '~16.7%',
+                'bug_fixed' => ($bugTestResult['breakdown']['skill'] ?? 0) < 20,
+                'old_bug_value' => '76%',
+            ];
+
+            // Create matrix view for easier reading
+            $matrix = [];
+            foreach ($skillLevels as $teamSkill) {
+                $row = ['team' => strtoupper($teamSkill)];
+                foreach ($skillLevels as $requestSkill) {
+                    $matchingResult = collect($results)->first(function ($r) use ($teamSkill, $requestSkill) {
+                        return strtolower($r['team_skill']) === $teamSkill
+                            && strtolower($r['request_skill']) === $requestSkill;
+                    });
+                    $row[strtoupper($requestSkill)] = $matchingResult['skill_score'] ?? 0;
+                }
+                $matrix[] = $row;
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Phase 1 Skill Compatibility Test Results',
+                'bug_fix_validation' => $bugFixValidation,
+                'full_results' => $results,
+                'compatibility_matrix' => $matrix,
+                'expected_matrix' => [
+                    'BEGINNER' => ['BEGINNER' => 100, 'INTERMEDIATE' => 66.7, 'ADVANCED' => 16.7, 'EXPERT' => 0],
+                    'INTERMEDIATE' => ['BEGINNER' => 66.7, 'INTERMEDIATE' => 100, 'ADVANCED' => 66.7, 'EXPERT' => 16.7],
+                    'ADVANCED' => ['BEGINNER' => 16.7, 'INTERMEDIATE' => 66.7, 'ADVANCED' => 100, 'EXPERT' => 66.7],
+                    'EXPERT' => ['BEGINNER' => 0, 'INTERMEDIATE' => 16.7, 'ADVANCED' => 66.7, 'EXPERT' => 100],
+                ],
+                'test_timestamp' => now()->toDateTimeString(),
+            ], 200);
+
+        } catch (\Exception $e) {
+            \Log::error('Phase 1 test error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Test failed: ' . $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ], 500);
+        }
+    }
 }
