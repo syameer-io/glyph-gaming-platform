@@ -809,10 +809,20 @@ class MatchmakingService
     }
 
     /**
-     * Calculate region/server compatibility
+     * Calculate region/server compatibility with geographic proximity
      *
-     * Returns normalized score [0, 1] based on server preference match
-     * or region proximity.
+     * Returns normalized score [0, 1] based on:
+     * 1. Server preference match (highest priority)
+     * 2. Geographic region proximity using latency-based matrix
+     * 3. Neutral score if no preferences specified
+     *
+     * Scoring Logic (Phase 4 - Proximity-aware):
+     * - Perfect server match: 1.0
+     * - Same region: 1.0
+     * - Adjacent regions: 0.45-0.70 (based on proximity matrix)
+     * - Distant regions: 0.20-0.45
+     * - Different preferred server: 0.40
+     * - No preferences: 0.70 (neutral)
      *
      * @param Team $team The team to evaluate
      * @param MatchmakingRequest $request The matchmaking request
@@ -824,35 +834,72 @@ class MatchmakingService
         $requestPrefs = $request->server_preferences ?? [];
         $requestReqs = $request->additional_requirements ?? [];
 
-        // Check if request specifies server preferences
+        // Priority 1: Server preference match (highest priority)
         if (!empty($requestPrefs) && is_array($requestPrefs)) {
             // Check if team's server is in the preferred list
             if (in_array($team->server_id, $requestPrefs)) {
+                \Log::debug('Region compatibility: Server preference match', [
+                    'team_id' => $team->id,
+                    'request_id' => $request->id,
+                    'team_server_id' => $team->server_id,
+                    'preferred_servers' => $requestPrefs,
+                    'score' => 1.0,
+                ]);
+
                 return 1.0; // Perfect server match
             } else {
+                \Log::debug('Region compatibility: Different preferred server', [
+                    'team_id' => $team->id,
+                    'request_id' => $request->id,
+                    'team_server_id' => $team->server_id,
+                    'preferred_servers' => $requestPrefs,
+                    'score' => 0.40,
+                ]);
+
                 return 0.40; // Different server
             }
         }
 
-        // Check for region compatibility in additional requirements
+        // Priority 2: Geographic region proximity
         $requestRegion = $requestReqs['preferred_region'] ?? null;
 
         if ($teamRegion && $requestRegion) {
-            if (strtolower($teamRegion) === strtolower($requestRegion)) {
-                return 1.0; // Same region
-            } else {
-                return 0.30; // Different region
-            }
+            // Use proximity matrix for gradual scoring
+            $proximityScore = $this->getRegionProximityScore($teamRegion, $requestRegion);
+
+            \Log::debug('Region compatibility: Geographic proximity', [
+                'team_id' => $team->id,
+                'request_id' => $request->id,
+                'team_region' => $teamRegion,
+                'request_region' => $requestRegion,
+                'proximity_score' => $proximityScore,
+            ]);
+
+            return $proximityScore;
         }
 
         // No specific preferences - neutral score
+        \Log::debug('Region compatibility: No preferences', [
+            'team_id' => $team->id,
+            'request_id' => $request->id,
+            'score' => 0.70,
+        ]);
+
         return 0.70;
     }
 
     /**
-     * Calculate team size score (prefer teams 30-70% full)
+     * Calculate team size score with refined tier-based approach
      *
-     * Returns normalized score [0, 1] with optimal range at 30-70% capacity.
+     * Returns normalized score [0, 1] with optimal range at 40-60% capacity.
+     * Uses gradual tier-based scoring with bounded scaling to prevent edge values.
+     *
+     * Scoring Logic (Phase 4 - Refined tiers):
+     * - Optimal (40-60% full): 1.0
+     * - Good (30-40% or 60-70% full): 0.90
+     * - Acceptable (20-30% or 70-80% full): 0.75
+     * - Poor (10-20% or 80-90% full): 0.60
+     * - Very Poor (<10% or >90% full): 0.40-0.50
      *
      * @param Team $team The team to evaluate
      * @return float Normalized team size score [0.0, 1.0]
@@ -861,22 +908,112 @@ class MatchmakingService
     {
         $fillPercentage = ($team->current_size / $team->max_size) * 100;
 
-        if ($fillPercentage >= 30 && $fillPercentage <= 70) {
-            return 1.0; // Optimal range
-        } elseif ($fillPercentage < 30) {
-            // Too empty - less established
-            return 0.50 + ($fillPercentage * 0.0167); // Scale from 0.50-1.0
+        // Tier 1: Optimal range (40-60% full)
+        if ($fillPercentage >= 40 && $fillPercentage <= 60) {
+            \Log::debug('Team size: Optimal range', [
+                'team_id' => $team->id,
+                'current_size' => $team->current_size,
+                'max_size' => $team->max_size,
+                'fill_percentage' => $fillPercentage,
+                'tier' => 'optimal',
+                'score' => 1.0,
+            ]);
+
+            return 1.0;
+        }
+
+        // Tier 2: Good range (30-40% or 60-70% full)
+        if (($fillPercentage >= 30 && $fillPercentage < 40) ||
+            ($fillPercentage > 60 && $fillPercentage <= 70)) {
+            \Log::debug('Team size: Good range', [
+                'team_id' => $team->id,
+                'current_size' => $team->current_size,
+                'max_size' => $team->max_size,
+                'fill_percentage' => $fillPercentage,
+                'tier' => 'good',
+                'score' => 0.90,
+            ]);
+
+            return 0.90;
+        }
+
+        // Tier 3: Acceptable range (20-30% or 70-80% full)
+        if (($fillPercentage >= 20 && $fillPercentage < 30) ||
+            ($fillPercentage > 70 && $fillPercentage <= 80)) {
+            \Log::debug('Team size: Acceptable range', [
+                'team_id' => $team->id,
+                'current_size' => $team->current_size,
+                'max_size' => $team->max_size,
+                'fill_percentage' => $fillPercentage,
+                'tier' => 'acceptable',
+                'score' => 0.75,
+            ]);
+
+            return 0.75;
+        }
+
+        // Tier 4: Poor range (10-20% or 80-90% full)
+        if (($fillPercentage >= 10 && $fillPercentage < 20) ||
+            ($fillPercentage > 80 && $fillPercentage <= 90)) {
+            \Log::debug('Team size: Poor range', [
+                'team_id' => $team->id,
+                'current_size' => $team->current_size,
+                'max_size' => $team->max_size,
+                'fill_percentage' => $fillPercentage,
+                'tier' => 'poor',
+                'score' => 0.60,
+            ]);
+
+            return 0.60;
+        }
+
+        // Tier 5: Very poor (<10% or >90% full)
+        // Apply bounded scaling to prevent extreme values
+        if ($fillPercentage < 10) {
+            // Very empty - scale from 0.40 to 0.60 based on fill
+            $score = 0.40 + ($fillPercentage / 10) * 0.20;
+
+            \Log::debug('Team size: Very empty', [
+                'team_id' => $team->id,
+                'current_size' => $team->current_size,
+                'max_size' => $team->max_size,
+                'fill_percentage' => $fillPercentage,
+                'tier' => 'very_empty',
+                'score' => $score,
+            ]);
+
+            return $score;
         } else {
-            // Too full - less room for integration
-            return 1.0 - (($fillPercentage - 70) * 0.02); // Scale from 1.0 down
+            // Very full - scale from 0.60 down to 0.40 as it approaches 100%
+            $score = 0.60 - (($fillPercentage - 90) / 10) * 0.20;
+
+            \Log::debug('Team size: Very full', [
+                'team_id' => $team->id,
+                'current_size' => $team->current_size,
+                'max_size' => $team->max_size,
+                'fill_percentage' => $fillPercentage,
+                'tier' => 'very_full',
+                'score' => $score,
+            ]);
+
+            return max(0.40, $score); // Ensure minimum 0.40
         }
     }
 
     /**
-     * Calculate activity time match between team and request
+     * Calculate activity time match using Jaccard similarity
      *
-     * Uses time range overlap to determine schedule compatibility.
+     * Converts time ranges to discrete hour slots and calculates overlap.
+     * Uses precise Jaccard similarity instead of fuzzy logic for gradual scoring.
      * Returns normalized score [0, 1].
+     *
+     * Scoring Logic (Phase 4 - Jaccard-based):
+     * - Perfect overlap (Jaccard = 1.0): 1.0
+     * - High overlap (Jaccard >= 0.7): 0.85-1.0
+     * - Medium overlap (Jaccard >= 0.4): 0.70-0.85
+     * - Low overlap (Jaccard >= 0.2): 0.50-0.70
+     * - Minimal overlap (Jaccard < 0.2): 0.30-0.50
+     * - No data available: 0.70 (neutral)
      *
      * @param Team $team The team to evaluate
      * @param MatchmakingRequest $request The matchmaking request
@@ -884,43 +1021,102 @@ class MatchmakingService
      */
     protected function calculateActivityTimeMatch(Team $team, MatchmakingRequest $request): float
     {
+        // Get team's activity time preferences
         $teamActivityTime = $team->team_data['activity_time'] ?? null;
         $requestAvailability = $request->availability_hours ?? [];
 
+        // If no data, return neutral score
         if (!$teamActivityTime || empty($requestAvailability)) {
-            return 0.70; // Neutral score if no data
+            \Log::debug('Activity time: No data available', [
+                'team_id' => $team->id,
+                'request_id' => $request->id,
+                'team_activity_time' => $teamActivityTime,
+                'request_availability' => $requestAvailability,
+                'score' => 0.70,
+            ]);
+
+            return 0.70;
         }
 
-        // If activity times match exactly
-        if (is_array($requestAvailability) && in_array($teamActivityTime, $requestAvailability)) {
-            return 1.0;
+        // Convert team's activity time to array format for comparison
+        $teamTimeSlots = is_array($teamActivityTime) ? $teamActivityTime : [$teamActivityTime];
+        $requestTimeSlots = is_array($requestAvailability) ? $requestAvailability : [];
+
+        // Calculate Jaccard similarity for schedule overlap
+        $jaccardScore = $this->calculateScheduleOverlap($requestTimeSlots, $teamTimeSlots);
+
+        // Apply graduated scoring based on overlap percentage
+        if ($jaccardScore >= 0.70) {
+            // High overlap - excellent schedule match
+            $finalScore = 0.85 + ($jaccardScore - 0.70) * 0.50; // Scale 0.85-1.0
+
+            \Log::debug('Activity time: High overlap', [
+                'team_id' => $team->id,
+                'request_id' => $request->id,
+                'team_slots' => $teamTimeSlots,
+                'request_slots' => $requestTimeSlots,
+                'jaccard_score' => $jaccardScore,
+                'final_score' => $finalScore,
+            ]);
+
+            return min(1.0, $finalScore);
+        } elseif ($jaccardScore >= 0.40) {
+            // Medium overlap - good schedule match
+            $finalScore = 0.70 + ($jaccardScore - 0.40) * 0.50; // Scale 0.70-0.85
+
+            \Log::debug('Activity time: Medium overlap', [
+                'team_id' => $team->id,
+                'request_id' => $request->id,
+                'team_slots' => $teamTimeSlots,
+                'request_slots' => $requestTimeSlots,
+                'jaccard_score' => $jaccardScore,
+                'final_score' => $finalScore,
+            ]);
+
+            return $finalScore;
+        } elseif ($jaccardScore >= 0.20) {
+            // Low overlap - some schedule compatibility
+            $finalScore = 0.50 + ($jaccardScore - 0.20) * 1.0; // Scale 0.50-0.70
+
+            \Log::debug('Activity time: Low overlap', [
+                'team_id' => $team->id,
+                'request_id' => $request->id,
+                'team_slots' => $teamTimeSlots,
+                'request_slots' => $requestTimeSlots,
+                'jaccard_score' => $jaccardScore,
+                'final_score' => $finalScore,
+            ]);
+
+            return $finalScore;
+        } else {
+            // Minimal overlap - poor schedule match
+            $finalScore = 0.30 + ($jaccardScore * 1.0); // Scale 0.30-0.50
+
+            \Log::debug('Activity time: Minimal overlap', [
+                'team_id' => $team->id,
+                'request_id' => $request->id,
+                'team_slots' => $teamTimeSlots,
+                'request_slots' => $requestTimeSlots,
+                'jaccard_score' => $jaccardScore,
+                'final_score' => $finalScore,
+            ]);
+
+            return $finalScore;
         }
-
-        // Partial match logic based on time ranges
-        $timeRangeMap = [
-            'morning' => ['morning', 'afternoon'],
-            'afternoon' => ['morning', 'afternoon', 'evening'],
-            'evening' => ['afternoon', 'evening', 'night'],
-            'night' => ['evening', 'night'],
-            'flexible' => ['morning', 'afternoon', 'evening', 'night'],
-        ];
-
-        $compatibleTimes = $timeRangeMap[strtolower($teamActivityTime)] ?? [$teamActivityTime];
-
-        foreach ($requestAvailability as $availTime) {
-            if (in_array(strtolower($availTime), $compatibleTimes)) {
-                return 0.80; // Good match
-            }
-        }
-
-        return 0.40; // Poor match
     }
 
     /**
      * Calculate language compatibility between team and request
      *
-     * Uses set intersection to check for any common languages.
+     * Uses Jaccard similarity for gradual scoring in multi-language scenarios.
+     * Recognizes English as a common fallback language.
      * Returns normalized score [0, 1].
+     *
+     * Scoring Logic (Phase 4 - Jaccard-based):
+     * - Perfect overlap (Jaccard = 1.0): 1.0
+     * - Partial overlap: 0.50 + (jaccard * 0.50) → [0.50, 1.0]
+     * - English fallback (one has EN, other doesn't): 0.60
+     * - No overlap at all: 0.30
      *
      * @param Team $team The team to evaluate
      * @param MatchmakingRequest $request The matchmaking request
@@ -935,14 +1131,210 @@ class MatchmakingService
         $requestReqs = $request->additional_requirements ?? [];
         $requestLanguages = $requestReqs['languages'] ?? ['en'];
 
-        // Check for any overlap
+        // Normalize to lowercase for comparison
+        $teamLanguages = array_map('strtolower', $teamLanguages);
+        $requestLanguages = array_map('strtolower', $requestLanguages);
+
+        // Check for any direct overlap
         $overlap = array_intersect($teamLanguages, $requestLanguages);
 
         if (!empty($overlap)) {
-            return 1.0; // Common language found
+            // Use Jaccard similarity for gradual scoring
+            $jaccardScore = $this->calculateJaccardSimilarity($teamLanguages, $requestLanguages);
+
+            // Scale from 0.5 to 1.0 based on overlap percentage
+            $score = 0.50 + ($jaccardScore * 0.50);
+
+            \Log::debug('Language compatibility: Direct overlap', [
+                'team_id' => $team->id,
+                'request_id' => $request->id,
+                'team_languages' => $teamLanguages,
+                'request_languages' => $requestLanguages,
+                'overlap' => $overlap,
+                'jaccard_score' => $jaccardScore,
+                'final_score' => $score,
+            ]);
+
+            return $score;
         }
 
-        return 0.30; // No common language
+        // Check for English fallback (common lingua franca)
+        $teamHasEnglish = in_array('en', $teamLanguages) || in_array('english', $teamLanguages);
+        $requestHasEnglish = in_array('en', $requestLanguages) || in_array('english', $requestLanguages);
+
+        if ($teamHasEnglish || $requestHasEnglish) {
+            // One has English - decent fallback communication
+            \Log::debug('Language compatibility: English fallback', [
+                'team_id' => $team->id,
+                'request_id' => $request->id,
+                'team_has_english' => $teamHasEnglish,
+                'request_has_english' => $requestHasEnglish,
+                'score' => 0.60,
+            ]);
+
+            return 0.60;
+        }
+
+        // No overlap at all - poor communication prospect
+        \Log::debug('Language compatibility: No overlap', [
+            'team_id' => $team->id,
+            'request_id' => $request->id,
+            'team_languages' => $teamLanguages,
+            'request_languages' => $requestLanguages,
+            'score' => 0.30,
+        ]);
+
+        return 0.30;
+    }
+
+    /**
+     * Get proximity score between two regions
+     *
+     * Based on geographic proximity, typical latency, and time zone overlap.
+     * Returns normalized score [0, 1] where 1.0 is same region, 0.0 is most distant.
+     *
+     * Proximity Matrix based on:
+     * - Latency (ping): Same region ~20ms, adjacent ~80ms, far ~200ms+
+     * - Time zones: Overlap affects scheduling compatibility
+     * - Cultural/language correlation
+     *
+     * @param string $region1 First region code
+     * @param string $region2 Second region code
+     * @return float Proximity score [0.0, 1.0]
+     */
+    protected function getRegionProximityScore(string $region1, string $region2): float
+    {
+        // Normalize to uppercase
+        $region1 = strtoupper($region1);
+        $region2 = strtoupper($region2);
+
+        // Same region = perfect match
+        if ($region1 === $region2) {
+            return 1.0;
+        }
+
+        // Region proximity matrix
+        // Format: [region1][region2] = score
+        // Based on latency zones and time zone overlap
+        $proximityMatrix = [
+            'NA' => [
+                'NA' => 1.0,
+                'SA' => 0.70,  // Close, similar time zones
+                'EU' => 0.50,  // Transatlantic, ~100ms
+                'OCEANIA' => 0.35, // Far, poor time zones
+                'ASIA' => 0.25,    // Farthest, worst time zones
+                'AFRICA' => 0.40,  // Moderate distance
+            ],
+            'SA' => [
+                'SA' => 1.0,
+                'NA' => 0.70,
+                'EU' => 0.45,
+                'OCEANIA' => 0.20,
+                'ASIA' => 0.20,
+                'AFRICA' => 0.35,
+            ],
+            'EU' => [
+                'EU' => 1.0,
+                'NA' => 0.50,
+                'SA' => 0.45,
+                'AFRICA' => 0.65,  // Close proximity
+                'ASIA' => 0.45,    // Moderate (Russia spans both)
+                'OCEANIA' => 0.25,
+            ],
+            'ASIA' => [
+                'ASIA' => 1.0,
+                'OCEANIA' => 0.60, // Close proximity
+                'EU' => 0.45,
+                'NA' => 0.25,
+                'SA' => 0.20,
+                'AFRICA' => 0.40,
+            ],
+            'OCEANIA' => [
+                'OCEANIA' => 1.0,
+                'ASIA' => 0.60,
+                'NA' => 0.35,
+                'EU' => 0.25,
+                'SA' => 0.20,
+                'AFRICA' => 0.20,
+            ],
+            'AFRICA' => [
+                'AFRICA' => 1.0,
+                'EU' => 0.65,
+                'NA' => 0.40,
+                'ASIA' => 0.40,
+                'SA' => 0.35,
+                'OCEANIA' => 0.20,
+            ],
+        ];
+
+        // Look up score in matrix
+        if (isset($proximityMatrix[$region1][$region2])) {
+            return $proximityMatrix[$region1][$region2];
+        }
+
+        // Fallback for unknown regions
+        return 0.50;
+    }
+
+    /**
+     * Calculate schedule overlap using Jaccard similarity
+     *
+     * Converts time ranges to discrete time slots and calculates overlap.
+     * Example: "evening" = [18, 19, 20, 21, 22]
+     *
+     * @param array $userSlots User's available time slots or ranges
+     * @param array $teamSlots Team's active time slots or ranges
+     * @return float Schedule overlap score [0.0, 1.0]
+     */
+    protected function calculateScheduleOverlap(array $userSlots, array $teamSlots): float
+    {
+        // If either is empty, return neutral
+        if (empty($userSlots) || empty($teamSlots)) {
+            return 0.70;
+        }
+
+        // Convert named ranges to hour slots if needed
+        $userHours = $this->expandTimeRanges($userSlots);
+        $teamHours = $this->expandTimeRanges($teamSlots);
+
+        // Use Jaccard similarity for overlap
+        return $this->calculateJaccardSimilarity($userHours, $teamHours);
+    }
+
+    /**
+     * Expand time range names to hour arrays
+     *
+     * @param array $ranges Array of time range names or hours
+     * @return array Array of hour integers (0-23)
+     */
+    protected function expandTimeRanges(array $ranges): array
+    {
+        $hours = [];
+
+        $rangeMap = [
+            'early_morning' => [6, 7, 8],
+            'morning' => [9, 10, 11],
+            'afternoon' => [12, 13, 14, 15, 16],
+            'evening' => [17, 18, 19, 20, 21],
+            'night' => [22, 23, 0, 1, 2],
+            'late_night' => [0, 1, 2, 3, 4, 5],
+            'weekday_morning' => [9, 10, 11], // Workday hours
+            'weekday_evening' => [18, 19, 20, 21], // After work
+            'weekend_all_day' => [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21],
+            'flexible' => range(0, 23), // All hours
+        ];
+
+        foreach ($ranges as $range) {
+            if (is_numeric($range)) {
+                // Already an hour value
+                $hours[] = (int)$range;
+            } elseif (isset($rangeMap[strtolower($range)])) {
+                // Named range
+                $hours = array_merge($hours, $rangeMap[strtolower($range)]);
+            }
+        }
+
+        return array_unique($hours);
     }
 
     /**
