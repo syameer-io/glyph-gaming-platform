@@ -16,6 +16,7 @@ use App\Http\Controllers\TeamController;
 use App\Http\Controllers\ServerGoalController;
 use App\Http\Controllers\TelegramController;
 use App\Http\Controllers\VoiceController;
+use App\Http\Controllers\Admin\MatchmakingConfigurationController;
 
 // Guest routes
 Route::middleware('guest')->group(function () {
@@ -328,4 +329,18 @@ Route::middleware('auth')->prefix('admin/telegram')->name('admin.telegram.')->gr
     Route::get('/info', [TelegramController::class, 'getBotInfo'])->name('info');
     Route::post('/webhook/set', [TelegramController::class, 'setWebhook'])->name('webhook.set');
     Route::delete('/webhook', [TelegramController::class, 'removeWebhook'])->name('webhook.remove');
+});
+
+// Admin Matchmaking Configuration routes (Phase 6)
+Route::middleware('auth')->prefix('admin/matchmaking')->name('admin.matchmaking.')->group(function () {
+    // Configuration CRUD
+    Route::resource('configurations', MatchmakingConfigurationController::class);
+
+    // Activate configuration
+    Route::post('configurations/{configuration}/activate', [MatchmakingConfigurationController::class, 'activate'])
+        ->name('configurations.activate');
+
+    // Analytics dashboard
+    Route::get('analytics/dashboard', [MatchmakingConfigurationController::class, 'analytics'])
+        ->name('analytics.dashboard');
 });

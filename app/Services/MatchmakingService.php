@@ -6,11 +6,17 @@ use App\Models\User;
 use App\Models\Team;
 use App\Models\MatchmakingRequest;
 use App\Models\Server;
+use App\Models\MatchmakingConfiguration;
+use App\Models\MatchmakingAnalytics;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class MatchmakingService
 {
+    /**
+     * Cached configuration for current request
+     */
+    protected ?MatchmakingConfiguration $config = null;
     /**
      * Find compatible teammates for a user
      */
@@ -392,8 +398,11 @@ class MatchmakingService
                     'reasons' => $compatibility['reasons'],
                 ]);
 
-                // Only include teams with at least 50% compatibility
-                if ($compatibility['total_score'] >= 50) {
+                // Get minimum threshold from configuration
+                $minThreshold = $this->getMinimumCompatibilityThreshold($request);
+
+                // Only include teams with compatibility above threshold
+                if ($compatibility['total_score'] >= $minThreshold) {
                     // Store compatibility score as a property for sorting
                     $team->compatibility_score = $compatibility['total_score'];
                     $compatibleTeams->push($team);
@@ -406,9 +415,9 @@ class MatchmakingService
                         'team_id' => $team->id,
                         'team_name' => $team->name,
                         'compatibility_score' => $compatibility['total_score'],
-                        'minimum_required' => 50,
+                        'minimum_required' => $minThreshold,
                     ]);
-                    $filteredReasons[$team->id] = "Low compatibility: {$compatibility['total_score']}%";
+                    $filteredReasons[$team->id] = "Low compatibility: {$compatibility['total_score']}% (min: {$minThreshold}%)";
                 }
             } catch (\Exception $e) {
                 \Log::error('Error calculating team compatibility', [
@@ -451,8 +460,8 @@ class MatchmakingService
      */
     public function calculateDetailedCompatibility(Team $team, MatchmakingRequest $request): array
     {
-        // Get and validate weights
-        $weights = $this->getMatchmakingWeights();
+        // Get and validate weights from configuration
+        $weights = $this->getMatchmakingWeights($request);
         $this->validateMatchmakingWeights($weights);
 
         $normalizedScores = [];
@@ -555,6 +564,24 @@ class MatchmakingService
             'breakdown' => $breakdown,
         ]);
 
+        // Store analytics for this match calculation
+        try {
+            MatchmakingAnalytics::create([
+                'matchmaking_request_id' => $request->id,
+                'team_id' => $team->id,
+                'compatibility_score' => round($totalScore * 100, 1),
+                'score_breakdown' => $breakdown,
+                'configuration_used' => $this->getConfiguration($request)->name,
+                'match_shown_at' => now(),
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to store matchmaking analytics', [
+                'error' => $e->getMessage(),
+                'request_id' => $request->id,
+                'team_id' => $team->id,
+            ]);
+        }
+
         return [
             'total_score' => round($totalScore * 100, 1), // Convert to percentage
             'reasons' => $reasons,
@@ -563,12 +590,36 @@ class MatchmakingService
     }
 
     /**
-     * Get matchmaking weights for multi-criteria scoring
+     * Get matchmaking configuration for request
+     *
+     * @param MatchmakingRequest $request The request
+     * @return MatchmakingConfiguration
+     */
+    protected function getConfiguration(MatchmakingRequest $request): MatchmakingConfiguration
+    {
+        if ($this->config !== null) {
+            return $this->config;
+        }
+
+        // Determine scope based on request
+        $scope = 'all';
+
+        if ($request->game_appid) {
+            $scope = "game:{$request->game_appid}";
+        }
+
+        $this->config = MatchmakingConfiguration::getActiveForScope($scope);
+
+        return $this->config;
+    }
+
+    /**
+     * Get matchmaking weights from configuration
      *
      * Weights must sum to 1.0 (100%). Based on research from Awesomenauts algorithm,
      * TrueSkill 2, and industry best practices.
      *
-     * Weight Distribution Rationale:
+     * Weight Distribution Rationale (default):
      * - Skill (40%): Primary factor for match quality and enjoyment
      * - Composition (25%): Role needs must be met for team success
      * - Region (15%): Affects latency and communication
@@ -576,19 +627,31 @@ class MatchmakingService
      * - Size (5%): Minor factor, teams accept applications at various fill levels
      * - Language (5%): Often correlates with region, English is common
      *
+     * @param MatchmakingRequest|null $request Optional request for scoped config
      * @return array Associative array of criterion => weight
      */
-    protected function getMatchmakingWeights(): array
+    protected function getMatchmakingWeights(?MatchmakingRequest $request = null): array
     {
-        // TODO: Phase 6 - Load from config/database
-        return [
-            'skill' => 0.40,
-            'composition' => 0.25,
-            'region' => 0.15,
-            'schedule' => 0.10,
-            'size' => 0.05,
-            'language' => 0.05,
-        ];
+        if ($request) {
+            $config = $this->getConfiguration($request);
+            return $config->weights;
+        }
+
+        // Fallback to default if no request provided
+        $config = MatchmakingConfiguration::getActiveForScope('all');
+        return $config->weights;
+    }
+
+    /**
+     * Get minimum compatibility threshold from configuration
+     *
+     * @param MatchmakingRequest $request The request
+     * @return float Minimum compatibility percentage
+     */
+    protected function getMinimumCompatibilityThreshold(MatchmakingRequest $request): float
+    {
+        $config = $this->getConfiguration($request);
+        return $config->thresholds['min_compatibility'] ?? 50;
     }
 
     /**
