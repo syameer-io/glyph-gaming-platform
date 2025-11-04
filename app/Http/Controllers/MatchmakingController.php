@@ -169,7 +169,12 @@ class MatchmakingController extends Controller
                 'preferred_roles.*' => 'string|max:50',
                 'message' => 'nullable|string|max:500',
                 'skill_level' => 'nullable|in:any,beginner,intermediate,advanced,expert',
-                'priority' => 'nullable|in:low,normal,high,urgent',
+                'preferred_regions' => 'nullable|array',
+                'preferred_regions.*' => 'string|in:NA,EU,ASIA,SA,OCEANIA,AFRICA,MIDDLE_EAST',
+                'availability_hours' => 'nullable|array',
+                'availability_hours.*' => 'string|in:morning,afternoon,evening,night,flexible',
+                'languages' => 'nullable|array',
+                'languages.*' => 'string|max:10',
             ]);
 
             if ($validator->fails()) {
@@ -206,11 +211,13 @@ class MatchmakingController extends Controller
                 'preferred_roles' => $request->preferred_roles ?? [],
                 'skill_level' => $request->skill_level ?? 'any',
                 'skill_score' => $skillScore,
-                'priority' => $request->priority ?? 'normal',
                 'status' => 'active',
                 'description' => $request->message,
                 'expires_at' => now()->addDays(7), // Request expires in 7 days
                 'last_activity_at' => now(),
+                'preferred_regions' => $request->preferred_regions ?? [],
+                'availability_hours' => $request->availability_hours ?? [],
+                'languages' => $request->languages ?? ['en'],
             ]);
 
             // Trigger matchmaking request created event (broadcasting disabled for now)

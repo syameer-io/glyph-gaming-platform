@@ -484,18 +484,6 @@
                                     <option value="oceania" {{ old('preferred_region') == 'oceania' ? 'selected' : '' }}>Oceania</option>
                                 </select>
                             </div>
-                            <div class="form-group">
-                                <label for="activity_time">Activity Time *</label>
-                                <select id="activity_time" name="activity_time" required onchange="updatePreview()">
-                                    <option value="">Select activity time...</option>
-                                    <option value="morning" {{ old('activity_time') == 'morning' ? 'selected' : '' }}>Morning (6AM - 12PM)</option>
-                                    <option value="afternoon" {{ old('activity_time') == 'afternoon' ? 'selected' : '' }}>Afternoon (12PM - 6PM)</option>
-                                    <option value="evening" {{ old('activity_time') == 'evening' ? 'selected' : '' }}>Evening (6PM - 12AM)</option>
-                                    <option value="late_night" {{ old('activity_time') == 'late_night' ? 'selected' : '' }}>Late Night (12AM - 6AM)</option>
-                                    <option value="weekends" {{ old('activity_time') == 'weekends' ? 'selected' : '' }}>Weekends Only</option>
-                                    <option value="flexible" {{ old('activity_time') == 'flexible' ? 'selected' : '' }}>Flexible Schedule</option>
-                                </select>
-                            </div>
                         </div>
 
                         <div class="form-row">
@@ -515,6 +503,135 @@
                                     <input type="checkbox" id="competitive_focus" name="competitive_focus" value="1" {{ old('competitive_focus') ? 'checked' : '' }}>
                                     <label for="competitive_focus">Competitive focus</label>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Matchmaking Preferences -->
+                    <div class="form-section">
+                        <div class="section-header">
+                            <div class="section-title">🎯 Matchmaking Preferences</div>
+                            <div class="section-description">Help the matchmaking algorithm find the right players for your team</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Required Roles (Optional)</label>
+                            <div class="form-description">Select roles you're looking for. Leave empty if you're flexible</div>
+                            <div class="role-selection" style="margin-top: 12px;">
+                                <label class="role-option">
+                                    <input type="checkbox" name="required_roles[]" value="entry_fragger">
+                                    <span>Entry Fragger</span>
+                                </label>
+                                <label class="role-option">
+                                    <input type="checkbox" name="required_roles[]" value="support">
+                                    <span>Support</span>
+                                </label>
+                                <label class="role-option">
+                                    <input type="checkbox" name="required_roles[]" value="awper">
+                                    <span>AWPer</span>
+                                </label>
+                                <label class="role-option">
+                                    <input type="checkbox" name="required_roles[]" value="igl">
+                                    <span>IGL</span>
+                                </label>
+                                <label class="role-option">
+                                    <input type="checkbox" name="required_roles[]" value="lurker">
+                                    <span>Lurker</span>
+                                </label>
+                                <label class="role-option">
+                                    <input type="checkbox" name="required_roles[]" value="carry">
+                                    <span>Carry</span>
+                                </label>
+                                <label class="role-option">
+                                    <input type="checkbox" name="required_roles[]" value="mid">
+                                    <span>Mid</span>
+                                </label>
+                                <label class="role-option">
+                                    <input type="checkbox" name="required_roles[]" value="offlaner">
+                                    <span>Offlaner</span>
+                                </label>
+                                <label class="role-option">
+                                    <input type="checkbox" name="required_roles[]" value="dps">
+                                    <span>DPS</span>
+                                </label>
+                                <label class="role-option">
+                                    <input type="checkbox" name="required_roles[]" value="tank">
+                                    <span>Tank</span>
+                                </label>
+                                <label class="role-option">
+                                    <input type="checkbox" name="required_roles[]" value="healer">
+                                    <span>Healer</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Team Activity Times (Optional)</label>
+                            <div class="form-description">When is your team typically active? Select all that apply</div>
+                            <div class="role-selection" style="margin-top: 12px;">
+                                <label class="role-option">
+                                    <input type="checkbox" name="activity_times[]" value="morning" onchange="updatePreview()">
+                                    <span>Morning (6AM-12PM)</span>
+                                </label>
+                                <label class="role-option">
+                                    <input type="checkbox" name="activity_times[]" value="afternoon" onchange="updatePreview()">
+                                    <span>Afternoon (12PM-6PM)</span>
+                                </label>
+                                <label class="role-option">
+                                    <input type="checkbox" name="activity_times[]" value="evening" onchange="updatePreview()">
+                                    <span>Evening (6PM-12AM)</span>
+                                </label>
+                                <label class="role-option">
+                                    <input type="checkbox" name="activity_times[]" value="night" onchange="updatePreview()">
+                                    <span>Night (12AM-6AM)</span>
+                                </label>
+                                <label class="role-option">
+                                    <input type="checkbox" name="activity_times[]" value="flexible" onchange="updatePreview()">
+                                    <span>Flexible Schedule</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Languages (Optional)</label>
+                            <div class="form-description">Languages spoken by your team. Select all that apply</div>
+                            <div class="role-selection" style="margin-top: 12px;">
+                                <label class="role-option">
+                                    <input type="checkbox" name="languages[]" value="en" checked>
+                                    <span>English</span>
+                                </label>
+                                <label class="role-option">
+                                    <input type="checkbox" name="languages[]" value="es">
+                                    <span>Spanish</span>
+                                </label>
+                                <label class="role-option">
+                                    <input type="checkbox" name="languages[]" value="zh">
+                                    <span>Chinese</span>
+                                </label>
+                                <label class="role-option">
+                                    <input type="checkbox" name="languages[]" value="fr">
+                                    <span>French</span>
+                                </label>
+                                <label class="role-option">
+                                    <input type="checkbox" name="languages[]" value="de">
+                                    <span>German</span>
+                                </label>
+                                <label class="role-option">
+                                    <input type="checkbox" name="languages[]" value="pt">
+                                    <span>Portuguese</span>
+                                </label>
+                                <label class="role-option">
+                                    <input type="checkbox" name="languages[]" value="ru">
+                                    <span>Russian</span>
+                                </label>
+                                <label class="role-option">
+                                    <input type="checkbox" name="languages[]" value="ja">
+                                    <span>Japanese</span>
+                                </label>
+                                <label class="role-option">
+                                    <input type="checkbox" name="languages[]" value="ko">
+                                    <span>Korean</span>
+                                </label>
                             </div>
                         </div>
                     </div>
@@ -651,30 +768,33 @@ function updatePreview() {
     const gameSelect = document.getElementById('game_appid');
     const skillLevel = document.getElementById('skill_level').value;
     const region = document.getElementById('preferred_region').value;
-    const activityTime = document.getElementById('activity_time').value;
+    const activityTimesCheckboxes = document.querySelectorAll('input[name="activity_times[]"]:checked');
+    const activityTimes = Array.from(activityTimesCheckboxes).map(cb => cb.value);
     const description = document.getElementById('description').value;
-    
+
     // Update name
     document.getElementById('preview-name').textContent = name;
-    
+
     // Update game
     const gameText = gameSelect.options[gameSelect.selectedIndex].text || 'Select a game';
     document.getElementById('preview-game').textContent = gameText;
-    
+
     // Update tags
     const tagsContainer = document.getElementById('preview-tags');
     let tagsHTML = '';
-    
+
     if (skillLevel) {
         tagsHTML += `<span class="preview-tag">${skillLevel.charAt(0).toUpperCase() + skillLevel.slice(1)}</span>`;
     }
     if (region) {
         tagsHTML += `<span class="preview-tag">${region.replace('_', ' ').toUpperCase()}</span>`;
     }
-    if (activityTime) {
-        tagsHTML += `<span class="preview-tag">${activityTime.replace('_', ' ').toUpperCase()}</span>`;
+    if (activityTimes.length > 0) {
+        activityTimes.forEach(time => {
+            tagsHTML += `<span class="preview-tag">${time.toUpperCase()}</span>`;
+        });
     }
-    
+
     tagsContainer.innerHTML = tagsHTML;
     
     // Update description
@@ -692,8 +812,8 @@ document.addEventListener('DOMContentLoaded', function() {
 // Form validation and AJAX submission
 document.getElementById('createTeamForm').addEventListener('submit', function(e) {
     e.preventDefault(); // Always prevent default form submission
-    
-    const requiredFields = ['name', 'game_appid', 'server_id', 'max_size', 'skill_level', 'preferred_region', 'activity_time', 'recruitment_status'];
+
+    const requiredFields = ['name', 'game_appid', 'server_id', 'max_size', 'skill_level', 'preferred_region', 'recruitment_status'];
     let isValid = true;
     
     requiredFields.forEach(fieldId => {

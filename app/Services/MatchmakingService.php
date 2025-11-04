@@ -181,7 +181,6 @@ class MatchmakingService
         $activeRequests = MatchmakingRequest::active()
             ->byGame($gameAppId)
             ->byType('find_teammates')
-            ->orderBy('priority', 'desc')
             ->orderBy('created_at', 'asc')
             ->get();
 
@@ -893,9 +892,14 @@ class MatchmakingService
      */
     protected function calculateRegionCompatibilityForTeam(Team $team, MatchmakingRequest $request): float
     {
+        // Get team region from direct field (new) or fallback to team_data (old)
         $teamRegion = $team->team_data['preferred_region'] ?? null;
+
+        // Get request regions from new direct field
+        $requestRegions = $request->preferred_regions ?? [];
+
+        // Legacy fallback to server_preferences
         $requestPrefs = $request->server_preferences ?? [];
-        $requestReqs = $request->additional_requirements ?? [];
 
         // Priority 1: Server preference match (highest priority)
         if (!empty($requestPrefs) && is_array($requestPrefs)) {
@@ -924,21 +928,32 @@ class MatchmakingService
         }
 
         // Priority 2: Geographic region proximity
-        $requestRegion = $requestReqs['preferred_region'] ?? null;
+        // Convert team region to uppercase for matching
+        if ($teamRegion) {
+            $teamRegionUpper = strtoupper(str_replace(['_east', '_west'], ['', ''], $teamRegion));
 
-        if ($teamRegion && $requestRegion) {
-            // Use proximity matrix for gradual scoring
-            $proximityScore = $this->getRegionProximityScore($teamRegion, $requestRegion);
+            // Check if any request regions match team region
+            if (!empty($requestRegions) && is_array($requestRegions)) {
+                $bestScore = 0.0;
 
-            \Log::debug('Region compatibility: Geographic proximity', [
-                'team_id' => $team->id,
-                'request_id' => $request->id,
-                'team_region' => $teamRegion,
-                'request_region' => $requestRegion,
-                'proximity_score' => $proximityScore,
-            ]);
+                foreach ($requestRegions as $requestRegion) {
+                    $requestRegionUpper = strtoupper($requestRegion);
+                    $proximityScore = $this->getRegionProximityScore($teamRegionUpper, $requestRegionUpper);
+                    $bestScore = max($bestScore, $proximityScore);
+                }
 
-            return $proximityScore;
+                if ($bestScore > 0) {
+                    \Log::debug('Region compatibility: Geographic proximity', [
+                        'team_id' => $team->id,
+                        'request_id' => $request->id,
+                        'team_region' => $teamRegion,
+                        'request_regions' => $requestRegions,
+                        'best_proximity_score' => $bestScore,
+                    ]);
+
+                    return $bestScore;
+                }
+            }
         }
 
         // No specific preferences - neutral score
@@ -1084,16 +1099,24 @@ class MatchmakingService
      */
     protected function calculateActivityTimeMatch(Team $team, MatchmakingRequest $request): float
     {
-        // Get team's activity time preferences
-        $teamActivityTime = $team->team_data['activity_time'] ?? null;
+        // Get team's activity times from new direct field (array) or fallback to team_data (single value)
+        $teamActivityTimes = $team->activity_times ?? null;
+
+        // Fallback to legacy team_data format
+        if (empty($teamActivityTimes)) {
+            $legacyActivityTime = $team->team_data['activity_time'] ?? null;
+            $teamActivityTimes = $legacyActivityTime ? [$legacyActivityTime] : [];
+        }
+
+        // Get request availability hours (already an array)
         $requestAvailability = $request->availability_hours ?? [];
 
-        // If no data, return neutral score
-        if (!$teamActivityTime || empty($requestAvailability)) {
+        // If no data from either side, return neutral score
+        if (empty($teamActivityTimes) || empty($requestAvailability)) {
             \Log::debug('Activity time: No data available', [
                 'team_id' => $team->id,
                 'request_id' => $request->id,
-                'team_activity_time' => $teamActivityTime,
+                'team_activity_times' => $teamActivityTimes,
                 'request_availability' => $requestAvailability,
                 'score' => 0.70,
             ]);
@@ -1101,8 +1124,8 @@ class MatchmakingService
             return 0.70;
         }
 
-        // Convert team's activity time to array format for comparison
-        $teamTimeSlots = is_array($teamActivityTime) ? $teamActivityTime : [$teamActivityTime];
+        // Convert to arrays for comparison
+        $teamTimeSlots = is_array($teamActivityTimes) ? $teamActivityTimes : [$teamActivityTimes];
         $requestTimeSlots = is_array($requestAvailability) ? $requestAvailability : [];
 
         // Calculate Jaccard similarity for schedule overlap
@@ -1187,12 +1210,20 @@ class MatchmakingService
      */
     protected function calculateLanguageCompatibility(Team $team, MatchmakingRequest $request): float
     {
-        // Get team languages from team_data or default to English
-        $teamLanguages = $team->team_data['languages'] ?? ['en'];
+        // Get team languages from new direct field or fallback to team_data
+        $teamLanguages = $team->languages ?? null;
 
-        // Get request languages from additional_requirements or default to English
-        $requestReqs = $request->additional_requirements ?? [];
-        $requestLanguages = $requestReqs['languages'] ?? ['en'];
+        // Fallback to legacy team_data format
+        if (empty($teamLanguages)) {
+            $teamLanguages = $team->team_data['languages'] ?? ['en'];
+        }
+
+        // Get request languages from new direct field
+        $requestLanguages = $request->languages ?? ['en'];
+
+        // Ensure both are arrays
+        $teamLanguages = is_array($teamLanguages) ? $teamLanguages : [$teamLanguages];
+        $requestLanguages = is_array($requestLanguages) ? $requestLanguages : [$requestLanguages];
 
         // Normalize to lowercase for comparison
         $teamLanguages = array_map('strtolower', $teamLanguages);

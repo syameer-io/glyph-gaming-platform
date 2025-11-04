@@ -20,11 +20,12 @@ class MatchmakingRequest extends Model
         'availability_hours',
         'server_preferences',
         'additional_requirements',
-        'priority',
         'status',
         'description',
         'expires_at',
         'last_activity_at',
+        'preferred_regions',
+        'languages',
     ];
 
     protected $casts = [
@@ -35,6 +36,8 @@ class MatchmakingRequest extends Model
         'skill_score' => 'decimal:2',
         'expires_at' => 'datetime',
         'last_activity_at' => 'datetime',
+        'preferred_regions' => 'array',
+        'languages' => 'array',
     ];
 
     public function user(): BelongsTo
@@ -222,13 +225,5 @@ class MatchmakingRequest extends Model
     public function scopeByType($query, string $requestType)
     {
         return $query->where('request_type', $requestType);
-    }
-
-    /**
-     * Scope for requests by priority
-     */
-    public function scopeByPriority($query, string $priority)
-    {
-        return $query->where('priority', $priority);
     }
 }

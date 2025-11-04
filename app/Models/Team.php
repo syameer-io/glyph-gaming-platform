@@ -25,12 +25,18 @@ class Team extends Model
         'team_data',
         'recruitment_deadline',
         'average_skill_score',
+        'required_roles',
+        'activity_times',
+        'languages',
     ];
 
     protected $casts = [
         'team_data' => 'array',
         'recruitment_deadline' => 'datetime',
         'average_skill_score' => 'decimal:2',
+        'required_roles' => 'array',
+        'activity_times' => 'array',
+        'languages' => 'array',
     ];
 
     public function server(): BelongsTo
@@ -357,17 +363,21 @@ class Team extends Model
     /**
      * Get roles that the team currently needs
      *
-     * Compares current member roles against desired composition from team_data.
-     * Falls back to game-specific requirements if no custom roles defined.
-     * Returns associative array of role => count_needed.
+     * Uses new direct required_roles field or falls back to team_data.
+     * Returns simple array of role names (not counts) that team is looking for.
      *
-     * Phase 3 Enhancement: Uses custom team preferences when available.
+     * Phase 4 Enhancement: Uses direct required_roles field for matchmaking.
      *
-     * @return array Role names and counts needed (e.g., ['awper' => 1, 'support' => 1])
+     * @return array Role names needed (e.g., ['awper', 'support'])
      */
     public function getNeededRoles(): array
     {
-        // Get desired role distribution from team_data (custom team preferences)
+        // Use new direct required_roles field first
+        if (!empty($this->required_roles) && is_array($this->required_roles)) {
+            return $this->required_roles;
+        }
+
+        // Fallback to legacy team_data format (desired_roles with counts)
         $desiredRoles = $this->team_data['desired_roles'] ?? null;
 
         // If team_data is explicitly empty or desired_roles not set, team is flexible (no specific needs)
@@ -375,7 +385,7 @@ class Team extends Model
             return []; // Team has no specific role requirements
         }
 
-        // If team has custom role preferences, use those
+        // If team has custom role preferences in legacy format, use those
         if (!empty($desiredRoles)) {
             // Get current member roles
             $currentRoles = $this->activeMembers()
@@ -397,7 +407,7 @@ class Team extends Model
                 }
             }
 
-            return $neededRoles;
+            return array_keys($neededRoles); // Return just role names for consistency
         }
 
         // If desired_roles is set but empty array, team is flexible

@@ -106,10 +106,15 @@ class TeamController extends Controller
             'max_size' => 'required|integer|min:2|max:10',
             'skill_level' => 'required|in:beginner,intermediate,advanced,expert',
             'preferred_region' => 'required|in:na_east,na_west,eu_west,eu_east,asia,oceania',
-            'activity_time' => 'required|in:morning,afternoon,evening,late_night,weekends,flexible',
             'recruitment_status' => 'required|in:open,closed',
             'communication_required' => 'nullable|boolean',
             'competitive_focus' => 'nullable|boolean',
+            'required_roles' => 'nullable|array',
+            'required_roles.*' => 'string|in:entry_fragger,support,awper,igl,lurker,carry,mid,offlaner,jungler,hard_support,dps,tank,healer,scout,assault,recon',
+            'activity_times' => 'nullable|array',
+            'activity_times.*' => 'string|in:morning,afternoon,evening,night,flexible',
+            'languages' => 'nullable|array',
+            'languages.*' => 'string|max:10',
         ]);
 
         if ($validator->fails()) {
@@ -153,11 +158,13 @@ class TeamController extends Controller
                 'status' => ($request->recruitment_status === 'open') ? 'recruiting' : 'full',
                 'team_data' => [
                     'preferred_region' => $request->preferred_region,
-                    'activity_time' => $request->activity_time,
                     'recruitment_status' => $request->recruitment_status,
                     'communication_required' => (bool) $request->communication_required,
                     'competitive_focus' => (bool) $request->competitive_focus,
                 ],
+                'required_roles' => $request->required_roles ?? [],
+                'activity_times' => $request->activity_times ?? [],
+                'languages' => $request->languages ?? ['en'],
             ]);
 
             // Add creator as team leader

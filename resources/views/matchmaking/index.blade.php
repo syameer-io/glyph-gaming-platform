@@ -747,13 +747,43 @@
                 <small style="color: #b3b3b5;">Hold Ctrl/Cmd to select multiple roles</small>
             </div>
             <div class="form-group">
-                <label for="priority">Priority</label>
-                <select id="priority" name="priority">
-                    <option value="normal">Normal</option>
-                    <option value="low">Low</option>
-                    <option value="high">High</option>
-                    <option value="urgent">Urgent</option>
+                <label for="preferred_regions">Preferred Regions</label>
+                <select id="preferred_regions" name="preferred_regions[]" multiple>
+                    <option value="NA">North America</option>
+                    <option value="EU">Europe</option>
+                    <option value="ASIA">Asia</option>
+                    <option value="SA">South America</option>
+                    <option value="OCEANIA">Oceania</option>
+                    <option value="AFRICA">Africa</option>
+                    <option value="MIDDLE_EAST">Middle East</option>
                 </select>
+                <small style="color: #b3b3b5;">Select your preferred gaming regions</small>
+            </div>
+            <div class="form-group">
+                <label for="availability_hours">When Can You Play?</label>
+                <select id="availability_hours" name="availability_hours[]" multiple>
+                    <option value="morning">Morning (6AM-12PM)</option>
+                    <option value="afternoon">Afternoon (12PM-6PM)</option>
+                    <option value="evening">Evening (6PM-12AM)</option>
+                    <option value="night">Night (12AM-6AM)</option>
+                    <option value="flexible">Flexible Schedule</option>
+                </select>
+                <small style="color: #b3b3b5;">Select your typical gaming hours</small>
+            </div>
+            <div class="form-group">
+                <label for="languages">Languages You Speak</label>
+                <select id="languages" name="languages[]" multiple>
+                    <option value="en" selected>English</option>
+                    <option value="es">Spanish</option>
+                    <option value="zh">Chinese</option>
+                    <option value="fr">French</option>
+                    <option value="de">German</option>
+                    <option value="pt">Portuguese</option>
+                    <option value="ru">Russian</option>
+                    <option value="ja">Japanese</option>
+                    <option value="ko">Korean</option>
+                </select>
+                <small style="color: #b3b3b5;">Select languages for team communication</small>
             </div>
             <div class="form-group">
                 <label for="message">Message (Optional)</label>

@@ -337,7 +337,6 @@ class User extends Authenticatable
             'server_id' => $preferences['server_id'] ?? null,
             'message' => $preferences['message'] ?? null,
             'max_team_size' => $preferences['max_team_size'] ?? 5,
-            'priority' => $preferences['priority'] ?? 5,
             'status' => 'active',
             'preferences' => $preferences,
         ]);
