@@ -153,7 +153,7 @@ class TeamController extends Controller
                 'server_id' => $request->server_id,
                 'creator_id' => $user->id,
                 'max_size' => $request->max_size,
-                'current_size' => 1,
+                'current_size' => 0,
                 'skill_level' => $request->skill_level,
                 'status' => ($request->recruitment_status === 'open') ? 'recruiting' : 'full',
                 'team_data' => [

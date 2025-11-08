@@ -13,8 +13,8 @@
     }
 
     // Determine status information
-    $isRecruiting = $team->status === 'recruiting' && $team->current_size < $team->max_size;
-    $isFull = $team->current_size >= $team->max_size;
+    $isRecruiting = $team->status === 'recruiting' && $team->activeMembers->count() < $team->max_size;
+    $isFull = $team->activeMembers->count() >= $team->max_size;
 
     // Status indicator color
     $statusColor = match($team->status) {
@@ -186,7 +186,7 @@
                     font-size: 12px;
                     color: #b3b3b5;
                 ">
-                    {{ $team->current_size }}/{{ $team->max_size }} members
+                    {{ $team->activeMembers->count() }}/{{ $team->max_size }} members
                 </div>
             </div>
         @endif
