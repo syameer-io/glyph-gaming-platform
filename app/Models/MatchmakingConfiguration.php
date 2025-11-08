@@ -93,14 +93,13 @@ class MatchmakingConfiguration extends Model
     {
         return self::create([
             'name' => 'default',
-            'description' => 'Default configuration',
+            'description' => 'Default configuration (5 criteria - SIZE removed)',
             'is_active' => true,
             'weights' => [
                 'skill' => 0.40,
-                'composition' => 0.25,
+                'composition' => 0.30,  // Increased from 0.25 (absorbed SIZE's 5%)
                 'region' => 0.15,
                 'schedule' => 0.10,
-                'size' => 0.05,
                 'language' => 0.05,
             ],
             'thresholds' => [

@@ -63,12 +63,17 @@ class MatchmakingServiceEdgeCasesTest extends TestCase
 
         $compatibility = $this->service->calculateDetailedCompatibility($team, $request);
 
-        // Full team should have low size score
-        $this->assertLessThan(75, $compatibility['breakdown']['size']);
+        // SIZE criterion removed - verify it's not in breakdown
+        $this->assertArrayNotHasKey('size', $compatibility['breakdown'],
+            'SIZE criterion should not be present in compatibility breakdown');
+
+        // Should still calculate other criteria normally
+        $this->assertArrayHasKey('skill', $compatibility['breakdown']);
+        $this->assertArrayHasKey('composition', $compatibility['breakdown']);
     }
 
     /** @test */
-    public function it_handles_teams_with_zero_members()
+    public function it_handles_teams_with_minimal_members()
     {
         $team = Team::factory()->create([
             'current_size' => 1, // Minimum 1 member (the creator)
@@ -79,9 +84,14 @@ class MatchmakingServiceEdgeCasesTest extends TestCase
 
         $compatibility = $this->service->calculateDetailedCompatibility($team, $request);
 
-        // Very small team (10% full) should have lower size score
-        $this->assertGreaterThan(35, $compatibility['breakdown']['size']);
-        $this->assertLessThan(65, $compatibility['breakdown']['size']);
+        // SIZE criterion removed - verify it's not in breakdown
+        $this->assertArrayNotHasKey('size', $compatibility['breakdown'],
+            'SIZE criterion should not be present in compatibility breakdown');
+
+        // Should still calculate other criteria normally
+        $this->assertIsArray($compatibility);
+        $this->assertGreaterThanOrEqual(0, $compatibility['total_score']);
+        $this->assertLessThanOrEqual(100, $compatibility['total_score']);
     }
 
     /** @test */
@@ -128,9 +138,10 @@ class MatchmakingServiceEdgeCasesTest extends TestCase
 
         $compatibility = $this->service->calculateDetailedCompatibility($team, $request);
 
-        // Should still calculate, defaulting to neutral scores (optimal size + neutrals = ~87.5%)
+        // Should still calculate, defaulting to neutral scores
+        // With 5 criteria (no SIZE), neutral scores result in lower total
         $this->assertIsArray($compatibility);
-        $this->assertGreaterThan(70, $compatibility['total_score']);
+        $this->assertGreaterThan(65, $compatibility['total_score']);
         $this->assertLessThan(95, $compatibility['total_score']);
     }
 

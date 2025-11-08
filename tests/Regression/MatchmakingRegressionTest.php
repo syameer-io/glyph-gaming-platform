@@ -136,11 +136,15 @@ class MatchmakingRegressionTest extends TestCase
         // Verify reasons is array
         $this->assertIsArray($compatibility['reasons']);
 
-        // Verify breakdown contains all expected criteria
-        $expectedCriteria = ['skill', 'composition', 'region', 'schedule', 'size', 'language'];
+        // Verify breakdown contains all expected criteria (5 total - SIZE removed)
+        $expectedCriteria = ['skill', 'composition', 'region', 'schedule', 'language'];
         foreach ($expectedCriteria as $criterion) {
             $this->assertArrayHasKey($criterion, $compatibility['breakdown']);
         }
+
+        // Verify SIZE is NOT in breakdown (removed criterion)
+        $this->assertArrayNotHasKey('size', $compatibility['breakdown'],
+            'SIZE criterion should be removed from breakdown');
     }
 
     /** @test */

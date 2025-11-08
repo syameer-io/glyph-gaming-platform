@@ -686,4 +686,29 @@ class TeamController extends Controller
             default => 'beginner'
         };
     }
+
+    /**
+     * Get recommended team size based on game
+     *
+     * Returns the standard/optimal team size for competitive play in each game.
+     * This is useful for team creation forms and validation.
+     *
+     * @param string $gameAppId Steam App ID
+     * @return int Recommended team size (defaults to 5 if game not recognized)
+     */
+    protected function getRecommendedTeamSize(string $gameAppId): int
+    {
+        $recommendedSizes = [
+            '730' => 5,      // Counter-Strike 2 (5v5 competitive)
+            '570' => 5,      // Dota 2 (5v5)
+            '1172470' => 3,  // Apex Legends (3-player squads)
+            '252490' => 5,   // Rust (optimal squad size)
+            '578080' => 4,   // PUBG (4-player squads)
+            '359550' => 5,   // Rainbow Six Siege (5v5)
+            '1446780' => 60, // Fall Guys (large lobbies)
+            '230410' => 4,   // Warframe (4-player squads)
+        ];
+
+        return $recommendedSizes[$gameAppId] ?? 5; // Default to 5 if unknown
+    }
 }

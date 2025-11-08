@@ -374,6 +374,18 @@ class MatchmakingService
                 'server_id' => $team->server_id,
             ]);
 
+            // Filter out full teams early (capacity check)
+            if ($team->current_size >= $team->max_size) {
+                \Log::debug('Team filtered: Team is full', [
+                    'team_id' => $team->id,
+                    'team_name' => $team->name,
+                    'current_size' => $team->current_size,
+                    'max_size' => $team->max_size,
+                ]);
+                $filteredReasons[$team->id] = 'Team is full (no open slots)';
+                continue;
+            }
+
             // Check if user is already a member
             $isMember = $team->members()->where('user_id', $request->user_id)->exists();
 
@@ -519,16 +531,7 @@ class MatchmakingService
             $reasons[] = "Active during your preferred hours";
         }
 
-        // 5. Team Size Score (already returns [0, 1])
-        $normalizedScores['size'] = $this->calculateTeamSizeScore($team);
-
-        if ($team->current_size <= 3) {
-            $reasons[] = "Small team - easier to integrate";
-        } elseif ($team->current_size >= $team->max_size - 1) {
-            $reasons[] = "Team almost full - join quickly!";
-        }
-
-        // 6. Language Compatibility (already returns [0, 1])
+        // 5. Language Compatibility (already returns [0, 1])
         $normalizedScores['language'] = $this->calculateLanguageCompatibility($team, $request);
 
         if ($normalizedScores['language'] >= 0.80) {
@@ -620,11 +623,14 @@ class MatchmakingService
      *
      * Weight Distribution Rationale (default):
      * - Skill (40%): Primary factor for match quality and enjoyment
-     * - Composition (25%): Role needs must be met for team success
+     * - Composition (30%): Role needs must be met for team success (increased from 25%)
      * - Region (15%): Affects latency and communication
      * - Schedule (10%): Nice-to-have but not critical (async possible)
-     * - Size (5%): Minor factor, teams accept applications at various fill levels
      * - Language (5%): Often correlates with region, English is common
+     *
+     * Note: SIZE criterion removed - team capacity is now a filter (not a score).
+     * The 5% from SIZE was redistributed to Composition, which is the most impactful
+     * criterion after Skill.
      *
      * @param MatchmakingRequest|null $request Optional request for scoped config
      * @return array Associative array of criterion => weight
@@ -968,6 +974,11 @@ class MatchmakingService
 
     /**
      * Calculate team size score with refined tier-based approach
+     *
+     * @deprecated This method is no longer used in the matchmaking algorithm.
+     * Team capacity is now handled as a filter (teams with no open slots are excluded)
+     * rather than a scoring criterion. This method is kept for backward compatibility
+     * and potential future use in team analytics/statistics.
      *
      * Returns normalized score [0, 1] with optimal range at 40-60% capacity.
      * Uses gradual tier-based scoring with bounded scaling to prevent edge values.
