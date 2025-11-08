@@ -450,14 +450,12 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="max_size">Team Size *</label>
-                                <select id="max_size" name="max_size" required onchange="updateMemberSlots(); updatePreview()">
-                                    <option value="">Select team size...</option>
-                                    <option value="2" {{ old('max_size') == '2' ? 'selected' : '' }}>2 Players (Duo)</option>
-                                    <option value="3" {{ old('max_size') == '3' ? 'selected' : '' }}>3 Players (Trio)</option>
-                                    <option value="5" {{ old('max_size') == '5' ? 'selected' : '' }}>5 Players (Standard)</option>
-                                    <option value="6" {{ old('max_size') == '6' ? 'selected' : '' }}>6 Players (Large Squad)</option>
-                                    <option value="10" {{ old('max_size') == '10' ? 'selected' : '' }}>10 Players (Guild)</option>
+                                <select id="max_size" name="max_size" required disabled style="background-color: #18181b; cursor: not-allowed; opacity: 0.7;">
+                                    <option value="">Select a game first...</option>
                                 </select>
+                                <div class="form-description" id="team-size-info" style="color: #667eea; margin-top: 6px; display: none;">
+                                    🔒 Team size is automatically set based on the game's competitive standard
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label for="skill_level">Skill Level *</label>
@@ -677,25 +675,57 @@ const gameInfo = {
         name: 'Counter-Strike 2',
         description: 'Tactical FPS requiring precise aim, strategy, and team coordination.',
         recommendedSize: 5,
+        sizeLabel: '5 Players (Competitive 5v5)',
         roles: ['Entry Fragger', 'Support', 'AWPer', 'IGL', 'Lurker']
     },
     '570': {
         name: 'Dota 2',
         description: 'MOBA with complex mechanics, requiring strategic thinking and role coordination.',
         recommendedSize: 5,
+        sizeLabel: '5 Players (Standard MOBA)',
         roles: ['Carry', 'Mid', 'Offlaner', 'Support', 'Hard Support']
     },
     '230410': {
         name: 'Warframe',
         description: 'Co-op action game with diverse Warframes and role specializations.',
         recommendedSize: 4,
+        sizeLabel: '4 Players (Full Squad)',
         roles: ['DPS', 'Support', 'Tank', 'Specialist']
     },
     '1172470': {
         name: 'Apex Legends',
         description: 'Battle royale emphasizing team composition and tactical play.',
         recommendedSize: 3,
+        sizeLabel: '3 Players (Trio)',
         roles: ['Assault', 'Recon', 'Support']
+    },
+    '252490': {
+        name: 'Rust',
+        description: 'Survival game with base building and PvP combat.',
+        recommendedSize: 5,
+        sizeLabel: '5 Players (Zerg Squad)',
+        roles: ['Builder', 'Farmer', 'PvP', 'Scout', 'Leader']
+    },
+    '578080': {
+        name: 'PUBG',
+        description: 'Battle royale with realistic gunplay and tactical teamwork.',
+        recommendedSize: 4,
+        sizeLabel: '4 Players (Squad)',
+        roles: ['Entry', 'Support', 'Sniper', 'Scout']
+    },
+    '359550': {
+        name: 'Rainbow Six Siege',
+        description: 'Tactical shooter emphasizing strategy, communication, and operator synergy.',
+        recommendedSize: 5,
+        sizeLabel: '5 Players (Ranked Team)',
+        roles: ['Entry', 'Support', 'Anchor', 'Roamer', 'IGL']
+    },
+    '1446780': {
+        name: 'Fall Guys',
+        description: 'Party game with chaotic mini-games and team challenges.',
+        recommendedSize: 4,
+        sizeLabel: '4 Players (Squad Show)',
+        roles: ['Grabber', 'Support', 'Speedrunner', 'Tank']
     }
 };
 
@@ -703,28 +733,39 @@ function updateGameInfo() {
     const gameSelect = document.getElementById('game_appid');
     const gameInfoDiv = document.getElementById('game-info');
     const gameNameInput = document.getElementById('game_name');
+    const sizeSelect = document.getElementById('max_size');
+    const sizeInfoDiv = document.getElementById('team-size-info');
     const selectedGame = gameSelect.value;
-    
+
     if (selectedGame && gameInfo[selectedGame]) {
         const info = gameInfo[selectedGame];
-        
+
         // Update game name hidden field
         gameNameInput.value = info.name;
-        
+
         gameInfoDiv.innerHTML = `
             <strong>${info.name}</strong><br>
-            ${info.description}<br>
-            <em>Recommended team size: ${info.recommendedSize} players</em>
+            ${info.description}
         `;
         gameInfoDiv.style.display = 'block';
-        
-        // Update recommended team size
-        const sizeSelect = document.getElementById('max_size');
-        if (!sizeSelect.value) {
-            sizeSelect.value = info.recommendedSize;
-            updateMemberSlots();
-        }
+
+        // Auto-set and lock team size based on game
+        sizeSelect.innerHTML = `<option value="${info.recommendedSize}">${info.sizeLabel}</option>`;
+        sizeSelect.value = info.recommendedSize;
+        sizeSelect.disabled = false; // Enable but still locked to single option
+
+        // Show locked info message
+        sizeInfoDiv.style.display = 'block';
+
+        // Update member slots with new size
+        updateMemberSlots();
+        updatePreview();
     } else {
+        // No game selected - reset team size
+        sizeSelect.innerHTML = '<option value="">Select a game first...</option>';
+        sizeSelect.value = '';
+        sizeSelect.disabled = true;
+        sizeInfoDiv.style.display = 'none';
         gameInfoDiv.style.display = 'none';
     }
 }

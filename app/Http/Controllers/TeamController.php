@@ -700,12 +700,12 @@ class TeamController extends Controller
     {
         $recommendedSizes = [
             '730' => 5,      // Counter-Strike 2 (5v5 competitive)
-            '570' => 5,      // Dota 2 (5v5)
-            '1172470' => 3,  // Apex Legends (3-player squads)
-            '252490' => 5,   // Rust (optimal squad size)
+            '570' => 5,      // Dota 2 (5v5 MOBA)
+            '1172470' => 3,  // Apex Legends (3-player trios)
+            '252490' => 5,   // Rust (zerg squad)
             '578080' => 4,   // PUBG (4-player squads)
-            '359550' => 5,   // Rainbow Six Siege (5v5)
-            '1446780' => 60, // Fall Guys (large lobbies)
+            '359550' => 5,   // Rainbow Six Siege (5v5 ranked)
+            '1446780' => 4,  // Fall Guys (4-player Squad Show)
             '230410' => 4,   // Warframe (4-player squads)
         ];
 
