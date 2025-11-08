@@ -994,16 +994,54 @@ function displayFindTeamsResults(teams) {
                         <div style="font-size: 14px; color: #b3b3b5;">
                             ${team.game_name || 'Unknown Game'}
                         </div>
-                        <div style="display: flex; gap: 6px; margin-top: 8px;">
+                        <div style="display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap;">
                             <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase;">
                                 ${team.skill_level ? team.skill_level.charAt(0).toUpperCase() + team.skill_level.slice(1) : 'Casual'}
                             </span>
                             <span style="background-color: #3f3f46; color: #b3b3b5; padding: 3px 8px; border-radius: 4px; font-size: 11px;">
                                 ${team.current_size || 0}/${team.max_size || 5} Members
                             </span>
-                            ${roleNeeds.length > 0 ? `
-                                <span style="background-color: rgba(102, 126, 234, 0.2); color: #667eea; padding: 3px 8px; border-radius: 4px; font-size: 11px;">
-                                    Needs: ${roleNeeds.slice(0, 2).join(', ')}${roleNeeds.length > 2 ? '...' : ''}
+                            ${team.preferred_region ? `
+                                <span style="background-color: #3f3f46; color: #b3b3b5; padding: 3px 8px; border-radius: 4px; font-size: 11px; text-transform: uppercase;">
+                                    ${team.preferred_region.replace(/_/g, ' ')}
+                                </span>
+                            ` : ''}
+                            ${team.required_roles && team.required_roles.length > 0 ?
+                                team.required_roles.map(role => `
+                                    <span style="background-color: rgba(102, 126, 234, 0.2); color: #8b9aef; padding: 3px 8px; border-radius: 4px; font-size: 11px; text-transform: uppercase; border: 1px solid rgba(102, 126, 234, 0.3);">
+                                        ${role.replace(/_/g, ' ')}
+                                    </span>
+                                `).join('')
+                            : ''}
+                            ${team.activity_times && team.activity_times.length > 0 ?
+                                team.activity_times.slice(0, 2).map(time => `
+                                    <span style="background-color: rgba(245, 158, 11, 0.2); color: #fbbf24; padding: 3px 8px; border-radius: 4px; font-size: 11px; text-transform: uppercase; border: 1px solid rgba(245, 158, 11, 0.3);">
+                                        ${time.replace(/_/g, ' ')}
+                                    </span>
+                                `).join('')
+                            : ''}
+                            ${team.activity_times && team.activity_times.length > 2 ? `
+                                <span style="background-color: rgba(245, 158, 11, 0.2); color: #fbbf24; padding: 3px 8px; border-radius: 4px; font-size: 11px; text-transform: uppercase; border: 1px solid rgba(245, 158, 11, 0.3);">
+                                    +${team.activity_times.length - 2} more
+                                </span>
+                            ` : ''}
+                            ${team.languages && team.languages.length > 0 ?
+                                (() => {
+                                    const languageMap = {
+                                        'en': 'English', 'es': 'Spanish', 'zh': 'Chinese',
+                                        'fr': 'French', 'de': 'German', 'pt': 'Portuguese',
+                                        'ru': 'Russian', 'ja': 'Japanese', 'ko': 'Korean'
+                                    };
+                                    return team.languages.slice(0, 2).map(lang => `
+                                        <span style="background-color: rgba(16, 185, 129, 0.2); color: #10b981; padding: 3px 8px; border-radius: 4px; font-size: 11px; text-transform: uppercase; border: 1px solid rgba(16, 185, 129, 0.3);">
+                                            ${languageMap[lang] || lang}
+                                        </span>
+                                    `).join('');
+                                })()
+                            : ''}
+                            ${team.languages && team.languages.length > 2 ? `
+                                <span style="background-color: rgba(16, 185, 129, 0.2); color: #10b981; padding: 3px 8px; border-radius: 4px; font-size: 11px; text-transform: uppercase; border: 1px solid rgba(16, 185, 129, 0.3);">
+                                    +${team.languages.length - 2} more
                                 </span>
                             ` : ''}
                         </div>

@@ -296,6 +296,7 @@
         flex-wrap: wrap;
         gap: 6px;
     ">
+        {{-- Skill Level Tag (Primary) --}}
         @if($team->skill_level)
             <span style="
                 font-size: 11px;
@@ -310,6 +311,7 @@
             </span>
         @endif
 
+        {{-- Preferred Region Tag --}}
         @if($team->preferred_region)
             <span style="
                 font-size: 11px;
@@ -324,20 +326,90 @@
             </span>
         @endif
 
-        @if($team->activity_time)
+        {{-- Required Roles Tags --}}
+        @if(!empty($team->required_roles) && is_array($team->required_roles))
+            @foreach($team->required_roles as $role)
+                <span style="
+                    font-size: 11px;
+                    background-color: rgba(102, 126, 234, 0.2);
+                    color: #8b9aef;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    text-transform: uppercase;
+                    font-weight: 500;
+                    border: 1px solid rgba(102, 126, 234, 0.3);
+                " title="Looking for this role">
+                    {{ ucfirst(str_replace('_', ' ', $role)) }}
+                </span>
+            @endforeach
+        @endif
+
+        {{-- Activity Times Tags --}}
+        @if(!empty($team->activity_times) && is_array($team->activity_times))
+            @foreach($team->activity_times as $time)
+                <span style="
+                    font-size: 11px;
+                    background-color: rgba(245, 158, 11, 0.2);
+                    color: #fbbf24;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    text-transform: uppercase;
+                    font-weight: 500;
+                    border: 1px solid rgba(245, 158, 11, 0.3);
+                " title="Active during this time">
+                    {{ ucfirst(str_replace('_', ' ', $time)) }}
+                </span>
+            @endforeach
+        @endif
+
+        {{-- Languages Tags --}}
+        @if(!empty($team->languages) && is_array($team->languages))
+            @php
+                $languageMap = [
+                    'en' => 'English',
+                    'es' => 'Spanish',
+                    'zh' => 'Chinese',
+                    'fr' => 'French',
+                    'de' => 'German',
+                    'pt' => 'Portuguese',
+                    'ru' => 'Russian',
+                    'ja' => 'Japanese',
+                    'ko' => 'Korean'
+                ];
+            @endphp
+            @foreach($team->languages as $langCode)
+                <span style="
+                    font-size: 11px;
+                    background-color: rgba(16, 185, 129, 0.2);
+                    color: #10b981;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    text-transform: uppercase;
+                    font-weight: 500;
+                    border: 1px solid rgba(16, 185, 129, 0.3);
+                " title="Speaks this language">
+                    {{ $languageMap[$langCode] ?? ucfirst($langCode) }}
+                </span>
+            @endforeach
+        @endif
+
+        {{-- Legacy: Single Activity Time from team_data (backward compatibility) --}}
+        @if($team->activity_time && (empty($team->activity_times) || !is_array($team->activity_times)))
             <span style="
                 font-size: 11px;
-                background-color: #3f3f46;
-                color: #b3b3b5;
+                background-color: rgba(245, 158, 11, 0.2);
+                color: #fbbf24;
                 padding: 4px 8px;
                 border-radius: 4px;
                 text-transform: uppercase;
                 font-weight: 500;
+                border: 1px solid rgba(245, 158, 11, 0.3);
             ">
                 {{ ucfirst(str_replace('_', ' ', $team->activity_time)) }}
             </span>
         @endif
 
+        {{-- Communication Required Tag --}}
         @if($team->communication_required)
             <span style="
                 font-size: 11px;

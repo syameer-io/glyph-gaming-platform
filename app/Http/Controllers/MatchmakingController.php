@@ -681,6 +681,10 @@ class MatchmakingController extends Controller
                     'compatibility_score' => $compatibility['total_score'],
                     'match_reasons' => $compatibility['reasons'],
                     'role_needs' => $roleNeedsList,
+                    'preferred_region' => $team->preferred_region,
+                    'required_roles' => $team->required_roles ?? [],
+                    'activity_times' => $team->activity_times ?? [],
+                    'languages' => $team->languages ?? [],
                     'server' => [
                         'id' => $team->server->id,
                         'name' => $team->server->name,
