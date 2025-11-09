@@ -474,4 +474,20 @@ class Team extends Model
     {
         return $query->where('server_id', $serverId);
     }
+
+    /**
+     * Check if team is associated with a server
+     */
+    public function hasServer(): bool
+    {
+        return $this->server_id !== null;
+    }
+
+    /**
+     * Check if team is an independent team (not associated with a server)
+     */
+    public function isIndependent(): bool
+    {
+        return $this->server_id === null;
+    }
 }

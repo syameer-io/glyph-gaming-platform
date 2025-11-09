@@ -420,14 +420,14 @@
 
                         <div class="form-row single">
                             <div class="form-group">
-                                <label for="server_id">Server *</label>
-                                <select id="server_id" name="server_id" required>
-                                    <option value="">Select a server...</option>
+                                <label for="server_id">Server (Optional)</label>
+                                <select id="server_id" name="server_id">
+                                    <option value="">No Server (Independent Team)</option>
                                     @foreach($servers as $server)
                                         <option value="{{ $server->id }}" {{ old('server_id') == $server->id ? 'selected' : '' }}>{{ $server->name }}</option>
                                     @endforeach
                                 </select>
-                                <div class="form-description">Choose which server this team will be associated with</div>
+                                <div class="form-description">You can create an independent team or associate it with a server you're in</div>
                             </div>
                         </div>
 
@@ -854,9 +854,10 @@ document.addEventListener('DOMContentLoaded', function() {
 document.getElementById('createTeamForm').addEventListener('submit', function(e) {
     e.preventDefault(); // Always prevent default form submission
 
-    const requiredFields = ['name', 'game_appid', 'server_id', 'max_size', 'skill_level', 'preferred_region', 'recruitment_status'];
+    // server_id is now optional (removed from required fields)
+    const requiredFields = ['name', 'game_appid', 'max_size', 'skill_level', 'preferred_region', 'recruitment_status'];
     let isValid = true;
-    
+
     requiredFields.forEach(fieldId => {
         const field = document.getElementById(fieldId);
         if (!field.value.trim()) {
@@ -866,12 +867,12 @@ document.getElementById('createTeamForm').addEventListener('submit', function(e)
             field.style.borderColor = '#3f3f46';
         }
     });
-    
+
     if (!isValid) {
         showMessage('Please fill in all required fields', 'error');
         return;
     }
-    
+
     // Submit form via AJAX
     submitTeamForm(this);
 });
@@ -879,14 +880,20 @@ document.getElementById('createTeamForm').addEventListener('submit', function(e)
 function submitTeamForm(form) {
     const submitButton = form.querySelector('button[type="submit"]');
     const originalText = submitButton.textContent;
-    
+
     // Show loading state
     submitButton.disabled = true;
     submitButton.textContent = 'Creating Team...';
-    
+
     // Prepare form data
     const formData = new FormData(form);
-    
+
+    // Convert empty server_id to null (optional field)
+    const serverIdValue = formData.get('server_id');
+    if (!serverIdValue || serverIdValue.trim() === '') {
+        formData.delete('server_id'); // Remove empty server_id so backend treats it as null
+    }
+
     // Debug: Log form data
     console.log('Form data being sent:');
     for (let [key, value] of formData.entries()) {

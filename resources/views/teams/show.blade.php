@@ -686,7 +686,7 @@
         </div>
         @endif
 
-        <div class="team-container" data-team-id="{{ $team->id }}" data-server-id="{{ $team->server_id }}">
+        <div class="team-container" data-team-id="{{ $team->id }}" data-server-id="{{ $team->server_id ?? '' }}">
             <!-- Sidebar -->
             <div class="team-sidebar">
                 <div class="sidebar-nav">

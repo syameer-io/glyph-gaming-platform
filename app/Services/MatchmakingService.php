@@ -111,14 +111,14 @@ class MatchmakingService
     /**
      * Create a balanced team from matchmaking requests
      */
-    public function createBalancedTeam(array $userIds, string $gameAppId, Server $server, array $teamData = []): ?Team
+    public function createBalancedTeam(array $userIds, string $gameAppId, ?Server $server = null, array $teamData = []): ?Team
     {
         if (count($userIds) < 2 || count($userIds) > 10) {
             return null; // Invalid team size
         }
 
         $users = User::whereIn('id', $userIds)->get();
-        
+
         // Validate all users are available
         foreach ($users as $user) {
             if ($this->isUserInActiveTeam($user, $gameAppId)) {
@@ -127,15 +127,15 @@ class MatchmakingService
         }
 
         DB::beginTransaction();
-        
+
         try {
-            // Create the team
+            // Create the team (server_id is now optional)
             $team = Team::create([
                 'name' => $teamData['name'] ?? 'Auto-Matched Team',
                 'description' => $teamData['description'] ?? 'Team created through intelligent matchmaking',
                 'game_appid' => $gameAppId,
                 'game_name' => $this->getGameName($gameAppId),
-                'server_id' => $server->id,
+                'server_id' => $server ? $server->id : null,
                 'creator_id' => $users->first()->id,
                 'max_size' => $teamData['max_size'] ?? 5,
                 'current_size' => 0,
@@ -908,7 +908,8 @@ class MatchmakingService
         $requestPrefs = $request->server_preferences ?? [];
 
         // Priority 1: Server preference match (highest priority)
-        if (!empty($requestPrefs) && is_array($requestPrefs)) {
+        // Only apply server matching if team has a server
+        if ($team->server_id && !empty($requestPrefs) && is_array($requestPrefs)) {
             // Check if team's server is in the preferred list
             if (in_array($team->server_id, $requestPrefs)) {
                 \Log::debug('Region compatibility: Server preference match', [

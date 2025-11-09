@@ -80,10 +80,10 @@ class TeamController extends Controller
     public function create(): View
     {
         $user = Auth::user();
-        
-        // Get user's servers
+
+        // Get user's servers (optional - user can create teams without being in any servers)
         $servers = $user->servers()->get();
-        
+
         // Get user's gaming preferences for game selection
         $games = $user->gamingPreferences()
             ->orderBy('preference_level', 'desc')
@@ -102,7 +102,7 @@ class TeamController extends Controller
             'description' => 'nullable|string|max:1000',
             'game_appid' => 'required|string',
             'game_name' => 'required|string|max:255',
-            'server_id' => 'required|exists:servers,id',
+            'server_id' => 'nullable|exists:servers,id',  // Changed to nullable
             'max_size' => 'required|integer|min:2|max:10',
             'skill_level' => 'required|in:beginner,intermediate,advanced,expert',
             'preferred_region' => 'required|in:na_east,na_west,eu_west,eu_east,asia,oceania',
@@ -122,11 +122,14 @@ class TeamController extends Controller
         }
 
         $user = Auth::user();
-        $server = Server::find($request->server_id);
 
-        // Check if user is a member of the server
-        if (!$server->members()->where('user_id', $user->id)->exists()) {
-            return response()->json(['error' => 'You must be a member of the server to create a team.'], 403);
+        // Server membership check only if a server is specified
+        if ($request->filled('server_id')) {
+            $server = Server::find($request->server_id);
+
+            if ($server && !$server->members()->where('user_id', $user->id)->exists()) {
+                return response()->json(['error' => 'You must be a member of the server to create a team associated with it.'], 403);
+            }
         }
 
         // Check if user already leads a team for this game

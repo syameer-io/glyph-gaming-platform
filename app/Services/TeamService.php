@@ -131,84 +131,91 @@ class TeamService
             ];
         }
 
-        // 5. Verify user is a member of the team's server
-        // If not, automatically join them to the server
-        $isServerMember = $user->servers()
-            ->where('servers.id', $team->server_id)
-            ->exists();
+        // 5. Verify user is a member of the team's server (only if team has a server)
+        // If team has a server and user is not a member, automatically join them
+        if ($team->server_id) {
+            $isServerMember = $user->servers()
+                ->where('servers.id', $team->server_id)
+                ->exists();
 
-        if (!$isServerMember) {
-            Log::info('TeamService::addMemberToTeam - User not a server member, auto-joining to server', [
-                'user_id' => $user->id,
-                'team_id' => $team->id,
-                'server_id' => $team->server_id,
-            ]);
+            if (!$isServerMember) {
+                Log::info('TeamService::addMemberToTeam - User not a server member, auto-joining to server', [
+                    'user_id' => $user->id,
+                    'team_id' => $team->id,
+                    'server_id' => $team->server_id,
+                ]);
 
-            try {
-                // Automatically join user to the server
-                $server = \App\Models\Server::findOrFail($team->server_id);
+                try {
+                    // Automatically join user to the server
+                    $server = \App\Models\Server::findOrFail($team->server_id);
 
-                // Check if server is invite-only
-                if ($server->is_private && !$matchmakingRequest) {
-                    // For private servers, only allow via matchmaking
-                    Log::warning('TeamService::addMemberToTeam - Cannot join private server without matchmaking', [
+                    // Check if server is invite-only
+                    if ($server->is_private && !$matchmakingRequest) {
+                        // For private servers, only allow via matchmaking
+                        Log::warning('TeamService::addMemberToTeam - Cannot join private server without matchmaking', [
+                            'user_id' => $user->id,
+                            'server_id' => $team->server_id,
+                            'server_name' => $server->name,
+                        ]);
+
+                        return [
+                            'success' => false,
+                            'message' => 'This team is on a private server. You need an invite to join.',
+                            'member' => null,
+                        ];
+                    }
+
+                    // Add user to server (check for existing membership first to avoid duplicate key error)
+                    $existingServerMembership = DB::table('server_members')
+                        ->where('server_id', $server->id)
+                        ->where('user_id', $user->id)
+                        ->first();
+
+                    if ($existingServerMembership) {
+                        // User already has a server membership record - update it
+                        DB::table('server_members')
+                            ->where('server_id', $server->id)
+                            ->where('user_id', $user->id)
+                            ->update([
+                                'is_banned' => false,
+                                'is_muted' => false,
+                                'updated_at' => now(),
+                            ]);
+                    } else {
+                        // Create new server membership
+                        $server->members()->attach($user->id, [
+                            'joined_at' => now(),
+                            'is_banned' => false,
+                            'is_muted' => false,
+                        ]);
+                    }
+
+                    Log::info('TeamService::addMemberToTeam - User successfully joined server', [
+                        'user_id' => $user->id,
+                        'server_id' => $server->id,
+                        'server_name' => $server->name,
+                    ]);
+
+                } catch (\Exception $e) {
+                    Log::error('TeamService::addMemberToTeam - Failed to join user to server', [
                         'user_id' => $user->id,
                         'server_id' => $team->server_id,
-                        'server_name' => $server->name,
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
                     ]);
 
                     return [
                         'success' => false,
-                        'message' => 'This team is on a private server. You need an invite to join.',
+                        'message' => 'Failed to join the team\'s server. Please try again.',
                         'member' => null,
                     ];
                 }
-
-                // Add user to server (check for existing membership first to avoid duplicate key error)
-                $existingServerMembership = DB::table('server_members')
-                    ->where('server_id', $server->id)
-                    ->where('user_id', $user->id)
-                    ->first();
-
-                if ($existingServerMembership) {
-                    // User already has a server membership record - update it
-                    DB::table('server_members')
-                        ->where('server_id', $server->id)
-                        ->where('user_id', $user->id)
-                        ->update([
-                            'is_banned' => false,
-                            'is_muted' => false,
-                            'updated_at' => now(),
-                        ]);
-                } else {
-                    // Create new server membership
-                    $server->members()->attach($user->id, [
-                        'joined_at' => now(),
-                        'is_banned' => false,
-                        'is_muted' => false,
-                    ]);
-                }
-
-                Log::info('TeamService::addMemberToTeam - User successfully joined server', [
-                    'user_id' => $user->id,
-                    'server_id' => $server->id,
-                    'server_name' => $server->name,
-                ]);
-
-            } catch (\Exception $e) {
-                Log::error('TeamService::addMemberToTeam - Failed to join user to server', [
-                    'user_id' => $user->id,
-                    'server_id' => $team->server_id,
-                    'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString(),
-                ]);
-
-                return [
-                    'success' => false,
-                    'message' => 'Failed to join the team\'s server. Please try again.',
-                    'member' => null,
-                ];
             }
+        } else {
+            Log::info('TeamService::addMemberToTeam - Independent team (no server association)', [
+                'user_id' => $user->id,
+                'team_id' => $team->id,
+            ]);
         }
 
         // 6. Prepare member data with skill score from Steam profile
