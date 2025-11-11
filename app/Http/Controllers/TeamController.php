@@ -310,11 +310,16 @@ class TeamController extends Controller
             'description' => 'nullable|string|max:1000',
             'max_size' => 'required|integer|min:2|max:10',
             'skill_level' => 'required|in:beginner,intermediate,advanced,expert',
+            'preferred_region' => 'required|in:na_east,na_west,eu_west,eu_east,asia,oceania',
             'recruitment_status' => 'nullable|in:open,closed',
             'recruitment_message' => 'nullable|string|max:500',
-            'required_roles' => 'array',
-            'required_roles.*' => 'string|max:50',
-            'team_settings' => 'array',
+            'required_roles' => 'nullable|array',
+            'required_roles.*' => 'string|in:entry_fragger,support,awper,igl,lurker,carry,mid,offlaner,jungler,hard_support,dps,tank,healer,scout,assault,recon',
+            'activity_times' => 'nullable|array',
+            'activity_times.*' => 'string|in:morning,afternoon,evening,night,flexible',
+            'languages' => 'nullable|array',
+            'languages.*' => 'string|max:10',
+            'team_settings' => 'nullable|array',
             'status' => 'nullable|in:recruiting,full,active,completed,disbanded',
         ]);
 
@@ -329,20 +334,39 @@ class TeamController extends Controller
             ], 422);
         }
 
+        // Get current team_data and merge with new preferred_region
+        $teamData = $team->team_data ?? [];
+        $teamData['preferred_region'] = $request->preferred_region;
+
+        // Merge other team_data fields if they exist in request
+        if ($request->filled('communication_required')) {
+            $teamData['communication_required'] = (bool) $request->communication_required;
+        }
+        if ($request->filled('competitive_focus')) {
+            $teamData['competitive_focus'] = (bool) $request->competitive_focus;
+        }
+
         $updateData = [
             'name' => $request->name,
             'description' => $request->description,
             'max_size' => $request->max_size,
             'skill_level' => $request->skill_level,
+            'team_data' => $teamData,
             'recruitment_message' => $request->recruitment_message,
-            'required_roles' => $request->required_roles ?? [],
-            'team_settings' => $request->team_settings ?? [],
+            'required_roles' => $request->input('required_roles', []),
+            'activity_times' => $request->input('activity_times', []),
+            'languages' => $request->input('languages', ['en']),
             'status' => $request->status ?? $team->status,
         ];
 
         // Add recruitment_status if provided
         if ($request->filled('recruitment_status')) {
             $updateData['recruitment_status'] = $request->recruitment_status;
+        }
+
+        // Merge additional team_settings if provided
+        if ($request->filled('team_settings')) {
+            $updateData['team_settings'] = $request->team_settings;
         }
 
         $team->update($updateData);

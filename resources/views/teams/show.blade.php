@@ -993,37 +993,158 @@
                 @if($isLeader)
                 <div id="settings" class="tab-content">
                     <h3 style="margin-bottom: 24px;">Team Settings</h3>
-                    
-                    <form action="{{ route('teams.update', $team) }}" method="POST">
+
+                    <form action="{{ route('teams.update', $team) }}" method="POST" id="teamSettingsForm">
                         @csrf
                         @method('PUT')
-                        
-                        <div class="form-group">
-                            <label for="team_name">Team Name</label>
-                            <input type="text" id="team_name" name="name" value="{{ $team->name }}" required>
-                        </div>
 
-                        <div class="form-group">
-                            <label for="team_description">Description</label>
-                            <textarea id="team_description" name="description" rows="4">{{ $team->description }}</textarea>
-                        </div>
+                        <!-- Basic Information Section -->
+                        <div style="background-color: #0e0e10; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+                            <h4 style="margin-bottom: 16px; color: #efeff1;">Basic Information</h4>
 
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                             <div class="form-group">
-                                <label for="recruitment_status">Recruitment Status</label>
-                                <select id="recruitment_status" name="recruitment_status">
-                                    <option value="open" {{ $team->recruitment_status === 'open' ? 'selected' : '' }}>Open - Accept new members</option>
-                                    <option value="closed" {{ $team->recruitment_status === 'closed' ? 'selected' : '' }}>Closed - Invite only</option>
+                                <label for="team_name">Team Name</label>
+                                <input type="text" id="team_name" name="name" value="{{ $team->name }}" required maxlength="255">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="team_description">Description</label>
+                                <textarea id="team_description" name="description" rows="4">{{ $team->description }}</textarea>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                <div class="form-group">
+                                    <label for="game_appid">Game</label>
+                                    <select id="game_appid" name="game_appid" disabled style="background-color: #18181b; cursor: not-allowed; opacity: 0.7;">
+                                        <option value="{{ $team->game_appid }}" selected>{{ $team->gameName }}</option>
+                                    </select>
+                                    <div style="font-size: 12px; color: #71717a; margin-top: 6px;">Game cannot be changed after team creation</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="max_size">Team Size</label>
+                                    <input type="number" id="max_size" name="max_size" value="{{ $team->max_size }}" min="{{ $team->current_size }}" max="10" required>
+                                    <div style="font-size: 12px; color: #71717a; margin-top: 6px;">Current: {{ $team->current_size }}/{{ $team->max_size }} members (cannot reduce below current size)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Team Configuration Section -->
+                        <div style="background-color: #0e0e10; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+                            <h4 style="margin-bottom: 16px; color: #efeff1;">Team Configuration</h4>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                <div class="form-group">
+                                    <label for="recruitment_status">Recruitment Status</label>
+                                    <select id="recruitment_status" name="recruitment_status">
+                                        <option value="open" {{ $team->recruitment_status === 'open' ? 'selected' : '' }}>Open - Anyone can join</option>
+                                        <option value="closed" {{ $team->recruitment_status === 'closed' ? 'selected' : '' }}>Closed - Invite only</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="skill_level">Skill Level</label>
+                                    <select id="skill_level" name="skill_level">
+                                        <option value="beginner" {{ $team->skill_level === 'beginner' ? 'selected' : '' }}>Beginner</option>
+                                        <option value="intermediate" {{ $team->skill_level === 'intermediate' ? 'selected' : '' }}>Intermediate</option>
+                                        <option value="advanced" {{ $team->skill_level === 'advanced' ? 'selected' : '' }}>Advanced</option>
+                                        <option value="expert" {{ $team->skill_level === 'expert' ? 'selected' : '' }}>Expert</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="preferred_region">Preferred Region</label>
+                                <select id="preferred_region" name="preferred_region" required>
+                                    <option value="na_east" {{ $team->preferred_region === 'na_east' ? 'selected' : '' }}>North America East</option>
+                                    <option value="na_west" {{ $team->preferred_region === 'na_west' ? 'selected' : '' }}>North America West</option>
+                                    <option value="eu_west" {{ $team->preferred_region === 'eu_west' ? 'selected' : '' }}>Europe West</option>
+                                    <option value="eu_east" {{ $team->preferred_region === 'eu_east' ? 'selected' : '' }}>Europe East</option>
+                                    <option value="asia" {{ $team->preferred_region === 'asia' ? 'selected' : '' }}>Asia</option>
+                                    <option value="oceania" {{ $team->preferred_region === 'oceania' ? 'selected' : '' }}>Oceania</option>
                                 </select>
                             </div>
+                        </div>
+
+                        <!-- Matchmaking Preferences Section -->
+                        <div style="background-color: #0e0e10; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+                            <h4 style="margin-bottom: 16px; color: #efeff1;">Matchmaking Preferences</h4>
+
                             <div class="form-group">
-                                <label for="skill_level">Skill Level</label>
-                                <select id="skill_level" name="skill_level">
-                                    <option value="beginner" {{ $team->skill_level === 'beginner' ? 'selected' : '' }}>Beginner</option>
-                                    <option value="intermediate" {{ $team->skill_level === 'intermediate' ? 'selected' : '' }}>Intermediate</option>
-                                    <option value="advanced" {{ $team->skill_level === 'advanced' ? 'selected' : '' }}>Advanced</option>
-                                    <option value="expert" {{ $team->skill_level === 'expert' ? 'selected' : '' }}>Expert</option>
-                                </select>
+                                <label>Required Roles (Optional)</label>
+                                <div style="font-size: 12px; color: #71717a; margin-bottom: 12px;">Select roles you're looking for in new members</div>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;">
+                                    @php
+                                        $currentRoles = $team->required_roles ?? [];
+                                        $allRoles = [
+                                            'entry_fragger' => 'Entry Fragger',
+                                            'support' => 'Support',
+                                            'awper' => 'AWPer',
+                                            'igl' => 'IGL',
+                                            'lurker' => 'Lurker',
+                                            'carry' => 'Carry',
+                                            'mid' => 'Mid',
+                                            'offlaner' => 'Offlaner',
+                                            'dps' => 'DPS',
+                                            'tank' => 'Tank',
+                                            'healer' => 'Healer',
+                                        ];
+                                    @endphp
+                                    @foreach($allRoles as $roleValue => $roleLabel)
+                                        <label style="display: flex; align-items: center; gap: 8px; padding: 12px; background-color: #18181b; border: 2px solid #3f3f46; border-radius: 8px; cursor: pointer;">
+                                            <input type="checkbox" name="required_roles[]" value="{{ $roleValue }}" {{ in_array($roleValue, $currentRoles) ? 'checked' : '' }}>
+                                            <span style="color: #efeff1; font-size: 14px;">{{ $roleLabel }}</span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Team Activity Times (Optional)</label>
+                                <div style="font-size: 12px; color: #71717a; margin-bottom: 12px;">When is your team typically active?</div>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+                                    @php
+                                        $currentActivityTimes = $team->activity_times ?? [];
+                                        $allActivityTimes = [
+                                            'morning' => 'Morning (6AM-12PM)',
+                                            'afternoon' => 'Afternoon (12PM-6PM)',
+                                            'evening' => 'Evening (6PM-12AM)',
+                                            'night' => 'Night (12AM-6AM)',
+                                            'flexible' => 'Flexible Schedule',
+                                        ];
+                                    @endphp
+                                    @foreach($allActivityTimes as $timeValue => $timeLabel)
+                                        <label style="display: flex; align-items: center; gap: 8px; padding: 12px; background-color: #18181b; border: 2px solid #3f3f46; border-radius: 8px; cursor: pointer;">
+                                            <input type="checkbox" name="activity_times[]" value="{{ $timeValue }}" {{ in_array($timeValue, $currentActivityTimes) ? 'checked' : '' }}>
+                                            <span style="color: #efeff1; font-size: 14px;">{{ $timeLabel }}</span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Languages (Optional)</label>
+                                <div style="font-size: 12px; color: #71717a; margin-bottom: 12px;">Languages spoken by your team</div>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px;">
+                                    @php
+                                        $currentLanguages = $team->languages ?? ['en'];
+                                        $allLanguages = [
+                                            'en' => 'English',
+                                            'es' => 'Spanish',
+                                            'zh' => 'Chinese',
+                                            'fr' => 'French',
+                                            'de' => 'German',
+                                            'pt' => 'Portuguese',
+                                            'ru' => 'Russian',
+                                            'ja' => 'Japanese',
+                                            'ko' => 'Korean',
+                                        ];
+                                    @endphp
+                                    @foreach($allLanguages as $langCode => $langName)
+                                        <label style="display: flex; align-items: center; gap: 8px; padding: 12px; background-color: #18181b; border: 2px solid #3f3f46; border-radius: 8px; cursor: pointer;">
+                                            <input type="checkbox" name="languages[]" value="{{ $langCode }}" {{ in_array($langCode, $currentLanguages) ? 'checked' : '' }}>
+                                            <span style="color: #efeff1; font-size: 14px;">{{ $langName }}</span>
+                                        </label>
+                                    @endforeach
+                                </div>
                             </div>
                         </div>
 
@@ -1151,6 +1272,67 @@ function leaveTeam() {
 }
 
 @if($isLeader)
+// Team Settings Form Submission
+document.getElementById('teamSettingsForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const submitButton = this.querySelector('button[type="submit"]');
+    const originalText = submitButton.textContent;
+
+    // Show loading state
+    submitButton.disabled = true;
+    submitButton.textContent = 'Saving...';
+
+    // Prepare form data
+    const formData = new FormData(this);
+
+    // Submit via fetch
+    fetch(this.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(data => {
+                throw new Error(JSON.stringify(data));
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message, 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showNotification(data.error || 'An error occurred while updating the team', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        try {
+            const errorData = JSON.parse(error.message);
+            if (errorData.errors) {
+                const errorMessages = Object.values(errorData.errors).flat();
+                showNotification(errorMessages.join(', '), 'error');
+            } else if (errorData.error) {
+                showNotification(errorData.error, 'error');
+            } else {
+                showNotification('An error occurred while updating the team. Please try again.', 'error');
+            }
+        } catch (parseError) {
+            showNotification('An error occurred while updating the team. Please try again.', 'error');
+        }
+    })
+    .finally(() => {
+        submitButton.disabled = false;
+        submitButton.textContent = originalText;
+    });
+});
+
 function sendInvite() {
     const username = document.getElementById('invite-username').value;
     const role = document.getElementById('invite-role').value;
