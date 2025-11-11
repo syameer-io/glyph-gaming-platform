@@ -30,9 +30,10 @@ class TeamService
      * This method consolidates all team joining logic for both:
      * 1. Direct joins (from teams page)
      * 2. Matchmaking joins (with MatchmakingRequest parameter)
+     * 3. Approved join requests (with bypass parameter)
      *
      * Validation performed:
-     * - Team recruiting status check
+     * - Team recruiting status check (unless bypassed for approved requests)
      * - Team capacity check
      * - Duplicate membership check
      * - User already in another team for same game check
@@ -42,13 +43,15 @@ class TeamService
      * @param User $user The user joining the team
      * @param array $memberData Optional member data (role, game_role, skill_level, etc.)
      * @param MatchmakingRequest|null $matchmakingRequest Optional matchmaking request if joining via matchmaking
+     * @param bool $bypassRecruitmentCheck Set to true to bypass recruitment status checks (for approved join requests)
      * @return array Returns ['success' => bool, 'message' => string, 'member' => TeamMember|null]
      */
     public function addMemberToTeam(
         Team $team,
         User $user,
         array $memberData = [],
-        ?MatchmakingRequest $matchmakingRequest = null
+        ?MatchmakingRequest $matchmakingRequest = null,
+        bool $bypassRecruitmentCheck = false
     ): array {
         Log::info('TeamService::addMemberToTeam START', [
             'team_id' => $team->id,
@@ -58,16 +61,20 @@ class TeamService
             'game_appid' => $team->game_appid,
             'via_matchmaking' => $matchmakingRequest !== null,
             'matchmaking_request_id' => $matchmakingRequest?->id,
+            'bypass_recruitment_check' => $bypassRecruitmentCheck,
+            'recruitment_status' => $team->recruitment_status,
+            'is_recruiting' => $team->isRecruiting(),
         ]);
 
-        // 1. Validate team is recruiting
-        if (!$team->isRecruiting()) {
+        // 1. Validate team is recruiting (unless bypassing for approved join requests)
+        if (!$bypassRecruitmentCheck && !$team->isRecruiting()) {
             Log::warning('TeamService::addMemberToTeam - Team not recruiting', [
                 'team_id' => $team->id,
                 'status' => $team->status,
                 'current_size' => $team->current_size,
                 'max_size' => $team->max_size,
                 'recruitment_deadline' => $team->recruitment_deadline,
+                'recruitment_status' => $team->recruitment_status,
             ]);
 
             return [
@@ -240,8 +247,8 @@ class TeamService
         DB::beginTransaction();
 
         try {
-            // 8. Add member using Team model method
-            $success = $team->addMember($user, $finalMemberData);
+            // 8. Add member using Team model method (pass bypass parameter)
+            $success = $team->addMember($user, $finalMemberData, $bypassRecruitmentCheck);
 
             if (!$success) {
                 DB::rollBack();
@@ -249,6 +256,7 @@ class TeamService
                 Log::error('TeamService::addMemberToTeam - Team::addMember returned false', [
                     'team_id' => $team->id,
                     'user_id' => $user->id,
+                    'bypass_recruitment_check' => $bypassRecruitmentCheck,
                 ]);
 
                 return [

@@ -13,6 +13,7 @@ use App\Http\Controllers\ServerAdminController;
 use App\Http\Controllers\ServerRecommendationController;
 use App\Http\Controllers\MatchmakingController;
 use App\Http\Controllers\TeamController;
+use App\Http\Controllers\TeamJoinRequestController;
 use App\Http\Controllers\ServerGoalController;
 use App\Http\Controllers\TelegramController;
 use App\Http\Controllers\VoiceController;
@@ -151,7 +152,14 @@ Route::middleware('auth')->group(function () {
         Route::post('/{team}/members', [TeamController::class, 'addMember'])->name('members.add');
         Route::delete('/{team}/members/{user}', [TeamController::class, 'removeMember'])->name('members.remove');
         Route::put('/{team}/members/{user}/role', [TeamController::class, 'updateMemberRole'])->name('members.role.update');
-        
+
+        // Team join request management (Phase 6)
+        Route::post('/{team}/join-requests', [TeamJoinRequestController::class, 'store'])->name('join.request.store');
+        Route::get('/{team}/join-requests', [TeamJoinRequestController::class, 'index'])->name('join.request.index');
+        Route::post('/{team}/join-requests/{joinRequest}/approve', [TeamJoinRequestController::class, 'approve'])->name('join.request.approve');
+        Route::post('/{team}/join-requests/{joinRequest}/reject', [TeamJoinRequestController::class, 'reject'])->name('join.request.reject');
+        Route::delete('/{team}/join-requests/{joinRequest}', [TeamJoinRequestController::class, 'cancel'])->name('join.request.cancel');
+
         // Team statistics and matchmaking
         Route::get('/{team}/stats', [TeamController::class, 'stats'])->name('stats');
         Route::get('/matchmaking/{gameAppid}', [TeamController::class, 'forMatchmaking'])->name('for.matchmaking');

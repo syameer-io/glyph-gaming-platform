@@ -22,6 +22,7 @@ class Team extends Model
         'current_size',
         'skill_level',
         'status',
+        'recruitment_status',
         'team_data',
         'recruitment_deadline',
         'average_skill_score',
@@ -57,6 +58,22 @@ class Team extends Model
     public function activeMembers(): HasMany
     {
         return $this->hasMany(TeamMember::class)->where('status', 'active');
+    }
+
+    /**
+     * Get all join requests for this team
+     */
+    public function joinRequests(): HasMany
+    {
+        return $this->hasMany(TeamJoinRequest::class);
+    }
+
+    /**
+     * Get pending join requests for this team
+     */
+    public function pendingJoinRequests(): HasMany
+    {
+        return $this->hasMany(TeamJoinRequest::class)->where('status', 'pending');
     }
 
     /**
@@ -116,21 +133,49 @@ class Team extends Model
     }
 
     /**
-     * Accessor for recruitment status from team_data
+     * Check if team is accepting join requests (open recruitment)
      */
-    public function getRecruitmentStatusAttribute()
+    public function isOpenForRecruitment(): bool
     {
-        return $this->team_data['recruitment_status'] ?? ($this->status === 'recruiting' ? 'open' : 'closed');
+        return $this->recruitment_status === 'open';
     }
 
     /**
-     * Check if team is recruiting
+     * Check if team is closed for recruitment (invite-only)
+     */
+    public function isClosedForRecruitment(): bool
+    {
+        return $this->recruitment_status === 'closed';
+    }
+
+    /**
+     * Check if team is recruiting (accepting new members)
+     * This checks both the team capacity and the recruitment status preference
      */
     public function isRecruiting(): bool
     {
-        return $this->status === 'recruiting' && 
-               $this->current_size < $this->max_size &&
-               (!$this->recruitment_deadline || $this->recruitment_deadline > now());
+        // Team must have space available
+        if ($this->current_size >= $this->max_size) {
+            return false;
+        }
+
+        // Team status must be 'recruiting'
+        if ($this->status !== 'recruiting') {
+            return false;
+        }
+
+        // Check recruitment deadline if set
+        if ($this->recruitment_deadline && $this->recruitment_deadline <= now()) {
+            return false;
+        }
+
+        // Check recruitment_status column (open vs closed/invite-only)
+        // Use database column first, then fallback to team_data for backward compatibility
+        $recruitmentStatus = $this->recruitment_status ?? $this->team_data['recruitment_status'] ?? 'open';
+
+        // Only 'open' recruitment allows public joining
+        // 'closed' means invite-only (will be enforced in join request logic)
+        return $recruitmentStatus === 'open';
     }
 
     /**
@@ -143,8 +188,13 @@ class Team extends Model
 
     /**
      * Add a member to the team
+     *
+     * @param User $user The user to add
+     * @param array $memberData Additional member data
+     * @param bool $bypassRecruitmentCheck Set to true to bypass recruitment status checks (for creators)
+     * @return bool
      */
-    public function addMember(User $user, array $memberData = []): bool
+    public function addMember(User $user, array $memberData = [], bool $bypassRecruitmentCheck = false): bool
     {
         \Log::info('Team::addMember called', [
             'team_id' => $this->id,
@@ -152,11 +202,12 @@ class Team extends Model
             'is_full' => $this->isFull(),
             'is_recruiting' => $this->isRecruiting(),
             'current_size' => $this->current_size,
-            'max_size' => $this->max_size
+            'max_size' => $this->max_size,
+            'bypass_check' => $bypassRecruitmentCheck,
         ]);
 
-        // Check if team can accept members
-        if ($this->isFull() || !$this->isRecruiting()) {
+        // Check if team can accept members (unless bypassing for creator)
+        if (!$bypassRecruitmentCheck && ($this->isFull() || !$this->isRecruiting())) {
             \Log::error('Team::addMember - Team cannot accept members', [
                 'is_full' => $this->isFull(),
                 'is_recruiting' => $this->isRecruiting()

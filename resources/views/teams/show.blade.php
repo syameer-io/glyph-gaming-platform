@@ -599,8 +599,18 @@
         </div>
         @else
         <div class="team-actions-bar">
-            @if($team->recruitment_status === 'open' && $team->activeMembers->count() < $team->max_size)
-                <button onclick="requestToJoin()" class="btn btn-primary">Request to Join</button>
+            @if($team->activeMembers->count() < $team->max_size)
+                @if($userJoinRequest)
+                    {{-- User has a pending join request --}}
+                    <button class="btn btn-secondary" disabled>Request Pending</button>
+                    <button onclick="cancelJoinRequest({{ $userJoinRequest->id }})" class="btn btn-danger btn-sm">Cancel Request</button>
+                @elseif($team->recruitment_status === 'open')
+                    {{-- Open recruitment - direct join --}}
+                    <button onclick="joinTeam()" class="btn btn-primary">Join Team</button>
+                @else
+                    {{-- Closed recruitment - request to join --}}
+                    <button onclick="requestToJoin()" class="btn btn-primary">Request to Join</button>
+                @endif
             @endif
             <a href="{{ route('teams.index') }}" class="btn btn-secondary">← Back to Teams</a>
         </div>
@@ -781,6 +791,34 @@
                             <button onclick="showInviteModal()" class="btn btn-primary btn-sm">Invite Member</button>
                         @endif
                     </div>
+
+                    {{-- Pending Join Requests Section (for team leaders) --}}
+                    @if($isLeader && $pendingJoinRequests->count() > 0)
+                        <div class="invite-section" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); border: 1px solid rgba(102, 126, 234, 0.3);">
+                            <h4 style="margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                                <span>📬</span>
+                                <span>Pending Join Requests ({{ $pendingJoinRequests->count() }})</span>
+                            </h4>
+                            @foreach($pendingJoinRequests as $joinRequest)
+                                <div class="member-item" style="background-color: #18181b; margin-bottom: 12px;">
+                                    <img src="{{ $joinRequest->user->profile->avatar_url }}" alt="{{ $joinRequest->user->display_name }}" class="member-avatar">
+                                    <div class="member-info">
+                                        <div class="member-name">{{ $joinRequest->user->display_name }}</div>
+                                        <div class="member-status">Requested {{ $joinRequest->created_at->diffForHumans() }}</div>
+                                        @if($joinRequest->message)
+                                            <div style="margin-top: 8px; padding: 8px; background-color: #0e0e10; border-radius: 4px; font-size: 13px; color: #b3b3b5;">
+                                                <strong>Message:</strong> {{ $joinRequest->message }}
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <div class="member-actions">
+                                        <button onclick="approveJoinRequest({{ $joinRequest->id }})" class="btn btn-primary btn-sm">Approve</button>
+                                        <button onclick="rejectJoinRequest({{ $joinRequest->id }})" class="btn btn-danger btn-sm">Reject</button>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
 
                     @if($isLeader && $team->activeMembers->count() < $team->max_size)
                         <div class="invite-section">
@@ -1019,9 +1057,11 @@ function showTab(tabName, element) {
 }
 
 // Member management functions
-function requestToJoin() {
-    if (confirm('Request to join this team?')) {
-        fetch(`{{ route('teams.join', $team) }}`, {
+
+// For open teams - direct join
+function joinTeam() {
+    if (confirm('Join this team?')) {
+        fetch(`{{ route('teams.join.direct', $team) }}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1041,14 +1081,49 @@ function requestToJoin() {
                 showNotification('Successfully joined the team! 🎉', 'success');
                 setTimeout(() => location.reload(), 1500);
             } else {
-                showNotification(data.error || data.message || 'Error requesting to join team', 'error');
+                showNotification(data.error || data.message || 'Error joining team', 'error');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            showNotification('Error requesting to join team: ' + error.message, 'error');
+            showNotification('Error joining team: ' + error.message, 'error');
         });
     }
+}
+
+// For closed teams - create join request
+function requestToJoin() {
+    const message = prompt('Optional: Add a message to the team leader (max 500 characters):');
+    if (message === null) return; // User canceled
+
+    fetch(`{{ route('teams.join.request.store', $team) }}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({ message: message })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(errorData => {
+                throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showNotification('Join request sent! The team leader will review your request. 📬', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showNotification(data.error || data.message || 'Error creating join request', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error creating join request: ' + error.message, 'error');
+    });
 }
 
 function leaveTeam() {
@@ -1163,6 +1238,82 @@ function removeMember(userId) {
         .catch(error => {
             console.error('Error:', error);
             alert('Error removing member');
+        });
+    }
+}
+
+// Join request management functions
+function approveJoinRequest(requestId) {
+    if (confirm('Approve this join request?')) {
+        fetch(`{{ route('teams.join.request.approve', [$team, 'REQUEST_ID']) }}`.replace('REQUEST_ID', requestId), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Join request approved! User added to team. ✅', 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showNotification(data.error || 'Error approving join request', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error approving join request: ' + error.message, 'error');
+        });
+    }
+}
+
+function rejectJoinRequest(requestId) {
+    if (confirm('Reject this join request?')) {
+        fetch(`{{ route('teams.join.request.reject', [$team, 'REQUEST_ID']) }}`.replace('REQUEST_ID', requestId), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Join request rejected. ❌', 'info');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showNotification(data.error || 'Error rejecting join request', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error rejecting join request: ' + error.message, 'error');
+        });
+    }
+}
+
+function cancelJoinRequest(requestId) {
+    if (confirm('Cancel your join request?')) {
+        fetch(`{{ route('teams.join.request.cancel', [$team, 'REQUEST_ID']) }}`.replace('REQUEST_ID', requestId), {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Join request canceled.', 'info');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showNotification(data.error || 'Error canceling join request', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error canceling join request: ' + error.message, 'error');
         });
     }
 }

@@ -158,10 +158,10 @@ class TeamController extends Controller
                 'max_size' => $request->max_size,
                 'current_size' => 0,
                 'skill_level' => $request->skill_level,
-                'status' => ($request->recruitment_status === 'open') ? 'recruiting' : 'full',
+                'status' => 'recruiting',  // Always recruiting until max_size reached
+                'recruitment_status' => $request->recruitment_status,  // Store in database column
                 'team_data' => [
                     'preferred_region' => $request->preferred_region,
-                    'recruitment_status' => $request->recruitment_status,
                     'communication_required' => (bool) $request->communication_required,
                     'competitive_focus' => (bool) $request->competitive_focus,
                 ],
@@ -170,7 +170,14 @@ class TeamController extends Controller
                 'languages' => $request->languages ?? ['en'],
             ]);
 
-            // Add creator as team leader
+            \Log::info('Team created with recruitment_status', [
+                'team_id' => $team->id,
+                'recruitment_status' => $team->recruitment_status,
+                'team_data' => $team->team_data,
+                'status' => $team->status,
+            ]);
+
+            // Add creator as team leader (bypass recruitment checks)
             $steamData = $user->profile->steam_data ?? [];
             $skillMetrics = $steamData['skill_metrics'] ?? [];
             $skillScore = $skillMetrics[$request->game_appid]['skill_score'] ?? 50;
@@ -180,7 +187,7 @@ class TeamController extends Controller
                 'skill_level' => $request->skill_level,
                 'individual_skill_score' => $skillScore,
                 'joined_at' => now(),
-            ]);
+            ], true);
 
             if (!$addResult) {
                 DB::rollback();
@@ -219,12 +226,44 @@ class TeamController extends Controller
         ]);
 
         $user = Auth::user();
-        
+
+        // Debug logging - what recruitment_status are we passing to view?
+        \Log::info('TeamController::show - Team data being passed to view', [
+            'team_id' => $team->id,
+            'team_name' => $team->name,
+            'recruitment_status' => $team->recruitment_status,
+            'team_data' => $team->team_data,
+            'isOpenForRecruitment' => $team->isOpenForRecruitment(),
+            'isClosedForRecruitment' => $team->isClosedForRecruitment(),
+        ]);
+
         // Check if user is a member
         $userMembership = $team->members()->where('user_id', $user->id)->first();
         $isMember = $userMembership !== null;
         $isLeader = $isMember && ($userMembership->role === 'leader' || $user->id === $team->creator_id);
-        
+
+        // Get user's pending join request for this team
+        $userJoinRequest = \App\Models\TeamJoinRequest::where('team_id', $team->id)
+            ->where('user_id', $user->id)
+            ->where('status', 'pending')
+            ->first();
+
+        \Log::info('TeamController::show - User membership status', [
+            'user_id' => $user->id,
+            'is_member' => $isMember,
+            'is_leader' => $isLeader,
+            'has_pending_request' => $userJoinRequest !== null,
+        ]);
+
+        // Get pending join requests for team leaders
+        $pendingJoinRequests = collect([]);
+        if ($isLeader) {
+            $pendingJoinRequests = $team->pendingJoinRequests()
+                ->with('user.profile')
+                ->orderBy('created_at', 'desc')
+                ->get();
+        }
+
         // Get team statistics
         $stats = [
             'balance_score' => $team->calculateBalanceScore(),
@@ -237,7 +276,7 @@ class TeamController extends Controller
         // Get recent team activity (placeholder for now)
         $recentActivity = collect([]);
 
-        return view('teams.show', compact('team', 'userMembership', 'isMember', 'isLeader', 'stats', 'recentActivity'));
+        return view('teams.show', compact('team', 'userMembership', 'isMember', 'isLeader', 'userJoinRequest', 'pendingJoinRequests', 'stats', 'recentActivity'));
     }
 
     /**
@@ -271,6 +310,7 @@ class TeamController extends Controller
             'description' => 'nullable|string|max:1000',
             'max_size' => 'required|integer|min:2|max:10',
             'skill_level' => 'required|in:beginner,intermediate,advanced,expert',
+            'recruitment_status' => 'nullable|in:open,closed',
             'recruitment_message' => 'nullable|string|max:500',
             'required_roles' => 'array',
             'required_roles.*' => 'string|max:50',
@@ -289,7 +329,7 @@ class TeamController extends Controller
             ], 422);
         }
 
-        $team->update([
+        $updateData = [
             'name' => $request->name,
             'description' => $request->description,
             'max_size' => $request->max_size,
@@ -298,7 +338,14 @@ class TeamController extends Controller
             'required_roles' => $request->required_roles ?? [],
             'team_settings' => $request->team_settings ?? [],
             'status' => $request->status ?? $team->status,
-        ]);
+        ];
+
+        // Add recruitment_status if provided
+        if ($request->filled('recruitment_status')) {
+            $updateData['recruitment_status'] = $request->recruitment_status;
+        }
+
+        $team->update($updateData);
 
         return response()->json([
             'success' => true,
@@ -350,8 +397,9 @@ class TeamController extends Controller
     /**
      * Direct team join (from teams page, not via matchmaking)
      *
-     * This method is called when a user directly joins a team from the teams listing page.
-     * It uses the TeamService for shared logic and validation.
+     * This method handles team joining based on recruitment_status:
+     * - 'open': Immediately adds user to team
+     * - 'closed': Creates a join request for team leader approval
      */
     public function joinTeamDirect(Request $request, Team $team): JsonResponse
     {
@@ -360,23 +408,39 @@ class TeamController extends Controller
         \Log::info('TeamController::joinTeamDirect called', [
             'team_id' => $team->id,
             'user_id' => $user->id,
+            'recruitment_status' => $team->recruitment_status,
         ]);
 
-        // Use TeamService for shared team join logic
-        $result = $this->teamService->addMemberToTeam($team, $user);
+        // Check recruitment status and route accordingly
+        if ($team->isOpenForRecruitment()) {
+            // Open recruitment - add user directly to team
+            \Log::info('TeamController::joinTeamDirect - Open recruitment, joining directly');
 
-        if ($result['success']) {
+            $result = $this->teamService->addMemberToTeam($team, $user);
+
+            if ($result['success']) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $result['message'],
+                    'team' => $team->fresh()->load(['activeMembers.user', 'server', 'creator'])
+                ]);
+            }
+
             return response()->json([
-                'success' => true,
-                'message' => $result['message'],
-                'team' => $team->fresh()->load(['activeMembers.user', 'server', 'creator'])
-            ]);
-        }
+                'success' => false,
+                'error' => $result['message']
+            ], 409);
 
-        return response()->json([
-            'success' => false,
-            'error' => $result['message']
-        ], 409);
+        } else {
+            // Closed recruitment - redirect to join request creation
+            \Log::info('TeamController::joinTeamDirect - Closed recruitment, creating join request');
+
+            return response()->json([
+                'success' => false,
+                'error' => 'This team has closed recruitment. Please use "Request to Join" instead.',
+                'requires_request' => true,
+            ], 403);
+        }
     }
 
     /**
