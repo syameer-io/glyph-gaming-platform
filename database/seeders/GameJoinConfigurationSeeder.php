@@ -70,6 +70,34 @@ class GameJoinConfigurationSeeder extends Seeder
                     "3. Press Enter",
                 'is_enabled' => true,
             ],
+
+            // Dota 2
+            [
+                'game_id' => 570, // Dota 2 App ID
+                'join_method' => 'steam_lobby',
+                'display_name' => 'Steam Lobby Link',
+                'icon' => 'steam',
+                'priority' => 10,
+                'validation_pattern' => '^steam:\/\/joinlobby\/570\/\d+\/\d+$',
+                'requires_manual_setup' => false,
+                'steam_app_id' => 570,
+                'default_port' => null,
+                'expiration_minutes' => 30,
+                'instructions_how_to_create' =>
+                    "1. Create a lobby in Dota 2\n" .
+                    "2. Press Shift+Tab to open Steam overlay\n" .
+                    "3. Right-click on your name in the friends list\n" .
+                    "4. Select 'Invite to Lobby' or 'Copy Lobby Link'\n" .
+                    "5. Paste the link here",
+                'instructions_how_to_join' =>
+                    "1. Click the 'Join Lobby' button below\n" .
+                    "2. Steam will automatically open Dota 2 and join the lobby\n\n" .
+                    "**Alternative:**\n" .
+                    "1. Copy the lobby link\n" .
+                    "2. Paste it in your browser address bar\n" .
+                    "3. Press Enter - Steam will launch Dota 2",
+                'is_enabled' => true,
+            ],
         ];
 
         foreach ($configurations as $config) {
@@ -83,6 +111,6 @@ class GameJoinConfigurationSeeder extends Seeder
         }
 
         $this->command->info('Game join configurations seeded successfully!');
-        $this->command->info('Seeded ' . count($configurations) . ' configuration(s) for CS2');
+        $this->command->info('Seeded ' . count($configurations) . ' configuration(s) for CS2 and Dota 2');
     }
 }

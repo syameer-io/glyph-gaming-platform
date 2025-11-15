@@ -171,9 +171,19 @@ class LobbyController extends Controller
                 return [
                     'id' => $lobby->id,
                     'game_id' => $lobby->game_id,
-                    'game_name' => $lobby->gamingPreference->game_name ?? 'Unknown Game',
+                    'gaming_preference' => [
+                        'game_name' => $lobby->gamingPreference->game_name ?? 'Unknown Game',
+                    ],
                     'join_method' => $lobby->join_method,
-                    'join_link' => $lobby->generateJoinLink(),
+                    // Include all fields needed by frontend
+                    'steam_app_id' => $lobby->steam_app_id,
+                    'steam_lobby_id' => $lobby->steam_lobby_id,
+                    'steam_profile_id' => $lobby->steam_profile_id,
+                    'server_ip' => $lobby->server_ip,
+                    'server_port' => $lobby->server_port,
+                    'lobby_code' => $lobby->lobby_code,
+                    'join_command' => $lobby->join_command,
+                    'match_name' => $lobby->match_name,
                     'is_active' => $lobby->isActive(),
                     'time_remaining' => $lobby->timeRemaining(),
                     'expires_at' => $lobby->expires_at?->toIso8601String(),
@@ -210,11 +220,9 @@ class LobbyController extends Controller
         try {
             $joinMethods = $this->lobbyService->getGameJoinMethods($gameId);
 
-            return response()->json([
-                'success' => true,
-                'join_methods' => $joinMethods,
-                'count' => $joinMethods->count(),
-            ]);
+            return response()->json(
+                $joinMethods->toArray()
+            );
 
         } catch (\Exception $e) {
             Log::error('Failed to fetch join methods', [
