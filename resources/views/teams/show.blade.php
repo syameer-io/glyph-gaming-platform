@@ -512,6 +512,89 @@
     .notification-close:hover {
         background-color: rgba(255, 255, 255, 0.2);
     }
+
+    /* Invite Member Modal */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.75);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(4px);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .modal-overlay.active {
+        display: flex;
+        opacity: 1;
+    }
+
+    .modal-content {
+        background: linear-gradient(135deg, #18181b 0%, #27272a 100%);
+        border-radius: 16px;
+        padding: 32px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transform: scale(0.95);
+        transition: transform 0.3s ease;
+    }
+
+    .modal-overlay.active .modal-content {
+        transform: scale(1);
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .modal-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: #efeff1;
+        margin: 0;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        color: #b3b3b5;
+        font-size: 28px;
+        cursor: pointer;
+        padding: 0;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #efeff1;
+    }
+
+    .modal-body {
+        margin-bottom: 24px;
+    }
+
+    .modal-footer {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+    }
 </style>
 @endpush
 
@@ -1158,6 +1241,42 @@
             </div>
         </div>
     </div>
+
+    {{-- Invite Member Modal --}}
+    @if($isLeader && $team->activeMembers->count() < $team->max_size)
+    <div id="inviteModal" class="modal-overlay" onclick="closeInviteModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 class="modal-title">Invite Member</h3>
+                <button class="modal-close" onclick="closeInviteModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="color: #b3b3b5; margin-bottom: 20px; font-size: 14px;">
+                    Enter the username or email of the player you want to invite to your team.
+                </p>
+                <div class="form-group">
+                    <label for="modal-invite-identifier">Username or Email</label>
+                    <input type="text" id="modal-invite-identifier" placeholder="e.g., player123 or player@example.com" autocomplete="off">
+                    <div id="modal-invite-error" style="color: #ef4444; font-size: 13px; margin-top: 8px; display: none;"></div>
+                </div>
+                <div class="form-group">
+                    <label for="modal-invite-role">Team Role</label>
+                    <select id="modal-invite-role">
+                        <option value="member">Member</option>
+                        <option value="co_leader">Co-Leader</option>
+                    </select>
+                    <div style="font-size: 12px; color: #71717a; margin-top: 6px;">
+                        Co-Leaders can manage team members and settings
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeInviteModal()" class="btn btn-secondary">Cancel</button>
+                <button id="modalSendInviteBtn" onclick="sendInviteFromModal()" class="btn btn-primary">Send Invite</button>
+            </div>
+        </div>
+    </div>
+    @endif
 </main>
 
 <script>
@@ -1333,40 +1452,175 @@ document.getElementById('teamSettingsForm')?.addEventListener('submit', function
     });
 });
 
-function sendInvite() {
-    const username = document.getElementById('invite-username').value;
-    const role = document.getElementById('invite-role').value;
-    
-    if (!username) {
-        alert('Please enter a username or email');
+// Modal functions
+function showInviteModal() {
+    const modal = document.getElementById('inviteModal');
+    if (modal) {
+        modal.classList.add('active');
+        // Focus on input field
+        setTimeout(() => {
+            document.getElementById('modal-invite-identifier').focus();
+        }, 100);
+    }
+}
+
+function closeInviteModal(event) {
+    // Only close if clicking overlay (not modal content) or explicit close
+    if (!event || event.target.id === 'inviteModal') {
+        const modal = document.getElementById('inviteModal');
+        if (modal) {
+            modal.classList.remove('active');
+            // Clear form
+            document.getElementById('modal-invite-identifier').value = '';
+            document.getElementById('modal-invite-role').value = 'member';
+            document.getElementById('modal-invite-error').style.display = 'none';
+        }
+    }
+}
+
+// Send invite from modal (enhanced with better error handling)
+function sendInviteFromModal() {
+    const identifier = document.getElementById('modal-invite-identifier').value.trim();
+    const role = document.getElementById('modal-invite-role').value;
+    const errorDiv = document.getElementById('modal-invite-error');
+    const submitBtn = document.getElementById('modalSendInviteBtn');
+
+    // Clear previous errors
+    errorDiv.style.display = 'none';
+    errorDiv.textContent = '';
+
+    // Validation
+    if (!identifier) {
+        errorDiv.textContent = 'Please enter a username or email';
+        errorDiv.style.display = 'block';
         return;
     }
-    
+
+    // Basic email/username detection
+    const isEmail = identifier.includes('@');
+    const payload = isEmail ? { email: identifier, role: role } : { username: identifier, role: role };
+
+    // Show loading state
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
+
     fetch(`{{ route('teams.members.add', $team) }}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         },
-        body: JSON.stringify({
-            username: username,
-            role: role
-        })
+        body: JSON.stringify(payload)
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(errorData => {
+                throw errorData;
+            });
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
-            alert('Invitation sent successfully!');
-            document.getElementById('invite-username').value = '';
+            showNotification(data.message || 'Member added successfully!', 'success');
+            closeInviteModal();
+            setTimeout(() => location.reload(), 1500);
         } else {
-            alert(data.message || 'Error sending invitation');
+            throw { error: data.error || 'Error adding member' };
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error sending invitation');
+
+        // Handle validation errors
+        if (error.errors) {
+            const firstError = Object.values(error.errors)[0];
+            errorDiv.textContent = Array.isArray(firstError) ? firstError[0] : firstError;
+        } else if (error.error) {
+            errorDiv.textContent = error.error;
+        } else {
+            errorDiv.textContent = 'An error occurred while sending the invitation. Please try again.';
+        }
+
+        errorDiv.style.display = 'block';
+    })
+    .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send Invite';
     });
 }
+
+// Inline form invite function (for backwards compatibility)
+function sendInvite() {
+    const username = document.getElementById('invite-username')?.value?.trim();
+    const role = document.getElementById('invite-role')?.value || 'member';
+
+    if (!username) {
+        showNotification('Please enter a username or email', 'warning');
+        return;
+    }
+
+    // Detect if email or username
+    const isEmail = username.includes('@');
+    const payload = isEmail ? { email: username, role: role } : { username: username, role: role };
+
+    fetch(`{{ route('teams.members.add', $team) }}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(errorData => {
+                throw errorData;
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message || 'Member added successfully!', 'success');
+            document.getElementById('invite-username').value = '';
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            throw { error: data.error || 'Error adding member' };
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+
+        if (error.errors) {
+            const firstError = Object.values(error.errors)[0];
+            showNotification(Array.isArray(firstError) ? firstError[0] : firstError, 'error');
+        } else if (error.error) {
+            showNotification(error.error, 'error');
+        } else {
+            showNotification('Error sending invitation. Please try again.', 'error');
+        }
+    });
+}
+
+// Allow Enter key to submit modal
+document.addEventListener('DOMContentLoaded', function() {
+    const modalInput = document.getElementById('modal-invite-identifier');
+    if (modalInput) {
+        modalInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendInviteFromModal();
+            }
+        });
+    }
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeInviteModal();
+        }
+    });
+});
 
 function editMemberRole(userId, currentRole) {
     const newRole = prompt('Enter new role for this member:', currentRole || '');

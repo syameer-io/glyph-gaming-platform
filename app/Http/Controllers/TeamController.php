@@ -11,6 +11,7 @@ use App\Events\TeamCreated;
 use App\Events\TeamMemberJoined;
 use App\Events\TeamMemberLeft;
 use App\Events\TeamStatusChanged;
+use App\Http\Requests\InviteMemberRequest;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
@@ -470,93 +471,210 @@ class TeamController extends Controller
     /**
      * Add a member to the team (by team leader/co-leader)
      *
-     * This method is called when a team leader/co-leader manually adds a user to the team.
+     * This method is called when a team leader/co-leader manually invites a user to the team.
+     * Supports flexible user lookup by user_id, username, or email.
+     *
+     * Flow:
+     * 1. Validate request data (InviteMemberRequest)
+     * 2. Authorize request (canManageTeam check)
+     * 3. Look up target user by provided identifier
+     * 4. Validate business rules (self-invite, team full, etc.)
+     * 5. Add member via TeamService with transaction safety
+     * 6. Return updated team data with eager-loaded relationships
+     *
+     * @param InviteMemberRequest $request Validated invitation request
+     * @param Team $team Team to add member to (route model binding)
+     * @return JsonResponse JSON response with success/error status
      */
-    public function addMember(Request $request, Team $team): JsonResponse
+    public function addMember(InviteMemberRequest $request, Team $team): JsonResponse
     {
-        \Log::info('TeamController::addMember called', [
-            'request_data' => $request->all(),
+        // Log request for debugging and audit trail
+        \Log::info('TeamController::addMember - Invitation initiated', [
+            'request_data' => $request->validated(),
             'team_id' => $team->id,
-            'auth_user_id' => Auth::id()
+            'team_name' => $team->name,
+            'auth_user_id' => Auth::id(),
+            'auth_username' => Auth::user()->username,
         ]);
 
         $user = Auth::user();
 
-        // Check authorization - only team leaders/co-leaders can add members
+        // AUTHORIZATION CHECK: Only team creator or co-leaders can invite members
+        // This check is critical to prevent unauthorized member additions
         if (!$this->canManageTeam($user, $team)) {
-            \Log::error('TeamController::addMember - Unauthorized', [
+            \Log::error('TeamController::addMember - Unauthorized invitation attempt', [
                 'user_id' => $user->id,
-                'team_id' => $team->id
+                'username' => $user->username,
+                'team_id' => $team->id,
+                'team_name' => $team->name,
             ]);
-            return response()->json(['error' => 'Unauthorized'], 403);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'You do not have permission to invite members to this team. Only team leaders and co-leaders can send invitations.'
+            ], 403);
         }
 
-        // Validation accepts either user_id or username
-        $validator = Validator::make($request->all(), [
-            'user_id' => 'required_without:username|nullable|exists:users,id',
-            'username' => 'required_without:user_id|nullable|exists:users,username',
-            'role' => 'nullable|in:member,co_leader',
-            'game_role' => 'nullable|string|max:50',
-        ]);
+        // USER LOOKUP: Find target user by user_id, username, or email
+        // Validation ensures at least one identifier exists, but we need to
+        // actually fetch the user model for further processing
+        $targetUser = null;
 
-        if ($validator->fails()) {
-            \Log::error('TeamController::addMember - Validation failed', [
-                'errors' => $validator->errors()->toArray()
-            ]);
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        // Find user by user_id or username
-        if ($request->filled('user_id')) {
-            $targetUser = User::find($request->user_id);
-        } else {
-            $targetUser = User::where('username', $request->username)->first();
-        }
-
-        if (!$targetUser) {
-            \Log::error('TeamController::addMember - User not found', [
+        try {
+            // Priority order: user_id > username > email
+            // Eager load profile to prevent N+1 query when accessing display_name later
+            if ($request->filled('user_id')) {
+                $targetUser = User::with('profile')->find($request->user_id);
+                \Log::debug('TeamController::addMember - Looking up by user_id', [
+                    'user_id' => $request->user_id,
+                    'found' => $targetUser !== null,
+                ]);
+            } elseif ($request->filled('username')) {
+                $targetUser = User::with('profile')->where('username', $request->username)->first();
+                \Log::debug('TeamController::addMember - Looking up by username', [
+                    'username' => $request->username,
+                    'found' => $targetUser !== null,
+                ]);
+            } elseif ($request->filled('email')) {
+                $targetUser = User::with('profile')->where('email', $request->email)->first();
+                \Log::debug('TeamController::addMember - Looking up by email', [
+                    'email' => $request->email,
+                    'found' => $targetUser !== null,
+                ]);
+            }
+        } catch (\Exception $e) {
+            // Catch any database errors during user lookup
+            \Log::error('TeamController::addMember - Database error during user lookup', [
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
                 'user_id' => $request->user_id,
-                'username' => $request->username
+                'username' => $request->username,
+                'email' => $request->email,
             ]);
-            return response()->json(['error' => 'User not found'], 404);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'An error occurred while looking up the user. Please try again.'
+            ], 500);
         }
 
-        // Prepare custom member data for leader-added members
+        // VALIDATION: Ensure user was found after validation
+        // This should rarely happen since validation checks 'exists:users',
+        // but could occur in edge cases (race condition, database inconsistency)
+        if (!$targetUser) {
+            \Log::error('TeamController::addMember - User not found after validation passed', [
+                'user_id' => $request->user_id,
+                'username' => $request->username,
+                'email' => $request->email,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'User not found. Please verify the username or email address and try again.'
+            ], 404);
+        }
+
+        // VALIDATION: Prevent self-invitation
+        // Team leaders cannot invite themselves (they should already be members)
+        if ($targetUser->id === $user->id) {
+            \Log::warning('TeamController::addMember - Self-invitation attempt blocked', [
+                'user_id' => $user->id,
+                'team_id' => $team->id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'You cannot invite yourself to the team. You are already a member as the team leader.'
+            ], 422);
+        }
+
+        // PREPARE MEMBER DATA: Build data array for TeamService
+        // Default role is 'member' unless specified as 'co_leader'
         $memberData = [
-            'role' => $request->role ?? 'member',
-            'game_role' => $request->game_role,
+            'role' => $request->input('role', 'member'), // Default to 'member'
+            'game_role' => $request->game_role,          // Optional game-specific role
         ];
 
-        \Log::info('TeamController::addMember - Calling TeamService', [
+        \Log::info('TeamController::addMember - Calling TeamService to add member', [
             'target_user_id' => $targetUser->id,
-            'member_data' => $memberData
+            'target_username' => $targetUser->username,
+            'target_display_name' => $targetUser->display_name,
+            'member_data' => $memberData,
+            'bypass_recruitment_check' => true,
         ]);
 
-        // Use TeamService for shared validation and logic
-        $result = $this->teamService->addMemberToTeam($team, $targetUser, $memberData);
+        // DELEGATE TO SERVICE LAYER: Use TeamService for shared business logic
+        // Pass true for $bypassRecruitmentCheck parameter since this is a leader
+        // invitation (bypasses open/closed recruitment status checks)
+        //
+        // TeamService handles:
+        // - Team full validation
+        // - Duplicate membership check
+        // - Already in another team for game check
+        // - Server membership auto-join
+        // - Database transaction with rollback on error
+        // - Event broadcasting (TeamMemberJoined)
+        try {
+            $result = $this->teamService->addMemberToTeam(
+                $team,
+                $targetUser,
+                $memberData,
+                null,  // No matchmaking request for manual invitations
+                true   // Bypass recruitment status checks
+            );
+        } catch (\Exception $e) {
+            // Catch any unexpected exceptions from TeamService
+            \Log::error('TeamController::addMember - TeamService threw exception', [
+                'team_id' => $team->id,
+                'target_user_id' => $targetUser->id,
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
 
+            return response()->json([
+                'success' => false,
+                'error' => 'An unexpected error occurred while adding the member. Please try again or contact support if the issue persists.'
+            ], 500);
+        }
+
+        // SUCCESS PATH: Member added successfully
         if ($result['success']) {
             \Log::info('TeamController::addMember - Member added successfully', [
-                'team_member_id' => $result['member']->id ?? null
+                'team_id' => $team->id,
+                'team_member_id' => $result['member']->id ?? null,
+                'target_user_id' => $targetUser->id,
+                'target_username' => $targetUser->username,
+                'role' => $memberData['role'],
+            ]);
+
+            // Refresh team data with eager-loaded relationships to prevent N+1 queries
+            // This ensures the frontend receives complete, up-to-date team data
+            $refreshedTeam = $team->fresh()->load([
+                'activeMembers.user.profile',  // All active members with user profiles
+                'server',                       // Associated server (if any)
+                'creator.profile',              // Team creator with profile
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => $result['message'],
-                'team' => $team->fresh()->load(['activeMembers.user'])
-            ]);
+                'message' => "{$targetUser->display_name} has been successfully added to the team!",
+                'team' => $refreshedTeam,
+            ], 200);
         }
 
-        \Log::error('TeamController::addMember - Failed to add member', [
+        // FAILURE PATH: TeamService returned failure
+        \Log::error('TeamController::addMember - TeamService returned failure', [
             'team_id' => $team->id,
             'target_user_id' => $targetUser->id,
-            'error' => $result['message']
+            'error_message' => $result['message'],
         ]);
 
+        // Return user-friendly error message from TeamService
+        // Common errors: team full, already a member, already in another team
         return response()->json([
             'success' => false,
             'error' => $result['message']
-        ], 409);
+        ], 409); // 409 Conflict - request conflicts with current state
     }
 
     /**
