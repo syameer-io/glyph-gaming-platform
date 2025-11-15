@@ -95,6 +95,11 @@ class User extends Authenticatable
         return $this->hasMany(GamingSession::class);
     }
 
+    public function gameLobbies()
+    {
+        return $this->hasMany(GameLobby::class);
+    }
+
     public function isServerAdmin($serverId)
     {
         // Check if user is the server creator
