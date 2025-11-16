@@ -79,21 +79,56 @@
 </div>
 
 <script>
-// Simple markdown-like formatting for instructions
+// Enhanced markdown-like formatting for instructions
 function formatMarkdown(text) {
     if (!text) return '';
 
-    return text
-        // Bold: **text** → <strong>text</strong>
-        .replace(/\*\*(.+?)\*\*/g, '<strong style="color: #efeff1;">$1</strong>')
-        // Code: `text` → <code>text</code>
-        .replace(/`(.+?)`/g, '<code style="background-color: #3f3f46; padding: 2px 6px; border-radius: 4px; color: #10b981; font-family: monospace; font-size: 13px;">$1</code>')
-        // Line breaks
-        .replace(/\n/g, '<br>')
-        // Numbered lists: Match lines starting with a number followed by a dot
-        .replace(/^(\d+)\.\s+(.+)$/gm, '<div style="margin-left: 20px; margin-bottom: 8px;"><span style="color: #667eea; font-weight: 600; margin-right: 8px;">$1.</span><span>$2</span></div>')
-        // Unordered lists: Match lines starting with - or *
-        .replace(/^[-*]\s+(.+)$/gm, '<div style="margin-left: 20px; margin-bottom: 8px;"><span style="color: #667eea; margin-right: 8px;">•</span><span>$1</span></div>');
+    let formatted = text;
+
+    // Escape HTML to prevent XSS
+    formatted = formatted
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+    // Bold: **text** → <strong>text</strong>
+    formatted = formatted.replace(/\*\*(.+?)\*\*/g, '<strong style="color: #efeff1; font-weight: 600;">$1</strong>');
+
+    // Italic: *text* → <em>text</em>
+    formatted = formatted.replace(/(?<!\*)\*(?!\*)(.+?)\*(?!\*)/g, '<em style="color: #d1d5db;">$1</em>');
+
+    // Inline code: `text` → <code>text</code>
+    formatted = formatted.replace(/`(.+?)`/g, '<code style="background-color: #3f3f46; padding: 3px 8px; border-radius: 4px; color: #10b981; font-family: monospace; font-size: 13px; font-weight: 500;">$1</code>');
+
+    // Headers: ## Header → <h4>Header</h4>
+    formatted = formatted.replace(/^##\s+(.+)$/gm, '<h4 style="color: #efeff1; font-size: 15px; font-weight: 600; margin: 16px 0 8px 0; border-bottom: 1px solid #3f3f46; padding-bottom: 6px;">$1</h4>');
+
+    // Numbered lists: Match lines starting with a number followed by a dot
+    formatted = formatted.replace(/^(\d+)\.\s+(.+)$/gm, function(match, num, content) {
+        return '<div style="display: flex; gap: 10px; margin-bottom: 10px; padding-left: 8px;">' +
+               '<span style="color: #667eea; font-weight: 600; min-width: 20px;">' + num + '.</span>' +
+               '<span style="flex: 1; line-height: 1.6;">' + content + '</span>' +
+               '</div>';
+    });
+
+    // Unordered lists: Match lines starting with - or *
+    formatted = formatted.replace(/^[-•]\s+(.+)$/gm, function(match, content) {
+        return '<div style="display: flex; gap: 10px; margin-bottom: 10px; padding-left: 8px;">' +
+               '<span style="color: #667eea; font-weight: 600; min-width: 20px;">•</span>' +
+               '<span style="flex: 1; line-height: 1.6;">' + content + '</span>' +
+               '</div>';
+    });
+
+    // Blockquotes: > text → styled blockquote
+    formatted = formatted.replace(/^&gt;\s+(.+)$/gm, '<div style="border-left: 3px solid #667eea; padding: 8px 16px; margin: 12px 0; background-color: #18181b; border-radius: 4px; color: #d1d5db; font-style: italic;">$1</div>');
+
+    // Double line breaks for paragraphs
+    formatted = formatted.replace(/\n\n/g, '<div style="height: 12px;"></div>');
+
+    // Single line breaks
+    formatted = formatted.replace(/\n/g, '<br>');
+
+    return formatted;
 }
 
 // Make formatMarkdown available globally for Alpine.js

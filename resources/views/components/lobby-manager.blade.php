@@ -57,6 +57,14 @@
                 </select>
             </div>
 
+            {{-- Warframe Warning (Steam version required) --}}
+            <div x-show="selectedGame == 230410" x-cloak style="margin-bottom: 16px;">
+                <x-lobby-warning
+                    type="warning"
+                    message="<strong>Steam version required.</strong> In-game invites are preferred by the Warframe community."
+                />
+            </div>
+
             {{-- Dynamic Form Fields --}}
             <div x-show="selectedJoinMethod" x-cloak>
                 {{-- Steam Lobby Link --}}
@@ -240,8 +248,12 @@
             </p>
         </div>
 
-        {{-- Active Lobbies Grid --}}
-        <div x-show="activeLobbies.length > 0" x-cloak style="display: grid; gap: 12px;">
+        {{-- Active Lobbies Grid (Responsive) --}}
+        <div
+            x-show="activeLobbies.length > 0"
+            x-cloak
+            style="display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));"
+        >
             <template x-for="lobby in activeLobbies" :key="lobby.id">
                 <div
                     class="lobby-card"
@@ -364,17 +376,76 @@
     >
         <div
             @click.stop
-            style="background-color: #18181b; border-radius: 12px; max-width: 600px; width: 100%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.5);"
+            class="instructions-modal-content"
+            style="background-color: #18181b; border-radius: 12px; max-width: 600px; width: 100%; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.5);"
         >
             <x-lobby-instructions-modal :configuration="'currentMethodConfig'" />
         </div>
     </div>
 </div>
 
-{{-- Add spinner animation --}}
+{{-- Add spinner animation and responsive styles --}}
 <style>
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
 [x-cloak] { display: none !important; }
+
+/* Mobile Responsive Styles */
+@media (max-width: 640px) {
+    /* Larger touch targets for mobile */
+    .lobby-manager .btn {
+        min-height: 44px;
+        font-size: 15px;
+    }
+
+    .lobby-manager .form-control {
+        min-height: 44px;
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+
+    /* Better spacing on mobile */
+    .lobby-manager .card {
+        padding: 16px;
+    }
+
+    /* Lobby cards full width on mobile */
+    .lobby-card {
+        min-height: auto;
+    }
+
+    /* Stack action buttons vertically on small screens */
+    .lobby-card .btn {
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+
+    /* Instructions modal full screen on mobile */
+    .instructions-modal-content {
+        max-height: 90vh !important;
+        border-radius: 8px !important;
+        margin: 10px !important;
+    }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+    /* Tablet: 2 columns */
+    .lobby-manager .lobby-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1025px) {
+    /* Desktop: 3 columns */
+    .lobby-manager .lobby-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Touch-friendly hover states (disable on touch devices) */
+@media (hover: none) {
+    .lobby-card:hover {
+        background-color: #0e0e10 !important;
+    }
+}
 </style>
