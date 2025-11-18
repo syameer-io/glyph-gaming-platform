@@ -29,7 +29,8 @@ Route::middleware(['auth'])->prefix('matchmaking')->group(function () {
 });
 
 // Game Lobby API Routes
-Route::middleware(['auth'])->group(function () {
+// Note: Using 'web' middleware to enable session-based auth for same-origin requests
+Route::middleware(['web', 'auth'])->group(function () {
     // Lobby management
     Route::post('/lobbies', [LobbyController::class, 'store'])->middleware('throttle:5,60');
     Route::put('/lobbies/{lobby}', [LobbyController::class, 'update']);

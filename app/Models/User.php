@@ -90,6 +90,21 @@ class User extends Authenticatable
         return $this->hasMany(UserGamingPreference::class);
     }
 
+    /**
+     * Gaming preferences that have available join configurations
+     * Only shows games the user can actually create lobbies for
+     */
+    public function gamingPreferencesWithJoinConfigs()
+    {
+        return $this->hasMany(UserGamingPreference::class)
+            ->whereIn('game_appid', function ($query) {
+                $query->select('game_id')
+                    ->from('game_join_configurations')
+                    ->where('is_enabled', true);
+            })
+            ->orderBy('playtime_forever', 'desc');
+    }
+
     public function gamingSessions()
     {
         return $this->hasMany(GamingSession::class);

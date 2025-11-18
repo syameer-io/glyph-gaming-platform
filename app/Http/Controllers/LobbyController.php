@@ -18,7 +18,7 @@ class LobbyController extends Controller
     public function __construct(GameLobbyService $lobbyService)
     {
         $this->lobbyService = $lobbyService;
-        $this->middleware('auth')->except(['index', 'show']);
+        // Note: Auth middleware is applied in routes/api.php
     }
 
     /**
@@ -220,14 +220,28 @@ class LobbyController extends Controller
         try {
             $joinMethods = $this->lobbyService->getGameJoinMethods($gameId);
 
-            return response()->json(
-                $joinMethods->toArray()
-            );
+            // CRITICAL FIX: Use values() to ensure proper JSON array encoding
+            // Without values(), Laravel Collection toArray() returns object like {"0": {...}, "1": {...}}
+            // With values(), it returns proper array [{...}, {...}]
+            $joinMethodsArray = $joinMethods->values()->toArray();
+
+            Log::info('Join methods API response', [
+                'game_id' => $gameId,
+                'count' => count($joinMethodsArray),
+                'methods' => array_column($joinMethodsArray, 'join_method'),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'join_methods' => $joinMethodsArray,
+                'count' => count($joinMethodsArray),
+            ]);
 
         } catch (\Exception $e) {
             Log::error('Failed to fetch join methods', [
                 'game_id' => $gameId,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([

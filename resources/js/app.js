@@ -16,3 +16,9 @@ window.Chart = Chart;
 // Make utilities available globally
 window.clipboardUtils = clipboardUtils;
 window.countdownTimer = countdownTimer;
+
+/**
+ * Start Alpine.js
+ * This must be called AFTER all Alpine components are registered
+ */
+window.Alpine.start();

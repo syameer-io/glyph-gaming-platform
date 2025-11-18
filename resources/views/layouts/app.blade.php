@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- TESTING LAYOUT EDITS - THIS SHOULD APPEAR -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -504,10 +505,12 @@
     </style>
     @stack('head')
     @stack('styles')
+    <!-- Alpine.js and App Scripts -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
     @yield('content')
-    
+
     <script>
         // Laravel data for JavaScript
         window.Laravel = {

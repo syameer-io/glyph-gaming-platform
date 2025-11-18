@@ -17,13 +17,25 @@ class GameLobbyService
      * Create a new lobby for user and game
      *
      * @param User $user The user creating the lobby
-     * @param int $gameId The game ID (game_appid for now)
+     * @param int $gameIdOrAppId The Steam App ID (e.g., 730, 570, 230410)
      * @param array $data Lobby data (varies by join method)
      * @return GameLobby The created lobby
      * @throws ValidationException If lobby data is invalid or duplicate exists
      */
-    public function createLobby(User $user, int $gameId, array $data): GameLobby
+    public function createLobby(User $user, int $gameIdOrAppId, array $data): GameLobby
     {
+        // CRITICAL ARCHITECTURE NOTE:
+        // The game_id throughout the system directly uses Steam App IDs
+        // There is no separate "games" table - we use Steam App IDs as the identifier
+        // game_lobbies.game_id = Steam App ID (730, 570, 230410, etc.)
+        $gameId = $gameIdOrAppId;
+
+        Log::debug('Creating lobby for user', [
+            'user_id' => $user->id,
+            'steam_app_id' => $gameId,
+            'join_method' => $data['join_method'] ?? 'unknown',
+        ]);
+
         // Check for existing active lobby for this user and game
         $existingLobby = GameLobby::where('user_id', $user->id)
             ->where('game_id', $gameId)
@@ -32,6 +44,9 @@ class GameLobbyService
 
         if ($existingLobby) {
             // Deactivate existing lobby before creating new one
+            Log::debug('Deactivating existing lobby', [
+                'existing_lobby_id' => $existingLobby->id,
+            ]);
             $existingLobby->markAsExpired();
         }
 
@@ -259,17 +274,41 @@ class GameLobbyService
     }
 
     /**
-     * Get available join methods for a game
+     * Get available join methods for a game by Steam App ID
      *
-     * @param int $gameId The game ID
+     * @param int $gameAppId The Steam App ID (e.g., 730 for CS2, 570 for Dota 2)
      * @return Collection Collection of GameJoinConfiguration instances
      */
-    public function getGameJoinMethods(int $gameId): Collection
+    public function getGameJoinMethods(int $gameAppId): Collection
     {
-        return GameJoinConfiguration::where('game_id', $gameId)
-            ->enabled()
-            ->byPriority()
+        // CRITICAL ARCHITECTURE NOTE:
+        // The game_join_configurations.game_id column directly stores Steam App IDs (not a separate database ID)
+        // There is no separate "games" table - we use Steam App IDs directly throughout the system
+        // game_join_configurations.game_id = Steam App ID (730, 570, 230410, etc.)
+
+        Log::debug('Fetching join methods for game', [
+            'steam_app_id' => $gameAppId,
+        ]);
+
+        // Query game_join_configurations directly using Steam App ID
+        $configurations = GameJoinConfiguration::where('game_id', $gameAppId)
+            ->where('is_enabled', true)
+            ->orderBy('priority', 'desc')
             ->get();
+
+        if ($configurations->isEmpty()) {
+            Log::warning('No join configurations found for Steam App ID', [
+                'steam_app_id' => $gameAppId,
+            ]);
+        } else {
+            Log::debug('Found join configurations', [
+                'steam_app_id' => $gameAppId,
+                'count' => $configurations->count(),
+                'methods' => $configurations->pluck('join_method')->toArray(),
+            ]);
+        }
+
+        return $configurations;
     }
 
     /**

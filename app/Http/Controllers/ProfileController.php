@@ -49,6 +49,9 @@ class ProfileController extends Controller
             }
         }
 
+        // Load gaming preferences filtered by available join configurations
+        $user->load(['gamingPreferencesWithJoinConfigs']);
+
         return view('profile.show', compact('user', 'isFriend', 'friendRequestPending', 'friendRequestReceived'));
     }
 

@@ -11,13 +11,20 @@ class GameJoinConfigurationSeeder extends Seeder
     /**
      * Seed game join configurations for multi-game lobby system
      *
-     * This seeder creates configuration records for each supported game,
-     * defining their available join methods, validation patterns, and instructions.
+     * IMPORTANT: This seeder follows the implementation guide strictly.
+     * Week 1: CS2, Dota 2, Warframe with steam_lobby ONLY
+     * Week 5: Minecraft with server_address (not implemented yet)
+     *
+     * DO NOT add steam_connect or server_address to CS2!
      */
     public function run(): void
     {
         $configurations = [
-            // CS2 (Counter-Strike 2)
+            // ============================================================
+            // WEEK 1: CS2 (Counter-Strike 2)
+            // ============================================================
+            // CS2 ONLY supports steam_lobby join method
+            // DO NOT add steam_connect - that's incorrect per implementation guide
             [
                 'game_id' => 730, // CS2 App ID
                 'join_method' => 'steam_lobby',
@@ -45,33 +52,9 @@ class GameJoinConfigurationSeeder extends Seeder
                 'is_enabled' => true,
             ],
 
-            // CS2 also supports steam_connect for community servers
-            [
-                'game_id' => 730,
-                'join_method' => 'steam_connect',
-                'display_name' => 'Server Address',
-                'icon' => 'server',
-                'priority' => 5,
-                'validation_pattern' => null, // Flexible validation
-                'requires_manual_setup' => false,
-                'steam_app_id' => 730,
-                'default_port' => 27015,
-                'expiration_minutes' => null, // Persistent for community servers
-                'instructions_how_to_create' =>
-                    "1. Get your CS2 community server IP and port\n" .
-                    "2. Enter the server details below\n" .
-                    "3. Optionally add server password if required",
-                'instructions_how_to_join' =>
-                    "1. Click the 'Connect' button to open CS2\n" .
-                    "2. CS2 will automatically connect to the server\n\n" .
-                    "**Alternative:**\n" .
-                    "1. Open CS2 console (~)\n" .
-                    "2. Type: connect [ip]:[port]\n" .
-                    "3. Press Enter",
-                'is_enabled' => true,
-            ],
-
-            // Dota 2
+            // ============================================================
+            // WEEK 1: Dota 2
+            // ============================================================
             [
                 'game_id' => 570, // Dota 2 App ID
                 'join_method' => 'steam_lobby',
@@ -99,7 +82,9 @@ class GameJoinConfigurationSeeder extends Seeder
                 'is_enabled' => true,
             ],
 
-            // Warframe
+            // ============================================================
+            // WEEK 3: Warframe
+            // ============================================================
             [
                 'game_id' => 230410, // Warframe App ID
                 'join_method' => 'steam_lobby',
@@ -144,6 +129,11 @@ class GameJoinConfigurationSeeder extends Seeder
         }
 
         $this->command->info('Game join configurations seeded successfully!');
-        $this->command->info('Seeded ' . count($configurations) . ' configuration(s) for CS2, Dota 2, and Warframe');
+        $this->command->info('Seeded ' . count($configurations) . ' configuration(s)');
+        $this->command->info('- CS2: steam_lobby ONLY (per implementation guide Week 1)');
+        $this->command->info('- Dota 2: steam_lobby ONLY');
+        $this->command->info('- Warframe: steam_lobby ONLY');
+        $this->command->info('');
+        $this->command->info('Note: server_address method is for Minecraft (Week 5, not yet implemented)');
     }
 }
