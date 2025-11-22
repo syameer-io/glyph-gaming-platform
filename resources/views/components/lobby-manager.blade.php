@@ -374,12 +374,12 @@
         x-show="showInstructions"
         x-cloak
         @click.self="showInstructions = false"
-        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 20px;"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 9999;"
     >
         <div
             @click.stop
             class="instructions-modal-content"
-            style="background-color: #18181b; border-radius: 12px; max-width: 600px; width: 100%; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.5);"
+            style="background-color: #18181b; border-radius: 12px; width: 90%; max-width: 600px; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.5); margin: 20px auto; border: 1px solid #3f3f46;"
         >
             <div style="padding: 24px;">
                 {{-- Modal Header --}}
@@ -500,9 +500,11 @@
 
     /* Instructions modal full screen on mobile */
     .instructions-modal-content {
+        width: 95% !important;
+        max-width: 95% !important;
         max-height: 90vh !important;
         border-radius: 8px !important;
-        margin: 10px !important;
+        margin: 10px auto !important;
     }
 }
 

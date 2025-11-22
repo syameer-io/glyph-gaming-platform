@@ -43,11 +43,12 @@ class GameLobbyService
             ->first();
 
         if ($existingLobby) {
-            // Deactivate existing lobby before creating new one
-            Log::debug('Deactivating existing lobby', [
+            // Delete existing lobby before creating new one
+            // (Hard delete to avoid unique constraint violation on user+game+is_active)
+            Log::debug('Deleting existing lobby', [
                 'existing_lobby_id' => $existingLobby->id,
             ]);
-            $existingLobby->markAsExpired();
+            $existingLobby->delete();
         }
 
         // Get join configuration to determine expiration
@@ -119,21 +120,40 @@ class GameLobbyService
     /**
      * Clear/deactivate a lobby
      *
+     * CRITICAL FIX: Hard delete instead of soft delete (is_active=0)
+     * Reason: MySQL unique constraint on (user_id, game_id, is_active) doesn't support
+     * partial indexes, so multiple inactive lobbies with same user+game would violate constraint.
+     * Since there's no business need to keep inactive lobbies, we delete them completely.
+     *
      * @param GameLobby $lobby The lobby to clear
      * @return bool Success status
      */
     public function clearLobby(GameLobby $lobby): bool
     {
-        $cleared = $lobby->markAsExpired();
+        try {
+            $lobbyId = $lobby->id;
+            $userId = $lobby->user_id;
 
-        if ($cleared) {
-            Log::info('Game lobby cleared', [
+            $deleted = $lobby->delete();
+
+            if ($deleted) {
+                Log::info('Game lobby cleared', [
+                    'lobby_id' => $lobbyId,
+                    'user_id' => $userId,
+                ]);
+            }
+
+            return $deleted;
+
+        } catch (\Exception $e) {
+            Log::error('Failed to delete lobby', [
                 'lobby_id' => $lobby->id,
                 'user_id' => $lobby->user_id,
+                'error' => $e->getMessage(),
             ]);
-        }
 
-        return $cleared;
+            throw $e;
+        }
     }
 
     /**
