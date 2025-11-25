@@ -217,10 +217,11 @@ class TeamController extends Controller
      */
     public function show(Team $team): View
     {
+        // Eager load team members with their active lobbies to prevent N+1 queries (Phase 1: Lobby Integration)
         $team->load([
             'server',
             'creator',
-            'activeMembers.user',
+            'activeMembers.user.activeLobbies', // Load lobbies for team members
             'activeMembers' => function ($query) {
                 $query->orderBy('role', 'desc')->orderBy('joined_at', 'asc');
             }

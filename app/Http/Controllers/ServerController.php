@@ -106,9 +106,24 @@ class ServerController extends Controller
             return redirect()->route('dashboard')->with('error', 'You are banned from this server.');
         }
 
-        $server->load(['channels', 'members.profile', 'members.roles' => function ($query) use ($server) {
-            $query->where('user_roles.server_id', $server->id);
-        }]);
+        // Load server data with member lobbies to prevent N+1 queries (Phase 1: Lobby Integration)
+        $server->load([
+            'channels',
+            'members.profile',
+            'members.gameLobbies' => function ($query) {
+                // Only load active, non-expired lobbies
+                $query->where('is_active', true)
+                    ->where(function($q) {
+                        $q->whereNull('expires_at')
+                          ->orWhere('expires_at', '>', now());
+                    })
+                    ->with('gamingPreference:id,game_appid,game_name')
+                    ->orderBy('created_at', 'desc');
+            },
+            'members.roles' => function ($query) use ($server) {
+                $query->where('user_roles.server_id', $server->id);
+            }
+        ]);
 
         // Load active goals with participants
         $activeGoals = $server->goals()

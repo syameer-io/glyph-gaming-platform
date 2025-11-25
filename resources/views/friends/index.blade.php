@@ -48,6 +48,16 @@
                                 Playing {{ $friend->profile->current_game['name'] }}
                             </div>
                         @endif
+                        {{-- Lobby Join Button --}}
+                        <div style="margin-top: 8px;">
+                            <x-lobby-join-button
+                                :user="$friend"
+                                size="small"
+                                variant="full"
+                                :show-game-icon="true"
+                                :show-timer="true"
+                            />
+                        </div>
                     </div>
                     <form method="POST" action="{{ route('friends.remove', $friend->id) }}">
                         @csrf

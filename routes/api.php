@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\MatchmakingApiController;
+use App\Http\Controllers\Api\LobbyStatusController;
 use App\Http\Controllers\LobbyController;
 
 /*
@@ -36,6 +37,14 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::put('/lobbies/{lobby}', [LobbyController::class, 'update']);
     Route::delete('/lobbies/{lobby}', [LobbyController::class, 'destroy']);
     Route::get('/lobbies/my-lobbies', [LobbyController::class, 'myLobbies']);
+
+    // Lobby status endpoints for integration (Phase 1)
+    Route::post('/lobbies/bulk-status', [LobbyStatusController::class, 'bulkStatus'])
+        ->middleware('throttle:60,1');
+    Route::get('/users/{user}/lobbies', [LobbyStatusController::class, 'userLobbies'])
+        ->middleware('throttle:120,1');
+    Route::get('/users/{user}/has-lobby', [LobbyStatusController::class, 'hasLobby'])
+        ->middleware('throttle:120,1');
 
     // Game configurations
     Route::get('/games/{gameId}/join-methods', [LobbyController::class, 'getGameJoinMethods']);

@@ -515,6 +515,15 @@
                                 {{ ucfirst($member->profile->status) }}
                             </div>
                         </div>
+                        {{-- Lobby Join Button --}}
+                        <div style="opacity: 0; transition: opacity 0.2s;" onmouseenter="this.style.opacity='1'" onmouseleave="this.style.opacity='0'">
+                            <x-lobby-join-button
+                                :user="$member"
+                                size="small"
+                                variant="icon"
+                                :show-timer="false"
+                            />
+                        </div>
                     </div>
                 @endforeach
             @endif

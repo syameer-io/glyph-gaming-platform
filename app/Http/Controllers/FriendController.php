@@ -13,10 +13,11 @@ class FriendController extends Controller
     public function index()
     {
         $user = Auth::user();
-        
+
+        // Eager load active lobbies to prevent N+1 queries (Phase 1: Lobby Integration)
         $friends = $user->friends()
             ->wherePivot('status', 'accepted')
-            ->with('profile')
+            ->with(['profile', 'activeLobbies'])
             ->get();
 
         $pendingRequests = $user->friendRequests()

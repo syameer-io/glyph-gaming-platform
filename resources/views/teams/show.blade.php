@@ -940,7 +940,7 @@
                                         <span class="member-role">{{ ucfirst(str_replace('_', ' ', $member->game_role)) }}</span>
                                     @endif
                                     <span class="member-status">
-                                        Skill: {{ ucfirst($member->individual_skill_score ?? 'Unknown') }} • 
+                                        Skill: {{ ucfirst($member->individual_skill_score ?? 'Unknown') }} •
                                         Joined {{ $member->joined_at->diffForHumans() }}
                                     </span>
                                 </div>
@@ -949,6 +949,16 @@
                                         🎮 {{ $member->user->profile->current_game['name'] ?? 'Playing' }}
                                     </div>
                                 @endif
+                                {{-- Lobby Join Button --}}
+                                <div style="margin-top: 8px;">
+                                    <x-lobby-join-button
+                                        :user="$member->user"
+                                        size="medium"
+                                        variant="full"
+                                        :show-game-icon="true"
+                                        :show-timer="true"
+                                    />
+                                </div>
                             </div>
                             @if($isLeader && $member->user->id !== auth()->id())
                                 <div class="member-actions">

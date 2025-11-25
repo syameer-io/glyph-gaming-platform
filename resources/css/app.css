@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import './realtime-phase3.css';
+@import './lobby.css';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
