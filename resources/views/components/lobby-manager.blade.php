@@ -1,4 +1,4 @@
-@props(['user', 'isOwnProfile' => false])
+@props(['user', 'combinedGames' => [], 'isOwnProfile' => false])
 
 <div
     x-data="lobbyManager({{ $user->id }}, {{ json_encode($isOwnProfile) }})"
@@ -29,9 +29,13 @@
                     style="width: 100%; padding: 10px 12px; background-color: #0e0e10; border: 1px solid #3f3f46; border-radius: 6px; color: #efeff1; font-size: 14px; cursor: pointer;"
                 >
                     <option value="">-- Choose a game --</option>
-                    @forelse($user->gamingPreferencesWithJoinConfigs->take(10) as $preference)
-                        <option value="{{ $preference->game_appid }}">
-                            {{ $preference->game_name }} ({{ round($preference->playtime_forever / 60, 1) }} hrs)
+                    @forelse($combinedGames as $game)
+                        <option value="{{ $game['game_id'] }}" data-owned="{{ $game['is_owned'] ? 'true' : 'false' }}">
+                            @if($game['is_owned'])
+                                ✓ {{ $game['game_name'] }} ({{ $game['playtime'] }} hrs)
+                            @else
+                                {{ $game['game_name'] }}
+                            @endif
                         </option>
                     @empty
                         <option value="" disabled>No games with lobby support found</option>

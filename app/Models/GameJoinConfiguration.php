@@ -108,6 +108,18 @@ class GameJoinConfiguration extends Model
     }
 
     /**
+     * Scope to get unique enabled games for lobby creation
+     * Returns distinct game_id entries where is_enabled = true
+     */
+    public function scopeEnabledGames($query)
+    {
+        return $query->where('is_enabled', true)
+            ->select('game_id')
+            ->distinct()
+            ->orderBy('game_id');
+    }
+
+    /**
      * Scope to order by priority (highest first)
      */
     public function scopeByPriority($query)

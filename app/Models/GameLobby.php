@@ -3,11 +3,24 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Events\LobbyCreated;
+use App\Events\LobbyDeleted;
+use App\Events\LobbyExpired;
 use Carbon\Carbon;
 
 class GameLobby extends Model
 {
+    use HasFactory;
+    /**
+     * The event map for the model.
+     *
+     * @var array
+     */
+    protected $dispatchesEvents = [
+        'created' => LobbyCreated::class,
+    ];
     protected $fillable = [
         'user_id',
         'game_id',
@@ -49,12 +62,25 @@ class GameLobby extends Model
     }
 
     /**
-     * For now, we don't have a Game model, so game_id references user_gaming_preferences.game_appid
-     * This will be updated when a proper games table is created
+     * Legacy relationship to user's gaming preference
+     * Returns null if user doesn't own the game (which is now allowed)
+     *
+     * @deprecated Use gameJoinConfiguration() for reliable game information
      */
     public function gamingPreference(): BelongsTo
     {
         return $this->belongsTo(UserGamingPreference::class, 'game_id', 'game_appid');
+    }
+
+    /**
+     * Primary relationship to game join configuration
+     * This provides reliable game information regardless of user ownership
+     *
+     * game_id references game_join_configurations.game_id (Steam App ID)
+     */
+    public function gameJoinConfiguration(): BelongsTo
+    {
+        return $this->belongsTo(GameJoinConfiguration::class, 'game_id', 'game_id');
     }
 
     /**
@@ -114,30 +140,60 @@ class GameLobby extends Model
     }
 
     /**
-     * Generate join link/code based on join method
+     * Generate join link/code based on join method with enhanced validation
+     *
+     * @return string|null Returns the join link/code or null if required fields are missing
      */
     public function generateJoinLink(): ?string
     {
+        try {
+            return match($this->join_method) {
+                'steam_lobby' => $this->steam_app_id && $this->steam_lobby_id && $this->steam_profile_id
+                    ? "steam://joinlobby/{$this->steam_app_id}/{$this->steam_lobby_id}/{$this->steam_profile_id}"
+                    : null,
+
+                'steam_connect' => $this->server_ip && $this->server_port
+                    ? "steam://connect/{$this->server_ip}:{$this->server_port}"
+                    : null,
+
+                'lobby_code' => $this->lobby_code,
+
+                'server_address' => $this->server_ip && $this->server_port
+                    ? "{$this->server_ip}:{$this->server_port}"
+                    : $this->server_ip,
+
+                'join_command' => $this->join_command,
+
+                'private_match' => $this->match_name,
+
+                default => null,
+            };
+        } catch (\Exception $e) {
+            \Log::error('Failed to generate join link for lobby', [
+                'lobby_id' => $this->id,
+                'join_method' => $this->join_method,
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Get user-friendly display format for the join method
+     *
+     * @return string Human-readable join method description
+     */
+    public function getDisplayFormat(): string
+    {
         return match($this->join_method) {
-            'steam_lobby' => $this->steam_app_id && $this->steam_lobby_id && $this->steam_profile_id
-                ? "steam://joinlobby/{$this->steam_app_id}/{$this->steam_lobby_id}/{$this->steam_profile_id}"
-                : null,
-
-            'steam_connect' => $this->server_ip && $this->server_port
-                ? "steam://connect/{$this->server_ip}:{$this->server_port}"
-                : null,
-
-            'lobby_code' => $this->lobby_code,
-
-            'server_address' => $this->server_ip && $this->server_port
-                ? "{$this->server_ip}:{$this->server_port}"
-                : $this->server_ip,
-
-            'join_command' => $this->join_command,
-
-            'private_match' => $this->match_name,
-
-            default => null,
+            'steam_lobby' => 'Steam Lobby Link',
+            'steam_connect' => 'Steam Connect',
+            'lobby_code' => 'Lobby Code',
+            'server_address' => 'Server Address',
+            'join_command' => 'Join Command',
+            'private_match' => 'Private Match',
+            'manual_invite' => 'Manual Invite',
+            default => 'Unknown Method',
         };
     }
 
@@ -148,6 +204,25 @@ class GameLobby extends Model
     {
         $this->is_active = false;
         return $this->save();
+    }
+
+    /**
+     * Override delete to dispatch LobbyDeleted event
+     *
+     * @return bool|null
+     */
+    public function delete()
+    {
+        $lobbyId = $this->id;
+        $userId = $this->user_id;
+
+        $result = parent::delete();
+
+        if ($result) {
+            event(new LobbyDeleted($lobbyId, $userId));
+        }
+
+        return $result;
     }
 
     /**

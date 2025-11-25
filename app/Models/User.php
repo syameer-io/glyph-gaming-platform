@@ -105,6 +105,87 @@ class User extends Authenticatable
             ->orderBy('playtime_forever', 'desc');
     }
 
+    /**
+     * Get combined list of games for lobby creation
+     * Returns user's owned games first, then all other supported games
+     *
+     * This allows users to create lobbies for any supported game,
+     * while prioritizing games they actually own and play.
+     *
+     * @return \Illuminate\Support\Collection Collection of game objects with:
+     *         - game_id: Steam App ID
+     *         - game_name: Display name of the game
+     *         - is_owned: Whether user owns this game
+     *         - playtime: Hours played (only if owned)
+     */
+    public function getCombinedLobbyGames(): \Illuminate\Support\Collection
+    {
+        // Load user's gaming preferences with join configurations
+        $userGames = $this->gamingPreferencesWithJoinConfigs()
+            ->get()
+            ->map(function ($preference) {
+                return [
+                    'game_id' => $preference->game_appid,
+                    'game_name' => $preference->game_name,
+                    'is_owned' => true,
+                    'playtime' => round($preference->playtime_forever / 60, 1), // Convert minutes to hours
+                ];
+            });
+
+        // Get all enabled games from join configurations
+        $allSupportedGames = \App\Models\GameJoinConfiguration::select('game_id', 'steam_app_id')
+            ->where('is_enabled', true)
+            ->distinct()
+            ->get()
+            ->groupBy('game_id'); // Group by game_id to get unique games
+
+        // Get unique game IDs and their names from configurations
+        $supportedGamesList = collect();
+        foreach ($allSupportedGames as $gameId => $configs) {
+            $supportedGamesList->push([
+                'game_id' => $gameId,
+                'game_name' => $this->getGameNameById($gameId),
+                'is_owned' => false,
+                'playtime' => null,
+            ]);
+        }
+
+        // Get user's owned game IDs for filtering
+        $ownedGameIds = $userGames->pluck('game_id')->toArray();
+
+        // Filter out games user already owns from the supported list
+        $otherSupportedGames = $supportedGamesList->filter(function ($game) use ($ownedGameIds) {
+            return !in_array($game['game_id'], $ownedGameIds);
+        });
+
+        // Combine: user's games first (sorted by playtime), then other supported games
+        return $userGames->concat($otherSupportedGames);
+    }
+
+    /**
+     * Get game name by Steam App ID
+     * Maps common Steam App IDs to their display names
+     *
+     * @param int $gameId Steam App ID
+     * @return string Game display name
+     */
+    private function getGameNameById(int $gameId): string
+    {
+        // Map of common Steam App IDs to game names
+        $gameNames = [
+            730 => 'Counter-Strike 2',
+            570 => 'Dota 2',
+            230410 => 'Warframe',
+            1172470 => 'Apex Legends',
+            252490 => 'Rust',
+            578080 => 'PUBG: BATTLEGROUNDS',
+            359550 => 'Rainbow Six Siege',
+            1097150 => 'Fall Guys',
+        ];
+
+        return $gameNames[$gameId] ?? "Game #{$gameId}";
+    }
+
     public function gamingSessions()
     {
         return $this->hasMany(GamingSession::class);
@@ -113,6 +194,62 @@ class User extends Authenticatable
     public function gameLobbies()
     {
         return $this->hasMany(GameLobby::class);
+    }
+
+    /**
+     * Get only active, non-expired lobbies for the user
+     */
+    public function activeLobbies()
+    {
+        return $this->hasMany(GameLobby::class)
+            ->where('is_active', true)
+            ->where(function($query) {
+                $query->whereNull('expires_at')
+                    ->orWhere('expires_at', '>', now());
+            });
+    }
+
+    /**
+     * Scope to eager load active lobbies with the user query
+     * Prevents N+1 queries when loading multiple users with their lobbies
+     */
+    public function scopeWithActiveLobbies($query)
+    {
+        return $query->with(['activeLobbies' => function($query) {
+            $query->orderBy('created_at', 'desc');
+        }]);
+    }
+
+    /**
+     * Get active lobby status with caching to reduce database load
+     * Cache is invalidated by GameLobbyObserver on lobby changes
+     *
+     * @return array|null Returns formatted lobby data or null if no active lobby
+     */
+    public function getActiveLobbyStatus(): ?array
+    {
+        $cacheKey = "user.{$this->id}.active_lobby_status";
+
+        return \Cache::remember($cacheKey, now()->addMinutes(2), function() {
+            $lobby = $this->activeLobbies()
+                ->orderBy('created_at', 'desc')
+                ->first();
+
+            if (!$lobby) {
+                return null;
+            }
+
+            return [
+                'id' => $lobby->id,
+                'game_id' => $lobby->game_id,
+                'join_method' => $lobby->join_method,
+                'join_link' => $lobby->generateJoinLink(),
+                'display_format' => $lobby->getDisplayFormat(),
+                'time_remaining' => $lobby->timeRemaining(),
+                'is_persistent' => $lobby->expires_at === null,
+                'created_at' => $lobby->created_at->toIso8601String(),
+            ];
+        });
     }
 
     public function isServerAdmin($serverId)

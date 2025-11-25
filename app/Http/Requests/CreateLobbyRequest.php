@@ -22,7 +22,7 @@ class CreateLobbyRequest extends FormRequest
     public function rules(): array
     {
         $rules = [
-            'game_id' => 'required|integer|exists:user_gaming_preferences,game_appid',
+            'game_id' => 'required|integer|exists:game_join_configurations,game_id,is_enabled,1',
             'join_method' => 'required|string|in:steam_lobby,steam_connect,lobby_code,join_command,private_match,server_address,manual_invite',
         ];
 
@@ -71,7 +71,7 @@ class CreateLobbyRequest extends FormRequest
     {
         return [
             'game_id.required' => 'Please select a game',
-            'game_id.exists' => 'Selected game not found in your gaming preferences',
+            'game_id.exists' => 'Selected game is not supported or not enabled for lobbies',
             'join_method.required' => 'Please select a join method',
             'join_method.in' => 'Invalid join method',
             'steam_lobby_link.required' => 'Steam lobby link is required',

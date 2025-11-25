@@ -197,7 +197,7 @@
                 {{-- Multi-Game Lobby Manager (Week 2) --}}
                 @if(auth()->check())
                     <div style="margin-bottom: 24px;">
-                        <x-lobby-manager :user="$user" :is-own-profile="auth()->id() === $user->id" />
+                        <x-lobby-manager :user="$user" :combined-games="$combinedGames" :is-own-profile="auth()->id() === $user->id" />
                     </div>
                 @endif
 

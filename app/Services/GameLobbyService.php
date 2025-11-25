@@ -16,6 +16,9 @@ class GameLobbyService
     /**
      * Create a new lobby for user and game
      *
+     * UPDATED: No longer requires user to have gaming preferences for the game.
+     * Users can create lobbies for any game with enabled join configurations.
+     *
      * @param User $user The user creating the lobby
      * @param int $gameIdOrAppId The Steam App ID (e.g., 730, 570, 230410)
      * @param array $data Lobby data (varies by join method)
@@ -28,6 +31,11 @@ class GameLobbyService
         // The game_id throughout the system directly uses Steam App IDs
         // There is no separate "games" table - we use Steam App IDs as the identifier
         // game_lobbies.game_id = Steam App ID (730, 570, 230410, etc.)
+        //
+        // FLEXIBLE GAME SUPPORT:
+        // Users can now create lobbies for ANY game with enabled join configurations,
+        // not just games in their gaming preferences. This allows users to organize
+        // gaming sessions even for games they don't own or haven't played yet.
         $gameId = $gameIdOrAppId;
 
         Log::debug('Creating lobby for user', [
@@ -159,6 +167,9 @@ class GameLobbyService
     /**
      * Get all active lobbies for a user
      *
+     * UPDATED: Now eager loads both gamingPreference (if user owns game)
+     * and gameJoinConfiguration (always available) for flexible game info
+     *
      * @param User $user The user
      * @return Collection Collection of active GameLobby instances
      */
@@ -167,7 +178,7 @@ class GameLobbyService
         return GameLobby::where('user_id', $user->id)
             ->active()
             ->notExpired()
-            ->with('gamingPreference')
+            ->with(['gamingPreference', 'gameJoinConfiguration'])
             ->orderBy('created_at', 'desc')
             ->get();
     }
