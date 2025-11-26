@@ -595,6 +595,33 @@
         gap: 12px;
         justify-content: flex-end;
     }
+
+    /* Lobby indicator animations */
+    @keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+        50% {
+            opacity: 0.6;
+            transform: scale(0.9);
+        }
+    }
+
+    .lobby-badge {
+        cursor: default;
+    }
+
+    .lobby-badge:hover .lobby-join-btn {
+        transform: scale(1.05);
+    }
+
+    /* Member lobby indicator styles */
+    .member-lobby-indicator {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+    }
 </style>
 @endpush
 
@@ -852,6 +879,28 @@
                                             🎮 {{ $member->user->profile->current_game['name'] ?? 'Playing' }}
                                         </div>
                                     @endif
+                                    {{-- Compact Lobby Status Indicator for Overview (no Join button - that's on Members tab) --}}
+                                    @php
+                                        // Use eager-loaded activeLobbies relationship for better performance
+                                        $overviewActiveLobbies = $member->user->activeLobbies ?? collect();
+                                    @endphp
+                                    @if($overviewActiveLobbies->isNotEmpty())
+                                        @php
+                                            $firstLobby = $overviewActiveLobbies->first();
+                                            $lobbyGameName = $firstLobby->getGameName();
+                                            $lobbyTimeRemaining = $firstLobby->timeRemaining();
+                                        @endphp
+                                        <div style="margin-top: 6px; display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; background: rgba(35, 165, 89, 0.12); border: 1px solid rgba(35, 165, 89, 0.25); border-radius: 4px;">
+                                            <span style="width: 6px; height: 6px; background-color: #23a559; border-radius: 50%; animation: pulse 2s infinite;"></span>
+                                            <span style="font-size: 11px; color: #23a559; font-weight: 500;">{{ $lobbyGameName }}</span>
+                                            @if($lobbyTimeRemaining)
+                                                <span style="font-size: 10px; color: #71717a;">{{ $lobbyTimeRemaining }}m</span>
+                                            @endif
+                                            @if($overviewActiveLobbies->count() > 1)
+                                                <span style="font-size: 10px; color: #71717a;">+{{ $overviewActiveLobbies->count() - 1 }}</span>
+                                            @endif
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         @endforeach
@@ -949,16 +998,82 @@
                                         🎮 {{ $member->user->profile->current_game['name'] ?? 'Playing' }}
                                     </div>
                                 @endif
-                                {{-- Lobby Join Button --}}
-                                <div style="margin-top: 8px;">
-                                    <x-lobby-join-button
-                                        :user="$member->user"
-                                        size="medium"
-                                        variant="full"
-                                        :show-game-icon="true"
-                                        :show-timer="true"
-                                    />
-                                </div>
+                                {{-- Lobby Status Indicator (Professional Design) --}}
+                                @php
+                                    // Use eager-loaded activeLobbies relationship for better performance
+                                    $memberActiveLobbies = $member->user->activeLobbies ?? collect();
+                                @endphp
+                                @if($memberActiveLobbies->isNotEmpty())
+                                    <div class="member-lobby-indicator" style="margin-top: 10px;">
+                                        @foreach($memberActiveLobbies->take(2) as $lobby)
+                                            @php
+                                                $gameAppId = $lobby->game_id ?? 730;
+                                                $gameName = $lobby->getGameName();
+                                                $timeRemaining = $lobby->timeRemaining();
+                                                $joinLink = $lobby->generateJoinLink();
+                                                $isSteamJoin = in_array($lobby->join_method, ['steam_lobby', 'steam_connect']);
+                                            @endphp
+                                            <div class="lobby-badge" style="
+                                                display: inline-flex;
+                                                align-items: center;
+                                                gap: 8px;
+                                                padding: 6px 10px;
+                                                background: linear-gradient(135deg, rgba(35, 165, 89, 0.15) 0%, rgba(16, 185, 129, 0.1) 100%);
+                                                border: 1px solid rgba(35, 165, 89, 0.3);
+                                                border-radius: 6px;
+                                                margin-right: 8px;
+                                                margin-bottom: 6px;
+                                                transition: all 0.2s ease;
+                                            " onmouseover="this.style.background='linear-gradient(135deg, rgba(35, 165, 89, 0.25) 0%, rgba(16, 185, 129, 0.2) 100%)'; this.style.borderColor='rgba(35, 165, 89, 0.5)';" onmouseout="this.style.background='linear-gradient(135deg, rgba(35, 165, 89, 0.15) 0%, rgba(16, 185, 129, 0.1) 100%)'; this.style.borderColor='rgba(35, 165, 89, 0.3)';">
+                                                {{-- Game Icon --}}
+                                                <img
+                                                    src="https://cdn.cloudflare.steamstatic.com/steam/apps/{{ $gameAppId }}/capsule_184x69.jpg"
+                                                    alt="{{ $gameName }}"
+                                                    style="width: 24px; height: 24px; border-radius: 4px; object-fit: cover; flex-shrink: 0;"
+                                                    onerror="this.style.display='none'"
+                                                >
+                                                {{-- Game Name & Timer --}}
+                                                <div style="display: flex; flex-direction: column; gap: 1px; min-width: 0;">
+                                                    <span style="font-size: 12px; font-weight: 600; color: #efeff1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100px;">{{ $gameName }}</span>
+                                                    @if($timeRemaining)
+                                                        <span style="font-size: 10px; color: {{ $timeRemaining < 5 ? '#ef4444' : '#23a559' }}; font-weight: 500;">
+                                                            {{ $timeRemaining < 60 ? $timeRemaining . 'm left' : floor($timeRemaining/60) . 'h ' . ($timeRemaining % 60) . 'm' }}
+                                                        </span>
+                                                    @else
+                                                        <span style="font-size: 10px; color: #23a559; font-weight: 500;">Active</span>
+                                                    @endif
+                                                </div>
+                                                {{-- Join Button --}}
+                                                @if($isSteamJoin && $joinLink)
+                                                    <a href="{{ $joinLink }}"
+                                                       style="
+                                                           display: inline-flex;
+                                                           align-items: center;
+                                                           justify-content: center;
+                                                           padding: 4px 10px;
+                                                           background-color: #23a559;
+                                                           color: white;
+                                                           border-radius: 4px;
+                                                           font-size: 11px;
+                                                           font-weight: 600;
+                                                           text-decoration: none;
+                                                           transition: background-color 0.15s ease;
+                                                           flex-shrink: 0;
+                                                       "
+                                                       onmouseover="this.style.backgroundColor='#1a8a47'"
+                                                       onmouseout="this.style.backgroundColor='#23a559'"
+                                                       title="Join {{ $gameName }} lobby via Steam"
+                                                    >
+                                                        Join
+                                                    </a>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                        @if($memberActiveLobbies->count() > 2)
+                                            <span style="font-size: 11px; color: #71717a; font-style: italic;">+{{ $memberActiveLobbies->count() - 2 }} more</span>
+                                        @endif
+                                    </div>
+                                @endif
                             </div>
                             @if($isLeader && $member->user->id !== auth()->id())
                                 <div class="member-actions">

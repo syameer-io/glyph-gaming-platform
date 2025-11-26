@@ -2,7 +2,7 @@
     Lobby Join Button Component
 
     A reusable component that displays join buttons for active game lobbies.
-    Supports multiple display variants and sizes with real-time updates.
+    Professional badge design with game thumbnails, timers, and hover effects.
 
     @param User $user - The user whose lobbies to display
     @param string $size - Button size: 'small', 'medium', 'large' (default: 'medium')
@@ -22,189 +22,358 @@
 ])
 
 @php
-    // Get active lobbies from the user relationship
-    $lobbies = $user->gameLobbies ?? collect();
-    $activeLobbies = $lobbies->filter(fn($lobby) => $lobby->isActive());
-
-    // Prepare lobby data for JavaScript
-    $lobbyData = $activeLobbies->map(function($lobby) {
-        // Use fallback for game icon (no game_icon_url in user_gaming_preferences table)
-        $gameIcon = asset('images/default-game.png');
-
-        return [
-            'id' => $lobby->id,
-            'game_name' => $lobby->getGameName(),
-            'game_icon' => $gameIcon,
-            'join_link' => $lobby->generateJoinLink(),
-            'join_method' => $lobby->join_method,
-            'display_format' => $lobby->getDisplayFormat(),
-            'time_remaining_minutes' => $lobby->timeRemaining(),
-            'expires_at' => $lobby->expires_at?->toIso8601String(),
-            'is_expiring_soon' => $lobby->timeRemaining() && $lobby->timeRemaining() < 5,
-            'is_expired' => false,
-        ];
-    });
+    // Prefer activeLobbies if eager-loaded, otherwise filter gameLobbies
+    $activeLobbies = $user->relationLoaded('activeLobbies')
+        ? ($user->activeLobbies ?? collect())
+        : ($user->gameLobbies ?? collect())->filter(fn($lobby) => $lobby->isActive());
 @endphp
 
 @if($activeLobbies->isNotEmpty())
-    <div
-        class="lobby-join-wrapper {{ $class }}"
-        x-data="lobbyJoinButton({
-            userId: {{ $user->id }},
-            initialLobbies: {{ $lobbyData->toJson() }}
-        })"
-        x-init="init()"
-    >
+    {{-- Scoped styles for lobby badges --}}
+    <style>
+        .lobby-badge-container {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+        }
+        .lobby-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            background: linear-gradient(135deg, rgba(35, 165, 89, 0.15) 0%, rgba(16, 185, 129, 0.1) 100%);
+            border: 1px solid rgba(35, 165, 89, 0.3);
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            cursor: default;
+        }
+        .lobby-badge:hover {
+            background: linear-gradient(135deg, rgba(35, 165, 89, 0.25) 0%, rgba(16, 185, 129, 0.2) 100%);
+            border-color: rgba(35, 165, 89, 0.5);
+        }
+        .lobby-badge:hover .lobby-join-btn {
+            transform: scale(1.05);
+        }
+        .lobby-game-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+        .lobby-game-info {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            min-width: 0;
+        }
+        .lobby-game-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: #efeff1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100px;
+        }
+        .lobby-timer {
+            font-size: 10px;
+            font-weight: 500;
+        }
+        .lobby-timer-active {
+            color: #23a559;
+        }
+        .lobby-timer-expiring {
+            color: #ef4444;
+            animation: pulse 2s infinite;
+        }
+        .lobby-join-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 10px;
+            background-color: #23a559;
+            color: white;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.15s ease;
+            flex-shrink: 0;
+        }
+        .lobby-join-btn:hover {
+            background-color: #1a8a47;
+        }
+        .lobby-more-indicator {
+            font-size: 11px;
+            color: #71717a;
+            font-style: italic;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+    </style>
+
+    <div class="lobby-badge-container {{ $class }}">
         @if($variant === 'full')
-            {{-- Full button display --}}
-            <div class="flex flex-wrap gap-2">
-                <template x-for="lobby in lobbies" :key="lobby.id">
-                    <button
-                        type="button"
-                        @click="joinLobby(lobby)"
-                        class="btn-join-lobby
-                               flex items-center gap-2
-                               bg-green-600 hover:bg-green-700
-                               text-white rounded-lg
-                               transition-all duration-200
-                               shadow-sm hover:shadow-md
-                               disabled:opacity-50 disabled:cursor-not-allowed
-                               focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-800"
-                        :class="{
-                            'px-3 py-1.5 text-sm btn-small': '{{ $size }}' === 'small',
-                            'px-4 py-2 text-base btn-medium': '{{ $size }}' === 'medium',
-                            'px-5 py-3 text-lg btn-large': '{{ $size }}' === 'large',
-                            'animate-pulse-glow': lobby.is_expiring_soon
-                        }"
-                        :disabled="lobby.is_expired"
-                        :title="lobby.is_expired ? 'Lobby has expired' : 'Click to join ' + lobby.game_name"
-                        :aria-label="'Join ' + lobby.game_name + (lobby.time_remaining_minutes ? ' (expires in ' + lobby.time_remaining_minutes + ' minutes)' : '')"
-                    >
-                        {{-- Game Icon --}}
-                        <template x-if="{{ $showGameIcon ? 'true' : 'false' }}">
-                            <img
-                                :src="lobby.game_icon || '{{ asset('images/default-game.png') }}'"
-                                :alt="lobby.game_name"
-                                class="rounded object-cover"
-                                :class="{
-                                    'w-4 h-4': '{{ $size }}' === 'small',
-                                    'w-5 h-5': '{{ $size }}' === 'medium',
-                                    'w-6 h-6': '{{ $size }}' === 'large'
-                                }"
-                                loading="lazy"
-                            >
-                        </template>
+            {{-- Professional badge display (matches teams page design) --}}
+            @foreach($activeLobbies->take(2) as $lobby)
+                @php
+                    $gameAppId = $lobby->game_id ?? 730;
+                    $gameName = $lobby->getGameName();
+                    $timeRemaining = $lobby->timeRemaining();
+                    $joinLink = $lobby->generateJoinLink();
+                    $isSteamJoin = in_array($lobby->join_method, ['steam_lobby', 'steam_connect']);
+                    $isExpiringSoon = $timeRemaining && $timeRemaining < 5;
+                @endphp
+                <div class="lobby-badge">
+                    {{-- Game Icon from Steam CDN --}}
+                    @if($showGameIcon)
+                        <img
+                            src="https://cdn.cloudflare.steamstatic.com/steam/apps/{{ $gameAppId }}/capsule_184x69.jpg"
+                            alt="{{ $gameName }}"
+                            class="lobby-game-icon"
+                            onerror="this.style.display='none'"
+                        >
+                    @endif
 
-                        {{-- Button Text --}}
-                        <span class="font-medium whitespace-nowrap" x-text="'Join ' + lobby.game_name"></span>
-
-                        {{-- Timer --}}
-                        <template x-if="{{ $showTimer ? 'true' : 'false' }} && lobby.time_remaining_minutes">
-                            <span
-                                class="text-xs opacity-80 font-mono"
-                                x-text="formatTimeRemaining(lobby.time_remaining_minutes)"
-                            ></span>
-                        </template>
-
-                        {{-- Join Method Icon --}}
-                        <template x-if="lobby.join_method === 'steam_lobby' || lobby.join_method === 'steam_connect'">
-                            <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
-                            </svg>
-                        </template>
-                    </button>
-                </template>
-            </div>
-
-        @elseif($variant === 'icon')
-            {{-- Icon-only display with tooltip --}}
-            <div
-                class="relative cursor-pointer group"
-                x-data="{ showTooltip: false }"
-                @mouseenter="showTooltip = true"
-                @mouseleave="showTooltip = false"
-                @click="showTooltip = !showTooltip"
-            >
-                <div class="lobby-icon relative inline-block">
-                    <svg class="w-6 h-6 text-green-500" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                    </svg>
-                    {{-- Animated indicator --}}
-                    <span class="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-ping"></span>
-                    <span class="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full"></span>
-                </div>
-
-                {{-- Tooltip - positioned to the left of the icon for right-edge placement --}}
-                <div
-                    x-show="showTooltip"
-                    x-transition:enter="transition ease-out duration-200"
-                    x-transition:enter-start="opacity-0 translate-x-1"
-                    x-transition:enter-end="opacity-100 translate-x-0"
-                    x-transition:leave="transition ease-in duration-150"
-                    x-transition:leave-start="opacity-100 translate-x-0"
-                    x-transition:leave-end="opacity-0 translate-x-1"
-                    class="absolute z-50 bg-gray-900 text-white text-sm rounded-lg p-3 shadow-xl min-w-[220px] right-full mr-3 top-1/2 -translate-y-1/2"
-                    @click.away="showTooltip = false"
-                    style="display: none;"
-                >
-                    {{-- Arrow pointer --}}
-                    <div class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-full">
-                        <div class="border-8 border-transparent border-l-gray-900"></div>
+                    {{-- Game Name & Timer --}}
+                    <div class="lobby-game-info">
+                        <span class="lobby-game-name">{{ $gameName }}</span>
+                        @if($showTimer)
+                            @if($timeRemaining)
+                                <span class="lobby-timer {{ $isExpiringSoon ? 'lobby-timer-expiring' : 'lobby-timer-active' }}">
+                                    {{ $timeRemaining < 60 ? $timeRemaining . 'm left' : floor($timeRemaining/60) . 'h ' . ($timeRemaining % 60) . 'm' }}
+                                </span>
+                            @else
+                                <span class="lobby-timer lobby-timer-active">Active</span>
+                            @endif
+                        @endif
                     </div>
 
-                    {{-- Tooltip header --}}
-                    <div class="text-xs text-green-400 font-semibold uppercase tracking-wide mb-2">Active Lobby</div>
+                    {{-- Join Button --}}
+                    @if($isSteamJoin && $joinLink)
+                        <a href="{{ $joinLink }}"
+                           class="lobby-join-btn"
+                           title="Join {{ $gameName }} lobby via Steam"
+                        >
+                            Join
+                        </a>
+                    @endif
+                </div>
+            @endforeach
 
-                    <template x-for="lobby in lobbies" :key="lobby.id">
-                        <div class="flex items-center gap-2 mb-2 last:mb-0">
-                            <img :src="lobby.game_icon" :alt="lobby.game_name" class="w-6 h-6 rounded flex-shrink-0">
-                            <div class="flex-1 min-w-0">
-                                <div class="font-medium truncate" x-text="lobby.game_name"></div>
-                                <div class="text-xs opacity-75 truncate" x-text="lobby.display_format"></div>
-                                <template x-if="lobby.time_remaining_minutes">
-                                    <div class="text-xs text-green-400" x-text="lobby.time_remaining_minutes + ' min remaining'"></div>
-                                </template>
-                            </div>
-                            <button
-                                @click.stop="joinLobby(lobby)"
-                                class="px-3 py-1.5 bg-green-600 hover:bg-green-700 rounded text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
-                                :disabled="lobby.is_expired"
-                                :aria-label="'Join ' + lobby.game_name"
+            {{-- More indicator for additional lobbies --}}
+            @if($activeLobbies->count() > 2)
+                <span class="lobby-more-indicator">+{{ $activeLobbies->count() - 2 }} more</span>
+            @endif
+
+        @elseif($variant === 'icon')
+            {{-- Icon-only display with CSS hover tooltip --}}
+            @php
+                $firstLobby = $activeLobbies->first();
+                $gameAppId = $firstLobby->game_id ?? 730;
+                $gameName = $firstLobby->getGameName();
+                $timeRemaining = $firstLobby->timeRemaining();
+                $joinLink = $firstLobby->generateJoinLink();
+                $isSteamJoin = in_array($firstLobby->join_method, ['steam_lobby', 'steam_connect']);
+            @endphp
+            <div class="lobby-icon-wrapper">
+                {{-- Pulsing green indicator --}}
+                <div class="lobby-pulse-indicator">
+                    <span class="lobby-pulse-ring"></span>
+                    <span class="lobby-pulse-dot"></span>
+                </div>
+
+                {{-- Tooltip on hover --}}
+                <div class="lobby-icon-tooltip">
+                    <div class="lobby-icon-tooltip-arrow"></div>
+                    <div style="font-size: 10px; color: #23a559; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+                        Active Lobby
+                    </div>
+                    @foreach($activeLobbies->take(3) as $lobby)
+                        @php
+                            $lGameAppId = $lobby->game_id ?? 730;
+                            $lGameName = $lobby->getGameName();
+                            $lTimeRemaining = $lobby->timeRemaining();
+                            $lJoinLink = $lobby->generateJoinLink();
+                            $lIsSteamJoin = in_array($lobby->join_method, ['steam_lobby', 'steam_connect']);
+                        @endphp
+                        <div class="lobby-tooltip-item">
+                            <img
+                                src="https://cdn.cloudflare.steamstatic.com/steam/apps/{{ $lGameAppId }}/capsule_184x69.jpg"
+                                alt="{{ $lGameName }}"
+                                class="lobby-game-icon"
+                                onerror="this.style.display='none'"
                             >
-                                Join
-                            </button>
+                            <div class="lobby-game-info">
+                                <span class="lobby-game-name">{{ $lGameName }}</span>
+                                @if($lTimeRemaining)
+                                    <span class="lobby-timer lobby-timer-active">{{ $lTimeRemaining }}m left</span>
+                                @else
+                                    <span class="lobby-timer lobby-timer-active">Active</span>
+                                @endif
+                            </div>
+                            @if($lIsSteamJoin && $lJoinLink)
+                                <a href="{{ $lJoinLink }}" class="lobby-join-btn" title="Join {{ $lGameName }}">Join</a>
+                            @endif
                         </div>
-                    </template>
+                    @endforeach
                 </div>
             </div>
 
         @elseif($variant === 'badge')
-            {{-- Badge display --}}
-            <div class="flex flex-wrap gap-1.5">
-                <template x-for="lobby in lobbies" :key="lobby.id">
-                    <button
-                        @click="joinLobby(lobby)"
-                        class="inline-flex items-center gap-1.5 px-2 py-1
-                               bg-green-100 dark:bg-green-900/30
-                               text-green-800 dark:text-green-300
-                               text-xs font-medium
-                               rounded-full cursor-pointer
-                               hover:bg-green-200 dark:hover:bg-green-900/50
-                               transition-colors
-                               focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-800
-                               disabled:opacity-50 disabled:cursor-not-allowed"
-                        :disabled="lobby.is_expired"
-                        :title="'Click to join ' + lobby.game_name"
-                        :aria-label="'Join ' + lobby.game_name"
-                    >
-                        <img :src="lobby.game_icon" :alt="lobby.game_name" class="w-4 h-4 rounded-full">
-                        <span class="truncate max-w-[100px]" x-text="lobby.game_name"></span>
-                        <template x-if="lobby.time_remaining_minutes">
-                            <span class="opacity-75" x-text="'• ' + lobby.time_remaining_minutes + 'm'"></span>
-                        </template>
-                    </button>
-                </template>
-            </div>
+            {{-- Compact badge display (same professional design, smaller) --}}
+            @foreach($activeLobbies->take(2) as $lobby)
+                @php
+                    $gameAppId = $lobby->game_id ?? 730;
+                    $gameName = $lobby->getGameName();
+                    $timeRemaining = $lobby->timeRemaining();
+                    $joinLink = $lobby->generateJoinLink();
+                    $isSteamJoin = in_array($lobby->join_method, ['steam_lobby', 'steam_connect']);
+                    $isExpiringSoon = $timeRemaining && $timeRemaining < 5;
+                @endphp
+                <div class="lobby-badge lobby-badge-compact">
+                    @if($showGameIcon)
+                        <img
+                            src="https://cdn.cloudflare.steamstatic.com/steam/apps/{{ $gameAppId }}/capsule_184x69.jpg"
+                            alt="{{ $gameName }}"
+                            class="lobby-game-icon-sm"
+                            onerror="this.style.display='none'"
+                        >
+                    @endif
+                    <span class="lobby-game-name-compact">{{ $gameName }}</span>
+                    @if($showTimer && $timeRemaining)
+                        <span class="lobby-timer-compact {{ $isExpiringSoon ? 'lobby-timer-expiring' : 'lobby-timer-active' }}">{{ $timeRemaining }}m</span>
+                    @endif
+                    @if($isSteamJoin && $joinLink)
+                        <a href="{{ $joinLink }}" class="lobby-join-btn-compact" title="Join {{ $gameName }}">Join</a>
+                    @endif
+                </div>
+            @endforeach
+            @if($activeLobbies->count() > 2)
+                <span class="lobby-more-indicator">+{{ $activeLobbies->count() - 2 }}</span>
+            @endif
         @endif
     </div>
+
+    {{-- Additional styles for icon and badge variants --}}
+    <style>
+        /* Icon variant styles */
+        .lobby-icon-wrapper {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+        }
+        .lobby-pulse-indicator {
+            position: relative;
+            width: 24px;
+            height: 24px;
+        }
+        .lobby-pulse-ring {
+            position: absolute;
+            inset: 0;
+            background-color: #23a559;
+            border-radius: 50%;
+            animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+            opacity: 0.75;
+        }
+        .lobby-pulse-dot {
+            position: absolute;
+            inset: 4px;
+            background-color: #23a559;
+            border-radius: 50%;
+        }
+        @keyframes ping {
+            75%, 100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+        .lobby-icon-tooltip {
+            position: absolute;
+            z-index: 50;
+            right: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            margin-right: 12px;
+            background-color: #1e1e22;
+            border: 1px solid rgba(35, 165, 89, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            min-width: 220px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+        }
+        .lobby-icon-wrapper:hover .lobby-icon-tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
+        .lobby-icon-tooltip-arrow {
+            position: absolute;
+            right: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: 8px solid transparent;
+            border-left-color: #1e1e22;
+        }
+        .lobby-tooltip-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .lobby-tooltip-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .lobby-tooltip-item:first-of-type {
+            padding-top: 0;
+        }
+
+        /* Compact badge variant styles */
+        .lobby-badge-compact {
+            padding: 4px 8px;
+            gap: 6px;
+        }
+        .lobby-game-icon-sm {
+            width: 18px;
+            height: 18px;
+            border-radius: 3px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+        .lobby-game-name-compact {
+            font-size: 11px;
+            font-weight: 600;
+            color: #efeff1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 70px;
+        }
+        .lobby-timer-compact {
+            font-size: 9px;
+            font-weight: 500;
+        }
+        .lobby-join-btn-compact {
+            padding: 2px 6px;
+            background-color: #23a559;
+            color: white;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background-color 0.15s ease;
+            flex-shrink: 0;
+        }
+        .lobby-join-btn-compact:hover {
+            background-color: #1a8a47;
+        }
+    </style>
 @endif
