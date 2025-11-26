@@ -282,8 +282,8 @@ Route::middleware('auth')->group(function () {
             ->middleware('throttle:60,1')
             ->name('store');
 
-        // Get or create conversation with specific user
-        Route::get('/with', [DirectMessageController::class, 'getConversationWith'])->name('with');
+        // Get or create conversation with specific user (route model binding)
+        Route::get('/with/{user}', [DirectMessageController::class, 'getConversationWith'])->name('with');
 
         // Conversation-specific routes
         Route::prefix('/{conversation}')->group(function () {

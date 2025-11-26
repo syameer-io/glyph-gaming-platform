@@ -462,34 +462,47 @@ const serverId = {{ $server->id }};
 const channelId = {{ $channel->id }};
 
 // Initialize Echo listener for chat messages
-if (window.Echo) {
-    console.log('Setting up Echo listener for channel:', `server.${serverId}.channel.${channelId}`);
+let channelSubscribed = false;
+
+function setupChatChannels() {
+    if (channelSubscribed) {
+        console.log('[Chat] Channels already subscribed, skipping...');
+        return;
+    }
+
+    if (!window.Echo) {
+        console.warn('[Chat] Echo not available yet, waiting for initialization...');
+        return;
+    }
+
+    console.log('[Chat] Setting up Echo listener for channel:', `server.${serverId}.channel.${channelId}`);
+    channelSubscribed = true;
 
     const chatChannel = window.Echo.private(`server.${serverId}.channel.${channelId}`);
 
     chatChannel.listen('.message.posted', (e) => {
-        console.log('Received message broadcast:', e);
+        console.log('[Chat] Received message broadcast:', e);
         appendMessage(e.message);
     })
     .listen('.message.edited', (e) => {
-        console.log('Received message edit broadcast:', e);
+        console.log('[Chat] Received message edit broadcast:', e);
         updateMessage(e.message);
     })
     .listen('.message.deleted', (e) => {
-        console.log('Received message delete broadcast:', e);
+        console.log('[Chat] Received message delete broadcast:', e);
         removeMessage(e.message_id);
     })
     .error((error) => {
-        console.error('Echo channel error:', error);
+        console.error('[Chat] Echo channel error:', error);
     });
 
     // Initialize Echo listener for server-wide events (lobby notifications)
-    console.log('Setting up Echo listener for server-wide events:', `server.${serverId}`);
+    console.log('[Chat] Setting up Echo listener for server-wide events:', `server.${serverId}`);
 
     const serverChannel = window.Echo.private(`server.${serverId}`);
 
     serverChannel.listen('.user.lobby.updated', (e) => {
-        console.log('Received lobby updated broadcast:', e);
+        console.log('[Chat] Received lobby updated broadcast:', e);
 
         // Don't show notification for own lobby creation
         if (e.user_id !== currentUserId) {
@@ -500,7 +513,7 @@ if (window.Echo) {
         updateMemberLobbyStatus(e.user_id, e.lobby_link, e.display_name);
     })
     .listen('.user.lobby.cleared', (e) => {
-        console.log('Received lobby cleared broadcast:', e);
+        console.log('[Chat] Received lobby cleared broadcast:', e);
 
         // Don't show notification for own lobby clear
         if (e.user_id !== currentUserId) {
@@ -511,24 +524,57 @@ if (window.Echo) {
         updateMemberLobbyStatus(e.user_id, null, e.display_name);
     })
     .error((error) => {
-        console.error('Echo server channel error:', error);
+        console.error('[Chat] Echo server channel error:', error);
     });
 
-    // Add connection status logging
-    window.Echo.connector.pusher.connection.bind('connected', () => {
-        console.log('WebSocket connected successfully');
+    console.log('[Chat] Channel subscriptions initiated');
+}
+
+// Try to set up channels immediately if Echo is ready
+if (window.Echo && window.Echo.connector && window.Echo.connector.pusher) {
+    const pusherConnection = window.Echo.connector.pusher.connection;
+
+    // Check if already connected
+    if (pusherConnection.state === 'connected') {
+        console.log('[Chat] Echo already connected, setting up channels...');
+        setupChatChannels();
+    } else {
+        // Wait for connection
+        console.log('[Chat] Waiting for Echo connection (current state:', pusherConnection.state, ')');
+        pusherConnection.bind('connected', () => {
+            console.log('[Chat] WebSocket connected, setting up channels...');
+            setupChatChannels();
+        });
+    }
+
+    // Log connection status changes
+    pusherConnection.bind('disconnected', () => {
+        console.warn('[Chat] WebSocket disconnected');
     });
 
-    window.Echo.connector.pusher.connection.bind('disconnected', () => {
-        console.log('WebSocket disconnected');
+    pusherConnection.bind('unavailable', () => {
+        console.error('[Chat] WebSocket unavailable - real-time messaging disabled');
     });
 
-    window.Echo.connector.pusher.connection.bind('error', (error) => {
-        console.error('WebSocket connection error:', error);
+    pusherConnection.bind('failed', () => {
+        console.error('[Chat] WebSocket connection failed - real-time messaging disabled');
     });
 
+    pusherConnection.bind('error', (error) => {
+        console.error('[Chat] WebSocket connection error:', error);
+    });
 } else {
-    console.error('Echo not initialized!');
+    // Echo not initialized yet, listen for the custom event from bootstrap.js
+    console.log('[Chat] Echo not initialized yet, waiting for echo:connected event...');
+
+    window.addEventListener('echo:connected', () => {
+        console.log('[Chat] Received echo:connected event, setting up channels...');
+        setupChatChannels();
+    });
+
+    window.addEventListener('echo:failed', () => {
+        console.error('[Chat] Echo initialization failed - real-time messaging will not work');
+    });
 }
 
 function handleKeyDown(event) {

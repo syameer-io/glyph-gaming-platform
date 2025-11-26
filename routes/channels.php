@@ -4,6 +4,7 @@ use App\Models\Server;
 use App\Models\Channel;
 use App\Models\Conversation;
 use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Support\Facades\Log;
 
 // Server-wide channel for lobby notifications and server events
 Broadcast::channel('server.{serverId}', function ($user, $serverId) {
@@ -38,6 +39,12 @@ Broadcast::channel('server.{serverId}.channel.{channelId}', function ($user, $se
  * Authorization: User can only subscribe to their own channel
  */
 Broadcast::channel('dm.user.{userId}', function ($user, $userId) {
+    Log::info('[Broadcasting] DM channel auth attempt', [
+        'authenticated_user_id' => $user->id ?? 'NULL',
+        'requested_user_id' => $userId,
+        'match' => (int) $user->id === (int) $userId,
+    ]);
+
     // User can only listen to their own DM channel
     return (int) $user->id === (int) $userId;
 });

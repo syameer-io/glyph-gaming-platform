@@ -43,6 +43,8 @@ return [
             ],
             'client_options' => [
                 // Guzzle client options: https://docs.guzzlephp.org/en/stable/request-options.html
+                // Disable SSL verification for local self-signed certificates
+                'verify' => env('APP_ENV') === 'production',
             ],
         ],
 

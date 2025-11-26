@@ -53,6 +53,7 @@ class DirectMessagePosted implements ShouldBroadcast
             'message' => [
                 'id' => $this->message->id,
                 'conversation_id' => $this->message->conversation_id,
+                'sender_id' => $this->message->sender_id,
                 'content' => $this->message->content,
                 'is_edited' => $this->message->is_edited,
                 'edited_at' => $this->message->edited_at?->toISOString(),

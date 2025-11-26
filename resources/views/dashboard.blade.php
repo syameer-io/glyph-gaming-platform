@@ -8,6 +8,17 @@
         <div class="navbar-content">
             <a href="{{ route('dashboard') }}" class="navbar-brand">Glyph</a>
             <div class="navbar-nav">
+                <a href="{{ route('dm.index') }}" class="link" style="position: relative;">
+                    Messages
+                    @php
+                        $unreadDmCount = auth()->user()->getUnreadDmCount();
+                    @endphp
+                    @if($unreadDmCount > 0)
+                        <span style="position: absolute; top: -8px; right: -12px; background-color: #ef4444; color: white; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 9999px; min-width: 18px; text-align: center;">
+                            {{ $unreadDmCount > 99 ? '99+' : $unreadDmCount }}
+                        </span>
+                    @endif
+                </a>
                 <a href="{{ route('friends.index') }}" class="link">Friends</a>
                 <a href="{{ route('matchmaking.index') }}" class="link">Matchmaking</a>
                 <a href="{{ route('teams.index') }}" class="link">Teams</a>

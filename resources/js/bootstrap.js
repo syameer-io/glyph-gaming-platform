@@ -7,6 +7,8 @@ window.axios = axios;
 window.Alpine = Alpine;
 
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+// Ensure cookies are sent with all axios requests (needed for session-based auth)
+window.axios.defaults.withCredentials = true;
 
 window.Pusher = Pusher;
 
@@ -40,8 +42,34 @@ function initializeEcho() {
             authEndpoint: '/broadcasting/auth',
             auth: {
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+                    'Accept': 'application/json',
                 }
+            },
+            // Custom authorizer to ensure cookies are sent with auth requests
+            authorizer: (channel, options) => {
+                return {
+                    authorize: (socketId, callback) => {
+                        axios.post('/broadcasting/auth', {
+                            socket_id: socketId,
+                            channel_name: channel.name
+                        }, {
+                            withCredentials: true,
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+                                'Accept': 'application/json',
+                            }
+                        })
+                        .then(response => {
+                            console.log('[Echo] Channel authorized successfully:', channel.name);
+                            callback(null, response.data);
+                        })
+                        .catch(error => {
+                            console.error('[Echo] Channel authorization failed:', channel.name, error.response?.status, error.response?.data);
+                            callback(error);
+                        });
+                    }
+                };
             }
         });
 
@@ -105,13 +133,12 @@ function handleEchoConnectionFailure() {
 initializeEcho();
 
 /**
+ * Note: Alpine.start() is called in app.js after all components are registered
+ *
  * Echo exposes an expressive API for subscribing to channels and listening
  * for events that are broadcast by Laravel. Echo and event broadcasting
  * allow your team to quickly build robust real-time web applications.
- */
-
-import './echo';
-
-/**
- * Note: Alpine.start() is called in app.js after all components are registered
+ *
+ * The Echo instance is initialized above with retry logic and error handling.
+ * The separate echo.js file is NOT imported to avoid duplicate initialization.
  */

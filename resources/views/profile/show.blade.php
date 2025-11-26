@@ -316,7 +316,22 @@ async function refreshSteamData() {
 }
 
 // Add real-time gaming status updates (Phase 2)
-if (window.Echo) {
+let profileChannelSubscribed = false;
+
+function setupProfileChannel() {
+    if (profileChannelSubscribed) {
+        console.log('[Profile] Channel already subscribed, skipping...');
+        return;
+    }
+
+    if (!window.Echo) {
+        console.warn('[Profile] Echo not available yet');
+        return;
+    }
+
+    console.log('[Profile] Setting up Echo listener for user gaming status');
+    profileChannelSubscribed = true;
+
     // Listen for gaming status changes for this user
     window.Echo.private('user.{{ $user->id }}')
         .listen('UserStartedPlaying', (e) => {
@@ -331,6 +346,24 @@ if (window.Echo) {
         .listen('UserGameStatusChanged', (e) => {
             updateGamingStatus(e.game_name, e.rich_presence);
         });
+}
+
+// Try to set up channel immediately if Echo is ready
+if (window.Echo && window.Echo.connector && window.Echo.connector.pusher) {
+    const pusherConnection = window.Echo.connector.pusher.connection;
+
+    if (pusherConnection.state === 'connected') {
+        setupProfileChannel();
+    } else {
+        pusherConnection.bind('connected', () => {
+            setupProfileChannel();
+        });
+    }
+} else {
+    // Echo not initialized yet, listen for the custom event
+    window.addEventListener('echo:connected', () => {
+        setupProfileChannel();
+    });
 }
 
 function updateGamingStatus(gameName, richPresence) {

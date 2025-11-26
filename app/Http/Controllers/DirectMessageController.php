@@ -72,7 +72,7 @@ class DirectMessageController extends Controller
             if (request()->expectsJson()) {
                 return response()->json(['error' => 'You are not a participant in this conversation'], 403);
             }
-            return redirect()->route('direct-messages.index')
+            return redirect()->route('dm.index')
                 ->with('error', 'You are not a participant in this conversation');
         }
 
@@ -87,7 +87,7 @@ class DirectMessageController extends Controller
             if (request()->expectsJson()) {
                 return response()->json(['error' => 'You can no longer message this user'], 403);
             }
-            return redirect()->route('direct-messages.index')
+            return redirect()->route('dm.index')
                 ->with('error', 'You can no longer message this user');
         }
 
@@ -507,85 +507,43 @@ class DirectMessageController extends Controller
 
     /**
      * Get or create a conversation with a specific user.
-     * Returns the conversation data or creates a new one if it doesn't exist.
+     * Redirects to the conversation view for web requests.
+     * Uses route model binding for cleaner URLs.
      *
-     * @param Request $request
-     * @return JsonResponse
+     * @param User $user The user to start/get conversation with
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function getConversationWith(Request $request): JsonResponse
+    public function getConversationWith(User $user)
     {
-        $request->validate([
-            'user_id' => 'required|integer|exists:users,id',
-        ]);
-
-        $user = Auth::user();
-        $otherUser = User::findOrFail($request->user_id);
+        $currentUser = Auth::user();
 
         // Cannot start conversation with yourself
-        if ($user->id === $otherUser->id) {
-            return response()->json([
-                'error' => 'You cannot start a conversation with yourself'
-            ], 422);
+        if ($currentUser->id === $user->id) {
+            return redirect()->route('dm.index')
+                ->with('error', 'You cannot start a conversation with yourself.');
         }
 
         // Authorization: Check if users are friends
-        if (!$user->canDirectMessage($otherUser)) {
-            return response()->json([
-                'error' => 'You can only message friends. Send a friend request first.'
-            ], 403);
+        if (!$currentUser->canDirectMessage($user)) {
+            return redirect()->route('friends.index')
+                ->with('error', 'You must be friends with this user to start a conversation.');
         }
 
         try {
             // Get or create the conversation
-            $conversation = $user->getConversationWith($otherUser);
+            $conversation = Conversation::findOrCreateBetween($currentUser->id, $user->id);
 
-            if (!$conversation) {
-                return response()->json([
-                    'error' => 'Failed to create conversation'
-                ], 500);
-            }
-
-            // Load participant data
-            $conversation->load(['userOne.profile', 'userTwo.profile']);
-
-            // Get recent messages
-            $messages = $conversation->messages()
-                ->with('sender.profile')
-                ->latest()
-                ->take(self::MESSAGES_PER_PAGE)
-                ->get()
-                ->reverse()
-                ->values();
-
-            // Mark messages as read
-            $this->markConversationAsRead($conversation, $user->id);
-
-            return response()->json([
-                'success' => true,
-                'conversation' => [
-                    'id' => $conversation->id,
-                    'created_at' => $conversation->created_at->toIso8601String(),
-                    'last_message_at' => $conversation->last_message_at?->toIso8601String(),
-                    'other_participant' => [
-                        'id' => $otherUser->id,
-                        'username' => $otherUser->username,
-                        'display_name' => $otherUser->display_name,
-                        'avatar_url' => $otherUser->profile?->avatar_url,
-                    ],
-                ],
-                'messages' => $messages->map(fn($msg) => $this->formatMessageForResponse($msg)),
-            ]);
+            return redirect()->route('dm.show', $conversation);
 
         } catch (\Exception $e) {
             \Log::error('Failed to get/create conversation', [
                 'error' => $e->getMessage(),
-                'user_id' => $user->id,
-                'other_user_id' => $otherUser->id,
+                'user_id' => $currentUser->id,
+                'other_user_id' => $user->id,
             ]);
 
-            return response()->json([
-                'error' => 'Failed to load conversation'
-            ], 500);
+            return redirect()->route('dm.index')
+                ->with('error', 'Failed to start conversation. Please try again.');
         }
     }
 
