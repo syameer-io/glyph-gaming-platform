@@ -9,6 +9,9 @@
 
 @push('styles')
 <style>
+    /* Hide x-cloak elements until Alpine.js loads */
+    [x-cloak] { display: none !important; }
+
     .kebab-menu {
         position: relative;
         display: inline-block;
@@ -452,7 +455,7 @@
         </div>
     </div>
 
-    <!-- Members Sidebar remains the same -->
+    <!-- Members Sidebar -->
     <div style="width: 240px; background-color: #18181b; padding: 16px; overflow-y: auto;">
         <p style="font-size: 12px; font-weight: 600; color: #71717a; text-transform: uppercase; margin-bottom: 16px;">
             Members — {{ $server->members->count() }}
@@ -498,32 +501,121 @@
                     {{ strtoupper($role->name) }} — {{ $roleMembers->count() }}
                 </p>
                 @foreach($roleMembers as $member)
-                    <div class="member-item" data-user-id="{{ $member->id }}" style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; position: relative;">
+                    @php
+                        $memberLobbies = $member->gameLobbies ?? collect();
+                        $hasActiveLobby = $memberLobbies->filter(fn($l) => $l->isActive())->isNotEmpty();
+                    @endphp
+                    <div
+                        class="member-item"
+                        data-user-id="{{ $member->id }}"
+                        x-data="{ showCard: false }"
+                        @click.stop="showCard = !showCard"
+                        @keydown.escape.window="showCard = false"
+                        style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; padding: 6px 8px; border-radius: 6px; position: relative; cursor: pointer; transition: background-color 0.15s;"
+                        onmouseover="this.style.backgroundColor='rgba(79, 84, 92, 0.4)'"
+                        onmouseout="this.style.backgroundColor='transparent'"
+                    >
                         <div style="position: relative;">
                             <img src="{{ $member->profile->avatar_url }}" alt="{{ $member->display_name }}"
                                  class="member-avatar"
                                  style="width: 32px; height: 32px; border-radius: 50%;">
+                            {{-- Online Status Dot --}}
+                            <div style="
+                                position: absolute;
+                                bottom: -2px;
+                                right: -2px;
+                                width: 14px;
+                                height: 14px;
+                                border-radius: 50%;
+                                border: 3px solid #1e1f22;
+                                background-color: {{ $member->profile->status === 'online' ? '#23a559' : '#80848e' }};
+                            "></div>
                             <div class="voice-speaking-indicator" style="display: none; position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px; border: 2px solid #10b981; border-radius: 50%; animation: pulse-ring 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;"></div>
                         </div>
-                        <div style="flex: 1;">
+                        <div style="flex: 1; min-width: 0;">
                             <div style="font-size: 14px; color: {{ $role->color }}; display: flex; align-items: center; gap: 6px;">
-                                {{ $member->display_name }}
+                                <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $member->display_name }}</span>
+                                @if($hasActiveLobby)
+                                    <span style="
+                                        display: inline-flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        width: 18px;
+                                        height: 18px;
+                                        background-color: #23a559;
+                                        border-radius: 4px;
+                                        flex-shrink: 0;
+                                    ">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="white">
+                                            <path d="M21 6h-7.59l3.29-3.29L16 2l-4 4-4-4-.71.71L10.59 6H3c-1.1 0-2 .89-2 2v12c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.11-.9-2-2-2zm0 14H3V8h18v12z"/>
+                                        </svg>
+                                    </span>
+                                @endif
                                 <span class="in-voice-badge" data-user-id="{{ $member->id }}" style="display: none; font-size: 10px; background-color: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 600;">IN VOICE</span>
                             </div>
-                            <div style="font-size: 12px; color: #71717a;">
-                                <span class="status-indicator {{ $member->profile->status === 'online' ? 'status-online' : 'status-offline' }}"></span>
-                                {{ ucfirst($member->profile->status) }}
+                        </div>
+
+                        {{-- User Card Popover (Fixed Position - Discord Style) --}}
+                        <template x-teleport="body">
+                            <div
+                                x-show="showCard"
+                                x-transition:enter="transition ease-out duration-150"
+                                x-transition:enter-start="opacity-0 scale-95"
+                                x-transition:enter-end="opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-100"
+                                x-transition:leave-start="opacity-100 scale-100"
+                                x-transition:leave-end="opacity-0 scale-95"
+                                @click.away="showCard = false"
+                                x-init="$watch('showCard', value => {
+                                    if (value) {
+                                        $nextTick(() => {
+                                            const rect = $root.getBoundingClientRect();
+                                            const card = $el;
+                                            const cardWidth = 340;
+
+                                            // Position to the left of the member sidebar
+                                            let left = rect.left - cardWidth - 12;
+
+                                            // Align TOP of card with TOP of clicked member (Discord style)
+                                            let top = rect.top;
+
+                                            // If card would go off left edge, show on right instead
+                                            if (left < 8) {
+                                                left = rect.right + 12;
+                                            }
+
+                                            // Measure actual card height after render
+                                            requestAnimationFrame(() => {
+                                                const cardHeight = card.offsetHeight;
+
+                                                // If card would go below viewport, push it up
+                                                if (top + cardHeight > window.innerHeight - 8) {
+                                                    top = window.innerHeight - cardHeight - 8;
+                                                }
+
+                                                // Never go above viewport
+                                                if (top < 8) top = 8;
+
+                                                card.style.left = left + 'px';
+                                                card.style.top = top + 'px';
+                                            });
+
+                                            // Set initial position
+                                            card.style.left = left + 'px';
+                                            card.style.top = top + 'px';
+                                        });
+                                    }
+                                })"
+                                style="position: fixed; z-index: 9999;"
+                                x-cloak
+                            >
+                                <x-user-member-card
+                                    :user="$member"
+                                    :server="$server"
+                                    :roleColor="$role->color ?? '#ffffff'"
+                                />
                             </div>
-                        </div>
-                        {{-- Lobby Join Button --}}
-                        <div style="opacity: 0; transition: opacity 0.2s;" onmouseenter="this.style.opacity='1'" onmouseleave="this.style.opacity='0'">
-                            <x-lobby-join-button
-                                :user="$member"
-                                size="small"
-                                variant="icon"
-                                :show-timer="false"
-                            />
-                        </div>
+                        </template>
                     </div>
                 @endforeach
             @endif

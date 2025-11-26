@@ -352,3 +352,24 @@ Route::middleware('auth')->prefix('admin/matchmaking')->name('admin.matchmaking.
     Route::get('analytics/dashboard', [MatchmakingConfigurationController::class, 'analytics'])
         ->name('analytics.dashboard');
 });
+
+// TEMPORARY DIAGNOSTIC ROUTE - Remove after SSL issue is fixed
+Route::get('/debug-php-config', function () {
+    return response()->json([
+        'loaded_php_ini' => php_ini_loaded_file(),
+        'additional_ini_files' => php_ini_scanned_files(),
+        'curl_ssl_settings' => [
+            'curl.cainfo' => ini_get('curl.cainfo'),
+            'openssl.cafile' => ini_get('openssl.cafile'),
+            'openssl.capath' => ini_get('openssl.capath'),
+        ],
+        'php_version' => phpversion(),
+        'php_sapi' => php_sapi_name(),
+        'server_software' => $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown',
+        'document_root' => $_SERVER['DOCUMENT_ROOT'] ?? 'Unknown',
+        'curl_version' => curl_version(),
+        'expected_cacert_path' => 'C:\laragon\etc\ssl\cacert.pem',
+        'cacert_exists' => file_exists('C:\laragon\etc\ssl\cacert.pem'),
+        'cacert_readable' => is_readable('C:\laragon\etc\ssl\cacert.pem'),
+    ]);
+});

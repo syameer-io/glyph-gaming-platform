@@ -134,29 +134,40 @@
                     <span class="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full"></span>
                 </div>
 
-                {{-- Tooltip --}}
+                {{-- Tooltip - positioned to the left of the icon for right-edge placement --}}
                 <div
                     x-show="showTooltip"
                     x-transition:enter="transition ease-out duration-200"
-                    x-transition:enter-start="opacity-0 translate-y-1"
-                    x-transition:enter-end="opacity-100 translate-y-0"
+                    x-transition:enter-start="opacity-0 translate-x-1"
+                    x-transition:enter-end="opacity-100 translate-x-0"
                     x-transition:leave="transition ease-in duration-150"
-                    x-transition:leave-start="opacity-100 translate-y-0"
-                    x-transition:leave-end="opacity-0 translate-y-1"
-                    class="absolute z-50 bg-gray-900 text-white text-sm rounded-lg p-3 shadow-xl min-w-[200px] -left-2 top-full mt-2"
+                    x-transition:leave-start="opacity-100 translate-x-0"
+                    x-transition:leave-end="opacity-0 translate-x-1"
+                    class="absolute z-50 bg-gray-900 text-white text-sm rounded-lg p-3 shadow-xl min-w-[220px] right-full mr-3 top-1/2 -translate-y-1/2"
                     @click.away="showTooltip = false"
                     style="display: none;"
                 >
+                    {{-- Arrow pointer --}}
+                    <div class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-full">
+                        <div class="border-8 border-transparent border-l-gray-900"></div>
+                    </div>
+
+                    {{-- Tooltip header --}}
+                    <div class="text-xs text-green-400 font-semibold uppercase tracking-wide mb-2">Active Lobby</div>
+
                     <template x-for="lobby in lobbies" :key="lobby.id">
                         <div class="flex items-center gap-2 mb-2 last:mb-0">
                             <img :src="lobby.game_icon" :alt="lobby.game_name" class="w-6 h-6 rounded flex-shrink-0">
                             <div class="flex-1 min-w-0">
                                 <div class="font-medium truncate" x-text="lobby.game_name"></div>
                                 <div class="text-xs opacity-75 truncate" x-text="lobby.display_format"></div>
+                                <template x-if="lobby.time_remaining_minutes">
+                                    <div class="text-xs text-green-400" x-text="lobby.time_remaining_minutes + ' min remaining'"></div>
+                                </template>
                             </div>
                             <button
                                 @click.stop="joinLobby(lobby)"
-                                class="px-2 py-1 bg-green-600 hover:bg-green-700 rounded text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
+                                class="px-3 py-1.5 bg-green-600 hover:bg-green-700 rounded text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
                                 :disabled="lobby.is_expired"
                                 :aria-label="'Join ' + lobby.game_name"
                             >
