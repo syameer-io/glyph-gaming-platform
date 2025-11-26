@@ -6,6 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Conversation;
 use App\Models\DirectMessage;
+use App\Events\DirectMessagePosted;
+use App\Events\DirectMessageEdited;
+use App\Events\DirectMessageDeleted;
+use App\Events\DirectMessageRead;
+use App\Events\UserTypingDM;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -156,10 +161,13 @@ class DirectMessageController extends Controller
             // Load message relationships for response
             $message->load('sender.profile');
 
+            // Update last_message_at timestamp
+            $conversation->update(['last_message_at' => now()]);
+
             DB::commit();
 
-            // TODO Phase 3: Broadcast the message to the recipient
-            // broadcast(new DirectMessageSent($message))->toOthers();
+            // Broadcast the message to the recipient
+            broadcast(new DirectMessagePosted($message, $conversation))->toOthers();
 
             return response()->json([
                 'success' => true,
@@ -223,8 +231,11 @@ class DirectMessageController extends Controller
             // Load message relationships for response
             $message->load('sender.profile');
 
-            // TODO Phase 3: Broadcast the message to the recipient
-            // broadcast(new DirectMessageSent($message))->toOthers();
+            // Update last_message_at timestamp
+            $conversation->update(['last_message_at' => now()]);
+
+            // Broadcast the message to the recipient
+            broadcast(new DirectMessagePosted($message, $conversation))->toOthers();
 
             return response()->json([
                 'success' => true,
@@ -291,8 +302,8 @@ class DirectMessageController extends Controller
             // Reload relationships for response
             $message->load('sender.profile');
 
-            // TODO Phase 3: Broadcast the message edit
-            // broadcast(new DirectMessageEdited($message))->toOthers();
+            // Broadcast the message edit
+            broadcast(new DirectMessageEdited($message, $conversation))->toOthers();
 
             return response()->json([
                 'success' => true,
@@ -347,8 +358,8 @@ class DirectMessageController extends Controller
         try {
             $messageId = $message->id;
 
-            // TODO Phase 3: Broadcast the message deletion before deleting
-            // broadcast(new DirectMessageDeleted($messageId, $conversation))->toOthers();
+            // Broadcast the message deletion before deleting
+            broadcast(new DirectMessageDeleted($messageId, $conversation))->toOthers();
 
             $message->delete();
 
@@ -390,6 +401,11 @@ class DirectMessageController extends Controller
         try {
             $updatedCount = $this->markConversationAsRead($conversation, $user->id);
 
+            // Broadcast read receipt if messages were marked as read
+            if ($updatedCount > 0) {
+                broadcast(new DirectMessageRead($conversation, $user->id))->toOthers();
+            }
+
             return response()->json([
                 'success' => true,
                 'messages_marked' => $updatedCount,
@@ -406,6 +422,29 @@ class DirectMessageController extends Controller
                 'error' => 'Failed to mark messages as read'
             ], 500);
         }
+    }
+
+    /**
+     * Broadcast typing indicator.
+     *
+     * @param Request $request
+     * @param Conversation $conversation
+     * @return JsonResponse
+     */
+    public function typing(Request $request, Conversation $conversation): JsonResponse
+    {
+        $user = Auth::user();
+
+        // Authorization: Check if user is a participant
+        if (!$conversation->hasParticipant($user->id)) {
+            return response()->json(['error' => 'Not authorized.'], 403);
+        }
+
+        $isTyping = $request->boolean('is_typing', true);
+
+        broadcast(new UserTypingDM($conversation, $user, $isTyping))->toOthers();
+
+        return response()->json(['success' => true]);
     }
 
     /**

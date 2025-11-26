@@ -306,6 +306,9 @@ Route::middleware('auth')->group(function () {
 
             // Delete message
             Route::delete('/messages/{message}', [DirectMessageController::class, 'deleteMessage'])->name('message.delete');
+
+            // Typing indicator
+            Route::post('/typing', [DirectMessageController::class, 'typing'])->name('typing');
         });
     });
 
