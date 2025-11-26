@@ -33,7 +33,7 @@
 
         return [
             'id' => $lobby->id,
-            'game_name' => $lobby->gamingPreference->game_name ?? 'Unknown Game',
+            'game_name' => $lobby->getGameName(),
             'game_icon' => $gameIcon,
             'join_link' => $lobby->generateJoinLink(),
             'join_method' => $lobby->join_method,

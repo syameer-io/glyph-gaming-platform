@@ -226,6 +226,64 @@ class GameLobby extends Model
     }
 
     /**
+     * Static mapping of Steam App IDs to game names
+     * Used as the authoritative source for game names throughout the lobby system
+     */
+    public const GAME_NAMES = [
+        730 => 'Counter-Strike 2',
+        570 => 'Dota 2',
+        230410 => 'Warframe',
+        1172470 => 'Apex Legends',
+        252490 => 'Rust',
+        578080 => 'PUBG: BATTLEGROUNDS',
+        359550 => 'Rainbow Six Siege',
+        1097150 => 'Fall Guys',
+        433850 => 'Fall Guys', // Alternative App ID
+    ];
+
+    /**
+     * Get the game name for this lobby
+     *
+     * Uses a static mapping of Steam App IDs to game names.
+     * This is the authoritative source for game names, avoiding the unreliable
+     * gamingPreference relationship which requires the user to own the game.
+     *
+     * @return string The game name or 'Unknown Game' if not found
+     */
+    public function getGameName(): string
+    {
+        $gameId = $this->game_id;
+
+        // First, try the static mapping (most reliable)
+        if (isset(self::GAME_NAMES[$gameId])) {
+            return self::GAME_NAMES[$gameId];
+        }
+
+        // Fallback: try gameJoinConfiguration relationship (if loaded)
+        if ($this->relationLoaded('gameJoinConfiguration') && $this->gameJoinConfiguration) {
+            // GameJoinConfiguration doesn't have game_name, but we can use it to confirm the game exists
+        }
+
+        // Fallback: try gamingPreference relationship (deprecated, but may have data)
+        if ($this->relationLoaded('gamingPreference') && $this->gamingPreference) {
+            return $this->gamingPreference->game_name ?? 'Unknown Game';
+        }
+
+        return 'Unknown Game';
+    }
+
+    /**
+     * Static helper to get game name by App ID
+     *
+     * @param int $gameId Steam App ID
+     * @return string The game name or 'Unknown Game' if not found
+     */
+    public static function getGameNameById(int $gameId): string
+    {
+        return self::GAME_NAMES[$gameId] ?? 'Unknown Game';
+    }
+
+    /**
      * Get join instructions based on join method and configuration
      */
     public function getJoinInstructions(): array

@@ -172,7 +172,7 @@ class LobbyController extends Controller
                     'id' => $lobby->id,
                     'game_id' => $lobby->game_id,
                     'gaming_preference' => [
-                        'game_name' => $lobby->gamingPreference->game_name ?? 'Unknown Game',
+                        'game_name' => $lobby->getGameName(),
                     ],
                     'join_method' => $lobby->join_method,
                     // Include all fields needed by frontend

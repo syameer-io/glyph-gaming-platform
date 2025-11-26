@@ -109,7 +109,7 @@ class LobbyStatusService
                 'id' => $lobby->id,
                 'user_id' => $lobby->user_id,
                 'game_id' => $lobby->game_id,
-                'game_name' => $lobby->gamingPreference->game_name ?? 'Unknown Game',
+                'game_name' => $lobby->getGameName(),
                 'game_icon' => $gameIcon,
                 'join_method' => $lobby->join_method,
                 'join_link' => $lobby->generateJoinLink(),

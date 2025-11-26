@@ -41,12 +41,12 @@
 
     // Prepare lobby data for JavaScript
     $lobbyData = $activeLobbies->map(function($lobby) use ($gameIcons) {
-        $gameAppId = $lobby->gamingPreference->game_appid ?? $lobby->game_id ?? 730;
+        $gameAppId = $lobby->game_id ?? 730;
         $gameIcon = $gameIcons[$gameAppId] ?? "https://cdn.cloudflare.steamstatic.com/steam/apps/{$gameAppId}/capsule_184x69.jpg";
 
         return [
             'id' => $lobby->id,
-            'game_name' => $lobby->gamingPreference->game_name ?? 'Unknown Game',
+            'game_name' => $lobby->getGameName(),
             'game_appid' => $gameAppId,
             'game_icon' => $gameIcon,
             'join_link' => $lobby->generateJoinLink(),
