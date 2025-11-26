@@ -18,6 +18,7 @@ use App\Http\Controllers\ServerGoalController;
 use App\Http\Controllers\TelegramController;
 use App\Http\Controllers\VoiceController;
 use App\Http\Controllers\Admin\MatchmakingConfigurationController;
+use App\Http\Controllers\DirectMessageController;
 
 // Guest routes
 Route::middleware('guest')->group(function () {
@@ -269,6 +270,43 @@ Route::middleware('auth')->group(function () {
         Route::post('/mute', [VoiceController::class, 'toggleMute'])->name('mute');
         Route::get('/channel/{channelId}/participants', [VoiceController::class, 'getParticipants'])->name('participants');
         Route::get('/stats', [VoiceController::class, 'getUserStats'])->name('stats');
+    });
+
+    // Direct Messages (Friends DM) routes
+    Route::prefix('dm')->name('dm.')->group(function () {
+        // Conversation list
+        Route::get('/', [DirectMessageController::class, 'index'])->name('index');
+
+        // Start new conversation (or get existing) with first message
+        Route::post('/start', [DirectMessageController::class, 'store'])
+            ->middleware('throttle:60,1')
+            ->name('store');
+
+        // Get or create conversation with specific user
+        Route::get('/with', [DirectMessageController::class, 'getConversationWith'])->name('with');
+
+        // Conversation-specific routes
+        Route::prefix('/{conversation}')->group(function () {
+            // View conversation
+            Route::get('/', [DirectMessageController::class, 'show'])->name('show');
+
+            // Send message in conversation
+            Route::post('/messages', [DirectMessageController::class, 'sendMessage'])
+                ->middleware('throttle:60,1')
+                ->name('message.send');
+
+            // Load more messages (infinite scroll)
+            Route::get('/messages/more', [DirectMessageController::class, 'loadMoreMessages'])->name('message.more');
+
+            // Mark messages as read
+            Route::post('/read', [DirectMessageController::class, 'markAsRead'])->name('read');
+
+            // Edit message
+            Route::put('/messages/{message}', [DirectMessageController::class, 'editMessage'])->name('message.edit');
+
+            // Delete message
+            Route::delete('/messages/{message}', [DirectMessageController::class, 'deleteMessage'])->name('message.delete');
+        });
     });
 
 });

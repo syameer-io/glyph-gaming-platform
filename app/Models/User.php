@@ -526,11 +526,106 @@ class User extends Authenticatable
                     'game_name' => $game['name'],
                     'playtime_forever' => $game['playtime_forever'] ?? 0,
                     'playtime_2weeks' => $game['playtime_2weeks'] ?? 0,
-                    'last_played' => isset($game['rtime_last_played']) 
+                    'last_played' => isset($game['rtime_last_played'])
                         ? \Carbon\Carbon::createFromTimestamp($game['rtime_last_played'])
                         : null,
                 ]
             );
         }
+    }
+
+    // Direct Messaging Relationships and Methods
+
+    /**
+     * Get all conversations for this user.
+     * Returns a query builder for filtering/eager loading.
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function conversations()
+    {
+        return Conversation::forUser($this->id);
+    }
+
+    /**
+     * Get all direct messages sent by this user.
+     */
+    public function sentDirectMessages()
+    {
+        return $this->hasMany(DirectMessage::class, 'sender_id');
+    }
+
+    /**
+     * Get all direct messages received by this user.
+     * These are messages in the user's conversations where they are not the sender.
+     */
+    public function receivedDirectMessages()
+    {
+        return DirectMessage::whereIn('conversation_id', function ($query) {
+            $query->select('id')
+                ->from('conversations')
+                ->where('user_one_id', $this->id)
+                ->orWhere('user_two_id', $this->id);
+        })->where('sender_id', '!=', $this->id);
+    }
+
+    /**
+     * Check if this user can send a direct message to another user.
+     * Users can only DM each other if they are accepted friends.
+     *
+     * @param User $otherUser The user to check DM permission with
+     * @return bool
+     */
+    public function canDirectMessage(User $otherUser): bool
+    {
+        // Check if there's an accepted friendship in either direction
+        $friendshipExists = $this->friends()
+            ->where('friend_id', $otherUser->id)
+            ->wherePivot('status', 'accepted')
+            ->exists();
+
+        if ($friendshipExists) {
+            return true;
+        }
+
+        // Also check the reverse relationship (friend_id -> user_id)
+        return $otherUser->friends()
+            ->where('friend_id', $this->id)
+            ->wherePivot('status', 'accepted')
+            ->exists();
+    }
+
+    /**
+     * Get or create a conversation with another user if allowed.
+     * Returns null if the users are not friends.
+     *
+     * @param User $otherUser The user to get/create conversation with
+     * @return Conversation|null
+     */
+    public function getConversationWith(User $otherUser): ?Conversation
+    {
+        if (!$this->canDirectMessage($otherUser)) {
+            return null;
+        }
+
+        return Conversation::findOrCreateBetween($this->id, $otherUser->id);
+    }
+
+    /**
+     * Get the total count of unread direct messages for this user.
+     *
+     * @return int
+     */
+    public function getUnreadDmCount(): int
+    {
+        return DirectMessage::whereIn('conversation_id', function ($query) {
+            $query->select('id')
+                ->from('conversations')
+                ->where('user_one_id', $this->id)
+                ->orWhere('user_two_id', $this->id);
+        })
+            ->where('sender_id', '!=', $this->id)
+            ->whereNull('read_at')
+            ->count();
     }
 }
