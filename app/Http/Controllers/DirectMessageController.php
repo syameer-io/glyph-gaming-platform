@@ -14,6 +14,7 @@ use App\Events\UserTypingDM;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
@@ -34,21 +35,29 @@ class DirectMessageController extends Controller
     {
         $user = Auth::user();
 
+        // Cache key for user's conversations
+        $cacheKey = 'user.' . $user->id . '.conversations';
+
         // Get all conversations with eager loading to prevent N+1 queries
         // Load both participants and the latest message for preview
-        $conversations = Conversation::forUser($user->id)
-            ->with([
-                'userOne.profile',
-                'userTwo.profile',
-                'latestMessage.sender',
-            ])
-            ->get()
-            ->map(function ($conversation) use ($user) {
-                // Add computed properties for the view
-                $conversation->other_participant = $conversation->getOtherParticipant($user);
-                $conversation->unread_count = $conversation->getUnreadCountFor($user->id);
-                return $conversation;
-            });
+        // Cache for 5 minutes to reduce database queries
+        $conversations = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($user) {
+            return Conversation::forUser($user->id)
+                ->with([
+                    'userOne.profile',
+                    'userTwo.profile',
+                    'latestMessage.sender',
+                ])
+                ->get();
+        });
+
+        // Add computed properties (not cached as they may change frequently)
+        $conversations = $conversations->map(function ($conversation) use ($user) {
+            // Add computed properties for the view
+            $conversation->other_participant = $conversation->getOtherParticipant($user);
+            $conversation->unread_count = $conversation->getUnreadCountFor($user->id);
+            return $conversation;
+        });
 
         // Get total unread count for notification badge
         $totalUnreadCount = $user->getUnreadDmCount();
@@ -237,6 +246,10 @@ class DirectMessageController extends Controller
             // Broadcast the message to the recipient
             broadcast(new DirectMessagePosted($message, $conversation))->toOthers();
 
+            // Invalidate cache for both participants so conversation list updates
+            Cache::forget('user.' . $conversation->user_one_id . '.conversations');
+            Cache::forget('user.' . $conversation->user_two_id . '.conversations');
+
             return response()->json([
                 'success' => true,
                 'message' => $this->formatMessageForResponse($message),
@@ -362,6 +375,10 @@ class DirectMessageController extends Controller
             broadcast(new DirectMessageDeleted($messageId, $conversation))->toOthers();
 
             $message->delete();
+
+            // Invalidate cache for both participants so conversation list updates
+            Cache::forget('user.' . $conversation->user_one_id . '.conversations');
+            Cache::forget('user.' . $conversation->user_two_id . '.conversations');
 
             return response()->json([
                 'success' => true,
@@ -544,6 +561,55 @@ class DirectMessageController extends Controller
 
             return redirect()->route('dm.index')
                 ->with('error', 'Failed to start conversation. Please try again.');
+        }
+    }
+
+    /**
+     * Search messages within a conversation.
+     * Returns messages matching the search query.
+     *
+     * @param Request $request
+     * @param Conversation $conversation
+     * @return JsonResponse
+     */
+    public function searchMessages(Request $request, Conversation $conversation): JsonResponse
+    {
+        $user = Auth::user();
+
+        // Authorization: Check if user is a participant
+        if (!$conversation->hasParticipant($user->id)) {
+            return response()->json(['error' => 'Not authorized.'], 403);
+        }
+
+        $query = $request->get('q', '');
+
+        // Require minimum 2 characters for search
+        if (strlen($query) < 2) {
+            return response()->json(['messages' => []]);
+        }
+
+        try {
+            $messages = $conversation->messages()
+                ->with('sender.profile')
+                ->where('content', 'like', "%{$query}%")
+                ->orderBy('created_at', 'desc')
+                ->limit(20)
+                ->get()
+                ->map(fn($m) => $this->formatMessageForResponse($m));
+
+            return response()->json(['messages' => $messages]);
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to search messages', [
+                'error' => $e->getMessage(),
+                'user_id' => $user->id,
+                'conversation_id' => $conversation->id,
+                'query' => $query,
+            ]);
+
+            return response()->json([
+                'error' => 'Failed to search messages'
+            ], 500);
         }
     }
 

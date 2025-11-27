@@ -340,7 +340,7 @@
                                 alt="{{ $conversation->other_participant->display_name }}"
                                 style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover;"
                             >
-                            <span class="status-dot {{ $conversation->other_participant->profile->status === 'online' ? 'online' : 'offline' }}"></span>
+                            <span class="status-dot {{ $conversation->other_participant->profile->status === 'online' ? 'online' : 'offline' }}" data-user-status="{{ $conversation->other_participant->id }}"></span>
                         </div>
                         <div style="flex: 1; min-width: 0;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
@@ -433,7 +433,7 @@
                             alt="{{ $friend->display_name }}"
                             style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;"
                         >
-                        <span class="status-dot {{ $friend->profile->status === 'online' ? 'online' : 'offline' }}" style="width: 10px; height: 10px;"></span>
+                        <span class="status-dot {{ $friend->profile->status === 'online' ? 'online' : 'offline' }}" style="width: 10px; height: 10px;" data-user-status="{{ $friend->id }}"></span>
                     </div>
                     <div style="flex: 1;">
                         <div style="font-weight: 600; color: #efeff1;">{{ $friend->display_name }}</div>
@@ -636,21 +636,68 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('[DM Index] Channel subscription initiated');
     }
 
+    // Setup presence channel for online status tracking
+    let presenceChannelSubscribed = false;
+
+    function setupPresenceChannel() {
+        if (presenceChannelSubscribed) {
+            console.log('[DM Index] Presence channel already subscribed, skipping...');
+            return;
+        }
+
+        if (!window.Echo) {
+            console.warn('[DM Index] Echo not available for presence channel');
+            return;
+        }
+
+        console.log('[DM Index] Setting up presence channel for online status');
+        presenceChannelSubscribed = true;
+
+        window.Echo.join('presence.dm')
+            .here((users) => {
+                console.log('[DM Index] Online users:', users);
+                users.forEach(user => updateUserOnlineStatus(user.id, true));
+            })
+            .joining((user) => {
+                console.log('[DM Index] User came online:', user);
+                updateUserOnlineStatus(user.id, true);
+            })
+            .leaving((user) => {
+                console.log('[DM Index] User went offline:', user);
+                updateUserOnlineStatus(user.id, false);
+            })
+            .error((error) => {
+                console.error('[DM Index] Presence channel error:', error);
+            });
+    }
+
+    function updateUserOnlineStatus(userId, isOnline) {
+        // Update status dots in conversation list
+        const statusDots = document.querySelectorAll(`[data-user-status="${userId}"]`);
+        statusDots.forEach(el => {
+            el.classList.remove('online', 'offline');
+            el.classList.add(isOnline ? 'online' : 'offline');
+        });
+    }
+
     // Try to set up channel immediately if Echo is ready
     if (window.Echo && window.Echo.connector && window.Echo.connector.pusher) {
         const pusherConnection = window.Echo.connector.pusher.connection;
 
         if (pusherConnection.state === 'connected') {
             setupIndexChannel();
+            setupPresenceChannel();
         } else {
             pusherConnection.bind('connected', () => {
                 setupIndexChannel();
+                setupPresenceChannel();
             });
         }
     } else {
         // Echo not initialized yet, listen for the custom event
         window.addEventListener('echo:connected', () => {
             setupIndexChannel();
+            setupPresenceChannel();
         });
     }
 

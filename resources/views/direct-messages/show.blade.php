@@ -127,6 +127,28 @@
     }
 
     /* ==========================================
+       Read Receipt Indicator
+       ========================================== */
+
+    .read-receipt {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 11px;
+        color: #71717a;
+        margin-left: auto;
+    }
+
+    .read-receipt svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .read-receipt.seen {
+        color: #667eea;
+    }
+
+    /* ==========================================
        Connection Status Banner
        ========================================== */
 
@@ -259,6 +281,311 @@
     .toggle-profile-btn.active {
         color: #667eea;
         background-color: rgba(102, 126, 234, 0.1);
+    }
+
+    /* ==========================================
+       Search Dropdown
+       ========================================== */
+
+    .search-container {
+        position: relative;
+    }
+
+    .search-dropdown {
+        position: absolute;
+        right: 0;
+        top: calc(100% + 8px);
+        width: 300px;
+        background-color: #27272a;
+        border: 1px solid #3f3f46;
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        z-index: 100;
+        display: none;
+    }
+
+    .search-dropdown.active {
+        display: block;
+    }
+
+    .search-input-wrapper {
+        padding: 12px;
+        border-bottom: 1px solid #3f3f46;
+    }
+
+    .search-input {
+        width: 100%;
+        background-color: #18181b;
+        border: 1px solid #3f3f46;
+        border-radius: 6px;
+        padding: 8px 12px;
+        color: #efeff1;
+        font-size: 14px;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+
+    .search-results {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .search-result-item {
+        padding: 12px;
+        cursor: pointer;
+        transition: background-color 0.15s;
+        border-bottom: 1px solid #3f3f46;
+    }
+
+    .search-result-item:last-child {
+        border-bottom: none;
+    }
+
+    .search-result-item:hover {
+        background-color: #3f3f46;
+    }
+
+    .search-result-meta {
+        font-size: 12px;
+        color: #71717a;
+        margin-bottom: 4px;
+    }
+
+    .search-result-content {
+        font-size: 14px;
+        color: #d4d4d8;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .search-result-content mark {
+        background-color: rgba(102, 126, 234, 0.3);
+        color: #efeff1;
+        padding: 1px 2px;
+        border-radius: 2px;
+    }
+
+    .search-no-results {
+        padding: 24px;
+        text-align: center;
+        color: #71717a;
+        font-size: 14px;
+    }
+
+    /* ==========================================
+       Emoji Picker
+       ========================================== */
+
+    .emoji-container {
+        position: relative;
+    }
+
+    .emoji-btn {
+        background: none;
+        border: none;
+        color: #71717a;
+        padding: 8px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.15s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .emoji-btn:hover {
+        color: #efeff1;
+        background-color: #3f3f46;
+    }
+
+    .emoji-picker {
+        position: absolute;
+        bottom: calc(100% + 8px);
+        left: 0;
+        background-color: #27272a;
+        border: 1px solid #3f3f46;
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        padding: 12px;
+        display: none;
+        z-index: 100;
+    }
+
+    .emoji-picker.active {
+        display: block;
+    }
+
+    .emoji-grid {
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        gap: 4px;
+    }
+
+    .emoji-item {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.15s;
+        background: none;
+        border: none;
+    }
+
+    .emoji-item:hover {
+        background-color: #3f3f46;
+    }
+
+    /* ==========================================
+       Mobile Message Menu (Bottom Sheet)
+       ========================================== */
+
+    .mobile-menu-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        z-index: 2000;
+        display: none;
+        align-items: flex-end;
+        justify-content: center;
+    }
+
+    .mobile-menu-overlay.active {
+        display: flex;
+    }
+
+    .mobile-menu-content {
+        width: 100%;
+        max-width: 500px;
+        background-color: #27272a;
+        border-radius: 16px 16px 0 0;
+        padding: 16px;
+        padding-bottom: max(16px, env(safe-area-inset-bottom));
+    }
+
+    .mobile-menu-handle {
+        width: 40px;
+        height: 4px;
+        background-color: #52525b;
+        border-radius: 2px;
+        margin: 0 auto 16px;
+    }
+
+    .mobile-menu-option {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        padding: 14px;
+        background: none;
+        border: none;
+        color: #efeff1;
+        font-size: 16px;
+        cursor: pointer;
+        border-radius: 8px;
+        transition: background-color 0.15s;
+    }
+
+    .mobile-menu-option:hover {
+        background-color: #3f3f46;
+    }
+
+    .mobile-menu-option.danger {
+        color: #f87171;
+    }
+
+    .mobile-menu-option svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    /* ==========================================
+       Loading Skeleton
+       ========================================== */
+
+    .skeleton {
+        background: linear-gradient(90deg, #27272a 25%, #3f3f46 50%, #27272a 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+        border-radius: 4px;
+    }
+
+    @keyframes shimmer {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+
+    .message-skeleton {
+        display: flex;
+        gap: 16px;
+        padding: 8px 16px;
+        margin: 4px 0;
+    }
+
+    .skeleton-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+    }
+
+    .skeleton-content {
+        flex: 1;
+    }
+
+    .skeleton-line {
+        height: 16px;
+        margin-bottom: 8px;
+    }
+
+    .skeleton-line.short {
+        width: 30%;
+    }
+
+    .skeleton-line.medium {
+        width: 60%;
+    }
+
+    .skeleton-line.long {
+        width: 85%;
+    }
+
+    /* ==========================================
+       Message Highlight Animation
+       ========================================== */
+
+    .message-highlight {
+        animation: highlightFade 2s ease-out;
+    }
+
+    @keyframes highlightFade {
+        0% { background-color: rgba(102, 126, 234, 0.3); }
+        100% { background-color: transparent; }
+    }
+
+    /* ==========================================
+       Screen Reader Only
+       ========================================== */
+
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
     }
 
     /* ==========================================
@@ -911,11 +1238,42 @@
                 </div>
             </div>
             <div class="chat-header-right">
+                {{-- Search Button --}}
+                <div class="search-container">
+                    <button
+                        class="toggle-profile-btn"
+                        onclick="toggleSearchDropdown()"
+                        title="Search messages"
+                        aria-label="Search messages"
+                        aria-expanded="false"
+                        aria-controls="search-dropdown"
+                    >
+                        <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </button>
+                    <div id="search-dropdown" class="search-dropdown" role="dialog" aria-label="Message search">
+                        <div class="search-input-wrapper">
+                            <input
+                                type="text"
+                                id="message-search-input"
+                                class="search-input"
+                                placeholder="Search messages..."
+                                aria-label="Search messages"
+                                autocomplete="off"
+                            >
+                        </div>
+                        <div id="search-results" class="search-results" role="listbox" aria-label="Search results"></div>
+                    </div>
+                </div>
+
                 <button
                     id="toggle-profile-btn"
                     class="toggle-profile-btn"
                     onclick="toggleProfilePanel()"
                     title="Toggle user profile"
+                    aria-label="Toggle user profile panel"
+                    aria-expanded="false"
                 >
                     <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
@@ -925,8 +1283,8 @@
         </div>
 
         <!-- Messages Container -->
-        <div class="messages-wrapper dm-scrollable">
-            <div id="messages-container">
+        <div class="messages-wrapper dm-scrollable" role="log" aria-live="polite" aria-label="Message history">
+            <div id="messages-container" aria-relevant="additions">
                 @if($messages->count() >= 50)
                     <button id="load-more-btn" class="load-more-btn" onclick="loadMoreMessages()">
                         Load older messages
@@ -1043,8 +1401,24 @@
 
         <!-- Chat Input -->
         <div class="dm-chat-input-container">
-            <form id="message-form" onsubmit="sendMessage(event)">
+            <form id="message-form" onsubmit="sendMessage(event)" role="form" aria-label="Send message">
                 <div class="chat-input-wrapper">
+                    {{-- Emoji Picker --}}
+                    <div class="emoji-container">
+                        <button type="button" class="emoji-btn" onclick="toggleEmojiPicker()" title="Add emoji" aria-label="Open emoji picker" aria-expanded="false" aria-controls="emoji-picker">
+                            <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </button>
+                        <div id="emoji-picker" class="emoji-picker" role="dialog" aria-label="Emoji picker">
+                            <div class="emoji-grid" role="listbox">
+                                @foreach(['😀','😂','😍','🤔','😎','👍','👎','❤️','🔥','✨','🎮','🎯','💯','🙌','😢','😡','🤣','😊','🥰','😋','🤩','😏','😴','🥳','😤','🤗','🤫','🤭','😱','😈','💀','👻','🤡','💩','🙈','🙉','🙊','💪','👏','🤝','✌️','🤞','🖐️','👋','🎉','🏆'] as $emoji)
+                                    <button type="button" class="emoji-item" onclick="insertEmoji('{{ $emoji }}')" role="option" aria-label="{{ $emoji }}">{{ $emoji }}</button>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+
                     <textarea
                         id="message-input"
                         class="dm-chat-input"
@@ -1053,10 +1427,12 @@
                         maxlength="2000"
                         onkeydown="handleKeyDown(event)"
                         oninput="handleTyping(); updateCharCounter();"
+                        aria-label="Message input"
+                        aria-describedby="char-counter"
                     ></textarea>
                     <div class="chat-input-footer">
-                        <span id="char-counter" class="char-counter">0/2000</span>
-                        <button type="submit" class="send-btn" id="send-btn" title="Send message">
+                        <span id="char-counter" class="char-counter" aria-live="polite">0/2000</span>
+                        <button type="submit" class="send-btn" id="send-btn" title="Send message" aria-label="Send message">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
                             </svg>
@@ -1065,6 +1441,9 @@
                 </div>
             </form>
         </div>
+
+        {{-- Screen reader announcer for new messages --}}
+        <div id="message-announcer" class="sr-only" aria-live="assertive" aria-atomic="true"></div>
     </div>
 
     <!-- Right Panel: User Profile (toggleable on xl+) -->
@@ -1122,6 +1501,31 @@
         </div>
     </div>
 </div>
+
+<!-- Mobile Message Actions Menu (Bottom Sheet) -->
+<div id="mobile-message-menu" class="mobile-menu-overlay" role="dialog" aria-label="Message actions">
+    <div class="mobile-menu-content">
+        <div class="mobile-menu-handle"></div>
+        <button class="mobile-menu-option" onclick="openEditFromMobile()">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+            Edit Message
+        </button>
+        <button class="mobile-menu-option danger" onclick="openDeleteFromMobile()">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+            Delete Message
+        </button>
+        <button class="mobile-menu-option" onclick="closeMobileMenu()">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+            Cancel
+        </button>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
@@ -1152,6 +1556,16 @@ let oldestMessageId = {{ $messages->first()?->id ?? 'null' }};
 let hasMoreMessages = {{ $messages->count() >= 50 ? 'true' : 'false' }};
 let isConnected = false;
 let messageRetryQueue = [];
+let searchTimeout = null;
+let mobileMenuMessageId = null;
+let lastReadMessageId = null;
+
+// Request browser notification permission on load
+if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission().then(permission => {
+        console.log('[DM] Notification permission:', permission);
+    });
+}
 
 // ==========================================
 // WebSocket Connection Management
@@ -1184,7 +1598,11 @@ function setupDMChannel() {
             if (e.message.sender_id !== currentUserId) {
                 appendMessage(e.message);
                 markAsRead();
+                announceMessage(e.message);
             }
+        } else {
+            // Different conversation - show browser notification
+            showBrowserNotification(e.message);
         }
     })
     .listen('.dm.message.edited', (e) => {
@@ -1207,6 +1625,10 @@ function setupDMChannel() {
     })
     .listen('.dm.read', (e) => {
         console.log('[DM] Received read receipt:', e);
+        if (e.conversation_id === conversationId) {
+            // Update read receipts for all own messages
+            updateReadReceipts(e.read_at);
+        }
     })
     .error((error) => {
         console.error('[DM] Echo channel error:', error);
@@ -1696,6 +2118,309 @@ function showToast(message, type = 'info') {
     setTimeout(() => {
         toast.remove();
     }, 3000);
+}
+
+// ==========================================
+// Read Receipts
+// ==========================================
+
+function updateReadReceipts(readAt) {
+    // Add "Seen" indicator to all own messages that don't have it yet
+    document.querySelectorAll(`.dm-message[data-sender-id="${currentUserId}"]`).forEach(el => {
+        if (!el.querySelector('.read-receipt')) {
+            const contentWrapper = el.querySelector('.dm-message-content-wrapper');
+            if (contentWrapper) {
+                const readReceipt = document.createElement('div');
+                readReceipt.className = 'read-receipt seen';
+                readReceipt.title = readAt ? `Seen ${formatDateTime(readAt)}` : 'Seen';
+                readReceipt.innerHTML = `
+                    <svg fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                    Seen
+                `;
+                contentWrapper.appendChild(readReceipt);
+            }
+        }
+    });
+}
+
+function formatDateTime(isoString) {
+    const date = new Date(isoString);
+    return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+    });
+}
+
+// ==========================================
+// Browser Notifications
+// ==========================================
+
+function showBrowserNotification(message) {
+    // Only show if tab is not focused and permission granted
+    if (document.hidden && Notification.permission === 'granted') {
+        const notification = new Notification(message.sender.display_name, {
+            body: message.content.substring(0, 100) + (message.content.length > 100 ? '...' : ''),
+            icon: message.sender.avatar_url || '/images/default-avatar.png',
+            tag: `dm-${message.conversation_id}`, // Prevents multiple notifications
+            silent: false,
+        });
+
+        notification.onclick = function() {
+            window.focus();
+            window.location.href = `/dm/${message.conversation_id}`;
+            notification.close();
+        };
+
+        // Auto close after 5 seconds
+        setTimeout(() => notification.close(), 5000);
+    }
+}
+
+function announceMessage(message) {
+    const announcer = document.getElementById('message-announcer');
+    if (announcer) {
+        announcer.textContent = `New message from ${message.sender.display_name}: ${message.content.substring(0, 100)}`;
+        setTimeout(() => announcer.textContent = '', 1000);
+    }
+}
+
+// ==========================================
+// Message Search
+// ==========================================
+
+function toggleSearchDropdown() {
+    const dropdown = document.getElementById('search-dropdown');
+    const isOpen = dropdown.classList.toggle('active');
+
+    const btn = dropdown.previousElementSibling;
+    if (btn) btn.setAttribute('aria-expanded', isOpen);
+
+    if (isOpen) {
+        const input = document.getElementById('message-search-input');
+        input.focus();
+        input.value = '';
+        document.getElementById('search-results').innerHTML = '';
+    }
+}
+
+document.getElementById('message-search-input')?.addEventListener('input', function(e) {
+    clearTimeout(searchTimeout);
+    const query = e.target.value.trim();
+
+    if (query.length < 2) {
+        document.getElementById('search-results').innerHTML = '';
+        return;
+    }
+
+    searchTimeout = setTimeout(() => searchMessages(query), 300);
+});
+
+async function searchMessages(query) {
+    const resultsEl = document.getElementById('search-results');
+    resultsEl.innerHTML = '<div class="search-no-results">Searching...</div>';
+
+    try {
+        const response = await fetch(`/dm/${conversationId}/search?q=${encodeURIComponent(query)}`, {
+            headers: { 'Accept': 'application/json' },
+        });
+        const data = await response.json();
+
+        if (data.messages && data.messages.length > 0) {
+            resultsEl.innerHTML = data.messages.map(msg => `
+                <div class="search-result-item" onclick="jumpToMessage(${msg.id})" role="option" tabindex="0">
+                    <div class="search-result-meta">${escapeHtml(msg.sender.display_name)} - ${formatDateTime(msg.created_at)}</div>
+                    <div class="search-result-content">${highlightText(escapeHtml(msg.content), query)}</div>
+                </div>
+            `).join('');
+        } else {
+            resultsEl.innerHTML = '<div class="search-no-results">No messages found</div>';
+        }
+    } catch (error) {
+        console.error('Search error:', error);
+        resultsEl.innerHTML = '<div class="search-no-results">Search failed. Try again.</div>';
+    }
+}
+
+function highlightText(text, query) {
+    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    return text.replace(regex, '<mark>$1</mark>');
+}
+
+function jumpToMessage(messageId) {
+    const el = document.querySelector(`[data-message-id="${messageId}"]`);
+    if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('message-highlight');
+        setTimeout(() => el.classList.remove('message-highlight'), 2000);
+        toggleSearchDropdown(); // Close search dropdown
+    } else {
+        showToast('Message may be on a previous page. Loading...', 'info');
+        // Could implement loading older messages until we find it
+    }
+}
+
+// Close search on click outside
+document.addEventListener('click', function(event) {
+    const searchContainer = document.querySelector('.search-container');
+    if (searchContainer && !searchContainer.contains(event.target)) {
+        const dropdown = document.getElementById('search-dropdown');
+        if (dropdown.classList.contains('active')) {
+            dropdown.classList.remove('active');
+        }
+    }
+});
+
+// ==========================================
+// Emoji Picker
+// ==========================================
+
+function toggleEmojiPicker() {
+    const picker = document.getElementById('emoji-picker');
+    const isOpen = picker.classList.toggle('active');
+
+    const btn = picker.previousElementSibling;
+    if (btn) btn.setAttribute('aria-expanded', isOpen);
+}
+
+function insertEmoji(emoji) {
+    const input = document.getElementById('message-input');
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const text = input.value;
+
+    input.value = text.substring(0, start) + emoji + text.substring(end);
+    input.selectionStart = input.selectionEnd = start + emoji.length;
+    input.focus();
+
+    // Trigger input event to update character count
+    input.dispatchEvent(new Event('input'));
+
+    toggleEmojiPicker();
+}
+
+// Close emoji picker on click outside
+document.addEventListener('click', function(event) {
+    const emojiContainer = document.querySelector('.emoji-container');
+    if (emojiContainer && !emojiContainer.contains(event.target)) {
+        const picker = document.getElementById('emoji-picker');
+        if (picker.classList.contains('active')) {
+            picker.classList.remove('active');
+        }
+    }
+});
+
+// ==========================================
+// Mobile Touch Menu
+// ==========================================
+
+let pressTimer;
+const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+if (isTouchDevice) {
+    document.addEventListener('touchstart', function(e) {
+        const messageEl = e.target.closest('.dm-message[data-sender-id="' + currentUserId + '"]');
+        if (messageEl) {
+            pressTimer = setTimeout(() => {
+                showMobileMenu(messageEl.dataset.messageId);
+            }, 500);
+        }
+    }, { passive: true });
+
+    document.addEventListener('touchend', function() {
+        clearTimeout(pressTimer);
+    });
+
+    document.addEventListener('touchmove', function() {
+        clearTimeout(pressTimer);
+    });
+}
+
+function showMobileMenu(messageId) {
+    mobileMenuMessageId = messageId;
+    document.getElementById('mobile-message-menu').classList.add('active');
+    // Haptic feedback if available
+    if (navigator.vibrate) {
+        navigator.vibrate(50);
+    }
+}
+
+function closeMobileMenu() {
+    document.getElementById('mobile-message-menu').classList.remove('active');
+    mobileMenuMessageId = null;
+}
+
+function openEditFromMobile() {
+    closeMobileMenu();
+    if (mobileMenuMessageId) {
+        openEditModal(mobileMenuMessageId);
+    }
+}
+
+function openDeleteFromMobile() {
+    closeMobileMenu();
+    if (mobileMenuMessageId) {
+        openDeleteModal(mobileMenuMessageId);
+    }
+}
+
+// Close mobile menu on tap outside
+document.getElementById('mobile-message-menu')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeMobileMenu();
+    }
+});
+
+// ==========================================
+// Enhanced Error Handling & Retry
+// ==========================================
+
+async function sendMessageWithRetry(content, retries = 3) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            const response = await fetch(`/dm/${conversationId}/messages`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ content }),
+            });
+
+            if (response.ok) {
+                return await response.json();
+            }
+
+            throw new Error(`HTTP ${response.status}`);
+        } catch (error) {
+            console.error(`Attempt ${i + 1} failed:`, error);
+
+            if (i === retries - 1) {
+                throw error;
+            }
+
+            // Wait before retrying (exponential backoff)
+            await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+        }
+    }
+}
+
+function markMessageAsFailed(tempId) {
+    const el = document.querySelector(`[data-temp-id="${tempId}"]`);
+    if (el) {
+        el.classList.add('opacity-50');
+        el.insertAdjacentHTML('beforeend', `
+            <button onclick="retryMessage('${tempId}')"
+                    class="text-red-400 text-xs hover:underline ml-2">
+                Failed to send. Click to retry.
+            </button>
+        `);
+    }
 }
 
 // ==========================================

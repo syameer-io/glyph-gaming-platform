@@ -65,6 +65,25 @@ Broadcast::channel('dm.conversation.{conversationId}', function ($user, $convers
     return $conversation->hasParticipant($user->id);
 });
 
+/**
+ * DM Presence channel - For online status tracking in DM
+ * Channel format: presence.dm
+ *
+ * Authorization: Any authenticated user can join
+ * Returns user data for presence tracking
+ */
+Broadcast::channel('presence.dm', function ($user) {
+    if (!$user) {
+        return false;
+    }
+
+    return [
+        'id' => $user->id,
+        'display_name' => $user->display_name,
+        'avatar_url' => $user->profile->avatar_url ?? null,
+    ];
+});
+
 // ===== USER PERSONAL CHANNELS =====
 
 /**

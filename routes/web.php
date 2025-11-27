@@ -290,6 +290,9 @@ Route::middleware('auth')->group(function () {
             // View conversation
             Route::get('/', [DirectMessageController::class, 'show'])->name('show');
 
+            // Search messages in conversation
+            Route::get('/search', [DirectMessageController::class, 'searchMessages'])->name('search');
+
             // Send message in conversation
             Route::post('/messages', [DirectMessageController::class, 'sendMessage'])
                 ->middleware('throttle:60,1')
