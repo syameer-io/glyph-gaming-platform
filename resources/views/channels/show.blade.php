@@ -2,72 +2,101 @@
 
 @section('title', '#' . $channel->name . ' - ' . $server->name)
 
+@push('head')
+    <!-- Agora App ID for Voice Chat (Public - Safe to expose) -->
+    <meta name="agora-app-id" content="{{ config('services.agora.app_id') }}">
+@endpush
+
 @push('styles')
 <style>
+    /* Hide x-cloak elements until Alpine.js loads */
+    [x-cloak] { display: none !important; }
+
     .message {
         display: flex;
         gap: 16px;
         padding: 8px 16px;
         transition: background-color 0.1s;
     }
-    
+
     .message:hover {
         background-color: rgba(255, 255, 255, 0.02);
     }
-    
+
     .message:hover .message-actions {
         opacity: 1 !important;
     }
-    
+
     .message-avatar {
         width: 40px;
         height: 40px;
         border-radius: 50%;
         flex-shrink: 0;
     }
-    
+
     .message-header {
         display: flex;
         align-items: baseline;
         gap: 8px;
         margin-bottom: 4px;
     }
-    
+
     .message-author {
         font-weight: 600;
         color: #efeff1;
     }
-    
+
     .message-timestamp {
         font-size: 12px;
         color: #71717a;
     }
-    
+
     .message-content {
         color: #b3b3b5;
         line-height: 1.5;
         word-wrap: break-word;
     }
-    
+
     .chat-input-container {
         padding: 16px;
         background-color: #0e0e10;
     }
-    
-    .chat-input {
-        width: 100%;
-        padding: 12px 16px;
+
+    .chat-input-wrapper {
+        display: flex;
+        align-items: flex-end;
+        gap: 8px;
         background-color: #18181b;
         border: 1px solid #3f3f46;
         border-radius: 8px;
+        padding: 4px 4px 4px 8px;
+        transition: border-color 0.15s;
+    }
+
+    .chat-input-wrapper:focus-within {
+        border-color: #667eea;
+    }
+
+    .chat-input {
+        flex: 1;
+        background: none;
+        border: none;
         color: #efeff1;
         font-size: 16px;
         resize: none;
+        font-family: inherit;
+        max-height: 100px;
+        min-height: 40px;
+        padding: 8px 0;
+        line-height: 1.4;
     }
-    
+
     .chat-input:focus {
         outline: none;
-        border-color: #667eea;
+    }
+
+    .chat-input::placeholder {
+        color: #71717a;
     }
 
     .kebab-menu {
@@ -148,7 +177,247 @@
         background-color: #3f3f46 !important;
         color: #ffffff !important;
     }
+
+    /* Voice Chat Styles */
+    .voice-channel-link {
+        cursor: pointer;
+        transition: background-color 0.15s;
+    }
+
+    .voice-channel-link:hover {
+        background-color: #3f3f46;
+        border-radius: 4px;
+        padding: 4px 8px;
+        margin-left: -8px;
+        margin-right: -8px;
+    }
+
+    .voice-user-count {
+        transition: all 0.2s ease;
+    }
+
+    .voice-channel-link.active {
+        background-color: #667eea;
+        color: #ffffff;
+        border-radius: 4px;
+        padding: 4px 8px;
+        margin-left: -8px;
+        margin-right: -8px;
+    }
+
+    /* Voice Controls Panel */
+    #voice-controls-panel {
+        animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes slideUp {
+        from {
+            transform: translateY(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    #mute-toggle-btn:hover {
+        background-color: #52525b !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    #mute-toggle-btn.muted {
+        background-color: #ef4444 !important;
+        color: white !important;
+    }
+
+    #disconnect-btn:hover {
+        background-color: #dc2626 !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+
+    /* Network Quality Indicators */
+    .network-quality-excellent {
+        background-color: #10b981 !important;
+    }
+
+    .network-quality-good {
+        background-color: #f59e0b !important;
+    }
+
+    .network-quality-poor {
+        background-color: #ef4444 !important;
+    }
+
+    /* Voice Speaking Animation */
+    @keyframes pulse-ring {
+        0% {
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+        }
+        50% {
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.3);
+        }
+        100% {
+            box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+        }
+    }
+
+    .voice-speaking-indicator {
+        animation: pulse-ring 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    .member-avatar.speaking {
+        border: 2px solid #10b981;
+        box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
+    }
+
+    /* In Voice Badge Animation */
+    .in-voice-badge {
+        animation: fadeInScale 0.3s ease-out;
+    }
+
+    @keyframes fadeInScale {
+        from {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    /* Connection Quality Pulse */
+    #voice-connection-indicator.connecting {
+        background-color: #f59e0b !important;
+        animation: pulse 1s ease-in-out infinite;
+    }
+
+    #voice-connection-indicator.disconnected {
+        background-color: #ef4444 !important;
+    }
+
+    @keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.5;
+        }
+    }
+
+    /* Emoji Picker Styles */
+    .emoji-container {
+        position: relative;
+    }
+
+    .emoji-btn {
+        background: none;
+        border: none;
+        color: #71717a;
+        padding: 8px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.15s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .emoji-btn:hover {
+        color: #efeff1;
+        background-color: #3f3f46;
+    }
+
+    .emoji-picker {
+        position: absolute;
+        bottom: calc(100% + 8px);
+        left: 0;
+        background-color: #27272a;
+        border: 1px solid #3f3f46;
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        padding: 12px;
+        display: none;
+        z-index: 100;
+    }
+
+    .emoji-picker.active {
+        display: block;
+    }
+
+    .emoji-grid {
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        gap: 4px;
+    }
+
+    .emoji-item {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.15s;
+        background: none;
+        border: none;
+    }
+
+    .emoji-item:hover {
+        background-color: #3f3f46;
+    }
+
+    .send-btn {
+        background-color: #667eea;
+        border: none;
+        color: white;
+        padding: 8px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.15s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .send-btn:hover {
+        background-color: #5a6fd6;
+    }
+
+    .send-btn:disabled {
+        background-color: #3f3f46;
+        cursor: not-allowed;
+    }
+
+    .send-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    /* Member List Styles */
+    .member-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 8px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+    }
+
+    .member-item:hover {
+        background-color: rgba(79, 84, 92, 0.4);
+    }
 </style>
+@endpush
+
+@push('scripts')
+    @vite(['resources/js/voice-chat.js'])
 @endpush
 
 @section('content')
@@ -187,9 +456,18 @@
             <div>
                 <p style="font-size: 12px; font-weight: 600; color: #71717a; text-transform: uppercase; margin-bottom: 8px;">Voice Channels</p>
                 @foreach($server->channels->where('type', 'voice') as $ch)
-                    <div class="sidebar-link" style="opacity: 0.5; cursor: not-allowed;">
-                        <span style="color: #71717a; margin-right: 8px;">🔊</span>
-                        {{ $ch->name }}
+                    <div class="sidebar-link voice-channel-link"
+                         data-channel-id="{{ $ch->id }}"
+                         data-channel-name="{{ $ch->name }}"
+                         style="cursor: pointer; display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;"
+                         onclick="joinVoiceChannel({{ $server->id }}, {{ $ch->id }}, '{{ $ch->name }}')">
+                        <div style="display: flex; align-items: center;">
+                            <span style="color: #71717a; margin-right: 8px;">🔊</span>
+                            {{ $ch->name }}
+                        </div>
+                        <div class="voice-user-count" data-channel-id="{{ $ch->id }}" style="display: none; font-size: 11px; color: #71717a; background-color: #3f3f46; padding: 2px 6px; border-radius: 4px;">
+                            <span class="count">0</span>
+                        </div>
                     </div>
                 @endforeach
             </div>
@@ -287,13 +565,39 @@
         <!-- Input -->
         <div class="chat-input-container">
             <form id="message-form" onsubmit="sendMessage(event)">
-                <textarea 
-                    id="message-input"
-                    class="chat-input" 
-                    placeholder="Message #{{ $channel->name }}"
-                    rows="1"
-                    maxlength="2000"
-                    onkeydown="handleKeyDown(event)"></textarea>
+                <div class="chat-input-wrapper">
+                    {{-- Emoji Picker --}}
+                    <div class="emoji-container">
+                        <button type="button" class="emoji-btn" onclick="toggleEmojiPicker()" title="Add emoji" aria-label="Open emoji picker">
+                            <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </button>
+                        <div id="emoji-picker" class="emoji-picker">
+                            <div class="emoji-grid">
+                                @foreach(['😀','😂','😍','🤔','😎','👍','👎','❤️','🔥','✨','🎮','🎯','💯','🙌','😢','😡','🤣','😊','🥰','😋','🤩','😏','😴','🥳','😤','🤗','🤫','🤭','😱','😈','💀','👻','🤡','💩','🙈','🙉','🙊','💪','👏','🤝','✌️','🤞','🖐️','👋','🎉','🏆'] as $emoji)
+                                    <button type="button" class="emoji-item" onclick="insertEmoji('{{ $emoji }}')">{{ $emoji }}</button>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+
+                    <textarea
+                        id="message-input"
+                        class="chat-input"
+                        placeholder="Message #{{ $channel->name }}"
+                        rows="1"
+                        maxlength="2000"
+                        onkeydown="handleKeyDown(event)"
+                        oninput="autoResizeTextarea(this)"
+                    ></textarea>
+
+                    <button type="submit" class="send-btn" id="send-btn" title="Send message">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                        </svg>
+                    </button>
+                </div>
             </form>
         </div>
     </div>
@@ -303,17 +607,17 @@
         <p style="font-size: 12px; font-weight: 600; color: #71717a; text-transform: uppercase; margin-bottom: 16px;">
             Members — {{ $server->members->count() }}
         </p>
-        
+
         @php
             // Group members by their highest role
             $membersByRole = collect();
-            
+
             foreach($server->members as $member) {
                 $highestRole = $member->roles()
                     ->wherePivot('server_id', $server->id)
                     ->orderBy('position', 'desc')
                     ->first();
-                
+
                 if ($highestRole) {
                     $roleKey = $highestRole->name;
                     if (!$membersByRole->has($roleKey)) {
@@ -332,7 +636,7 @@
                     }
                 }
             }
-            
+
             // Get roles for proper ordering
             $allRoles = $server->roles()->orderBy('position', 'desc')->get();
         @endphp
@@ -344,87 +648,121 @@
                     {{ strtoupper($role->name) }} — {{ $roleMembers->count() }}
                 </p>
                 @foreach($roleMembers as $member)
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                        <img src="{{ $member->profile->avatar_url }}" alt="{{ $member->display_name }}" 
-                             style="width: 32px; height: 32px; border-radius: 50%;">
-                        <div style="flex: 1;" data-member-id="{{ $member->id }}">
-                            <div style="font-size: 14px; color: {{ $role->color }};">
-                                {{ $member->display_name }}
-                                <div class="gaming-status-indicator w-2 h-2 {{ $member->profile->current_game ? 'bg-green-500' : 'bg-gray-500' }} rounded-full" 
-                                     title="{{ $member->profile->current_game ? 'Playing ' . $member->profile->current_game['name'] : 'Not playing' }}"></div>
-                            </div>
-                            
-                            {{-- Gaming Status (Phase 2: Real-time updates via data-user-status) --}}
-                            <div data-user-status="{{ $member->id }}" class="{{ $member->profile->current_game ? '' : 'hidden' }}">
-                                @if($member->profile->current_game)
-                                    <div class="flex items-center space-x-2">
-                                        <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-                                        <div class="text-sm">
-                                            <div class="text-green-400">{{ $member->profile->current_game['name'] }}</div>
-                                            @if(isset($member->profile->current_game['server_name']) || isset($member->profile->current_game['map']))
-                                                <div class="text-gray-400 text-xs">
-                                                    @if($member->profile->current_game['server_name'])
-                                                        {{ $member->profile->current_game['server_name'] }}
-                                                    @endif
-                                                    @if($member->profile->current_game['map'])
-                                                        {{ $member->profile->current_game['server_name'] ? ' • ' : '' }}{{ $member->profile->current_game['map'] }}
-                                                    @endif
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </div>
-                                @endif
-                            </div>
-                            
-                            {{-- Fallback status when not gaming --}}
-                            @if(!$member->profile->current_game)
-                                <div style="font-size: 12px; color: #71717a;">
-                                    <span class="status-indicator {{ $member->profile->status === 'online' ? 'status-online' : 'status-offline' }}"></span>
-                                    {{ ucfirst($member->profile->status) }}
-                                </div>
-                            @endif
-                            
-                            {{-- Join lobby button (Phase 4) --}}
-                            @if($member->id !== auth()->id())
-                                @php
-                                    // Priority system:
-                                    // 1. User-provided lobby link (highest priority)
-                                    // 2. Server IP from Steam API (community servers)
-                                    // 3. Not joinable (matchmaking/offline)
-
-                                    $hasLobbyLink = $member->profile && $member->profile->hasActiveLobby();
-                                    $hasServerIP = $member->profile->current_game && isset($member->profile->current_game['connect']) && !empty($member->profile->current_game['connect']);
-                                    $isJoinable = $hasLobbyLink || $hasServerIP;
-
-                                    $joinUrl = null;
-                                    $buttonText = 'Not Joinable';
-                                    $buttonClass = 'btn-secondary';
-                                    $isDisabled = true;
-
-                                    if ($hasLobbyLink) {
-                                        $joinUrl = $member->profile->steam_lobby_link;
-                                        $buttonText = '🚀 Join Lobby';
-                                        $buttonClass = 'btn-success';
-                                        $isDisabled = false;
-                                    } elseif ($hasServerIP) {
-                                        $joinUrl = 'steam://connect/' . $member->profile->current_game['connect'];
-                                        $buttonText = '🎮 Join Server';
-                                        $buttonClass = 'btn-primary';
-                                        $isDisabled = false;
-                                    }
-                                @endphp
-
-                                @if($isJoinable)
-                                    <a href="{{ $joinUrl }}" class="btn {{ $buttonClass }} btn-sm" style="margin-top: 4px; font-size: 11px; padding: 4px 8px; text-decoration: none; display: inline-block;">
-                                        {{ $buttonText }}
-                                    </a>
-                                @elseif($member->profile->current_game)
-                                    <button class="btn {{ $buttonClass }} btn-sm" style="margin-top: 4px; font-size: 11px; padding: 4px 8px; opacity: 0.5;" disabled title="Player is in matchmaking or offline">
-                                        ⚠️ {{ $buttonText }}
-                                    </button>
-                                @endif
-                            @endif
+                    @php
+                        $memberLobbies = $member->gameLobbies ?? collect();
+                        $hasActiveLobby = $memberLobbies->filter(fn($l) => $l->isActive())->isNotEmpty();
+                    @endphp
+                    <div
+                        class="member-item"
+                        data-user-id="{{ $member->id }}"
+                        x-data="{ showCard: false }"
+                        @click.stop="showCard = !showCard"
+                        @keydown.escape.window="showCard = false"
+                        style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; padding: 6px 8px; border-radius: 6px; position: relative; cursor: pointer; transition: background-color 0.15s;"
+                        onmouseover="this.style.backgroundColor='rgba(79, 84, 92, 0.4)'"
+                        onmouseout="this.style.backgroundColor='transparent'"
+                    >
+                        <div style="position: relative;">
+                            <img src="{{ $member->profile->avatar_url }}" alt="{{ $member->display_name }}"
+                                 class="member-avatar"
+                                 style="width: 32px; height: 32px; border-radius: 50%;">
+                            {{-- Online Status Dot --}}
+                            <div style="
+                                position: absolute;
+                                bottom: -2px;
+                                right: -2px;
+                                width: 14px;
+                                height: 14px;
+                                border-radius: 50%;
+                                border: 3px solid #1e1f22;
+                                background-color: {{ $member->profile->status === 'online' ? '#23a559' : '#80848e' }};
+                            "></div>
+                            <div class="voice-speaking-indicator" style="display: none; position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px; border: 2px solid #10b981; border-radius: 50%; animation: pulse-ring 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;"></div>
                         </div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-size: 14px; color: {{ $role->color }}; display: flex; align-items: center; gap: 6px;">
+                                <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $member->display_name }}</span>
+                                @if($hasActiveLobby)
+                                    <span style="
+                                        display: inline-flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        width: 18px;
+                                        height: 18px;
+                                        background-color: #23a559;
+                                        border-radius: 4px;
+                                        flex-shrink: 0;
+                                    ">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="white">
+                                            <path d="M21 6h-7.59l3.29-3.29L16 2l-4 4-4-4-.71.71L10.59 6H3c-1.1 0-2 .89-2 2v12c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.11-.9-2-2-2zm0 14H3V8h18v12z"/>
+                                        </svg>
+                                    </span>
+                                @endif
+                                <span class="in-voice-badge" data-user-id="{{ $member->id }}" style="display: none; font-size: 10px; background-color: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 600;">IN VOICE</span>
+                            </div>
+                        </div>
+
+                        {{-- User Card Popover (Fixed Position - Discord Style) --}}
+                        <template x-teleport="body">
+                            <div
+                                x-show="showCard"
+                                x-transition:enter="transition ease-out duration-150"
+                                x-transition:enter-start="opacity-0 scale-95"
+                                x-transition:enter-end="opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-100"
+                                x-transition:leave-start="opacity-100 scale-100"
+                                x-transition:leave-end="opacity-0 scale-95"
+                                @click.away="showCard = false"
+                                x-init="$watch('showCard', value => {
+                                    if (value) {
+                                        $nextTick(() => {
+                                            const rect = $root.getBoundingClientRect();
+                                            const card = $el;
+                                            const cardWidth = 340;
+
+                                            // Position to the left of the member sidebar
+                                            let left = rect.left - cardWidth - 12;
+
+                                            // Align TOP of card with TOP of clicked member (Discord style)
+                                            let top = rect.top;
+
+                                            // If card would go off left edge, show on right instead
+                                            if (left < 8) {
+                                                left = rect.right + 12;
+                                            }
+
+                                            // Measure actual card height after render
+                                            requestAnimationFrame(() => {
+                                                const cardHeight = card.offsetHeight;
+
+                                                // If card would go below viewport, push it up
+                                                if (top + cardHeight > window.innerHeight - 8) {
+                                                    top = window.innerHeight - cardHeight - 8;
+                                                }
+
+                                                // Never go above viewport
+                                                if (top < 8) top = 8;
+
+                                                card.style.left = left + 'px';
+                                                card.style.top = top + 'px';
+                                            });
+
+                                            // Set initial position
+                                            card.style.left = left + 'px';
+                                            card.style.top = top + 'px';
+                                        });
+                                    }
+                                })"
+                                style="position: fixed; z-index: 9999;"
+                                x-cloak
+                            >
+                                <x-user-member-card
+                                    :user="$member"
+                                    :server="$server"
+                                    :roleColor="$role->color ?? '#ffffff'"
+                                />
+                            </div>
+                        </template>
                     </div>
                 @endforeach
             @endif
@@ -437,7 +775,7 @@
     <div style="background-color: #18181b; border-radius: 12px; padding: 24px; width: 90%; max-width: 500px; border: 1px solid #3f3f46;">
         <h3 style="margin-bottom: 16px; color: #efeff1;">Edit Message</h3>
         <form id="edit-form" onsubmit="saveEdit(event)">
-            <textarea 
+            <textarea
                 id="edit-content"
                 style="width: 100%; min-height: 80px; padding: 12px; background-color: #0e0e10; border: 1px solid #3f3f46; border-radius: 8px; color: #efeff1; font-size: 16px; resize: vertical; font-family: inherit;"
                 placeholder="Edit your message..."
@@ -448,6 +786,36 @@
                 <button type="submit" class="btn btn-primary">Save</button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Voice Controls Panel (Fixed Bottom Bar) -->
+<div id="voice-controls-panel" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background-color: #18181b; border-top: 2px solid #3f3f46; padding: 12px 20px; z-index: 1000; box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);">
+    <div style="max-width: 1400px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 8px; height: 8px; border-radius: 50%; background-color: #10b981;" id="voice-connection-indicator"></div>
+                <div>
+                    <div style="font-size: 12px; color: #71717a; font-weight: 600;">VOICE CONNECTED</div>
+                    <div style="font-size: 14px; color: #efeff1; font-weight: 600;" id="voice-channel-name">Voice Channel</div>
+                </div>
+            </div>
+            <div id="voice-network-quality" style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; background-color: #0e0e10; border-radius: 6px;">
+                <div style="width: 6px; height: 6px; border-radius: 50%; background-color: #10b981;" id="network-quality-indicator"></div>
+                <span style="font-size: 12px; color: #71717a;">Connection: <span id="network-quality-text" style="color: #10b981; font-weight: 600;">Excellent</span></span>
+            </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <button id="mute-toggle-btn" onclick="toggleMute()" style="background-color: #3f3f46; color: #efeff1; border: none; padding: 10px 20px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px;">
+                <span id="mute-icon">🎤</span>
+                <span id="mute-text">Mute</span>
+            </button>
+            <button id="disconnect-btn" onclick="disconnectVoice()" style="background-color: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px;">
+                <span>📞</span>
+                <span>Disconnect</span>
+            </button>
+        </div>
     </div>
 </div>
 @endsection
@@ -1056,6 +1424,237 @@ function showToast(message, type = 'info') {
         toast.style.transform = 'translateY(20px)';
         setTimeout(() => toast.remove(), 300);
     }, 3000);
+}
+
+// ==========================================
+// Emoji Picker Functions
+// ==========================================
+
+/**
+ * Toggle the emoji picker visibility
+ */
+function toggleEmojiPicker() {
+    const picker = document.getElementById('emoji-picker');
+    picker.classList.toggle('active');
+}
+
+/**
+ * Insert emoji at cursor position in textarea
+ */
+function insertEmoji(emoji) {
+    const input = document.getElementById('message-input');
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const text = input.value;
+
+    input.value = text.substring(0, start) + emoji + text.substring(end);
+    input.selectionStart = input.selectionEnd = start + emoji.length;
+    input.focus();
+
+    // Close emoji picker after selection
+    toggleEmojiPicker();
+
+    // Trigger resize
+    autoResizeTextarea(input);
+}
+
+/**
+ * Auto-resize textarea based on content
+ */
+function autoResizeTextarea(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = Math.min(textarea.scrollHeight, 100) + 'px';
+}
+
+// Close emoji picker when clicking outside
+document.addEventListener('click', function(event) {
+    const emojiContainer = document.querySelector('.emoji-container');
+    const emojiPicker = document.getElementById('emoji-picker');
+
+    if (emojiContainer && !emojiContainer.contains(event.target) && emojiPicker) {
+        emojiPicker.classList.remove('active');
+    }
+});
+
+// ==========================================
+// Voice Chat Functions
+// ==========================================
+
+let voiceChat = null;
+let currentVoiceChannel = null;
+let isMuted = false;
+
+/**
+ * Join a voice channel
+ */
+async function joinVoiceChannel(serverId, channelId, channelName) {
+    try {
+        // Check if already connected to a voice channel
+        if (voiceChat && voiceChat.isConnected) {
+            if (currentVoiceChannel === channelId) {
+                showToast('You are already connected to this voice channel', 'info');
+                return;
+            }
+            // Disconnect from current channel first
+            await disconnectVoice();
+        }
+
+        showToast(`Connecting to ${channelName}...`, 'info');
+
+        // Initialize voice chat if not already
+        if (!voiceChat) {
+            if (typeof window.VoiceChat !== 'undefined') {
+                voiceChat = new window.VoiceChat();
+            } else {
+                console.log('[Voice] VoiceChat module not yet loaded, waiting...');
+
+                // Dispatch custom event for voice chat handler
+                window.dispatchEvent(new CustomEvent('voice:join', {
+                    detail: { serverId, channelId, channelName }
+                }));
+
+                // Show UI feedback in the meantime
+                currentVoiceChannel = channelId;
+                document.getElementById('voice-channel-name').textContent = channelName;
+                document.getElementById('voice-controls-panel').style.display = 'block';
+
+                // Mark voice channel as active
+                document.querySelectorAll('.voice-channel-link').forEach(link => {
+                    link.classList.remove('active');
+                });
+                const activeLink = document.querySelector(`.voice-channel-link[data-channel-id="${channelId}"]`);
+                if (activeLink) {
+                    activeLink.classList.add('active');
+                }
+
+                showToast(`Connected to ${channelName}`, 'success');
+                return;
+            }
+        }
+
+        // Join the voice channel
+        await voiceChat.joinChannel(channelId);
+
+        // Update UI
+        currentVoiceChannel = channelId;
+        document.getElementById('voice-channel-name').textContent = channelName;
+        document.getElementById('voice-controls-panel').style.display = 'block';
+
+        // Mark voice channel as active
+        document.querySelectorAll('.voice-channel-link').forEach(link => {
+            link.classList.remove('active');
+        });
+        const activeLink = document.querySelector(`.voice-channel-link[data-channel-id="${channelId}"]`);
+        if (activeLink) {
+            activeLink.classList.add('active');
+        }
+
+        // Show user's own "In Voice" badge
+        const myBadge = document.querySelector(`.in-voice-badge[data-user-id="{{ auth()->id() }}"]`);
+        if (myBadge) {
+            myBadge.style.display = 'inline-block';
+        }
+
+        showToast(`Connected to ${channelName}`, 'success');
+    } catch (error) {
+        console.error('[Voice] Failed to join channel:', error);
+        showToast('Failed to connect to voice channel. Please try again.', 'error');
+    }
+}
+
+/**
+ * Disconnect from voice channel
+ */
+async function disconnectVoice() {
+    try {
+        if (voiceChat && voiceChat.isConnected) {
+            await voiceChat.leaveChannel();
+        }
+
+        // Update UI
+        document.getElementById('voice-controls-panel').style.display = 'none';
+        document.querySelectorAll('.voice-channel-link').forEach(link => {
+            link.classList.remove('active');
+        });
+
+        // Hide user's own "In Voice" badge
+        const myBadge = document.querySelector(`.in-voice-badge[data-user-id="{{ auth()->id() }}"]`);
+        if (myBadge) {
+            myBadge.style.display = 'none';
+        }
+
+        currentVoiceChannel = null;
+        isMuted = false;
+
+        showToast('Disconnected from voice channel', 'info');
+    } catch (error) {
+        console.error('[Voice] Failed to disconnect:', error);
+    }
+}
+
+/**
+ * Toggle mute state
+ */
+function toggleMute() {
+    isMuted = !isMuted;
+
+    const muteBtn = document.getElementById('mute-toggle-btn');
+    const muteIcon = document.getElementById('mute-icon');
+    const muteText = document.getElementById('mute-text');
+
+    if (isMuted) {
+        muteBtn.classList.add('muted');
+        muteIcon.textContent = '🔇';
+        muteText.textContent = 'Unmute';
+
+        if (voiceChat) {
+            voiceChat.mute();
+        }
+
+        showToast('Microphone muted', 'info');
+    } else {
+        muteBtn.classList.remove('muted');
+        muteIcon.textContent = '🎤';
+        muteText.textContent = 'Mute';
+
+        if (voiceChat) {
+            voiceChat.unmute();
+        }
+
+        showToast('Microphone unmuted', 'info');
+    }
+}
+
+/**
+ * Update network quality indicator
+ */
+function updateNetworkQuality(quality) {
+    const indicator = document.getElementById('network-quality-indicator');
+    const text = document.getElementById('network-quality-text');
+
+    if (quality >= 4) {
+        indicator.className = 'network-quality-excellent';
+        indicator.style.backgroundColor = '#10b981';
+        text.textContent = 'Excellent';
+        text.style.color = '#10b981';
+    } else if (quality >= 2) {
+        indicator.className = 'network-quality-good';
+        indicator.style.backgroundColor = '#f59e0b';
+        text.textContent = 'Good';
+        text.style.color = '#f59e0b';
+    } else {
+        indicator.className = 'network-quality-poor';
+        indicator.style.backgroundColor = '#ef4444';
+        text.textContent = 'Poor';
+        text.style.color = '#ef4444';
+    }
+}
+
+/**
+ * Leave current voice channel (alias for disconnectVoice)
+ */
+function leaveVoiceChannel() {
+    disconnectVoice();
 }
 </script>
 @endpush
