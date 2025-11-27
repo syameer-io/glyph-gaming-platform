@@ -64,3 +64,90 @@ Broadcast::channel('dm.conversation.{conversationId}', function ($user, $convers
 
     return $conversation->hasParticipant($user->id);
 });
+
+// ===== USER PERSONAL CHANNELS =====
+
+/**
+ * User personal channel - For user-specific notifications
+ * Channel format: user.{userId}
+ *
+ * Used by: DM index, profile, lobby join buttons, matchmaking, phase3 realtime
+ * Authorization: User can only subscribe to their own channel
+ */
+Broadcast::channel('user.{userId}', function ($user, $userId) {
+    Log::info('[Broadcasting] User channel auth attempt', [
+        'authenticated_user_id' => $user->id ?? 'NULL',
+        'requested_user_id' => $userId,
+        'match' => (int) $user->id === (int) $userId,
+    ]);
+
+    // User can only listen to their own personal channel
+    return (int) $user->id === (int) $userId;
+});
+
+// ===== TEAMS CHANNELS =====
+
+/**
+ * Global teams channel - For matchmaking and team creation notifications
+ * Channel format: teams.global
+ *
+ * Used by: Live matchmaking, phase3 realtime
+ * Authorization: Any authenticated user can subscribe
+ */
+Broadcast::channel('teams.global', function ($user) {
+    Log::info('[Broadcasting] Teams global channel auth attempt', [
+        'user_id' => $user->id ?? 'NULL',
+    ]);
+
+    // Any authenticated user can listen to global team events
+    return $user !== null;
+});
+
+// ===== GAMING STATUS CHANNELS =====
+
+/**
+ * Server gaming status channel - For real-time gaming status updates within a server
+ * Channel format: server.{serverId}.gaming-status
+ *
+ * Used by: Gaming status manager
+ * Authorization: User must be a member of the server
+ */
+Broadcast::channel('server.{serverId}.gaming-status', function ($user, $serverId) {
+    $server = Server::find($serverId);
+
+    if (!$server) {
+        Log::warning('[Broadcasting] Gaming status channel auth failed - server not found', [
+            'server_id' => $serverId,
+            'user_id' => $user->id ?? 'NULL',
+        ]);
+        return false;
+    }
+
+    $isMember = $server->members->contains($user->id);
+
+    Log::info('[Broadcasting] Gaming status channel auth attempt', [
+        'server_id' => $serverId,
+        'user_id' => $user->id ?? 'NULL',
+        'is_member' => $isMember,
+    ]);
+
+    return $isMember;
+});
+
+/**
+ * User gaming status channel - For personal gaming status updates
+ * Channel format: user.{userId}.gaming-status
+ *
+ * Used by: Gaming status manager
+ * Authorization: User can only subscribe to their own gaming status channel
+ */
+Broadcast::channel('user.{userId}.gaming-status', function ($user, $userId) {
+    Log::info('[Broadcasting] User gaming status channel auth attempt', [
+        'authenticated_user_id' => $user->id ?? 'NULL',
+        'requested_user_id' => $userId,
+        'match' => (int) $user->id === (int) $userId,
+    ]);
+
+    // User can only listen to their own gaming status channel
+    return (int) $user->id === (int) $userId;
+});
