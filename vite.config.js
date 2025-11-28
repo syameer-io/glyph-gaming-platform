@@ -7,6 +7,7 @@ export default defineConfig({
         laravel({
             input: [
                 'resources/css/app.css',
+                'resources/css/voice-panel.css',
                 'resources/js/app.js',
                 'resources/js/voice-chat.js'
             ],

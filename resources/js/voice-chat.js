@@ -16,17 +16,32 @@ import AgoraRTC from 'agora-rtc-sdk-ng';
 /**
  * Configure Agora SDK settings - MUST be done before creating any clients
  * This suppresses non-critical errors and CORS issues with stats collectors
+ *
+ * NOTE: The CORS errors from statscollector-*.agora.io and web-*.statscollector.sd-rtn.com
+ * are Agora's telemetry/analytics system. These are NON-BLOCKING and don't affect voice
+ * functionality. They appear because browsers block cross-origin requests to Agora's
+ * stats servers. This is expected behavior in development environments.
  */
 
-// Set log level to WARNING (2) to reduce console noise
+// Set log level to ERROR (3) to minimize console noise
 // Levels: 0=DEBUG, 1=INFO, 2=WARNING, 3=ERROR, 4=NONE
-AgoraRTC.setLogLevel(2);
+AgoraRTC.setLogLevel(3);
 
-// Disable log upload to prevent CORS errors with statscollector-*.agora.io
+// Disable log upload to prevent some CORS errors with statscollector-*.agora.io
 // This is safe for development/production - logs are local only
 AgoraRTC.disableLogUpload();
 
-console.log('[Agora SDK] Configured: log level=WARNING, log upload=disabled');
+// Disable area-specific stats collection to reduce CORS errors
+// These are optional telemetry features that don't affect core functionality
+try {
+    // Disable cloud proxy stats (reduces some network requests)
+    AgoraRTC.setParameter('ENABLE_REPORT_DATACHANNEL', false);
+    AgoraRTC.setParameter('ENABLE_INSTANT_ANALYTICS', false);
+} catch (e) {
+    // Parameters may not be available in all SDK versions - safe to ignore
+}
+
+console.log('[Agora SDK] Configured: log level=ERROR, telemetry reduced');
 
 class VoiceChat {
     constructor() {
@@ -63,6 +78,10 @@ class VoiceChat {
             uplink: 0,
             downlink: 0
         };
+
+        // Network stats for voice panel (Phase 5)
+        this.lastPing = 0;
+        this.lastPacketLoss = 0;
 
         // Auto-reconnection settings
         this.reconnectAttempts = 0;
@@ -265,9 +284,19 @@ class VoiceChat {
         });
 
         // Network quality updates (for monitoring connection quality)
-        this.client.on('network-quality', (stats) => {
+        this.client.on('network-quality', async (stats) => {
             this.networkQuality.uplink = stats.uplinkNetworkQuality;
             this.networkQuality.downlink = stats.downlinkNetworkQuality;
+
+            // Get RTT stats for voice panel (Phase 5)
+            try {
+                const rtcStats = this.client.getRTCStats();
+                if (rtcStats) {
+                    this.lastPing = rtcStats.RTT || 0;
+                }
+            } catch (e) {
+                // Stats not available, use estimates
+            }
 
             this.updateNetworkQuality();
         });
@@ -356,6 +385,14 @@ class VoiceChat {
 
                 this.showNotification('Connected to voice channel', 'success');
 
+                // Dispatch event for voice panel (Phase 5)
+                window.dispatchEvent(new CustomEvent('voice-connected', {
+                    detail: {
+                        channelId: this.currentChannelId,
+                        channelName: this.currentChannelName
+                    }
+                }));
+
                 // Fetch participants from server
                 this.fetchParticipants();
                 break;
@@ -368,6 +405,9 @@ class VoiceChat {
             case 'DISCONNECTED':
                 this.isConnected = false;
                 this.isConnecting = false;
+
+                // Dispatch event for voice panel (Phase 5)
+                window.dispatchEvent(new CustomEvent('voice-disconnected'));
 
                 // Only attempt auto-reconnect if disconnected unexpectedly
                 if (reason !== 'LEAVE' && this.currentChannelId) {
@@ -488,6 +528,20 @@ class VoiceChat {
         if (this.callbacks.onNetworkQualityChange) {
             this.callbacks.onNetworkQualityChange(quality);
         }
+
+        // Dispatch event for voice panel (Phase 5)
+        // Calculate ping based on RTT stats or estimate from quality
+        const estimatedPing = quality.overall === 0 ? 0 :
+                              quality.overall <= 2 ? 25 :
+                              quality.overall <= 4 ? 80 : 150;
+
+        window.dispatchEvent(new CustomEvent('voice-quality-update', {
+            detail: {
+                quality: quality.status,
+                ping: this.lastPing || estimatedPing,
+                packetLoss: this.lastPacketLoss || 0
+            }
+        }));
 
         // Show warning if quality is poor
         if (quality.overall >= 5 && this.isConnected) {

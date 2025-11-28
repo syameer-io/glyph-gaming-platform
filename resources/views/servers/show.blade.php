@@ -8,6 +8,7 @@
 @endpush
 
 @push('styles')
+@vite(['resources/css/voice-panel.css'])
 <style>
     /* Hide x-cloak elements until Alpine.js loads */
     [x-cloak] { display: none !important; }
@@ -589,35 +590,11 @@
 {{-- Phase 3: Search Modal --}}
 <x-search-modal :server="$server" />
 
-<!-- Voice Controls Panel (Fixed Bottom Bar) -->
-<div id="voice-controls-panel" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background-color: #18181b; border-top: 2px solid #3f3f46; padding: 12px 20px; z-index: 1000; box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);">
-    <div style="max-width: 1400px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between;">
-        <div style="display: flex; align-items: center; gap: 16px;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <div style="width: 8px; height: 8px; border-radius: 50%; background-color: #10b981;" id="voice-connection-indicator"></div>
-                <div>
-                    <div style="font-size: 12px; color: #71717a; font-weight: 600;">VOICE CONNECTED</div>
-                    <div style="font-size: 14px; color: #efeff1; font-weight: 600;" id="voice-channel-name">Voice Channel</div>
-                </div>
-            </div>
-            <div id="voice-network-quality" style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; background-color: #0e0e10; border-radius: 6px;">
-                <div style="width: 6px; height: 6px; border-radius: 50%; background-color: #10b981;" id="network-quality-indicator"></div>
-                <span style="font-size: 12px; color: #71717a;">Connection: <span id="network-quality-text" style="color: #10b981; font-weight: 600;">Excellent</span></span>
-            </div>
-        </div>
+{{-- Phase 5: Voice Connected Panel --}}
+<x-voice-panel :server="$server" />
 
-        <div style="display: flex; align-items: center; gap: 12px;">
-            <button id="mute-toggle-btn" onclick="toggleMute()" style="background-color: #3f3f46; color: #efeff1; border: none; padding: 10px 20px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px;">
-                <span id="mute-icon">🎤</span>
-                <span id="mute-text">Mute</span>
-            </button>
-            <button id="disconnect-btn" onclick="disconnectVoice()" style="background-color: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px;">
-                <span>📞</span>
-                <span>Disconnect</span>
-            </button>
-        </div>
-    </div>
-</div>
+{{-- Phase 5: Voice Settings Popup --}}
+<x-voice-settings-popup />
 
 <script>
 function toggleKebabMenu(menuId) {
@@ -961,12 +938,6 @@ async function joinVoiceChannel(serverId, channelId, channelName) {
             await disconnectVoice();
         }
 
-        // Show connecting state
-        const connectionIndicator = document.getElementById('voice-connection-indicator');
-        if (connectionIndicator) {
-            connectionIndicator.classList.add('connecting');
-        }
-
         showNotification('Connecting to voice channel...', 'info');
 
         // Import the VoiceChat class (check if already loaded globally)
@@ -999,13 +970,11 @@ async function joinVoiceChannel(serverId, channelId, channelName) {
             showNotification(message, type);
         });
 
-        // Join the channel
+        // Join the channel (voice-chat.js dispatches voice-connected event)
         await voiceChat.joinChannel(channelId);
 
-        // Update UI
+        // Update local state
         currentVoiceChannel = channelId;
-        document.getElementById('voice-channel-name').textContent = channelName;
-        document.getElementById('voice-controls-panel').style.display = 'block';
 
         // Mark voice channel as active
         document.querySelectorAll('.voice-channel-link').forEach(link => {
@@ -1022,20 +991,10 @@ async function joinVoiceChannel(serverId, channelId, channelName) {
             myBadge.style.display = 'inline-block';
         }
 
-        if (connectionIndicator) {
-            connectionIndicator.classList.remove('connecting');
-        }
-
         showNotification(`Connected to ${channelName}`, 'success');
     } catch (error) {
         console.error('Error joining voice channel:', error);
         showNotification('Failed to join voice channel: ' + error.message, 'error');
-
-        const connectionIndicator = document.getElementById('voice-connection-indicator');
-        if (connectionIndicator) {
-            connectionIndicator.classList.remove('connecting');
-            connectionIndicator.classList.add('disconnected');
-        }
     }
 }
 
@@ -1048,8 +1007,10 @@ async function disconnectVoice() {
     try {
         await voiceChat.leaveChannel();
 
+        // Phase 5: Dispatch event for new voice panel
+        window.dispatchEvent(new CustomEvent('voice-disconnected'));
+
         // Update UI
-        document.getElementById('voice-controls-panel').style.display = 'none';
         document.querySelectorAll('.voice-channel-link').forEach(link => {
             link.classList.remove('active');
         });
@@ -1064,11 +1025,6 @@ async function disconnectVoice() {
         currentVoiceChannel = null;
         isMuted = false;
 
-        // Reset mute button
-        document.getElementById('mute-toggle-btn').classList.remove('muted');
-        document.getElementById('mute-icon').textContent = '🎤';
-        document.getElementById('mute-text').textContent = 'Mute';
-
         showNotification('Disconnected from voice channel', 'info');
     } catch (error) {
         console.error('Error disconnecting from voice:', error);
@@ -1076,7 +1032,7 @@ async function disconnectVoice() {
     }
 }
 
-// Toggle Mute
+// Toggle Mute - Phase 5: Updated to work with new voice panel component
 async function toggleMute() {
     if (!voiceChat) {
         return;
@@ -1085,20 +1041,14 @@ async function toggleMute() {
     try {
         isMuted = await voiceChat.toggleMute();
 
-        // Update mute button UI
-        const muteBtn = document.getElementById('mute-toggle-btn');
-        const muteIcon = document.getElementById('mute-icon');
-        const muteText = document.getElementById('mute-text');
+        // Phase 5: Dispatch event for new voice panel component
+        window.dispatchEvent(new CustomEvent('voice-mute-changed', {
+            detail: { isMuted: isMuted }
+        }));
 
         if (isMuted) {
-            muteBtn.classList.add('muted');
-            muteIcon.textContent = '🔇';
-            muteText.textContent = 'Unmute';
             showNotification('Microphone muted', 'info');
         } else {
-            muteBtn.classList.remove('muted');
-            muteIcon.textContent = '🎤';
-            muteText.textContent = 'Mute';
             showNotification('Microphone unmuted', 'success');
         }
     } catch (error) {
@@ -1107,51 +1057,18 @@ async function toggleMute() {
     }
 }
 
-// Update Connection State UI
+// Update Connection State UI - Phase 5: Now handled by voice panel component
 function updateConnectionUI(state) {
-    const indicator = document.getElementById('voice-connection-indicator');
-    if (!indicator) return;
-
-    indicator.classList.remove('connecting', 'disconnected');
-
-    switch (state) {
-        case 'CONNECTING':
-            indicator.classList.add('connecting');
-            break;
-        case 'CONNECTED':
-            indicator.style.backgroundColor = '#10b981';
-            break;
-        case 'DISCONNECTED':
-            indicator.classList.add('disconnected');
-            break;
-        case 'RECONNECTING':
-            indicator.classList.add('connecting');
-            break;
-    }
+    // Legacy function - the new voice panel handles this via events
+    // Keeping for backwards compatibility with voiceChat callbacks
+    console.log('[Voice] Connection state:', state);
 }
 
-// Update Network Quality UI
+// Update Network Quality UI - Phase 5: Now handled by voice panel component
 function updateNetworkQualityUI(quality) {
-    const qualityIndicator = document.getElementById('network-quality-indicator');
-    const qualityText = document.getElementById('network-quality-text');
-
-    if (!qualityIndicator || !qualityText) return;
-
-    qualityIndicator.classList.remove('network-quality-excellent', 'network-quality-good', 'network-quality-poor');
-
-    if (quality >= 4) {
-        qualityIndicator.classList.add('network-quality-excellent');
-        qualityText.textContent = 'Excellent';
-        qualityText.style.color = '#10b981';
-    } else if (quality >= 2) {
-        qualityIndicator.classList.add('network-quality-good');
-        qualityText.textContent = 'Good';
-        qualityText.style.color = '#f59e0b';
-    } else {
-        qualityIndicator.classList.add('network-quality-poor');
-        qualityText.textContent = 'Poor';
-        qualityText.style.color = '#ef4444';
-    }
+    // Legacy function - the new voice panel handles this via voice-quality-update events
+    // The voice-chat.js dispatches these events automatically
+    console.log('[Voice] Network quality:', quality);
 }
 
 // Update Voice User Indicators

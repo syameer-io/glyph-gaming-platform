@@ -30,7 +30,7 @@ Transform Glyph's server interface from a basic functional layout into a polishe
 | 2 | [Member List Enhancement](./PHASE-2-MEMBER-LIST-ENHANCEMENT.md) | **Complete** | High | Medium |
 | 3 | [Server Header & Navigation](./PHASE-3-SERVER-HEADER-NAVIGATION.md) | **Complete** | Medium | Medium |
 | 4 | [Voice Channel Sidebar Integration](./PHASE-4-VOICE-CHANNEL-SIDEBAR-INTEGRATION.md) | **Complete** | High | High |
-| 5 | [Voice Connected Panel](./PHASE-5-VOICE-CONNECTED-PANEL.md) | Not Started | High | Medium |
+| 5 | [Voice Connected Panel](./PHASE-5-VOICE-CONNECTED-PANEL.md) | **Complete** | High | Medium |
 | 6 | [Voice Channel Main View](./PHASE-6-VOICE-CHANNEL-MAIN-VIEW.md) | Not Started | Medium | High |
 
 ---
@@ -120,15 +120,15 @@ Transform Glyph's server interface from a basic functional layout into a polishe
 - [x] Real-time updates
 
 ### Phase 5: Voice Connected Panel
-- [ ] Panel layout redesign
-- [ ] Channel info section
-- [ ] Connection quality indicator
-- [ ] Control buttons (Row 1)
-- [ ] Control buttons (Row 2)
-- [ ] Disconnect button
-- [ ] Voice settings quick access
-- [ ] Connection status indicator
-- [ ] Timer display
+- [x] Panel layout redesign
+- [x] Channel info section
+- [x] Connection quality indicator
+- [x] Control buttons (Row 1)
+- [ ] Control buttons (Row 2) - Video, Screen Share, Activities (future)
+- [x] Disconnect button
+- [x] Voice settings quick access
+- [x] Connection status indicator
+- [x] Timer display
 
 ### Phase 6: Voice Channel Main View
 - [ ] Voice channel page route
