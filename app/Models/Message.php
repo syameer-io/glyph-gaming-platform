@@ -15,11 +15,16 @@ class Message extends Model
         'content',
         'is_edited',
         'edited_at',
+        'is_pinned',
+        'pinned_at',
+        'pinned_by',
     ];
 
     protected $casts = [
         'is_edited' => 'boolean',
         'edited_at' => 'datetime',
+        'is_pinned' => 'boolean',
+        'pinned_at' => 'datetime',
     ];
 
     public function channel()
@@ -30,6 +35,11 @@ class Message extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function pinnedByUser()
+    {
+        return $this->belongsTo(User::class, 'pinned_by');
     }
 
     public function canEdit($userId)

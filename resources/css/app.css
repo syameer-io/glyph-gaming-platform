@@ -3,6 +3,7 @@
 @import './lobby.css';
 @import './sidebar.css';
 @import './members.css';
+@import './header.css';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';

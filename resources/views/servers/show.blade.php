@@ -226,19 +226,13 @@
 <div style="display: flex; height: 100vh;">
     <!-- Server Sidebar -->
     <div style="width: 240px; background-color: #18181b; display: flex; flex-direction: column;">
-        <div style="padding: 16px; border-bottom: 1px solid #3f3f46;">
-            <h3 style="font-size: 16px; margin: 0;">{{ $server->name }}</h3>
-            @if(auth()->user()->isServerAdmin($server->id))
-                <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px;">
-                    <div>
-                        <span style="font-size: 12px; color: #71717a;">Invite Code: </span>
-                        <code style="font-size: 12px; background-color: #0e0e10; padding: 2px 6px; border-radius: 4px;">{{ $server->invite_code }}</code>
-                    </div>
-                    <a href="{{ route('server.admin.settings', $server) }}" class="btn btn-secondary btn-sm">
-                        Server Settings
-                    </a>
-                </div>
-            @endif
+        {{-- Phase 3: Server Dropdown Header --}}
+        <div class="server-header" style="padding: 12px 16px; border-bottom: 1px solid #3f3f46;">
+            <x-server-dropdown
+                :server="$server"
+                :isAdmin="auth()->user()->isServerAdmin($server->id)"
+                :isOwner="$server->creator_id === auth()->id()"
+            />
         </div>
 
         <!-- Channels List - Phase 1 UI Improvement -->
@@ -316,16 +310,62 @@
     </div>
 
     <!-- Main Content -->
-    <div style="flex: 1; display: flex; flex-direction: column; background-color: #0e0e10;">
-        <!-- Header Bar -->
-        <div style="padding: 16px; border-bottom: 1px solid #3f3f46; background-color: #18181b; display: flex; align-items: center; justify-content: space-between;">
+    <div
+        style="flex: 1; display: flex; flex-direction: column; background-color: #0e0e10;"
+        x-data="{
+            memberListVisible: localStorage.getItem('memberListVisible') !== 'false'
+        }"
+        @toggle-member-list.window="memberListVisible = $event.detail.visible"
+    >
+        <!-- Header Bar - Phase 3 Enhanced -->
+        <div class="channel-header" style="padding: 12px 16px; border-bottom: 1px solid #3f3f46; background-color: #18181b; display: flex; align-items: center; justify-content: space-between;">
             <div style="display: flex; align-items: center; gap: 12px;">
-                <a href="{{ route('dashboard') }}" class="back-button" style="display: flex; align-items: center; gap: 8px; color: #71717a; text-decoration: none; padding: 8px 12px; border-radius: 6px; transition: background-color 0.2s, color 0.2s;">
-                    <span style="font-size: 16px;">←</span>
-                    <span style="font-size: 14px; font-weight: 500;">Dashboard</span>
-                </a>
-                <span style="color: #3f3f46; font-size: 16px;">|</span>
-                <h3 style="margin: 0; font-size: 18px; color: #efeff1;">{{ $server->name }}</h3>
+                {{-- Breadcrumb Navigation --}}
+                <nav class="breadcrumb">
+                    <a href="{{ route('dashboard') }}" class="breadcrumb-item">
+                        <svg class="breadcrumb-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                        </svg>
+                        <span class="breadcrumb-item-text">Dashboard</span>
+                    </a>
+                    <span class="breadcrumb-separator">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </span>
+                    <span class="breadcrumb-item active">
+                        <span class="breadcrumb-item-text">{{ $server->name }}</span>
+                    </span>
+                </nav>
+            </div>
+
+            {{-- Header Actions --}}
+            <div class="channel-header-actions">
+                {{-- Member List Toggle --}}
+                <button
+                    class="header-icon-btn"
+                    :class="{ 'active': memberListVisible }"
+                    @click="memberListVisible = !memberListVisible; $dispatch('toggle-member-list', { visible: memberListVisible }); localStorage.setItem('memberListVisible', memberListVisible)"
+                    title="Toggle Member List"
+                >
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                    </svg>
+                </button>
+
+                {{-- Search --}}
+                <div class="header-search" @click="$dispatch('open-search-modal')">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <input
+                        type="text"
+                        placeholder="Search"
+                        readonly
+                        @focus="$dispatch('open-search-modal')"
+                    >
+                    <span class="search-shortcut">Ctrl+K</span>
+                </div>
             </div>
         </div>
         
@@ -460,8 +500,20 @@
         </div>
     </div>
 
-    <!-- Members Sidebar - Phase 2 Enhanced -->
-    <div class="member-list-container" style="width: 240px; background-color: #18181b; padding: 8px; overflow-y: auto;">
+    <!-- Members Sidebar - Phase 2 Enhanced + Phase 3 Toggle -->
+    <div
+        class="member-list-container"
+        x-data="{ visible: localStorage.getItem('memberListVisible') !== 'false' }"
+        @toggle-member-list.window="visible = $event.detail.visible"
+        x-show="visible"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0 transform translate-x-4"
+        x-transition:enter-end="opacity-100 transform translate-x-0"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100 transform translate-x-0"
+        x-transition:leave-end="opacity-0 transform translate-x-4"
+        style="width: 240px; background-color: #18181b; padding: 8px; overflow-y: auto;"
+    >
         <div class="member-list-header">
             Members — {{ $server->members->count() }}
         </div>
@@ -533,6 +585,9 @@
         @endforeach
     </div>
 </div>
+
+{{-- Phase 3: Search Modal --}}
+<x-search-modal :server="$server" />
 
 <!-- Voice Controls Panel (Fixed Bottom Bar) -->
 <div id="voice-controls-panel" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background-color: #18181b; border-top: 2px solid #3f3f46; padding: 12px 20px; z-index: 1000; box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);">

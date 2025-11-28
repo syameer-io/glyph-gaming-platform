@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\MatchmakingApiController;
 use App\Http\Controllers\Api\LobbyStatusController;
 use App\Http\Controllers\Api\UserStatusController;
+use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\LobbyController;
 
 /*
@@ -79,3 +80,20 @@ Route::middleware(['web', 'auth'])->prefix('status')->group(function () {
 Route::middleware(['web', 'auth'])->get('/users/{user}/status', [UserStatusController::class, 'getStatus'])
     ->middleware('throttle:120,1')
     ->name('api.users.status');
+
+// Phase 3: Search API Routes
+Route::middleware(['web', 'auth'])->group(function () {
+    // Server message search
+    Route::get('/servers/{server}/search', [SearchController::class, 'search'])
+        ->middleware('throttle:30,1')
+        ->name('api.servers.search');
+
+    // Pin/Unpin messages
+    Route::post('/messages/{message}/pin', [SearchController::class, 'pinMessage'])
+        ->middleware('throttle:20,1')
+        ->name('api.messages.pin');
+
+    Route::post('/messages/{message}/unpin', [SearchController::class, 'unpinMessage'])
+        ->middleware('throttle:20,1')
+        ->name('api.messages.unpin');
+});
