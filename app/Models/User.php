@@ -38,6 +38,118 @@ class User extends Authenticatable
         return $this->hasOne(Profile::class);
     }
 
+    /**
+     * Get the user's status record.
+     * Phase 2: Member List Enhancement
+     */
+    public function userStatus()
+    {
+        return $this->hasOne(UserStatus::class);
+    }
+
+    /**
+     * Get the current status for the user.
+     * Returns the UserStatus status if set, otherwise falls back to Profile status.
+     *
+     * Phase 2: Member List Enhancement
+     *
+     * @return string One of: 'online', 'idle', 'dnd', 'offline'
+     */
+    public function getCurrentStatus(): string
+    {
+        // Check UserStatus first
+        if ($this->userStatus && $this->userStatus->status) {
+            return $this->userStatus->status;
+        }
+
+        // Fallback to Profile status (legacy)
+        if ($this->profile && $this->profile->status) {
+            return $this->profile->status === 'online' ? 'online' : 'offline';
+        }
+
+        return 'offline';
+    }
+
+    /**
+     * Get the status color for UI rendering.
+     *
+     * Phase 2: Member List Enhancement
+     *
+     * @return string Hex color code
+     */
+    public function getStatusColor(): string
+    {
+        $status = $this->getCurrentStatus();
+        return UserStatus::STATUS_COLORS[$status] ?? UserStatus::STATUS_COLORS['offline'];
+    }
+
+    /**
+     * Get display activity for the user.
+     * Returns Steam current game or custom status text.
+     *
+     * Phase 2: Member List Enhancement
+     *
+     * @return string|null Activity description or null if none
+     */
+    public function getDisplayActivity(): ?string
+    {
+        // Priority 1: Steam "Currently Playing" status
+        if ($this->profile && $this->profile->current_game) {
+            return 'Playing ' . $this->profile->current_game;
+        }
+
+        // Priority 2: Custom status (if not expired)
+        if ($this->userStatus && $this->userStatus->hasCustomStatus()) {
+            return $this->userStatus->getFullCustomStatus();
+        }
+
+        return null;
+    }
+
+    /**
+     * Check if user is currently playing a game (Steam).
+     *
+     * Phase 2: Member List Enhancement
+     *
+     * @return bool
+     */
+    public function isPlayingGame(): bool
+    {
+        return $this->profile && !empty($this->profile->current_game);
+    }
+
+    /**
+     * Get the custom status (emoji + text) if set.
+     *
+     * Phase 2: Member List Enhancement
+     *
+     * @return array|null ['emoji' => string|null, 'text' => string|null]
+     */
+    public function getCustomStatus(): ?array
+    {
+        if (!$this->userStatus || !$this->userStatus->hasCustomStatus()) {
+            return null;
+        }
+
+        return [
+            'emoji' => $this->userStatus->custom_emoji,
+            'text' => $this->userStatus->custom_text,
+        ];
+    }
+
+    /**
+     * Set the user's status.
+     *
+     * Phase 2: Member List Enhancement
+     *
+     * @param string $status One of: 'online', 'idle', 'dnd', 'offline'
+     * @return UserStatus
+     */
+    public function setStatus(string $status): UserStatus
+    {
+        return UserStatus::setStatus($this->id, $status);
+    }
+
     public function friends()
     {
         return $this->belongsToMany(User::class, 'friends', 'user_id', 'friend_id')

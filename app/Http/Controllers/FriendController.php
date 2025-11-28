@@ -68,6 +68,9 @@ class FriendController extends Controller
         $targetUser = User::find($request->user_id);
 
         if ($currentUser->id === $targetUser->id) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'You cannot send a friend request to yourself.'], 400);
+            }
             return back()->with('error', 'You cannot send a friend request to yourself.');
         }
 
@@ -75,12 +78,23 @@ class FriendController extends Controller
             ->wherePivot('friend_id', $targetUser->id)
             ->first();
 
-        if ($existingFriendship) {
+        // Also check reverse direction (if target already sent us a request)
+        $reverseRequest = $targetUser->friends()
+            ->wherePivot('friend_id', $currentUser->id)
+            ->first();
+
+        if ($existingFriendship || $reverseRequest) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Friend request already exists.'], 400);
+            }
             return back()->with('error', 'Friend request already exists.');
         }
 
         $currentUser->friends()->attach($targetUser->id, ['status' => 'pending']);
 
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => 'Friend request sent!']);
+        }
         return back()->with('success', 'Friend request sent!');
     }
 

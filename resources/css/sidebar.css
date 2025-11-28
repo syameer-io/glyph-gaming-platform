@@ -1,0 +1,819 @@
+/**
+ * Sidebar Styles - Discord-Inspired Channel Sidebar
+ *
+ * A comprehensive stylesheet for the server channel sidebar component.
+ * Implements Discord-like UX patterns with collapsible categories,
+ * channel states, voice indicators, and smooth animations.
+ *
+ * @author Glyph Development Team
+ * @version 1.0.0
+ *
+ * Table of Contents:
+ * 1. Base Sidebar Container
+ * 2. Category Styles
+ * 3. Text Channel Styles
+ * 4. Voice Channel Styles
+ * 5. Unread Indicators
+ * 6. Channel Actions & Settings
+ * 7. Spacing & Separators
+ * 8. Animations & Transitions
+ * 9. Responsive Adjustments
+ * 10. Accessibility & Reduced Motion
+ * 11. High Contrast Mode
+ */
+
+/* =============================================================================
+   1. Base Sidebar Container
+   ============================================================================= */
+
+.server-sidebar {
+    width: 240px;
+    background-color: var(--sidebar-bg, #1e1e22);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+.sidebar-channels-container {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: var(--sidebar-padding-x, 8px);
+    scrollbar-width: thin;
+    scrollbar-color: var(--sidebar-bg-tertiary, #313338) transparent;
+}
+
+/* Custom scrollbar for WebKit browsers */
+.sidebar-channels-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.sidebar-channels-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar-channels-container::-webkit-scrollbar-thumb {
+    background-color: var(--sidebar-bg-tertiary, #313338);
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+.sidebar-channels-container::-webkit-scrollbar-thumb:hover {
+    background-color: var(--sidebar-channel-hover, #3f3f46);
+}
+
+/* =============================================================================
+   2. Category Styles
+   ============================================================================= */
+
+.channel-category {
+    margin-bottom: var(--category-gap, 16px);
+}
+
+.channel-category:last-child {
+    margin-bottom: 0;
+}
+
+/* Category Header - Full Width Clickable Area */
+.category-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--sidebar-padding-x, 8px);
+    margin-bottom: 4px;
+    cursor: pointer;
+    user-select: none;
+    border-radius: var(--radius-sm, 4px);
+    transition: background-color var(--transition-fast, 150ms ease);
+}
+
+.category-header:hover {
+    background-color: rgba(79, 84, 92, 0.16);
+}
+
+.category-header:hover .category-add-btn {
+    opacity: 1;
+}
+
+/* Category Header Left Side (Chevron + Name) */
+.category-header-left {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+}
+
+/* Chevron Icon with Rotation Animation */
+.category-chevron {
+    width: 12px;
+    height: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--sidebar-category-text, #96989d);
+    font-size: 10px;
+    transition: transform var(--transition-medium, 200ms ease);
+    flex-shrink: 0;
+}
+
+.category-chevron svg {
+    width: 12px;
+    height: 12px;
+    fill: currentColor;
+    transition: transform var(--transition-medium, 200ms ease);
+}
+
+/* Collapsed state - chevron rotates */
+.channel-category.collapsed .category-chevron,
+.channel-category.collapsed .category-chevron svg {
+    transform: rotate(-90deg);
+}
+
+/* Category Name - Uppercase Small Text */
+.category-name {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--sidebar-category-text, #96989d);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+}
+
+.category-header:hover .category-name {
+    color: var(--text-muted, #949ba4);
+}
+
+/* Category Add Button - Shows on Hover (Admins Only) */
+.category-add-btn {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--sidebar-add-button, #b5bac1);
+    opacity: 0;
+    cursor: pointer;
+    border-radius: var(--radius-sm, 4px);
+    transition: opacity var(--transition-fast, 150ms ease),
+                color var(--transition-fast, 150ms ease),
+                background-color var(--transition-fast, 150ms ease);
+    flex-shrink: 0;
+}
+
+.category-add-btn:hover {
+    color: var(--sidebar-add-button-hover, #dbdee1);
+    background-color: rgba(79, 84, 92, 0.24);
+}
+
+.category-add-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* Category Channels Container */
+.category-channels {
+    display: flex;
+    flex-direction: column;
+    gap: var(--channel-gap, 2px);
+    overflow: hidden;
+    transition: max-height var(--transition-slow, 300ms ease),
+                opacity var(--transition-medium, 200ms ease);
+}
+
+/* Collapsed State for Channels */
+.channel-category.collapsed .category-channels {
+    max-height: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Expanded State - Auto Height Workaround */
+.channel-category:not(.collapsed) .category-channels {
+    max-height: 1000px; /* Large enough for most cases */
+    opacity: 1;
+}
+
+/* =============================================================================
+   3. Text Channel Styles
+   ============================================================================= */
+
+.channel-item {
+    display: flex;
+    align-items: center;
+    height: 32px;
+    padding: 0 8px;
+    margin: 0 0 1px 0;
+    border-radius: var(--radius-sm, 4px);
+    cursor: pointer;
+    color: var(--sidebar-channel-text, #949ba4);
+    text-decoration: none;
+    transition: background-color var(--transition-fast, 150ms ease),
+                color var(--transition-fast, 150ms ease),
+                padding-left var(--transition-fast, 150ms ease);
+    position: relative;
+}
+
+.channel-item:hover {
+    background-color: var(--sidebar-channel-hover, #3f3f46);
+    color: var(--text-muted, #949ba4);
+}
+
+.channel-item:hover .channel-settings-btn {
+    opacity: 1;
+}
+
+/* Active/Selected Channel */
+.channel-item.active,
+.channel-item[aria-current="page"] {
+    background-color: var(--sidebar-channel-active, #404249);
+    color: var(--sidebar-channel-active-text, #ffffff);
+}
+
+.channel-item.active:hover {
+    background-color: var(--sidebar-channel-active, #404249);
+}
+
+/* Channel Icon (Hashtag, Lock, etc.) */
+.channel-icon {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 6px;
+    flex-shrink: 0;
+    color: inherit;
+    opacity: 0.7;
+    font-size: 16px;
+}
+
+.channel-icon svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+}
+
+.channel-item.active .channel-icon,
+.channel-item:hover .channel-icon {
+    opacity: 1;
+}
+
+/* Channel Name - Text Truncation */
+.channel-name {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 20px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+
+/* Channel Settings Button (Gear Icon on Hover) */
+.channel-settings-btn {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted, #949ba4);
+    opacity: 0;
+    cursor: pointer;
+    border-radius: var(--radius-sm, 4px);
+    margin-left: 4px;
+    flex-shrink: 0;
+    transition: opacity var(--transition-fast, 150ms ease),
+                color var(--transition-fast, 150ms ease),
+                background-color var(--transition-fast, 150ms ease);
+}
+
+.channel-settings-btn:hover {
+    color: var(--text-normal, #f2f3f5);
+    background-color: rgba(79, 84, 92, 0.32);
+}
+
+.channel-settings-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* Private/Locked Channel Indicator */
+.channel-item.private .channel-icon {
+    color: var(--text-faint, #6d6f78);
+}
+
+/* =============================================================================
+   4. Voice Channel Styles
+   ============================================================================= */
+
+.voice-channel-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 32px;
+    padding: 0 8px;
+    margin: 0 0 1px 0;
+    border-radius: var(--radius-sm, 4px);
+    cursor: pointer;
+    color: var(--sidebar-channel-text, #949ba4);
+    transition: background-color var(--transition-fast, 150ms ease),
+                color var(--transition-fast, 150ms ease);
+    position: relative;
+}
+
+.voice-channel-item:hover {
+    background-color: var(--sidebar-channel-hover, #3f3f46);
+    color: var(--text-muted, #949ba4);
+}
+
+.voice-channel-item:hover .channel-settings-btn {
+    opacity: 1;
+}
+
+/* Voice Channel Left Side */
+.voice-channel-left {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+}
+
+/* Voice Channel Icon (Speaker) */
+.voice-channel-icon {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 6px;
+    flex-shrink: 0;
+    color: inherit;
+    opacity: 0.7;
+    font-size: 16px;
+}
+
+.voice-channel-icon svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+}
+
+.voice-channel-item:hover .voice-channel-icon {
+    opacity: 1;
+}
+
+/* Voice Channel Name */
+.voice-channel-name {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 20px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+
+/* Voice Channel Right Side */
+.voice-channel-right {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+/* Voice User Count Badge */
+.voice-user-count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted, #949ba4);
+    background-color: var(--sidebar-bg-secondary, #2b2d31);
+    border-radius: 9px;
+    transition: background-color var(--transition-fast, 150ms ease),
+                color var(--transition-fast, 150ms ease);
+}
+
+.voice-channel-item:hover .voice-user-count-badge {
+    background-color: var(--sidebar-bg-tertiary, #313338);
+}
+
+/* Voice Connected State - Green Highlight */
+.voice-channel-item.voice-connected {
+    background-color: rgba(35, 165, 89, 0.16);
+    color: var(--voice-connected, #23a559);
+}
+
+.voice-channel-item.voice-connected:hover {
+    background-color: rgba(35, 165, 89, 0.24);
+}
+
+.voice-channel-item.voice-connected .voice-channel-icon {
+    opacity: 1;
+    color: var(--voice-connected, #23a559);
+}
+
+.voice-channel-item.voice-connected .voice-user-count-badge {
+    background-color: rgba(35, 165, 89, 0.32);
+    color: var(--voice-connected, #23a559);
+}
+
+/* Voice Channel Active Animation */
+.voice-channel-item.voice-active .voice-channel-icon {
+    animation: voicePulse 2s ease-in-out infinite;
+}
+
+@keyframes voicePulse {
+    0%, 100% {
+        opacity: 0.7;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+}
+
+/* Voice Users List (Connected Users) */
+.voice-users-list {
+    margin-left: 26px;
+    padding: 4px 0;
+}
+
+.voice-user-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm, 4px);
+    font-size: 13px;
+    color: var(--text-muted, #949ba4);
+    transition: background-color var(--transition-fast, 150ms ease);
+}
+
+.voice-user-item:hover {
+    background-color: rgba(79, 84, 92, 0.16);
+}
+
+.voice-user-avatar {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.voice-user-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Voice User Speaking Indicator */
+.voice-user-item.speaking {
+    color: var(--voice-connected, #23a559);
+}
+
+.voice-user-item.speaking .voice-user-avatar {
+    box-shadow: 0 0 0 2px var(--voice-connected, #23a559);
+}
+
+/* Voice User Muted Indicator */
+.voice-user-muted-icon {
+    width: 14px;
+    height: 14px;
+    color: var(--accent-danger, #ed4245);
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+/* =============================================================================
+   5. Unread Indicators
+   ============================================================================= */
+
+/* Unread Pill - White 4px Pill on Left */
+.channel-item.unread::before,
+.voice-channel-item.unread::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 8px;
+    background-color: var(--sidebar-unread-pill, #ffffff);
+    border-radius: 0 4px 4px 0;
+    transition: height var(--transition-fast, 150ms ease);
+}
+
+.channel-item.unread:hover::before,
+.voice-channel-item.unread:hover::before {
+    height: 20px;
+}
+
+/* Unread Text State - Bold */
+.channel-item.unread .channel-name,
+.voice-channel-item.unread .voice-channel-name {
+    font-weight: 600;
+    color: var(--text-normal, #f2f3f5);
+}
+
+/* Mention Badge - Notification Count */
+.channel-mention-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #ffffff;
+    background-color: var(--accent-danger, #ed4245);
+    border-radius: 8px;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+/* High Priority Mention - Subtle Glow */
+.channel-mention-badge.high-priority {
+    box-shadow: 0 0 8px rgba(237, 66, 69, 0.5);
+    animation: mentionGlow 2s ease-in-out infinite;
+}
+
+@keyframes mentionGlow {
+    0%, 100% {
+        box-shadow: 0 0 4px rgba(237, 66, 69, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 12px rgba(237, 66, 69, 0.6);
+    }
+}
+
+/* =============================================================================
+   6. Channel Actions & Settings
+   ============================================================================= */
+
+/* Create Channel Button */
+.create-channel-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    margin: 4px 0;
+    border-radius: var(--radius-sm, 4px);
+    color: var(--text-muted, #949ba4);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color var(--transition-fast, 150ms ease),
+                color var(--transition-fast, 150ms ease);
+}
+
+.create-channel-btn:hover {
+    background-color: var(--sidebar-channel-hover, #3f3f46);
+    color: var(--text-normal, #f2f3f5);
+}
+
+.create-channel-btn svg {
+    width: 16px;
+    height: 16px;
+    opacity: 0.7;
+}
+
+.create-channel-btn:hover svg {
+    opacity: 1;
+}
+
+/* =============================================================================
+   7. Spacing & Separators
+   ============================================================================= */
+
+/* Category Separator */
+.category-separator {
+    height: 1px;
+    background-color: var(--sidebar-separator, #3f3f46);
+    margin: var(--category-gap, 16px) var(--sidebar-padding-x, 8px);
+}
+
+/* Thin Separator Between Channel Types */
+.channel-type-separator {
+    height: 1px;
+    background-color: rgba(79, 84, 92, 0.24);
+    margin: 8px 0;
+}
+
+/* =============================================================================
+   8. Animations & Transitions
+   ============================================================================= */
+
+/* Smooth Collapse/Expand Animation for Categories */
+.channel-category .category-channels {
+    transform-origin: top;
+}
+
+/* Fade In Animation for New Channels */
+@keyframes channelFadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.channel-item.new-channel,
+.voice-channel-item.new-channel {
+    animation: channelFadeIn 0.3s ease-out;
+}
+
+/* Shake Animation for Errors */
+@keyframes channelShake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(-4px);
+    }
+    75% {
+        transform: translateX(4px);
+    }
+}
+
+.channel-item.error,
+.voice-channel-item.error {
+    animation: channelShake 0.3s ease-in-out;
+}
+
+/* =============================================================================
+   9. Responsive Adjustments
+   ============================================================================= */
+
+@media (max-width: 768px) {
+    .server-sidebar {
+        width: 100%;
+        max-width: 240px;
+    }
+
+    /* Larger touch targets on mobile */
+    .channel-item,
+    .voice-channel-item {
+        height: 40px;
+        padding: 0 12px;
+    }
+
+    .category-header {
+        padding: 4px var(--sidebar-padding-x, 8px);
+    }
+
+    /* Always show settings button on mobile (no hover) */
+    .channel-settings-btn,
+    .category-add-btn {
+        opacity: 0.7;
+    }
+}
+
+@media (max-width: 480px) {
+    .server-sidebar {
+        max-width: 100%;
+    }
+
+    /* Even larger touch targets on small screens */
+    .channel-item,
+    .voice-channel-item {
+        height: 44px;
+    }
+}
+
+/* =============================================================================
+   10. Accessibility & Reduced Motion
+   ============================================================================= */
+
+/* Reduced Motion Preference */
+@media (prefers-reduced-motion: reduce) {
+    .channel-item,
+    .voice-channel-item,
+    .category-header,
+    .category-chevron,
+    .category-chevron svg,
+    .category-channels,
+    .category-add-btn,
+    .channel-settings-btn,
+    .voice-user-count-badge,
+    .channel-mention-badge {
+        transition: none !important;
+        animation: none !important;
+    }
+
+    .channel-category.collapsed .category-channels {
+        display: none;
+    }
+
+    .channel-category:not(.collapsed) .category-channels {
+        display: flex;
+    }
+
+    .voice-channel-item.voice-active .voice-channel-icon {
+        animation: none;
+    }
+
+    .channel-mention-badge.high-priority {
+        animation: none;
+        box-shadow: 0 0 4px rgba(237, 66, 69, 0.4);
+    }
+}
+
+/* Focus Visible Styles for Keyboard Navigation */
+.channel-item:focus-visible,
+.voice-channel-item:focus-visible,
+.category-header:focus-visible,
+.category-add-btn:focus-visible,
+.channel-settings-btn:focus-visible {
+    outline: 2px solid var(--accent-primary, #667eea);
+    outline-offset: 2px;
+}
+
+/* Skip focus ring on mouse click */
+.channel-item:focus:not(:focus-visible),
+.voice-channel-item:focus:not(:focus-visible),
+.category-header:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* Screen Reader Only Text */
+.sidebar-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* =============================================================================
+   11. High Contrast Mode
+   ============================================================================= */
+
+@media (prefers-contrast: high) {
+    .channel-item,
+    .voice-channel-item {
+        border: 1px solid transparent;
+    }
+
+    .channel-item:hover,
+    .voice-channel-item:hover {
+        border-color: var(--sidebar-separator, #3f3f46);
+    }
+
+    .channel-item.active,
+    .channel-item[aria-current="page"] {
+        border-color: var(--text-normal, #f2f3f5);
+    }
+
+    .channel-item.unread::before,
+    .voice-channel-item.unread::before {
+        width: 6px;
+    }
+
+    .category-separator {
+        height: 2px;
+    }
+}
+
+/* =============================================================================
+   12. Dark Mode Enhancements (Already dark by default)
+   ============================================================================= */
+
+/* Force dark mode colors even in light mode system preference */
+@media (prefers-color-scheme: light) {
+    .server-sidebar {
+        background-color: var(--sidebar-bg, #1e1e22);
+        color: var(--text-normal, #f2f3f5);
+    }
+}
+
+/* =============================================================================
+   13. Print Styles (Hide Interactive Sidebar)
+   ============================================================================= */
+
+@media print {
+    .server-sidebar {
+        display: none !important;
+    }
+}

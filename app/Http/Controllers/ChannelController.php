@@ -64,9 +64,24 @@ class ChannelController extends Controller
             return redirect()->route('server.show', $server);
         }
 
-        $server->load(['channels', 'members.profile', 'members.roles' => function ($query) use ($server) {
-            $query->where('user_roles.server_id', $server->id);
-        }]);
+        // Load server data with member status and lobbies (Phase 2: Member List Enhancement)
+        $server->load([
+            'channels',
+            'members.profile',
+            'members.userStatus', // Phase 2: Load user status for member list
+            'members.gameLobbies' => function ($query) {
+                // Only load active, non-expired lobbies
+                $query->where('is_active', true)
+                    ->where(function($q) {
+                        $q->whereNull('expires_at')
+                          ->orWhere('expires_at', '>', now());
+                    })
+                    ->orderBy('created_at', 'desc');
+            },
+            'members.roles' => function ($query) use ($server) {
+                $query->where('user_roles.server_id', $server->id);
+            }
+        ]);
 
         $messages = $channel->messages()
             ->with('user.profile')

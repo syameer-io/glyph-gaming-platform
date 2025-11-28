@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\MatchmakingApiController;
 use App\Http\Controllers\Api\LobbyStatusController;
+use App\Http\Controllers\Api\UserStatusController;
 use App\Http\Controllers\LobbyController;
 
 /*
@@ -49,3 +50,32 @@ Route::middleware(['web', 'auth'])->group(function () {
     // Game configurations
     Route::get('/games/{gameId}/join-methods', [LobbyController::class, 'getGameJoinMethods']);
 });
+
+// Phase 2: User Status API Routes
+// Note: Using 'web' middleware for session-based auth (same-origin requests)
+Route::middleware(['web', 'auth'])->prefix('status')->group(function () {
+    // Update user status (online, idle, dnd, offline)
+    Route::post('/', [UserStatusController::class, 'update'])
+        ->middleware('throttle:30,1')
+        ->name('api.status.update');
+
+    // Set custom status (text + emoji with optional expiry)
+    Route::post('/custom', [UserStatusController::class, 'setCustomStatus'])
+        ->middleware('throttle:20,1')
+        ->name('api.status.custom.set');
+
+    // Clear custom status
+    Route::delete('/custom', [UserStatusController::class, 'clearCustomStatus'])
+        ->middleware('throttle:20,1')
+        ->name('api.status.custom.clear');
+
+    // Bulk fetch statuses for multiple users
+    Route::post('/bulk', [UserStatusController::class, 'bulkStatus'])
+        ->middleware('throttle:60,1')
+        ->name('api.status.bulk');
+});
+
+// Get specific user's status (public endpoint for members)
+Route::middleware(['web', 'auth'])->get('/users/{user}/status', [UserStatusController::class, 'getStatus'])
+    ->middleware('throttle:120,1')
+    ->name('api.users.status');

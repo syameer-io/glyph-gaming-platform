@@ -106,10 +106,11 @@ class ServerController extends Controller
             return redirect()->route('dashboard')->with('error', 'You are banned from this server.');
         }
 
-        // Load server data with member lobbies to prevent N+1 queries (Phase 1: Lobby Integration)
+        // Load server data with member lobbies to prevent N+1 queries (Phase 1: Lobby Integration, Phase 2: Member Status)
         $server->load([
             'channels',
             'members.profile',
+            'members.userStatus', // Phase 2: Load user status for member list
             'members.gameLobbies' => function ($query) {
                 // Only load active, non-expired lobbies
                 $query->where('is_active', true)

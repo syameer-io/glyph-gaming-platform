@@ -241,39 +241,44 @@
             @endif
         </div>
 
-        <!-- Rest of the sidebar remains the same -->
-        <!-- Channels List -->
-        <div style="flex: 1; overflow-y: auto; padding: 8px;">
-            <div style="margin-bottom: 16px;">
-                <p style="font-size: 12px; font-weight: 600; color: #71717a; text-transform: uppercase; margin-bottom: 8px;">Text Channels</p>
+        <!-- Channels List - Phase 1 UI Improvement -->
+        <div class="sidebar-channels-container" style="flex: 1; overflow-y: auto; padding: var(--sidebar-padding-x, 8px);">
+            {{-- Text Channels Category --}}
+            <x-channel-category
+                name="TEXT CHANNELS"
+                :serverId="$server->id"
+                :canAddChannel="auth()->user()->isServerAdmin($server->id)"
+                :addChannelRoute="route('server.admin.settings', $server) . '#channels'"
+                type="text"
+            >
                 @foreach($server->channels->where('type', 'text') as $ch)
-                    <a href="{{ route('channel.show', [$server, $ch]) }}" 
-                       class="sidebar-link {{ isset($channel) && $channel->id === $ch->id ? 'active' : '' }}"
-                       style="display: block; margin-bottom: 4px;">
-                        <span style="color: #71717a; margin-right: 8px;">#</span>
-                        {{ $ch->name }}
-                    </a>
+                    <x-text-channel-item
+                        :channel="$ch"
+                        :server="$server"
+                        :active="isset($channel) && $channel->id === $ch->id"
+                        :canEdit="auth()->user()->isServerAdmin($server->id)"
+                        :editRoute="route('server.admin.settings', $server) . '#channels'"
+                    />
                 @endforeach
-            </div>
+            </x-channel-category>
 
-            <div>
-                <p style="font-size: 12px; font-weight: 600; color: #71717a; text-transform: uppercase; margin-bottom: 8px;">Voice Channels</p>
+            {{-- Voice Channels Category --}}
+            <x-channel-category
+                name="VOICE CHANNELS"
+                :serverId="$server->id"
+                :canAddChannel="auth()->user()->isServerAdmin($server->id)"
+                :addChannelRoute="route('server.admin.settings', $server) . '#channels'"
+                type="voice"
+            >
                 @foreach($server->channels->where('type', 'voice') as $ch)
-                    <div class="sidebar-link voice-channel-link"
-                         data-channel-id="{{ $ch->id }}"
-                         data-channel-name="{{ $ch->name }}"
-                         style="cursor: pointer; display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;"
-                         onclick="joinVoiceChannel({{ $server->id }}, {{ $ch->id }}, '{{ $ch->name }}')">
-                        <div style="display: flex; align-items: center;">
-                            <span style="color: #71717a; margin-right: 8px;">🔊</span>
-                            {{ $ch->name }}
-                        </div>
-                        <div class="voice-user-count" data-channel-id="{{ $ch->id }}" style="display: none; font-size: 11px; color: #71717a; background-color: #3f3f46; padding: 2px 6px; border-radius: 4px;">
-                            <span class="count">0</span>
-                        </div>
-                    </div>
+                    <x-voice-channel-item
+                        :channel="$ch"
+                        :server="$server"
+                        :canEdit="auth()->user()->isServerAdmin($server->id)"
+                        :editRoute="route('server.admin.settings', $server) . '#channels'"
+                    />
                 @endforeach
-            </div>
+            </x-channel-category>
         </div>
 
         <!-- User Section -->
@@ -455,169 +460,75 @@
         </div>
     </div>
 
-    <!-- Members Sidebar -->
-    <div style="width: 240px; background-color: #18181b; padding: 16px; overflow-y: auto;">
-        <p style="font-size: 12px; font-weight: 600; color: #71717a; text-transform: uppercase; margin-bottom: 16px;">
+    <!-- Members Sidebar - Phase 2 Enhanced -->
+    <div class="member-list-container" style="width: 240px; background-color: #18181b; padding: 8px; overflow-y: auto;">
+        <div class="member-list-header">
             Members — {{ $server->members->count() }}
-        </p>
-        
+        </div>
+
         @php
             // Group members by their highest role
             $membersByRole = collect();
-            
+
             foreach($server->members as $member) {
                 $highestRole = $member->roles()
                     ->wherePivot('server_id', $server->id)
                     ->orderBy('position', 'desc')
                     ->first();
-                
+
                 if ($highestRole) {
                     $roleKey = $highestRole->name;
                     if (!$membersByRole->has($roleKey)) {
-                        $membersByRole->put($roleKey, collect());
+                        $membersByRole->put($roleKey, collect([
+                            'role' => $highestRole,
+                            'members' => collect()
+                        ]));
                     }
-                    $membersByRole->get($roleKey)->push($member);
+                    $membersByRole->get($roleKey)['members']->push($member);
                 } else {
                     // Members with no custom roles go to default "Member" role
                     $defaultRole = $server->roles()->where('name', 'Member')->first();
                     if ($defaultRole) {
                         $roleKey = 'Member';
                         if (!$membersByRole->has($roleKey)) {
-                            $membersByRole->put($roleKey, collect());
+                            $membersByRole->put($roleKey, collect([
+                                'role' => $defaultRole,
+                                'members' => collect()
+                            ]));
                         }
-                        $membersByRole->get($roleKey)->push($member);
+                        $membersByRole->get($roleKey)['members']->push($member);
                     }
                 }
             }
-            
+
             // Get roles for proper ordering
             $allRoles = $server->roles()->orderBy('position', 'desc')->get();
         @endphp
 
         @foreach($allRoles as $role)
-            @if($membersByRole->has($role->name) && $membersByRole->get($role->name)->count() > 0)
-                @php $roleMembers = $membersByRole->get($role->name); @endphp
-                <p style="font-size: 12px; color: #71717a; margin-bottom: 8px; {{ $loop->index > 0 ? 'margin-top: 16px;' : '' }}">
-                    {{ strtoupper($role->name) }} — {{ $roleMembers->count() }}
-                </p>
-                @foreach($roleMembers as $member)
-                    @php
-                        $memberLobbies = $member->gameLobbies ?? collect();
-                        $hasActiveLobby = $memberLobbies->filter(fn($l) => $l->isActive())->isNotEmpty();
-                    @endphp
-                    <div
-                        class="member-item"
-                        data-user-id="{{ $member->id }}"
-                        x-data="{ showCard: false }"
-                        @click.stop="showCard = !showCard"
-                        @keydown.escape.window="showCard = false"
-                        style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; padding: 6px 8px; border-radius: 6px; position: relative; cursor: pointer; transition: background-color 0.15s;"
-                        onmouseover="this.style.backgroundColor='rgba(79, 84, 92, 0.4)'"
-                        onmouseout="this.style.backgroundColor='transparent'"
-                    >
-                        <div style="position: relative;">
-                            <img src="{{ $member->profile->avatar_url }}" alt="{{ $member->display_name }}"
-                                 class="member-avatar"
-                                 style="width: 32px; height: 32px; border-radius: 50%;">
-                            {{-- Online Status Dot --}}
-                            <div style="
-                                position: absolute;
-                                bottom: -2px;
-                                right: -2px;
-                                width: 14px;
-                                height: 14px;
-                                border-radius: 50%;
-                                border: 3px solid #1e1f22;
-                                background-color: {{ $member->profile->status === 'online' ? '#23a559' : '#80848e' }};
-                            "></div>
-                            <div class="voice-speaking-indicator" style="display: none; position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px; border: 2px solid #10b981; border-radius: 50%; animation: pulse-ring 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;"></div>
-                        </div>
-                        <div style="flex: 1; min-width: 0;">
-                            <div style="font-size: 14px; color: {{ $role->color }}; display: flex; align-items: center; gap: 6px;">
-                                <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $member->display_name }}</span>
-                                @if($hasActiveLobby)
-                                    <span style="
-                                        display: inline-flex;
-                                        align-items: center;
-                                        justify-content: center;
-                                        width: 18px;
-                                        height: 18px;
-                                        background-color: #23a559;
-                                        border-radius: 4px;
-                                        flex-shrink: 0;
-                                    ">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="white">
-                                            <path d="M21 6h-7.59l3.29-3.29L16 2l-4 4-4-4-.71.71L10.59 6H3c-1.1 0-2 .89-2 2v12c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.11-.9-2-2-2zm0 14H3V8h18v12z"/>
-                                        </svg>
-                                    </span>
-                                @endif
-                                <span class="in-voice-badge" data-user-id="{{ $member->id }}" style="display: none; font-size: 10px; background-color: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 600;">IN VOICE</span>
-                            </div>
-                        </div>
+            @if($membersByRole->has($role->name) && $membersByRole->get($role->name)['members']->count() > 0)
+                @php
+                    $roleData = $membersByRole->get($role->name);
+                    $roleMembers = $roleData['members'];
+                @endphp
 
-                        {{-- User Card Popover (Fixed Position - Discord Style) --}}
-                        <template x-teleport="body">
-                            <div
-                                x-show="showCard"
-                                x-transition:enter="transition ease-out duration-150"
-                                x-transition:enter-start="opacity-0 scale-95"
-                                x-transition:enter-end="opacity-100 scale-100"
-                                x-transition:leave="transition ease-in duration-100"
-                                x-transition:leave-start="opacity-100 scale-100"
-                                x-transition:leave-end="opacity-0 scale-95"
-                                @click.away="showCard = false"
-                                x-init="$watch('showCard', value => {
-                                    if (value) {
-                                        $nextTick(() => {
-                                            const rect = $root.getBoundingClientRect();
-                                            const card = $el;
-                                            const cardWidth = 340;
-
-                                            // Position to the left of the member sidebar
-                                            let left = rect.left - cardWidth - 12;
-
-                                            // Align TOP of card with TOP of clicked member (Discord style)
-                                            let top = rect.top;
-
-                                            // If card would go off left edge, show on right instead
-                                            if (left < 8) {
-                                                left = rect.right + 12;
-                                            }
-
-                                            // Measure actual card height after render
-                                            requestAnimationFrame(() => {
-                                                const cardHeight = card.offsetHeight;
-
-                                                // If card would go below viewport, push it up
-                                                if (top + cardHeight > window.innerHeight - 8) {
-                                                    top = window.innerHeight - cardHeight - 8;
-                                                }
-
-                                                // Never go above viewport
-                                                if (top < 8) top = 8;
-
-                                                card.style.left = left + 'px';
-                                                card.style.top = top + 'px';
-                                            });
-
-                                            // Set initial position
-                                            card.style.left = left + 'px';
-                                            card.style.top = top + 'px';
-                                        });
-                                    }
-                                })"
-                                style="position: fixed; z-index: 9999;"
-                                x-cloak
-                            >
-                                <x-user-member-card
-                                    :user="$member"
-                                    :server="$server"
-                                    :roleColor="$role->color ?? '#ffffff'"
-                                />
-                            </div>
-                        </template>
-                    </div>
-                @endforeach
+                {{-- Role Header Component --}}
+                <x-role-header
+                    :roleName="$role->name"
+                    :count="$roleMembers->count()"
+                    :serverId="$server->id"
+                    :roleColor="$role->color ?? '#96989d'"
+                >
+                    @foreach($roleMembers as $member)
+                        {{-- Member Item Component --}}
+                        <x-member-item
+                            :member="$member"
+                            :server="$server"
+                            :role="$role"
+                            :isOwner="$server->creator_id === $member->id"
+                        />
+                    @endforeach
+                </x-role-header>
             @endif
         @endforeach
     </div>
@@ -1256,8 +1167,56 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Could add muted icon next to user
             // For now, just log it
+        })
+        .listen('.user.status.updated', (event) => {
+            console.log('[Server] User status updated:', event);
+            updateMemberStatus(event);
         });
 });
 @endif
+
+/**
+ * Update member status in the member list (Phase 2)
+ * Called when receiving real-time status update broadcasts
+ */
+function updateMemberStatus(data) {
+    const { user_id, status, status_color, activity, has_custom_status, full_custom_status } = data;
+
+    // Find all member items for this user
+    const memberItems = document.querySelectorAll(`.member-item-enhanced[data-user-id="${user_id}"]`);
+
+    memberItems.forEach(memberItem => {
+        // Update status data attribute
+        memberItem.dataset.status = status;
+
+        // Update status indicator
+        const statusIndicator = memberItem.querySelector('.member-status');
+        if (statusIndicator) {
+            statusIndicator.dataset.status = status;
+        }
+
+        // Update activity text
+        const activityElement = memberItem.querySelector('.member-activity');
+        if (activity) {
+            if (activityElement) {
+                activityElement.textContent = activity;
+                activityElement.style.display = '';
+            } else {
+                // Create activity element if it doesn't exist
+                const infoElement = memberItem.querySelector('.member-info');
+                if (infoElement) {
+                    const newActivity = document.createElement('div');
+                    newActivity.className = 'member-activity';
+                    newActivity.textContent = activity;
+                    infoElement.appendChild(newActivity);
+                }
+            }
+        } else if (activityElement) {
+            activityElement.style.display = 'none';
+        }
+    });
+
+    console.log(`[Status] Updated status for user ${user_id} to ${status}`);
+}
 </script>
 @endsection
