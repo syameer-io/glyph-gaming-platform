@@ -27,6 +27,7 @@ class VoiceSession extends Model
         'joined_at',
         'left_at',
         'is_muted',
+        'is_deafened',
         'session_duration',
     ];
 
@@ -39,6 +40,7 @@ class VoiceSession extends Model
         'joined_at' => 'datetime',
         'left_at' => 'datetime',
         'is_muted' => 'boolean',
+        'is_deafened' => 'boolean',
         'session_duration' => 'integer',
     ];
 

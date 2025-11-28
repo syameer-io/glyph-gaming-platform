@@ -1170,58 +1170,152 @@ document.addEventListener('DOMContentLoaded', function() {
         .listen('.voice.user.joined', (event) => {
             console.log('User joined voice:', event);
 
+            // Extract user data from nested structure
+            const userId = event.user?.id || event.user_id;
+            const userName = event.user?.display_name || event.user?.username || event.user_name || 'Unknown user';
+
             // Show "In Voice" badge for the user
-            const badge = document.querySelector(`.in-voice-badge[data-user-id="${event.user_id}"]`);
+            const badge = document.querySelector(`.in-voice-badge[data-user-id="${userId}"]`);
             if (badge) {
                 badge.style.display = 'inline-block';
             }
 
-            // Update voice channel user count
-            const channelCount = document.querySelector(`.voice-user-count[data-channel-id="${event.channel_id}"]`);
+            // Update voice channel user count badge
+            const channelCount = document.querySelector(`.voice-user-count-badge[data-channel-id="${event.channel_id}"]`);
             if (channelCount) {
-                const countSpan = channelCount.querySelector('.count');
-                const currentCount = parseInt(countSpan.textContent) || 0;
-                countSpan.textContent = currentCount + 1;
-                channelCount.style.display = 'block';
+                const currentCount = parseInt(channelCount.textContent) || 0;
+                channelCount.textContent = currentCount + 1;
+                channelCount.style.display = 'inline-flex';
+            }
+
+            // Update Alpine.js voice-channel-wrapper component
+            const channelWrapper = document.querySelector(`.voice-channel-wrapper[data-channel-id="${event.channel_id}"]`);
+            if (channelWrapper && channelWrapper._x_dataStack) {
+                const alpineData = channelWrapper._x_dataStack[0];
+                if (alpineData) {
+                    const newUser = {
+                        id: userId,
+                        name: userName,
+                        avatar: event.user?.avatar_url || '/images/default-avatar.png',
+                        isSpeaking: false,
+                        isMuted: false,
+                        isDeafened: false,
+                        isStreaming: false
+                    };
+                    alpineData.users.push(newUser);
+                    alpineData.userCount = alpineData.users.length;
+                    alpineData.expanded = true;
+                }
             }
 
             // Show notification if not the current user
-            if (event.user_id !== {{ auth()->id() }}) {
-                showNotification(`${event.user_name} joined ${event.channel_name}`, 'info');
+            if (userId !== {{ auth()->id() }}) {
+                showNotification(`${userName} joined ${event.channel_name}`, 'info');
             }
         })
         .listen('.voice.user.left', (event) => {
             console.log('User left voice:', event);
 
+            // Extract user data from nested structure
+            const userId = event.user?.id || event.user_id;
+            const userName = event.user?.display_name || event.user?.username || event.user_name || 'Unknown user';
+
             // Hide "In Voice" badge for the user
-            const badge = document.querySelector(`.in-voice-badge[data-user-id="${event.user_id}"]`);
+            const badge = document.querySelector(`.in-voice-badge[data-user-id="${userId}"]`);
             if (badge) {
                 badge.style.display = 'none';
             }
 
-            // Update voice channel user count
-            const channelCount = document.querySelector(`.voice-user-count[data-channel-id="${event.channel_id}"]`);
+            // Update voice channel user count badge
+            const channelCount = document.querySelector(`.voice-user-count-badge[data-channel-id="${event.channel_id}"]`);
             if (channelCount) {
-                const countSpan = channelCount.querySelector('.count');
-                const currentCount = parseInt(countSpan.textContent) || 0;
+                const currentCount = parseInt(channelCount.textContent) || 0;
                 const newCount = Math.max(0, currentCount - 1);
-                countSpan.textContent = newCount;
+                channelCount.textContent = newCount;
 
                 if (newCount === 0) {
                     channelCount.style.display = 'none';
                 }
             }
 
+            // Update Alpine.js voice-channel-wrapper component
+            const channelWrapper = document.querySelector(`.voice-channel-wrapper[data-channel-id="${event.channel_id}"]`);
+            if (channelWrapper && channelWrapper._x_dataStack) {
+                const alpineData = channelWrapper._x_dataStack[0];
+                if (alpineData) {
+                    alpineData.users = alpineData.users.filter(u => u.id !== userId);
+                    alpineData.userCount = alpineData.users.length;
+                }
+            }
+
             // Show notification if not the current user
-            if (event.user_id !== {{ auth()->id() }}) {
-                showNotification(`${event.user_name} left ${event.channel_name}`, 'info');
+            if (userId !== {{ auth()->id() }}) {
+                showNotification(`${userName} left ${event.channel_name}`, 'info');
+            }
+        })
+        .listen('.voice.user.speaking', (event) => {
+            console.log('User speaking status:', event);
+
+            // Update Alpine.js voice-channel-wrapper component
+            const channelWrapper = document.querySelector(`.voice-channel-wrapper[data-channel-id="${event.channel_id}"]`);
+            if (channelWrapper && channelWrapper._x_dataStack) {
+                const alpineData = channelWrapper._x_dataStack[0];
+                if (alpineData) {
+                    const user = alpineData.users.find(u => u.id === event.user_id);
+                    if (user) {
+                        user.isSpeaking = event.is_speaking;
+                    }
+                }
+            }
+
+            // Also update DOM directly for immediate visual feedback
+            const userItem = document.querySelector(`.voice-user-item[data-user-id="${event.user_id}"][data-channel-id="${event.channel_id}"]`);
+            if (userItem) {
+                const avatarWrapper = userItem.querySelector('.voice-user-avatar-wrapper');
+                if (event.is_speaking) {
+                    userItem.classList.add('speaking');
+                    if (avatarWrapper) avatarWrapper.classList.add('speaking');
+                } else {
+                    userItem.classList.remove('speaking');
+                    if (avatarWrapper) avatarWrapper.classList.remove('speaking');
+                }
             }
         })
         .listen('.voice.user.muted', (event) => {
             console.log('User mute status changed:', event);
 
-            // Could add muted icon next to user
-            // For now, just log it
+            // Extract user data from nested structure
+            const userId = event.user?.id || event.user_id;
+
+            // Update Alpine.js voice-channel-wrapper component
+            const channelWrapper = document.querySelector(`.voice-channel-wrapper[data-channel-id="${event.channel_id}"]`);
+            if (channelWrapper && channelWrapper._x_dataStack) {
+                const alpineData = channelWrapper._x_dataStack[0];
+                if (alpineData) {
+                    const user = alpineData.users.find(u => u.id === userId);
+                    if (user) {
+                        user.isMuted = event.is_muted;
+                    }
+                }
+            }
+        })
+        .listen('.voice.user.deafened', (event) => {
+            console.log('User deafen status changed:', event);
+
+            // Extract user data from nested structure
+            const userId = event.user?.id || event.user_id;
+
+            // Update Alpine.js voice-channel-wrapper component
+            const channelWrapper = document.querySelector(`.voice-channel-wrapper[data-channel-id="${event.channel_id}"]`);
+            if (channelWrapper && channelWrapper._x_dataStack) {
+                const alpineData = channelWrapper._x_dataStack[0];
+                if (alpineData) {
+                    const user = alpineData.users.find(u => u.id === userId);
+                    if (user) {
+                        user.isDeafened = event.is_deafened;
+                    }
+                }
+            }
         })
         .listen('.user.status.updated', (event) => {
             console.log('[Server] User status updated:', event);

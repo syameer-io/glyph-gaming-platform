@@ -2,6 +2,10 @@ import axios from 'axios';
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 import Alpine from 'alpinejs';
+import collapse from '@alpinejs/collapse';
+
+// Register Alpine.js plugins
+Alpine.plugin(collapse);
 
 window.axios = axios;
 window.Alpine = Alpine;

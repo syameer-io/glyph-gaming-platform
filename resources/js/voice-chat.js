@@ -13,6 +13,21 @@
 
 import AgoraRTC from 'agora-rtc-sdk-ng';
 
+/**
+ * Configure Agora SDK settings - MUST be done before creating any clients
+ * This suppresses non-critical errors and CORS issues with stats collectors
+ */
+
+// Set log level to WARNING (2) to reduce console noise
+// Levels: 0=DEBUG, 1=INFO, 2=WARNING, 3=ERROR, 4=NONE
+AgoraRTC.setLogLevel(2);
+
+// Disable log upload to prevent CORS errors with statscollector-*.agora.io
+// This is safe for development/production - logs are local only
+AgoraRTC.disableLogUpload();
+
+console.log('[Agora SDK] Configured: log level=WARNING, log upload=disabled');
+
 class VoiceChat {
     constructor() {
         // Agora RTC client instance
@@ -25,6 +40,13 @@ class VoiceChat {
         this.isConnected = false;
         this.isConnecting = false;
         this.isMuted = false;
+        this.isDeafened = false;
+        this.isSpeaking = false;
+
+        // Speaking detection debounce
+        this.speakingDebounceTimer = null;
+        this.lastSpeakingBroadcast = 0;
+        this.speakingBroadcastInterval = 200; // Max 5 updates per second
 
         // Current channel information
         this.currentChannelId = null;
@@ -113,7 +135,8 @@ class VoiceChat {
         }
 
         try {
-            // Create Agora client with VP8 codec and cloud proxy for reliability
+            // Create Agora client with VP8 codec
+            // Using RTC mode for low-latency voice communication
             this.client = AgoraRTC.createClient({
                 mode: 'rtc',
                 codec: 'vp8',
@@ -121,6 +144,22 @@ class VoiceChat {
 
             // Setup client event listeners
             this.setupClientEvents();
+
+            // Handle SDK exceptions - show user-friendly messages for critical errors
+            // Non-critical errors (connection retries, etc.) are silently logged
+            this.client.on('exception', (evt) => {
+                if (evt.code === 'INVALID_PARAMS') {
+                    console.error('[Agora] Critical error:', evt);
+                    this.showError('Invalid voice chat parameters. Please try again.');
+                } else if (evt.code === 'NOT_SUPPORTED') {
+                    console.error('[Agora] Critical error:', evt);
+                    this.showError('Your browser does not support voice chat. Please use Chrome, Edge, or Firefox.');
+                } else {
+                    // Non-critical: connection retries, network fluctuations, etc.
+                    // These are handled internally by the SDK
+                    console.debug('[Agora] Non-critical event:', evt.code, evt.msg);
+                }
+            });
 
             console.log('Agora RTC client initialized successfully');
         } catch (error) {
@@ -248,12 +287,28 @@ class VoiceChat {
         this.client.enableAudioVolumeIndicator();
         this.client.on('volume-indicator', (volumes) => {
             volumes.forEach((volume) => {
+                const isCurrentUser = volume.uid === this.currentUid || volume.uid === 0;
+
                 // volume.level ranges from 0 to 100
                 if (volume.level > 5) { // Speaking threshold
                     // Trigger speaking animation in UI
                     if (this.callbacks.onUserSpeaking) {
                         this.callbacks.onUserSpeaking(volume.uid, volume.level);
                     }
+
+                    // Broadcast local user speaking status to server (debounced)
+                    if (isCurrentUser && !this.isSpeaking) {
+                        this.isSpeaking = true;
+                        this.broadcastSpeakingStatus(true);
+                    }
+
+                    // Reset speaking timeout for current user
+                    if (isCurrentUser) {
+                        this.resetSpeakingTimeout();
+                    }
+                } else if (isCurrentUser && this.isSpeaking) {
+                    // User stopped speaking (level dropped below threshold)
+                    // Will be handled by timeout for smoother transition
                 }
             });
         });
@@ -270,16 +325,7 @@ class VoiceChat {
             await this.handleTokenExpired();
         });
 
-        // Critical errors
-        this.client.on('exception', (event) => {
-            console.error('Agora exception:', event);
-
-            if (event.code === 'INVALID_PARAMS') {
-                this.showError('Invalid voice chat parameters. Please try again.');
-            } else if (event.code === 'NOT_SUPPORTED') {
-                this.showError('Your browser does not support voice chat. Please use Chrome, Edge, or Firefox.');
-            }
-        });
+        // Note: Exception handler is set up in initializeClient() to avoid duplicates
 
         console.log('Client event listeners setup complete');
     }
@@ -717,6 +763,136 @@ class VoiceChat {
     }
 
     /**
+     * Toggle audio deafen (stop hearing others)
+     *
+     * @returns {Promise<boolean>} New deafen state
+     */
+    async toggleDeafen() {
+        if (!this.isConnected) {
+            console.warn('Not connected to voice channel');
+            this.showNotification('You must be in a voice channel to deafen/undeafen', 'warning');
+            return this.isDeafened;
+        }
+
+        try {
+            const newDeafenState = !this.isDeafened;
+
+            // Mute/unmute all remote audio tracks
+            for (const user of this.client.remoteUsers) {
+                if (user.audioTrack) {
+                    if (newDeafenState) {
+                        user.audioTrack.setVolume(0);
+                    } else {
+                        user.audioTrack.setVolume(100);
+                    }
+                }
+            }
+
+            this.isDeafened = newDeafenState;
+            console.log('Audio', newDeafenState ? 'deafened' : 'undeafened');
+
+            // Notify backend to update session deafen status
+            await this.notifyBackendDeafenToggle(this.currentChannelId, newDeafenState);
+
+            this.showNotification(
+                newDeafenState ? 'Audio deafened' : 'Audio enabled',
+                'info'
+            );
+
+            return newDeafenState;
+
+        } catch (error) {
+            console.error('Failed to toggle deafen:', error);
+            this.showError('Failed to toggle audio. Please try again.');
+            return this.isDeafened;
+        }
+    }
+
+    /**
+     * Notify backend of deafen toggle
+     *
+     * @param {number} channelId - Voice channel ID
+     * @param {boolean} isDeafened - New deafen state
+     */
+    async notifyBackendDeafenToggle(channelId, isDeafened) {
+        try {
+            const response = await fetch('/voice/deafen', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content
+                },
+                body: JSON.stringify({
+                    channel_id: channelId,
+                    is_deafened: isDeafened
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            console.log('Backend deafen status updated');
+
+        } catch (error) {
+            console.error('Failed to notify backend of deafen toggle:', error);
+            // Don't show error to user, deafen still works locally
+        }
+    }
+
+    /**
+     * Broadcast speaking status to server (debounced)
+     *
+     * @param {boolean} isSpeaking - Whether user is speaking
+     */
+    broadcastSpeakingStatus(isSpeaking) {
+        const now = Date.now();
+
+        // Debounce: only broadcast if enough time has passed
+        if (now - this.lastSpeakingBroadcast < this.speakingBroadcastInterval) {
+            return;
+        }
+
+        this.lastSpeakingBroadcast = now;
+
+        // Fire and forget - don't await
+        fetch('/voice/speaking', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content
+            },
+            body: JSON.stringify({
+                channel_id: this.currentChannelId,
+                is_speaking: isSpeaking
+            })
+        }).catch(error => {
+            // Silently fail - speaking indicator is non-critical
+            console.debug('Speaking status broadcast failed:', error);
+        });
+    }
+
+    /**
+     * Reset speaking timeout - called when user is actively speaking
+     */
+    resetSpeakingTimeout() {
+        // Clear existing timeout
+        if (this.speakingDebounceTimer) {
+            clearTimeout(this.speakingDebounceTimer);
+        }
+
+        // Set timeout to mark as not speaking after 500ms of silence
+        this.speakingDebounceTimer = setTimeout(() => {
+            if (this.isSpeaking) {
+                this.isSpeaking = false;
+                this.broadcastSpeakingStatus(false);
+            }
+        }, 500);
+    }
+
+    /**
      * Update UI based on connection status
      *
      * @param {string} state - Connection state
@@ -732,6 +908,8 @@ class VoiceChat {
             isConnected: this.isConnected,
             isConnecting: this.isConnecting,
             isMuted: this.isMuted,
+            isDeafened: this.isDeafened,
+            isSpeaking: this.isSpeaking,
             channelId: this.currentChannelId,
             channelName: this.currentChannelName,
             participantCount: this.participants.size

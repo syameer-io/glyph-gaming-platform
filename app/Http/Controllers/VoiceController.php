@@ -8,6 +8,8 @@ use App\Models\Channel;
 use App\Events\VoiceUserJoined;
 use App\Events\VoiceUserLeft;
 use App\Events\VoiceUserMuted;
+use App\Events\VoiceUserSpeaking;
+use App\Events\VoiceUserDeafened;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
@@ -430,6 +432,153 @@ class VoiceController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve statistics.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Update speaking status in a voice channel.
+     *
+     * Broadcasts the user's speaking status to all server members for real-time
+     * speaking indicator updates (green ring around avatar). This endpoint should
+     * be called with debouncing from the client (max 10 calls/second) to prevent
+     * excessive WebSocket broadcasts.
+     *
+     * @param Request $request Contains channel_id and is_speaking
+     * @return JsonResponse Success response
+     */
+    public function updateSpeakingStatus(Request $request): JsonResponse
+    {
+        try {
+            // Validate request
+            $validated = $request->validate([
+                'channel_id' => 'required|integer|exists:channels,id',
+                'is_speaking' => 'required|boolean',
+            ]);
+
+            $channelId = $validated['channel_id'];
+            $isSpeaking = $validated['is_speaking'];
+            $user = auth()->user();
+
+            // Load channel with server
+            $channel = Channel::with('server')->findOrFail($channelId);
+            $server = $channel->server;
+
+            // Verify user has active voice session in this channel
+            $activeSession = $this->agoraService->getActiveSession($user->id, $channelId);
+            if (!$activeSession) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You are not in this voice channel.'
+                ], 400);
+            }
+
+            // Broadcast speaking status to all server members
+            broadcast(new VoiceUserSpeaking($user, $channel, $server, $isSpeaking));
+
+            // Debug log (only when speaking starts, not on every update)
+            if ($isSpeaking) {
+                Log::debug('User speaking in voice channel', [
+                    'user_id' => $user->id,
+                    'channel_id' => $channelId
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'is_speaking' => $isSpeaking,
+            ], 200);
+
+        } catch (Exception $e) {
+            Log::error('Failed to update speaking status', [
+                'user_id' => auth()->id(),
+                'channel_id' => $request->input('channel_id'),
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update speaking status.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Toggle deafen status in a voice channel.
+     *
+     * Updates the user's deafen status for their active voice session and broadcasts
+     * the status change to all server members. When deafened, the user cannot hear
+     * audio from other participants (handled client-side via Agora SDK).
+     *
+     * @param Request $request Contains channel_id and is_deafened
+     * @return JsonResponse Success with updated deafen status, or error response
+     */
+    public function toggleDeafen(Request $request): JsonResponse
+    {
+        try {
+            // Validate request
+            $validated = $request->validate([
+                'channel_id' => 'required|integer|exists:channels,id',
+                'is_deafened' => 'required|boolean',
+            ]);
+
+            $channelId = $validated['channel_id'];
+            $isDeafened = $validated['is_deafened'];
+            $user = auth()->user();
+
+            // Load channel with server
+            $channel = Channel::with('server')->findOrFail($channelId);
+            $server = $channel->server;
+
+            // Verify user has active voice session
+            $session = $this->agoraService->getActiveSession($user->id, $channelId);
+            if (!$session) {
+                Log::warning('User attempted to toggle deafen with no active session', [
+                    'user_id' => $user->id,
+                    'channel_id' => $channelId,
+                    'requested_deafen_status' => $isDeafened
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You are not currently in this voice channel.'
+                ], 400);
+            }
+
+            // Update deafen status in session
+            $session->is_deafened = $isDeafened;
+            $session->save();
+
+            // Broadcast deafen status change to all server members
+            broadcast(new VoiceUserDeafened($user, $channel, $server, $isDeafened));
+
+            Log::info('User toggled deafen status in voice channel', [
+                'user_id' => $user->id,
+                'username' => $user->username,
+                'channel_id' => $channelId,
+                'channel_name' => $channel->name,
+                'server_id' => $server->id,
+                'is_deafened' => $isDeafened
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => $isDeafened ? 'Audio deafened.' : 'Audio enabled.',
+                'is_deafened' => $isDeafened,
+            ], 200);
+
+        } catch (Exception $e) {
+            Log::error('Failed to toggle deafen status', [
+                'user_id' => auth()->id(),
+                'channel_id' => $request->input('channel_id'),
+                'is_deafened' => $request->input('is_deafened'),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update deafen status. Please try again.'
             ], 500);
         }
     }

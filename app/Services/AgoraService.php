@@ -361,6 +361,21 @@ class AgoraService
     }
 
     /**
+     * Get active voice session for a user in a specific channel.
+     *
+     * Returns the user's current active voice session in the specified channel,
+     * or null if the user is not currently in the channel.
+     *
+     * @param int $userId The user ID
+     * @param int $channelId The channel ID
+     * @return VoiceSession|null The active session or null
+     */
+    public function getActiveSession(int $userId, int $channelId): ?VoiceSession
+    {
+        return VoiceSession::getActiveUserSession($userId, $channelId);
+    }
+
+    /**
      * Clean up stale voice sessions.
      *
      * Finds and ends any voice sessions that are still marked as active but have been

@@ -268,6 +268,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/join', [VoiceController::class, 'join'])->name('join');
         Route::post('/leave', [VoiceController::class, 'leave'])->name('leave');
         Route::post('/mute', [VoiceController::class, 'toggleMute'])->name('mute');
+        Route::post('/deafen', [VoiceController::class, 'toggleDeafen'])->name('deafen');
+        Route::post('/speaking', [VoiceController::class, 'updateSpeakingStatus'])->name('speaking');
         Route::get('/channel/{channelId}/participants', [VoiceController::class, 'getParticipants'])->name('participants');
         Route::get('/stats', [VoiceController::class, 'getUserStats'])->name('stats');
     });

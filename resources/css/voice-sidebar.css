@@ -1,0 +1,617 @@
+/**
+ * Voice Sidebar Styles - Phase 4: Voice Channel Sidebar Integration
+ *
+ * Discord-inspired voice channel sidebar with connected users display,
+ * speaking indicators, mute/deafen status icons, and streaming badges.
+ *
+ * @author Glyph Development Team
+ * @version 1.0.0
+ *
+ * Table of Contents:
+ * 1. CSS Variables
+ * 2. Voice Channel Expandable Structure
+ * 3. Voice Channel Status
+ * 4. Connected User Display
+ * 5. Speaking Indicator
+ * 6. Mute/Deafen Status Icons
+ * 7. Streaming Badge
+ * 8. Voice Channel Actions
+ * 9. Real-time Animations
+ * 10. Accessibility
+ */
+
+/* =============================================================================
+   1. CSS Variables
+   ============================================================================= */
+
+:root {
+    /* Voice User Sizing */
+    --voice-user-size: 24px;
+    --voice-user-indent: 32px;
+
+    /* Status Colors */
+    --voice-speaking-ring: #43b581;
+    --voice-muted-icon: #ed4245;
+    --voice-deafened-icon: #ed4245;
+    --voice-streaming-bg: #eb459e;
+
+    /* Transition Duration */
+    --voice-transition-fast: 150ms;
+    --voice-transition-medium: 200ms;
+    --voice-transition-slow: 300ms;
+}
+
+/* =============================================================================
+   2. Voice Channel Expandable Structure
+   ============================================================================= */
+
+.voice-channel-wrapper {
+    position: relative;
+}
+
+/* Voice Channel Header (Clickable) */
+.voice-channel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--sidebar-channel-text, #949ba4);
+    transition: background-color var(--voice-transition-fast) ease,
+                color var(--voice-transition-fast) ease;
+}
+
+.voice-channel-header:hover {
+    background-color: var(--sidebar-channel-hover, #3f3f46);
+    color: var(--text-muted, #949ba4);
+}
+
+/* Expand/Collapse Chevron */
+.voice-channel-expand-icon {
+    width: 12px;
+    height: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted, #949ba4);
+    transition: transform var(--voice-transition-medium) ease;
+    margin-right: 4px;
+    flex-shrink: 0;
+}
+
+.voice-channel-expand-icon svg {
+    width: 10px;
+    height: 10px;
+    fill: currentColor;
+}
+
+/* Collapsed state */
+.voice-channel-wrapper.collapsed .voice-channel-expand-icon {
+    transform: rotate(-90deg);
+}
+
+/* User Count Badge */
+.voice-channel-user-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted, #949ba4);
+    background-color: var(--sidebar-bg-secondary, #2b2d31);
+    border-radius: 9px;
+    margin-left: 8px;
+    flex-shrink: 0;
+}
+
+/* =============================================================================
+   3. Voice Channel Status
+   ============================================================================= */
+
+.voice-channel-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px 4px var(--voice-user-indent);
+    font-size: 12px;
+    color: var(--text-muted, #949ba4);
+}
+
+.voice-channel-status-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+}
+
+.voice-channel-status-edit {
+    opacity: 0;
+    cursor: pointer;
+    color: var(--text-muted, #949ba4);
+    transition: opacity var(--voice-transition-fast) ease;
+    padding: 2px;
+    border-radius: 4px;
+    background: none;
+    border: none;
+}
+
+.voice-channel-status:hover .voice-channel-status-edit {
+    opacity: 1;
+}
+
+.voice-channel-status-edit:hover {
+    color: var(--text-normal, #f2f3f5);
+    background-color: rgba(79, 84, 92, 0.24);
+}
+
+/* Set Status Link */
+.voice-channel-set-status {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px 4px var(--voice-user-indent);
+    font-size: 12px;
+    color: var(--text-muted, #949ba4);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color var(--voice-transition-fast) ease,
+                color var(--voice-transition-fast) ease;
+}
+
+.voice-channel-set-status:hover {
+    background-color: rgba(79, 84, 92, 0.16);
+    color: var(--text-normal, #f2f3f5);
+}
+
+/* =============================================================================
+   4. Connected User Display
+   ============================================================================= */
+
+.voice-channel-users {
+    padding: 2px 0 4px 0;
+    max-height: 500px;
+    overflow: hidden;
+    transition: max-height var(--voice-transition-slow) ease,
+                opacity var(--voice-transition-medium) ease;
+}
+
+/* Collapsed users list */
+.voice-channel-wrapper.collapsed .voice-channel-users {
+    max-height: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Individual Voice User Item */
+.voice-user-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px 4px var(--voice-user-indent);
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--text-muted, #949ba4);
+    cursor: pointer;
+    transition: background-color var(--voice-transition-fast) ease;
+    position: relative;
+}
+
+.voice-user-item:hover {
+    background-color: rgba(79, 84, 92, 0.16);
+}
+
+/* Voice User Avatar */
+.voice-user-avatar-wrapper {
+    position: relative;
+    width: var(--voice-user-size);
+    height: var(--voice-user-size);
+    flex-shrink: 0;
+}
+
+.voice-user-avatar {
+    width: var(--voice-user-size);
+    height: var(--voice-user-size);
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+/* Voice User Name */
+.voice-user-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+    min-width: 0;
+}
+
+/* Overflow Indicator */
+.voice-users-overflow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px 4px var(--voice-user-indent);
+    font-size: 12px;
+    color: var(--text-muted, #949ba4);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color var(--voice-transition-fast) ease;
+}
+
+.voice-users-overflow:hover {
+    background-color: rgba(79, 84, 92, 0.16);
+    color: var(--text-normal, #f2f3f5);
+}
+
+/* =============================================================================
+   5. Speaking Indicator
+   ============================================================================= */
+
+/* Speaking state - green ring */
+.voice-user-item.speaking .voice-user-avatar {
+    box-shadow: 0 0 0 2px var(--voice-speaking-ring);
+}
+
+/* Speaking ring animation */
+.voice-user-avatar-wrapper.speaking::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border: 2px solid var(--voice-speaking-ring);
+    border-radius: 50%;
+    animation: speaking-pulse 1.5s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes speaking-pulse {
+    0%, 100% {
+        opacity: 0.6;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+}
+
+/* Speaking name highlight */
+.voice-user-item.speaking .voice-user-name {
+    color: var(--voice-speaking-ring);
+}
+
+/* Smooth transition in/out */
+.voice-user-avatar {
+    transition: box-shadow var(--voice-transition-medium) ease;
+}
+
+/* =============================================================================
+   6. Mute/Deafen Status Icons
+   ============================================================================= */
+
+/* Status Icon Container */
+.voice-user-status-icons {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+/* Base Status Icon */
+.voice-status-icon {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--voice-muted-icon);
+    flex-shrink: 0;
+}
+
+.voice-status-icon svg {
+    width: 14px;
+    height: 14px;
+    fill: currentColor;
+}
+
+/* Muted Icon - on avatar bottom-right */
+.voice-user-avatar-wrapper .voice-muted-badge {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 14px;
+    height: 14px;
+    background-color: var(--sidebar-bg, #1e1e22);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.voice-user-avatar-wrapper .voice-muted-badge svg {
+    width: 10px;
+    height: 10px;
+    fill: var(--voice-muted-icon);
+}
+
+/* Deafened Icon - on avatar bottom-right */
+.voice-user-avatar-wrapper .voice-deafened-badge {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 14px;
+    height: 14px;
+    background-color: var(--sidebar-bg, #1e1e22);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.voice-user-avatar-wrapper .voice-deafened-badge svg {
+    width: 10px;
+    height: 10px;
+    fill: var(--voice-deafened-icon);
+}
+
+/* Gray variant for subtle mute indicator */
+.voice-status-icon.muted-subtle {
+    color: #6d6f78;
+}
+
+/* =============================================================================
+   7. Streaming Badge
+   ============================================================================= */
+
+/* LIVE Badge */
+.voice-live-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 5px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #ffffff;
+    background-color: var(--voice-streaming-bg);
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    animation: live-pulse 2s ease-in-out infinite;
+    flex-shrink: 0;
+}
+
+@keyframes live-pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.8;
+    }
+}
+
+/* Screen Share Icon Badge */
+.voice-screen-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    background-color: rgba(235, 69, 158, 0.2);
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.voice-screen-badge svg {
+    width: 12px;
+    height: 12px;
+    fill: var(--voice-streaming-bg);
+}
+
+/* Video Icon Badge */
+.voice-video-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    background-color: rgba(67, 181, 129, 0.2);
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.voice-video-badge svg {
+    width: 12px;
+    height: 12px;
+    fill: var(--voice-speaking-ring);
+}
+
+/* =============================================================================
+   8. Voice Channel Actions
+   ============================================================================= */
+
+/* Hover Actions Container */
+.voice-channel-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity var(--voice-transition-fast) ease;
+    flex-shrink: 0;
+}
+
+.voice-channel-header:hover .voice-channel-actions {
+    opacity: 1;
+}
+
+/* Action Button */
+.voice-channel-action-btn {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted, #949ba4);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: color var(--voice-transition-fast) ease,
+                background-color var(--voice-transition-fast) ease;
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.voice-channel-action-btn:hover {
+    color: var(--text-normal, #f2f3f5);
+    background-color: rgba(79, 84, 92, 0.32);
+}
+
+.voice-channel-action-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* User Limit Badge */
+.voice-channel-limit {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--text-muted, #949ba4);
+    margin-left: auto;
+}
+
+.voice-channel-limit.full {
+    color: var(--voice-muted-icon);
+}
+
+/* Locked Icon */
+.voice-channel-locked-icon {
+    width: 14px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--voice-muted-icon);
+}
+
+.voice-channel-locked-icon svg {
+    width: 12px;
+    height: 12px;
+    fill: currentColor;
+}
+
+/* =============================================================================
+   9. Real-time Animations
+   ============================================================================= */
+
+/* User Join Animation */
+@keyframes voice-user-join {
+    from {
+        opacity: 0;
+        transform: translateX(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.voice-user-item.joining {
+    animation: voice-user-join 0.3s ease-out;
+}
+
+/* User Leave Animation */
+@keyframes voice-user-leave {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(8px);
+    }
+}
+
+.voice-user-item.leaving {
+    animation: voice-user-leave 0.3s ease-out forwards;
+}
+
+/* Speaking Waveform (alternative) */
+@keyframes voice-waveform {
+    0%, 100% {
+        transform: scaleY(0.3);
+    }
+    50% {
+        transform: scaleY(1);
+    }
+}
+
+.voice-waveform-bar {
+    width: 3px;
+    height: 12px;
+    background-color: var(--voice-speaking-ring);
+    border-radius: 2px;
+}
+
+.voice-waveform-bar:nth-child(1) { animation: voice-waveform 0.8s ease-in-out infinite 0s; }
+.voice-waveform-bar:nth-child(2) { animation: voice-waveform 0.8s ease-in-out infinite 0.1s; }
+.voice-waveform-bar:nth-child(3) { animation: voice-waveform 0.8s ease-in-out infinite 0.2s; }
+
+/* =============================================================================
+   10. Accessibility
+   ============================================================================= */
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    .voice-user-avatar-wrapper.speaking::after,
+    .voice-live-badge,
+    .voice-user-item.joining,
+    .voice-user-item.leaving,
+    .voice-waveform-bar {
+        animation: none !important;
+    }
+
+    .voice-user-avatar-wrapper.speaking::after {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Focus Visible */
+.voice-user-item:focus-visible,
+.voice-channel-header:focus-visible,
+.voice-channel-action-btn:focus-visible {
+    outline: 2px solid var(--accent-primary, #667eea);
+    outline-offset: 2px;
+}
+
+/* Screen Reader Only */
+.voice-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+    .voice-user-item.speaking .voice-user-avatar {
+        box-shadow: 0 0 0 3px var(--voice-speaking-ring);
+    }
+
+    .voice-live-badge {
+        border: 1px solid #ffffff;
+    }
+
+    .voice-status-icon {
+        filter: contrast(1.2);
+    }
+}
