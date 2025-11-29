@@ -31,7 +31,7 @@ Transform Glyph's server interface from a basic functional layout into a polishe
 | 3 | [Server Header & Navigation](./PHASE-3-SERVER-HEADER-NAVIGATION.md) | **Complete** | Medium | Medium |
 | 4 | [Voice Channel Sidebar Integration](./PHASE-4-VOICE-CHANNEL-SIDEBAR-INTEGRATION.md) | **Complete** | High | High |
 | 5 | [Voice Connected Panel](./PHASE-5-VOICE-CONNECTED-PANEL.md) | **Complete** | High | Medium |
-| 6 | [Voice Channel Main View](./PHASE-6-VOICE-CHANNEL-MAIN-VIEW.md) | Not Started | Medium | High |
+| 6 | [Voice Channel Main View](./PHASE-6-VOICE-CHANNEL-MAIN-VIEW.md) | **Complete** | Medium | High |
 
 ---
 
@@ -131,19 +131,19 @@ Transform Glyph's server interface from a basic functional layout into a polishe
 - [x] Timer display
 
 ### Phase 6: Voice Channel Main View
-- [ ] Voice channel page route
-- [ ] Main view layout
-- [ ] Voice channel header
-- [ ] User grid layout
-- [ ] User card design
-- [ ] Speaking animation
-- [ ] Activity display
-- [ ] Empty state
-- [ ] Invite friends modal
-- [ ] Choose activity modal
-- [ ] Screen share preview
-- [ ] Control bar (enhanced)
-- [ ] Text chat panel (toggle)
+- [x] Voice channel page route
+- [x] Main view layout
+- [x] Voice channel header
+- [x] User grid layout
+- [x] User card design
+- [x] Speaking animation
+- [x] Activity display
+- [x] Empty state
+- [x] Invite friends modal
+- [x] Choose activity modal
+- [x] Screen share preview
+- [x] Control bar (enhanced)
+- [x] Text chat panel (toggle)
 
 ---
 

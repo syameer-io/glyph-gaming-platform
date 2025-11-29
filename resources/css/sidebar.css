@@ -430,6 +430,26 @@
     color: var(--voice-connected, #23a559);
 }
 
+/* Voice Channel Viewing State (Phase 6) - Currently viewing this channel in full view */
+.voice-channel-item.voice-viewing {
+    background-color: rgba(102, 126, 234, 0.16);
+    color: var(--accent-primary, #667eea);
+}
+
+.voice-channel-item.voice-viewing:hover {
+    background-color: rgba(102, 126, 234, 0.24);
+}
+
+.voice-channel-item.voice-viewing .voice-channel-icon {
+    opacity: 1;
+    color: var(--accent-primary, #667eea);
+}
+
+.voice-channel-item.voice-viewing .voice-user-count-badge {
+    background-color: rgba(102, 126, 234, 0.32);
+    color: var(--accent-primary, #667eea);
+}
+
 /* Voice Channel Active Animation */
 .voice-channel-item.voice-active .voice-channel-icon {
     animation: voicePulse 2s ease-in-out infinite;

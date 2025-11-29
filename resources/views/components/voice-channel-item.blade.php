@@ -34,6 +34,7 @@
     'channel',
     'server',
     'isConnected' => false,
+    'isActive' => false,
     'canEdit' => false,
     'editRoute' => null,
     'channelStatus' => null,
@@ -65,9 +66,15 @@
     if ($isConnected) {
         $itemClasses[] = 'voice-connected';
     }
+    if ($isActive) {
+        $itemClasses[] = 'voice-viewing';
+    }
     if ($userCount > 0) {
         $itemClasses[] = 'voice-active';
     }
+
+    // Route to voice channel view (Phase 6)
+    $voiceViewRoute = route('voice.channel.show', [$server, $channel]);
 
     // Generate edit route if not provided
     $settingsRoute = $editRoute ?? route('server.admin.settings', $server) . '#channels';
@@ -96,15 +103,15 @@
     data-channel-type="voice"
     :class="{ 'collapsed': !expanded }"
 >
-    {{-- Voice Channel Header (Clickable to Join/Expand) --}}
+    {{-- Voice Channel Header (Clickable to Navigate to Voice View) --}}
     <div
         class="{{ implode(' ', $itemClasses) }}"
-        @click="joinVoiceChannel({{ $server->id }}, {{ $channel->id }}, '{{ addslashes($channel->name) }}')"
+        @click="window.location.href = '{{ $voiceViewRoute }}'"
         role="button"
         tabindex="0"
-        @keydown.enter="joinVoiceChannel({{ $server->id }}, {{ $channel->id }}, '{{ addslashes($channel->name) }}')"
-        @keydown.space.prevent="joinVoiceChannel({{ $server->id }}, {{ $channel->id }}, '{{ addslashes($channel->name) }}')"
-        aria-label="Join {{ $channel->name }} voice channel{{ $userCount > 0 ? ', ' . $userCount . ' users connected' : '' }}"
+        @keydown.enter="window.location.href = '{{ $voiceViewRoute }}'"
+        @keydown.space.prevent="window.location.href = '{{ $voiceViewRoute }}'"
+        aria-label="Open {{ $channel->name }} voice channel{{ $userCount > 0 ? ', ' . $userCount . ' users connected' : '' }}"
         aria-expanded="expanded"
     >
         {{-- Expand/Collapse Toggle --}}
@@ -150,6 +157,20 @@
 
             {{-- Hover Actions --}}
             <div class="voice-channel-actions">
+                {{-- Open Voice View (Phase 6) --}}
+                <a
+                    href="{{ $voiceViewRoute }}"
+                    class="voice-channel-action-btn"
+                    @click.stop
+                    title="Open Voice View"
+                    aria-label="Open full voice channel view"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M10.75 2.75a.75.75 0 00-1.5 0v8.614L6.295 8.235a.75.75 0 10-1.09 1.03l4.25 4.5a.75.75 0 001.09 0l4.25-4.5a.75.75 0 00-1.09-1.03l-2.955 3.129V2.75z"/>
+                        <path d="M3.5 12.75a.75.75 0 00-1.5 0v2.5A2.75 2.75 0 004.75 18h10.5A2.75 2.75 0 0018 15.25v-2.5a.75.75 0 00-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5z"/>
+                    </svg>
+                </a>
+
                 {{-- Invite to Channel --}}
                 <button
                     type="button"

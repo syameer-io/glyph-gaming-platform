@@ -19,6 +19,7 @@ use App\Http\Controllers\TelegramController;
 use App\Http\Controllers\VoiceController;
 use App\Http\Controllers\Admin\MatchmakingConfigurationController;
 use App\Http\Controllers\DirectMessageController;
+use App\Http\Controllers\VoiceChannelController;
 
 // Guest routes
 Route::middleware('guest')->group(function () {
@@ -85,6 +86,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/servers/{server}/leave', [ServerController::class, 'leave'])->name('server.leave');
     Route::delete('/servers/{server}', [ServerController::class, 'destroy'])->name('server.destroy');
     
+    // Voice Channel View (Phase 6) - Must be before channel routes
+    Route::get('/servers/{server}/voice/{channel}', [VoiceChannelController::class, 'show'])->name('voice.channel.show');
+
     // Channel routes
     Route::get('/servers/{server}/channels/{channel}', [ChannelController::class, 'show'])->name('channel.show');
     Route::post('/servers/{server}/channels/{channel}/messages', [ChannelController::class, 'sendMessage'])->name('channel.message.send');
@@ -272,6 +276,10 @@ Route::middleware('auth')->group(function () {
         Route::post('/speaking', [VoiceController::class, 'updateSpeakingStatus'])->name('speaking');
         Route::get('/channel/{channelId}/participants', [VoiceController::class, 'getParticipants'])->name('participants');
         Route::get('/stats', [VoiceController::class, 'getUserStats'])->name('stats');
+
+        // Phase 6: Voice channel view API routes
+        Route::get('/channel/{channel}/users', [VoiceChannelController::class, 'participants'])->name('channel.users');
+        Route::post('/channel/{channel}/invite', [VoiceChannelController::class, 'invite'])->name('channel.invite');
     });
 
     // Direct Messages (Friends DM) routes

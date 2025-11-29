@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Server;
 use App\Models\Channel;
 use App\Models\Role;
+use App\Models\VoiceSession;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ServerController extends Controller
 {
@@ -93,10 +95,10 @@ class ServerController extends Controller
     public function show(Server $server)
     {
         $user = Auth::user();
-        
+
         // Check if user is a member and get membership status in one query
         $membership = $server->members()->where('user_id', $user->id)->first();
-        
+
         if (!$membership) {
             return redirect()->route('dashboard')->with('error', 'You are not a member of this server.');
         }
@@ -104,6 +106,25 @@ class ServerController extends Controller
         // Check if user is banned
         if ($membership->pivot->is_banned) {
             return redirect()->route('dashboard')->with('error', 'You are banned from this server.');
+        }
+
+        // Clean up stale voice sessions for this user in this server
+        // This handles cases where user disconnected without properly leaving
+        // (e.g., browser crash, network loss, page refresh without disconnect)
+        $staleSessions = VoiceSession::where('user_id', $user->id)
+            ->where('server_id', $server->id)
+            ->whereNull('left_at')
+            ->get();
+
+        if ($staleSessions->count() > 0) {
+            foreach ($staleSessions as $session) {
+                $session->endSession();
+            }
+            Log::info('Cleaned up stale voice sessions on server page load', [
+                'user_id' => $user->id,
+                'server_id' => $server->id,
+                'sessions_cleaned' => $staleSessions->count()
+            ]);
         }
 
         // Load server data with member lobbies to prevent N+1 queries (Phase 1: Lobby Integration, Phase 2: Member Status)

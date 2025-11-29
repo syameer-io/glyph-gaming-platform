@@ -1324,4 +1324,124 @@ export default VoiceChat;
 // Also make available globally on window for easy access
 window.VoiceChat = VoiceChat;
 
+/**
+ * Create global VoiceChat instance
+ * This instance is used by voice panels and voice views throughout the app
+ */
+window.voiceChat = new VoiceChat();
+
+/**
+ * Register callback handlers for notifications
+ */
+window.voiceChat.on('notification', (message, type) => {
+    // Use global toast notification if available
+    if (window.toastNotification && typeof window.toastNotification.show === 'function') {
+        window.toastNotification.show(message, type);
+    } else if (typeof window.showNotification === 'function') {
+        window.showNotification(message, type);
+    }
+});
+
+window.voiceChat.on('error', (message) => {
+    console.error('[VoiceChat Error]', message);
+    if (window.toastNotification && typeof window.toastNotification.show === 'function') {
+        window.toastNotification.show(message, 'error');
+    } else {
+        alert('Voice Chat Error: ' + message);
+    }
+});
+
+/**
+ * Global helper function to join a voice channel
+ * Called by voice channel items and voice view pages
+ *
+ * @param {number} serverId - Server ID (not used by Agora but kept for consistency)
+ * @param {number} channelId - Voice channel ID
+ * @param {string} channelName - Voice channel name (for display)
+ * @returns {Promise<boolean>} Success status
+ */
+window.joinVoiceChannel = async function(serverId, channelId, channelName) {
+    console.log('[VoiceChat] joinVoiceChannel called:', { serverId, channelId, channelName });
+
+    if (!window.voiceChat) {
+        console.error('[VoiceChat] VoiceChat instance not available');
+        return false;
+    }
+
+    // Store channel name for reference
+    window.voiceChat.currentChannelName = channelName;
+
+    // Join the channel
+    const success = await window.voiceChat.joinChannel(channelId);
+
+    return success;
+};
+
+/**
+ * Global helper function to disconnect from voice
+ * Called by voice panels and voice views
+ *
+ * @returns {Promise<boolean>} Success status
+ */
+window.disconnectVoice = async function() {
+    console.log('[VoiceChat] disconnectVoice called');
+
+    if (!window.voiceChat) {
+        console.error('[VoiceChat] VoiceChat instance not available');
+        return false;
+    }
+
+    const success = await window.voiceChat.leaveChannel();
+
+    return success;
+};
+
+/**
+ * Global helper function to toggle microphone mute
+ * Called by voice panels and voice views
+ *
+ * @returns {Promise<boolean>} New mute state
+ */
+window.toggleMute = async function() {
+    console.log('[VoiceChat] toggleMute called');
+
+    if (!window.voiceChat) {
+        console.error('[VoiceChat] VoiceChat instance not available');
+        return false;
+    }
+
+    const newMuteState = await window.voiceChat.toggleMute();
+
+    // Dispatch event for UI components
+    window.dispatchEvent(new CustomEvent('voice-mute-changed', {
+        detail: { isMuted: newMuteState }
+    }));
+
+    return newMuteState;
+};
+
+/**
+ * Global helper function to toggle audio deafen
+ * Called by voice panels and voice views
+ *
+ * @returns {Promise<boolean>} New deafen state
+ */
+window.toggleDeafen = async function() {
+    console.log('[VoiceChat] toggleDeafen called');
+
+    if (!window.voiceChat) {
+        console.error('[VoiceChat] VoiceChat instance not available');
+        return false;
+    }
+
+    const newDeafenState = await window.voiceChat.toggleDeafen();
+
+    // Dispatch event for UI components
+    window.dispatchEvent(new CustomEvent('voice-deafen-changed', {
+        detail: { isDeafened: newDeafenState }
+    }));
+
+    return newDeafenState;
+};
+
 console.log('Voice Chat module loaded');

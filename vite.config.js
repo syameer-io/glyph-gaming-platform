@@ -8,8 +8,10 @@ export default defineConfig({
             input: [
                 'resources/css/app.css',
                 'resources/css/voice-panel.css',
+                'resources/css/voice-view.css',
                 'resources/js/app.js',
-                'resources/js/voice-chat.js'
+                'resources/js/voice-chat.js',
+                'resources/js/voice-view.js'
             ],
             refresh: true,
         }),
