@@ -20,24 +20,43 @@
 ])
 
 <div class="channel-header">
-    {{-- Left Side: Channel Info --}}
+    {{-- Left Side: Compact Navigation + Channel Info --}}
     <div class="channel-header-left">
-        <div class="channel-header-info">
-            {{-- Channel Icon --}}
-            @if($channel->type === 'voice')
-                <span class="channel-header-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        {{-- Compact Navigation: Home > Server > Channel --}}
+        <nav class="breadcrumb">
+            {{-- Home icon (links to dashboard) --}}
+            <a href="{{ route('dashboard') }}" class="breadcrumb-item" title="Dashboard">
+                <svg class="breadcrumb-item-icon" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+            </a>
+            <span class="breadcrumb-separator">
+                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </span>
+            {{-- Server name (links to server main page) --}}
+            <a href="{{ route('server.show', $server) }}" class="breadcrumb-item">
+                <span class="breadcrumb-item-text">{{ $server->name }}</span>
+            </a>
+            <span class="breadcrumb-separator">
+                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </span>
+            {{-- Current channel (active, not clickable) --}}
+            <span class="breadcrumb-item active">
+                @if($channel->type === 'voice')
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 2px;">
                         <path d="M12 3C10.34 3 9 4.34 9 6V12C9 13.66 10.34 15 12 15C13.66 15 15 13.66 15 12V6C15 4.34 13.66 3 12 3Z"/>
                         <path d="M19 12C19 15.53 16.39 18.44 13 18.93V21H16V23H8V21H11V18.93C7.61 18.44 5 15.53 5 12H7C7 14.76 9.24 17 12 17C14.76 17 17 14.76 17 12H19Z"/>
                     </svg>
-                </span>
-            @else
-                <span class="channel-header-icon">#</span>
-            @endif
-
-            {{-- Channel Name --}}
-            <h1 class="channel-header-name">{{ $channel->name }}</h1>
-        </div>
+                @else
+                    <span style="margin-right: 2px;">#</span>
+                @endif
+                <span class="breadcrumb-item-text">{{ $channel->name }}</span>
+            </span>
+        </nav>
 
         {{-- Topic Divider & Topic (if exists) --}}
         @if($channel->description)
