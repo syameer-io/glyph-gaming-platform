@@ -517,14 +517,9 @@
         @toggle-member-list.window="memberListVisible = $event.detail.visible"
     >
         {{-- Phase 3: Enhanced Channel Header --}}
-        @php
-            $pinnedCount = $channel->messages()->where('is_pinned', true)->count();
-        @endphp
         <x-channel-header
             :channel="$channel"
             :server="$server"
-            :pinnedCount="$pinnedCount"
-            :notificationCount="0"
             :memberListVisible="true"
         />
 
