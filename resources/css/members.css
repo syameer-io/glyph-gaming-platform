@@ -166,15 +166,16 @@
     height: var(--avatar-size-lg);
 }
 
-.member-avatar {
+.member-avatar-wrapper .member-avatar {
     width: 100%;
     height: 100%;
     border-radius: 50%;
     object-fit: cover;
 }
 
-/* Status indicator base */
-.member-status {
+/* Status indicator base - scoped to server member list only */
+.member-item-enhanced .member-status,
+.member-avatar-wrapper .member-status {
     position: absolute;
     bottom: -2px;
     right: -2px;
@@ -186,17 +187,20 @@
 }
 
 /* Online status - solid green circle */
-.member-status[data-status="online"] {
+.member-item-enhanced .member-status[data-status="online"],
+.member-avatar-wrapper .member-status[data-status="online"] {
     background-color: var(--status-online);
 }
 
 /* Idle status - crescent moon shape */
-.member-status[data-status="idle"] {
+.member-item-enhanced .member-status[data-status="idle"],
+.member-avatar-wrapper .member-status[data-status="idle"] {
     background-color: var(--status-idle);
     position: relative;
 }
 
-.member-status[data-status="idle"]::after {
+.member-item-enhanced .member-status[data-status="idle"]::after,
+.member-avatar-wrapper .member-status[data-status="idle"]::after {
     content: '';
     position: absolute;
     top: 0;
@@ -208,12 +212,14 @@
 }
 
 /* DND status - red circle with horizontal line */
-.member-status[data-status="dnd"] {
+.member-item-enhanced .member-status[data-status="dnd"],
+.member-avatar-wrapper .member-status[data-status="dnd"] {
     background-color: var(--status-dnd);
     position: relative;
 }
 
-.member-status[data-status="dnd"]::after {
+.member-item-enhanced .member-status[data-status="dnd"]::after,
+.member-avatar-wrapper .member-status[data-status="dnd"]::after {
     content: '';
     position: absolute;
     top: 50%;
@@ -226,13 +232,15 @@
 }
 
 /* Offline status - hollow circle */
-.member-status[data-status="offline"] {
+.member-item-enhanced .member-status[data-status="offline"],
+.member-avatar-wrapper .member-status[data-status="offline"] {
     background-color: transparent;
     border-color: var(--status-offline);
     border-width: 2px;
 }
 
-.member-status[data-status="offline"]::after {
+.member-item-enhanced .member-status[data-status="offline"]::after,
+.member-avatar-wrapper .member-status[data-status="offline"]::after {
     content: '';
     position: absolute;
     top: 50%;
@@ -245,12 +253,14 @@
 }
 
 /* Streaming status - purple with play icon */
-.member-status[data-status="streaming"] {
+.member-item-enhanced .member-status[data-status="streaming"],
+.member-avatar-wrapper .member-status[data-status="streaming"] {
     background-color: var(--status-streaming);
 }
 
-/* Mobile status indicator (phone icon) */
-.member-status-mobile {
+/* Mobile status indicator (phone icon) - scoped */
+.member-item-enhanced .member-status-mobile,
+.member-avatar-wrapper .member-status-mobile {
     position: absolute;
     bottom: -2px;
     right: -6px;
@@ -263,28 +273,29 @@
     justify-content: center;
 }
 
-.member-status-mobile svg {
+.member-item-enhanced .member-status-mobile svg,
+.member-avatar-wrapper .member-status-mobile svg {
     width: 8px;
     height: 10px;
 }
 
 /* =============================================================================
-   Member Info
+   Member Info - scoped to server member list only
    ============================================================================= */
 
-.member-info {
+.member-item-enhanced .member-info {
     flex: 1;
     min-width: 0;
     overflow: hidden;
 }
 
-.member-name-row {
+.member-item-enhanced .member-name-row {
     display: flex;
     align-items: center;
     gap: 4px;
 }
 
-.member-username {
+.member-item-enhanced .member-username {
     font-size: 14px;
     font-weight: 500;
     color: var(--member-username);
@@ -300,10 +311,10 @@
 }
 
 /* =============================================================================
-   Activity Display
+   Activity Display - scoped to server member list only
    ============================================================================= */
 
-.member-activity {
+.member-item-enhanced .member-activity {
     font-size: 12px;
     color: var(--member-activity);
     overflow: hidden;
@@ -314,18 +325,18 @@
 }
 
 /* Playing a game activity */
-.member-activity--playing {
+.member-item-enhanced .member-activity--playing {
     color: var(--member-activity-playing);
 }
 
 /* Custom status activity */
-.member-activity--custom {
+.member-item-enhanced .member-activity--custom {
     display: flex;
     align-items: center;
     gap: 4px;
 }
 
-.member-activity-emoji {
+.member-item-enhanced .member-activity-emoji {
     font-size: 14px;
     line-height: 1;
 }
@@ -528,13 +539,14 @@
     outline-offset: 2px;
 }
 
-/* High contrast mode */
+/* High contrast mode - scoped */
 @media (prefers-contrast: high) {
-    .member-status {
+    .member-item-enhanced .member-status,
+    .member-avatar-wrapper .member-status {
         border-width: 2px;
     }
 
-    .member-username {
+    .member-item-enhanced .member-username {
         font-weight: 600;
     }
 }
