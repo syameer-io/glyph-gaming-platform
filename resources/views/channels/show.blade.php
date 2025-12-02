@@ -477,32 +477,11 @@
         <!-- User Section -->
         <div style="padding: 16px; border-top: 1px solid #3f3f46; background-color: #0e0e10;">
             <div style="display: flex; align-items: center; gap: 12px;">
-                <img src="{{ auth()->user()->profile->avatar_url }}" alt="{{ auth()->user()->display_name }}" 
+                <img src="{{ auth()->user()->profile->avatar_url }}" alt="{{ auth()->user()->display_name }}"
                      style="width: 32px; height: 32px; border-radius: 50%;">
                 <div style="flex: 1;">
                     <div style="font-size: 14px; font-weight: 600;">{{ auth()->user()->display_name }}</div>
                     <div style="font-size: 12px; color: #71717a;">{{ auth()->user()->username }}</div>
-                </div>
-                <div class="kebab-menu">
-                    <button class="kebab-button" onclick="toggleKebabMenu('user-settings')" style="padding: 4px;">⚙️</button>
-                    <div class="kebab-dropdown" id="kebab-user-settings">
-                        @if($server->creator_id === auth()->id())
-                            <form method="POST" action="{{ route('server.destroy', $server) }}" style="display: inline;">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="kebab-option danger" onclick="return confirm('Are you sure you want to delete this server? This action cannot be undone and will delete all channels, messages, and remove all members.')">
-                                    Delete Server
-                                </button>
-                            </form>
-                        @else
-                            <form method="POST" action="{{ route('server.leave', $server) }}" style="display: inline;">
-                                @csrf
-                                <button type="submit" class="kebab-option danger" onclick="return confirm('Are you sure you want to leave this server?')">
-                                    Leave Server
-                                </button>
-                            </form>
-                        @endif
-                    </div>
                 </div>
             </div>
         </div>
