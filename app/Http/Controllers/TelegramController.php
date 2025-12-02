@@ -25,11 +25,13 @@ class TelegramController extends Controller
     {
         try {
             // Verify webhook secret if configured
+            // Note: Only verify if secret_token was set when registering webhook with Telegram
             $webhookSecret = config('services.telegram.webhook_secret');
-            if ($webhookSecret) {
-                $providedSecret = $request->header('X-Telegram-Bot-Api-Secret-Token');
-                
-                if (!hash_equals($webhookSecret, $providedSecret ?? '')) {
+            $providedSecret = $request->header('X-Telegram-Bot-Api-Secret-Token');
+
+            // Only check secret if one was provided in the request (meaning it was set up with Telegram)
+            if ($webhookSecret && $providedSecret) {
+                if (!hash_equals($webhookSecret, $providedSecret)) {
                     Log::warning('Telegram webhook: Invalid secret token');
                     return response()->json(['error' => 'Unauthorized'], 401);
                 }

@@ -229,6 +229,22 @@ class ServerGoal extends Model
     }
 
     /**
+     * Get top contributors for this goal
+     *
+     * @param int $limit Number of contributors to return
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getTopContributors(int $limit = 3): \Illuminate\Database\Eloquent\Collection
+    {
+        return $this->participants()
+            ->where('participation_status', 'active')
+            ->orderBy('individual_progress', 'desc')
+            ->with('user')
+            ->take($limit)
+            ->get();
+    }
+
+    /**
      * Calculate days remaining
      */
     public function getDaysRemaining(): ?int

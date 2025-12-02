@@ -7,6 +7,7 @@ use App\Models\ServerGoal;
 use App\Models\GoalParticipant;
 use App\Models\GoalMilestone;
 use App\Services\ServerGoalService;
+use App\Events\GoalCreated;
 use App\Events\GoalProgressUpdated;
 use App\Events\GoalMilestoneReached;
 use App\Events\GoalCompleted;
@@ -107,6 +108,9 @@ class ServerGoalController extends Controller
 
         try {
             $goal = $this->goalService->createGoal($server, $user, $request->all());
+
+            // Fire the GoalCreated event for Telegram notifications and broadcasting
+            event(new GoalCreated($goal->load(['creator', 'server'])));
 
             return response()->json([
                 'success' => true,

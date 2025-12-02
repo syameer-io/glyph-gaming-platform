@@ -4,10 +4,12 @@ namespace App\Services;
 
 use TelegramBot\Api\BotApi;
 use TelegramBot\Api\Types\Message;
+use TelegramBot\Api\Types\Inline\InlineKeyboardMarkup;
 use TelegramBot\Api\Exception;
 use App\Models\Server;
 use App\Models\ServerGoal;
 use App\Models\GoalParticipant;
+use App\Models\Team;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
 
@@ -60,12 +62,22 @@ class TelegramBotService
             ];
             
             $options = array_merge($defaultOptions, $options);
-            
-            $this->bot->sendMessage($chatId, $message, $options['parse_mode'], $options['disable_web_page_preview']);
-            
+
+            $replyMarkup = $options['reply_markup'] ?? null;
+
+            $this->bot->sendMessage(
+                $chatId,
+                $message,
+                $options['parse_mode'],
+                $options['disable_web_page_preview'],
+                null, // reply_to_message_id
+                $replyMarkup
+            );
+
             Log::info('Telegram message sent successfully', [
                 'chat_id' => $chatId,
-                'message_length' => strlen($message)
+                'message_length' => strlen($message),
+                'has_keyboard' => $replyMarkup !== null
             ]);
             
             return true;
@@ -127,14 +139,15 @@ class TelegramBotService
     public function sendNewGoalNotification(ServerGoal $goal): bool
     {
         $server = $goal->server;
-        
+
         if (!$server->telegram_chat_id) {
             return false;
         }
 
         $message = $this->buildNewGoalMessage($goal);
-        
-        return $this->sendMessage($server->telegram_chat_id, $message);
+        $keyboard = $this->buildGoalKeyboard($goal);
+
+        return $this->sendMessage($server->telegram_chat_id, $message, ['reply_markup' => $keyboard]);
     }
 
     /**
@@ -179,7 +192,12 @@ class TelegramBotService
                 $message = $update['message'];
                 $this->processMessage($message);
             }
-            
+
+            // Handle inline keyboard button presses
+            if (isset($update['callback_query'])) {
+                $this->processCallbackQuery($update['callback_query']);
+            }
+
         } catch (\Exception $e) {
             Log::error('Error processing Telegram webhook', [
                 'error' => $e->getMessage(),
@@ -210,12 +228,80 @@ class TelegramBotService
     }
 
     /**
+     * Process callback query from inline keyboard button press
+     */
+    protected function processCallbackQuery(array $callbackQuery): void
+    {
+        $callbackId = $callbackQuery['id'];
+        $data = $callbackQuery['data'] ?? '';
+        $chatId = $callbackQuery['message']['chat']['id'] ?? null;
+
+        Log::info('Processing Telegram callback query', [
+            'callback_id' => $callbackId,
+            'data' => $data,
+            'chat_id' => $chatId
+        ]);
+
+        try {
+            // Answer callback to remove loading state on button
+            $this->bot->answerCallbackQuery($callbackId, 'Loading...');
+
+            // Parse callback data format: action:entity_type:entity_id
+            $parts = explode(':', $data);
+            $action = $parts[0] ?? '';
+            $entityType = $parts[1] ?? '';
+            $entityId = $parts[2] ?? '';
+
+            if ($action === 'refresh' && $chatId) {
+                $this->handleRefreshCallback($entityType, $entityId, $chatId);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Error processing callback query', [
+                'error' => $e->getMessage(),
+                'data' => $data
+            ]);
+        }
+    }
+
+    /**
+     * Handle refresh callback - sends updated status message
+     */
+    protected function handleRefreshCallback(string $entityType, string $entityId, string $chatId): void
+    {
+        switch ($entityType) {
+            case 'goal':
+                $goal = ServerGoal::find($entityId);
+                if ($goal) {
+                    $message = $this->buildGoalStatusMessage($goal);
+                    $keyboard = $this->buildGoalKeyboard($goal);
+                    $this->sendMessage($chatId, $message, ['reply_markup' => $keyboard]);
+                }
+                break;
+
+            case 'team':
+                $team = Team::with(['creator', 'activeMembers.user'])->find($entityId);
+                if ($team) {
+                    $message = $this->buildTeamStatusMessage($team);
+                    $keyboard = $this->buildTeamKeyboard($team);
+                    $this->sendMessage($chatId, $message, ['reply_markup' => $keyboard]);
+                }
+                break;
+        }
+    }
+
+    /**
      * Handle bot commands
      */
     protected function handleCommand(string $chatId, string $command, ?int $userId): void
     {
         $parts = explode(' ', trim($command));
         $cmd = strtolower($parts[0]);
+
+        // Strip bot username from command (e.g., /start@GlyphCommunityBot -> /start)
+        if (str_contains($cmd, '@')) {
+            $cmd = explode('@', $cmd)[0];
+        }
 
         switch ($cmd) {
             case '/start':
@@ -482,7 +568,139 @@ class TelegramBotService
         }
         
         $message .= "Excellent progress, team! 🔥";
-        
+
+        return $message;
+    }
+
+    /**
+     * Build inline keyboard markup from button array
+     *
+     * @param array $buttons Array of button rows, each row is array of buttons
+     * @return InlineKeyboardMarkup
+     */
+    protected function buildInlineKeyboard(array $buttons): InlineKeyboardMarkup
+    {
+        return new InlineKeyboardMarkup($buttons);
+    }
+
+    /**
+     * Build inline keyboard for goal notifications
+     * Provides View Goal, Join Goal (if active), and Refresh buttons
+     */
+    protected function buildGoalKeyboard(ServerGoal $goal): InlineKeyboardMarkup
+    {
+        $appUrl = config('app.url');
+        $buttons = [];
+
+        // Row 1: View Goal button (URL button)
+        $viewUrl = "{$appUrl}/servers/{$goal->server_id}/goals/{$goal->id}";
+        $buttons[] = [
+            ['text' => '🎯 View Goal', 'url' => $viewUrl]
+        ];
+
+        // Row 2: Join (if active) and Refresh
+        $row2 = [];
+        if ($goal->isActive() && $goal->status === 'active') {
+            $row2[] = ['text' => '✅ Join Goal', 'url' => $viewUrl];
+        }
+        $row2[] = ['text' => '🔄 Refresh', 'callback_data' => "refresh:goal:{$goal->id}"];
+        $buttons[] = $row2;
+
+        return $this->buildInlineKeyboard($buttons);
+    }
+
+    /**
+     * Build inline keyboard for team notifications
+     * Provides View Team, Join Team (if recruiting), and Refresh buttons
+     */
+    protected function buildTeamKeyboard(Team $team): InlineKeyboardMarkup
+    {
+        $appUrl = config('app.url');
+        $buttons = [];
+
+        // Row 1: View Team button
+        $viewUrl = "{$appUrl}/teams/{$team->id}";
+        $buttons[] = [
+            ['text' => '👥 View Team', 'url' => $viewUrl]
+        ];
+
+        // Row 2: Join (if recruiting and not full) and Refresh
+        $row2 = [];
+        if ($team->isRecruiting() && !$team->isFull()) {
+            $row2[] = ['text' => '✅ Join Team', 'url' => $viewUrl];
+        }
+        $row2[] = ['text' => '🔄 Refresh', 'callback_data' => "refresh:team:{$team->id}"];
+        $buttons[] = $row2;
+
+        return $this->buildInlineKeyboard($buttons);
+    }
+
+    /**
+     * Build goal status message for refresh callback
+     */
+    protected function buildGoalStatusMessage(ServerGoal $goal): string
+    {
+        $message = "📊 <b>Goal Status</b>\n\n";
+        $message .= "🎯 <b>{$goal->title}</b>\n";
+
+        if ($goal->game_name) {
+            $message .= "🎮 Game: {$goal->game_name}\n";
+        }
+
+        $progress = round($goal->completion_percentage, 1);
+        $message .= "📈 Progress: {$goal->current_progress}/{$goal->target_value} ({$progress}%)\n";
+        $message .= "👥 Participants: {$goal->participant_count}\n";
+        $message .= "📋 Status: " . ucfirst($goal->status) . "\n";
+
+        if ($goal->deadline) {
+            $daysLeft = now()->diffInDays($goal->deadline, false);
+            if ($daysLeft >= 0) {
+                $message .= "⏰ {$daysLeft} days remaining\n";
+            } else {
+                $message .= "⏰ Deadline passed\n";
+            }
+        }
+
+        return $message;
+    }
+
+    /**
+     * Build team status message for refresh callback
+     */
+    protected function buildTeamStatusMessage(Team $team): string
+    {
+        $message = "📊 <b>Team Status</b>\n\n";
+        $message .= "👥 <b>{$team->name}</b>\n";
+
+        if ($team->game_name) {
+            $message .= "🎮 Game: {$team->game_name}\n";
+        }
+
+        $message .= "📈 Members: {$team->current_size}/{$team->max_size}\n";
+        $message .= "🏆 Skill Level: " . ucfirst($team->skill_level ?? 'Any') . "\n";
+        $message .= "📋 Status: " . ucfirst($team->status) . "\n";
+
+        // Show recruiting status
+        if ($team->isRecruiting() && !$team->isFull()) {
+            $spotsLeft = $team->max_size - $team->current_size;
+            $message .= "🔓 Recruiting: {$spotsLeft} spot(s) available\n";
+        } elseif ($team->isFull()) {
+            $message .= "🔒 Team is full\n";
+        }
+
+        // List first 5 members
+        if ($team->activeMembers && $team->activeMembers->count() > 0) {
+            $message .= "\n<b>Members:</b>\n";
+            foreach ($team->activeMembers->take(5) as $member) {
+                $role = $member->game_role ? " ({$member->game_role})" : "";
+                $message .= "• {$member->user->display_name}{$role}\n";
+            }
+            if ($team->activeMembers->count() > 5) {
+                $remaining = $team->activeMembers->count() - 5;
+                $message .= "• <i>+{$remaining} more...</i>\n";
+            }
+        }
+
         return $message;
     }
 

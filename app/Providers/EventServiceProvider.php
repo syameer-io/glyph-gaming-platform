@@ -3,10 +3,12 @@
 namespace App\Providers;
 
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
+use App\Events\GoalCreated;
 use App\Events\GoalCompleted;
 use App\Events\GoalProgressUpdated;
 use App\Events\UserJoinedGoal;
 use App\Events\GoalMilestoneReached;
+use App\Listeners\TelegramGoalCreated;
 use App\Listeners\TelegramGoalCompleted;
 use App\Listeners\TelegramGoalProgressUpdated;
 use App\Listeners\TelegramUserJoinedGoal;
@@ -20,18 +22,22 @@ class EventServiceProvider extends ServiceProvider
      * @var array
      */
     protected $listen = [
+        GoalCreated::class => [
+            TelegramGoalCreated::class,
+        ],
+
         GoalCompleted::class => [
             TelegramGoalCompleted::class,
         ],
-        
+
         GoalProgressUpdated::class => [
             TelegramGoalProgressUpdated::class,
         ],
-        
+
         UserJoinedGoal::class => [
             TelegramUserJoinedGoal::class,
         ],
-        
+
         GoalMilestoneReached::class => [
             TelegramGoalMilestoneReached::class,
         ],
