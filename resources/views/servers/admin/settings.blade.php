@@ -771,19 +771,24 @@
                     <p style="color: #b3b3b5; margin-bottom: 24px; font-size: 14px;">Connect your server to Telegram to receive goal notifications and updates in your Telegram group or channel.</p>
                     
                     <!-- Bot Status Card -->
-                    <div id="telegramStatusCard" style="background-color: #0e0e10; border-radius: 8px; padding: 20px; margin-bottom: 32px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                            <h4 style="margin: 0;">Connection Status</h4>
-                            <div id="statusIndicator" class="status-indicator" style="padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 600;">
-                                <span id="statusText">Checking...</span>
-                            </div>
+                    <div id="telegramStatusCard" style="background-color: #0e0e10; border-radius: 8px; padding: 20px; margin-bottom: 32px; position: relative;">
+                        <!-- Status Badge - Positioned absolutely in top-right -->
+                        <div id="statusIndicator" style="position: absolute; top: 16px; right: 16px; display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; background-color: #3f3f46; color: #efeff1;">
+                            <span id="statusDot" style="width: 8px; height: 8px; border-radius: 50%; background-color: #71717a; flex-shrink: 0;"></span>
+                            <span id="statusText">Checking...</span>
                         </div>
+
+                        <h4 style="margin: 0 0 16px 0;">Connection Status</h4>
                         
                         <div id="telegramInfo" style="display: none;">
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 16px;">
+                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px;">
                                 <div>
                                     <div style="font-size: 14px; color: #b3b3b5;">Chat ID</div>
                                     <div style="font-weight: 600; color: #efeff1;" id="chatId">-</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 14px; color: #b3b3b5;">Chat Name</div>
+                                    <div style="font-weight: 600; color: #efeff1;" id="chatName">-</div>
                                 </div>
                                 <div>
                                     <div style="font-size: 14px; color: #b3b3b5;">Linked</div>
@@ -818,7 +823,10 @@
 
                     <!-- Notification Settings -->
                     <div style="background-color: #0e0e10; border-radius: 8px; padding: 20px; margin-bottom: 32px;">
-                        <h4 style="margin-bottom: 16px;">Notification Settings</h4>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <h4 style="margin-bottom: 0;">Notification Settings</h4>
+                            <span id="saveIndicator" style="display: none; font-size: 12px; color: #10b981;">&#10003; Saved</span>
+                        </div>
                         
                         <div id="notificationSettings" style="display: none;">
                             <div style="margin-bottom: 16px;">
@@ -1514,10 +1522,14 @@ function updateTelegramUI(status) {
         document.getElementById('setupInstructions').style.display = 'none';
 
         // Populate connection details
-        document.getElementById('chatId').textContent = status.chat_id || 'Unknown';
+        document.getElementById('chatId').textContent = status.chat_id || '-';
+        document.getElementById('chatName').textContent =
+            (status.settings && status.settings.chat_title) || 'Telegram Group';
         document.getElementById('linkedAt').textContent = status.linked_at
-            ? new Date(status.linked_at).toLocaleDateString()
-            : 'Unknown';
+            ? new Date(status.linked_at).toLocaleDateString('en-US', {
+                year: 'numeric', month: 'short', day: 'numeric'
+              })
+            : '-';
         document.getElementById('notificationsEnabled').textContent =
             (status.settings && status.settings.notifications_enabled) ? 'Enabled' : 'Disabled';
 
@@ -1547,11 +1559,13 @@ function updateTelegramUI(status) {
 
 function showTelegramStatus(text, color) {
     const statusIndicator = document.getElementById('statusIndicator');
+    const statusDot = document.getElementById('statusDot');
     const statusText = document.getElementById('statusText');
-    
+
     statusText.textContent = text;
-    statusIndicator.style.backgroundColor = color;
-    statusIndicator.style.color = color === '#71717a' ? '#efeff1' : '#ffffff';
+    statusDot.style.backgroundColor = color;
+    statusIndicator.style.backgroundColor = color === '#10b981' ? 'rgba(16, 185, 129, 0.15)' : '#3f3f46';
+    statusIndicator.style.color = '#efeff1';
 }
 
 function updateNotificationCheckboxes(settings) {
@@ -1615,6 +1629,9 @@ function updateNotificationSettings() {
     .then(data => {
         if (data.success) {
             console.log('Notification settings updated successfully');
+            const saveIndicator = document.getElementById('saveIndicator');
+            saveIndicator.style.display = 'inline';
+            setTimeout(() => { saveIndicator.style.display = 'none'; }, 2000);
         } else {
             alert('Error updating settings: ' + (data.message || 'Unknown error'));
             // Reload to reset checkboxes on error

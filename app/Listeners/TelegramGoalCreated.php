@@ -61,7 +61,7 @@ class TelegramGoalCreated
             // Check if this notification type is enabled
             $settings = $server->telegram_settings ?? [];
             if (!($settings['notifications_enabled'] ?? true) ||
-                !($settings['notification_types']['goal_created'] ?? true)) {
+                !($settings['notification_types']['new_goal'] ?? true)) {
                 Log::info('Telegram goal created notifications disabled for server', [
                     'goal_id' => $goal->id,
                     'server_id' => $server->id

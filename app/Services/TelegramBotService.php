@@ -510,8 +510,35 @@ class TelegramBotService
             return;
         }
 
-        $server->update(['telegram_chat_id' => $chatId]);
-        
+        // Get chat title from Telegram API if available
+        $chatTitle = null;
+        try {
+            $chatInfo = $this->bot->getChat($chatId);
+            $chatTitle = $chatInfo['title'] ?? $chatInfo['first_name'] ?? 'Telegram Group';
+        } catch (\Exception $e) {
+            Log::warning('Could not get chat info', ['chat_id' => $chatId, 'error' => $e->getMessage()]);
+            $chatTitle = 'Telegram Group';
+        }
+
+        $server->update([
+            'telegram_chat_id' => $chatId,
+            'telegram_linked_at' => now(),
+            'telegram_settings' => [
+                'chat_title' => $chatTitle,
+                'notifications_enabled' => true,
+                'notification_types' => [
+                    'goal_completed' => true,
+                    'goal_progress' => true,
+                    'new_goal' => true,
+                    'user_joined' => true,
+                    'milestone_reached' => true,
+                    'team_created' => true,
+                    'team_member_joined' => true,
+                    'team_member_left' => false,
+                ]
+            ]
+        ]);
+
         $message = "✅ <b>Successfully linked!</b>\n\n";
         $message .= "🎮 Server: <b>{$server->name}</b>\n";
         $message .= "👥 Members: {$server->members()->count()}\n";
