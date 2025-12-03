@@ -183,6 +183,94 @@ class TelegramBotService
     }
 
     /**
+     * Send team created notification to linked server chat
+     */
+    public function sendTeamCreatedNotification(Team $team): bool
+    {
+        $server = $team->server;
+
+        // Teams without server association can't send Telegram notifications
+        if (!$server || !$server->telegram_chat_id) {
+            return false;
+        }
+
+        // Check notification settings
+        $settings = $server->telegram_settings ?? [];
+        if (!($settings['notifications_enabled'] ?? true)) {
+            return false;
+        }
+        if (!($settings['notification_types']['team_created'] ?? true)) {
+            return false;
+        }
+
+        $message = $this->buildTeamCreatedMessage($team);
+        $keyboard = $this->buildTeamKeyboard($team);
+
+        return $this->sendMessage($server->telegram_chat_id, $message, [
+            'reply_markup' => $keyboard
+        ]);
+    }
+
+    /**
+     * Send team member joined notification
+     *
+     * @param Team $team The team
+     * @param \App\Models\TeamMember $member The new member record
+     */
+    public function sendTeamMemberJoinedNotification(Team $team, $member): bool
+    {
+        $server = $team->server;
+
+        if (!$server || !$server->telegram_chat_id) {
+            return false;
+        }
+
+        $settings = $server->telegram_settings ?? [];
+        if (!($settings['notifications_enabled'] ?? true)) {
+            return false;
+        }
+        if (!($settings['notification_types']['team_member_joined'] ?? true)) {
+            return false;
+        }
+
+        $message = $this->buildTeamMemberJoinedMessage($team, $member);
+        $keyboard = $this->buildTeamKeyboard($team);
+
+        return $this->sendMessage($server->telegram_chat_id, $message, [
+            'reply_markup' => $keyboard
+        ]);
+    }
+
+    /**
+     * Send team member left notification
+     *
+     * @param Team $team The team
+     * @param \App\Models\User $user The user who left
+     */
+    public function sendTeamMemberLeftNotification(Team $team, $user): bool
+    {
+        $server = $team->server;
+
+        if (!$server || !$server->telegram_chat_id) {
+            return false;
+        }
+
+        $settings = $server->telegram_settings ?? [];
+        if (!($settings['notifications_enabled'] ?? true)) {
+            return false;
+        }
+        // Default to false - member left is lower priority
+        if (!($settings['notification_types']['team_member_left'] ?? false)) {
+            return false;
+        }
+
+        $message = $this->buildTeamMemberLeftMessage($team, $user);
+        // No keyboard for "left" notifications - less actionable
+
+        return $this->sendMessage($server->telegram_chat_id, $message);
+    }
+
+    /**
      * Process incoming webhook from Telegram
      */
     public function processWebhook(array $update): void
@@ -568,6 +656,85 @@ class TelegramBotService
         }
         
         $message .= "Excellent progress, team! 🔥";
+
+        return $message;
+    }
+
+    /**
+     * Build team created message
+     */
+    protected function buildTeamCreatedMessage(Team $team): string
+    {
+        $message = "👥 <b>NEW TEAM CREATED!</b>\n\n";
+        $message .= "🏷️ <b>{$team->name}</b>\n";
+
+        if ($team->game_name) {
+            $message .= "🎮 Game: {$team->game_name}\n";
+        }
+
+        $message .= "📊 Size: {$team->current_size}/{$team->max_size}\n";
+        $message .= "🏆 Skill Level: " . ucfirst($team->skill_level ?? 'Any') . "\n";
+
+        if ($team->creator) {
+            $message .= "👤 Created by: <b>{$team->creator->display_name}</b>\n";
+        }
+
+        if ($team->description) {
+            // Truncate long descriptions
+            $desc = strlen($team->description) > 150
+                ? substr($team->description, 0, 147) . '...'
+                : $team->description;
+            $message .= "\n📝 {$desc}\n";
+        }
+
+        // Show recruiting status
+        if ($team->isRecruiting()) {
+            $spotsLeft = $team->max_size - $team->current_size;
+            $message .= "\n🔓 <b>{$spotsLeft} spot(s) available!</b>";
+        }
+
+        return $message;
+    }
+
+    /**
+     * Build team member joined message
+     */
+    protected function buildTeamMemberJoinedMessage(Team $team, $member): string
+    {
+        $userName = $member->user->display_name ?? 'Unknown User';
+
+        $message = "🎉 <b>New Team Member!</b>\n\n";
+        $message .= "👤 <b>{$userName}</b> joined <b>{$team->name}</b>\n";
+        $message .= "📊 Team Size: {$team->current_size}/{$team->max_size}\n";
+
+        if ($member->game_role) {
+            $message .= "🎯 Role: " . ucfirst($member->game_role) . "\n";
+        }
+
+        if ($team->isFull()) {
+            $message .= "\n✅ <b>Team is now full!</b>";
+        } else {
+            $spotsLeft = $team->max_size - $team->current_size;
+            $message .= "\n🔓 {$spotsLeft} spot(s) remaining";
+        }
+
+        return $message;
+    }
+
+    /**
+     * Build team member left message
+     */
+    protected function buildTeamMemberLeftMessage(Team $team, $user): string
+    {
+        $userName = $user->display_name ?? 'Unknown User';
+
+        $message = "👋 <b>{$userName}</b> left <b>{$team->name}</b>\n";
+        $message .= "📊 Team Size: {$team->current_size}/{$team->max_size}";
+
+        if ($team->isRecruiting() && !$team->isFull()) {
+            $spotsLeft = $team->max_size - $team->current_size;
+            $message .= "\n🔓 Now recruiting! {$spotsLeft} spot(s) available";
+        }
 
         return $message;
     }

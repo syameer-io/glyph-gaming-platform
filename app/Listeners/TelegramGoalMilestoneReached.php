@@ -6,6 +6,7 @@ use App\Events\GoalMilestoneReached;
 use App\Services\TelegramBotService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class TelegramGoalMilestoneReached implements ShouldQueue
@@ -21,6 +22,10 @@ class TelegramGoalMilestoneReached implements ShouldQueue
 
     /**
      * Handle the event.
+     *
+     * Uses cache-based lock to prevent duplicate notifications.
+     * This handles the case where the listener may be triggered multiple times
+     * due to queue retries or Laravel's event registration behavior.
      */
     public function handle(GoalMilestoneReached $event): void
     {
@@ -29,15 +34,41 @@ class TelegramGoalMilestoneReached implements ShouldQueue
             $milestone = $event->milestone;
             $server = $goal->server;
 
+            // Prevent duplicate notifications using a cache lock
+            // The lock expires after 60 seconds to handle edge cases
+            $lockKey = "telegram_milestone_reached_notification_{$goal->id}_{$milestone->id}";
+
+            if (Cache::has($lockKey)) {
+                Log::debug('Skipping duplicate Telegram milestone reached notification', [
+                    'goal_id' => $goal->id,
+                    'milestone_id' => $milestone->id,
+                    'reason' => 'Already sent within lock window'
+                ]);
+                return;
+            }
+
+            // Set the lock before sending to prevent race conditions
+            Cache::put($lockKey, true, 60);
+
             // Check if server has Telegram integration enabled
             if (!$server->telegram_chat_id) {
+                Log::info('No Telegram chat ID for server, skipping milestone reached notification', [
+                    'goal_id' => $goal->id,
+                    'milestone_id' => $milestone->id,
+                    'server_id' => $server->id
+                ]);
                 return;
             }
 
             // Check if this notification type is enabled
             $settings = $server->telegram_settings ?? [];
-            if (!($settings['notifications_enabled'] ?? true) || 
+            if (!($settings['notifications_enabled'] ?? true) ||
                 !($settings['notification_types']['milestone_reached'] ?? true)) {
+                Log::info('Telegram milestone reached notifications disabled for server', [
+                    'goal_id' => $goal->id,
+                    'milestone_id' => $milestone->id,
+                    'server_id' => $server->id
+                ]);
                 return;
             }
 
@@ -48,6 +79,7 @@ class TelegramGoalMilestoneReached implements ShouldQueue
                 'goal_id' => $goal->id,
                 'milestone_id' => $milestone->id,
                 'server_id' => $server->id,
+                'telegram_chat_id' => $server->telegram_chat_id,
                 'success' => $success
             ]);
 

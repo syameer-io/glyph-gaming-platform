@@ -3,16 +3,30 @@
 namespace App\Providers;
 
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
+
+// Goal Events
 use App\Events\GoalCreated;
 use App\Events\GoalCompleted;
 use App\Events\GoalProgressUpdated;
 use App\Events\UserJoinedGoal;
 use App\Events\GoalMilestoneReached;
+
+// Team Events
+use App\Events\TeamCreated;
+use App\Events\TeamMemberJoined;
+use App\Events\TeamMemberLeft;
+
+// Goal Telegram Listeners
 use App\Listeners\TelegramGoalCreated;
 use App\Listeners\TelegramGoalCompleted;
 use App\Listeners\TelegramGoalProgressUpdated;
 use App\Listeners\TelegramUserJoinedGoal;
 use App\Listeners\TelegramGoalMilestoneReached;
+
+// Team Telegram Listeners
+use App\Listeners\TelegramTeamCreated;
+use App\Listeners\TelegramTeamMemberJoined;
+use App\Listeners\TelegramTeamMemberLeft;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -40,6 +54,21 @@ class EventServiceProvider extends ServiceProvider
 
         GoalMilestoneReached::class => [
             TelegramGoalMilestoneReached::class,
+        ],
+
+        // ========================================
+        // Team Events → Telegram Notifications
+        // ========================================
+        TeamCreated::class => [
+            TelegramTeamCreated::class,
+        ],
+
+        TeamMemberJoined::class => [
+            TelegramTeamMemberJoined::class,
+        ],
+
+        TeamMemberLeft::class => [
+            TelegramTeamMemberLeft::class,
         ],
     ];
 
