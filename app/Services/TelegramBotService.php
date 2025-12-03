@@ -395,20 +395,32 @@ class TelegramBotService
             case '/start':
                 $this->handleStartCommand($chatId, $userId);
                 break;
-                
+
             case '/goals':
                 $this->handleGoalsCommand($chatId);
                 break;
-                
+
             case '/link':
                 $inviteCode = $parts[1] ?? null;
                 $this->handleLinkCommand($chatId, $inviteCode);
                 break;
-                
+
             case '/help':
                 $this->handleHelpCommand($chatId);
                 break;
-                
+
+            case '/stats':
+                $this->handleStatsCommand($chatId, $userId);
+                break;
+
+            case '/leaderboard':
+                $this->handleLeaderboardCommand($chatId);
+                break;
+
+            case '/upcoming':
+                $this->handleUpcomingCommand($chatId);
+                break;
+
             default:
                 $this->sendMessage($chatId, "Unknown command. Type /help for available commands.");
         }
@@ -424,9 +436,12 @@ class TelegramBotService
         $message .= "Available commands:\n";
         $message .= "• /link {invite_code} - Link this chat to a server\n";
         $message .= "• /goals - View active community goals\n";
+        $message .= "• /stats - View server goal statistics\n";
+        $message .= "• /leaderboard - Top 10 contributors\n";
+        $message .= "• /upcoming - Goals sorted by deadline\n";
         $message .= "• /help - Show this help message\n\n";
         $message .= "Get started by linking me to your gaming server! 🚀";
-        
+
         $this->sendMessage($chatId, $message);
     }
 
@@ -517,15 +532,268 @@ class TelegramBotService
         $message .= "• /start - Welcome message and setup info\n";
         $message .= "• /link {invite_code} - Link chat to your gaming server\n";
         $message .= "• /goals - View all active community goals\n";
+        $message .= "• /stats - View server goal statistics\n";
+        $message .= "• /leaderboard - Top 10 goal contributors\n";
+        $message .= "• /upcoming - Active goals sorted by deadline\n";
         $message .= "• /help - Show this help message\n\n";
         $message .= "<b>What I do:</b>\n";
         $message .= "🎯 Notify when goals are completed\n";
         $message .= "📈 Send progress updates\n";
         $message .= "🎉 Announce new community challenges\n";
-        $message .= "👥 Track when members join goals\n\n";
+        $message .= "👥 Track when members join goals\n";
+        $message .= "👥 Notify about team activities\n\n";
         $message .= "Questions? Contact your server admin! 💬";
-        
+
         $this->sendMessage($chatId, $message);
+    }
+
+    /**
+     * Handle /stats command - Shows server goal statistics
+     */
+    protected function handleStatsCommand(string $chatId, ?int $userId): void
+    {
+        $server = Server::where('telegram_chat_id', $chatId)->first();
+
+        if (!$server) {
+            $this->sendMessage($chatId, "❌ This chat is not linked to any server. Use /link {invite_code} first.");
+            return;
+        }
+
+        $stats = $this->getServerGoalStats($server);
+
+        $message = "📊 <b>Goal Statistics for {$server->name}</b>\n\n";
+
+        // Overview stats
+        $message .= "<b>Overview</b>\n";
+        $message .= "📋 Total Goals: {$stats['total_goals']}\n";
+        $message .= "✅ Completed: {$stats['completed_goals']}\n";
+        $message .= "🎯 Active: {$stats['active_goals']}\n";
+        $message .= "👥 Total Participations: {$stats['total_participations']}\n\n";
+
+        // Completion rate
+        if ($stats['total_goals'] > 0) {
+            $message .= "<b>Completion Rate:</b> {$stats['completion_rate']}%\n";
+        }
+
+        // Average participation
+        if ($stats['active_goals'] > 0) {
+            $message .= "<b>Avg Participants/Goal:</b> {$stats['avg_participants']}\n";
+        }
+
+        // Recent activity
+        if ($stats['recently_completed'] > 0) {
+            $message .= "\n🏆 <b>{$stats['recently_completed']}</b> goals completed in the last 7 days!";
+        }
+
+        $this->sendMessage($chatId, $message);
+    }
+
+    /**
+     * Handle /leaderboard command - Shows top 10 contributors
+     */
+    protected function handleLeaderboardCommand(string $chatId): void
+    {
+        $server = Server::where('telegram_chat_id', $chatId)->first();
+
+        if (!$server) {
+            $this->sendMessage($chatId, "❌ This chat is not linked to any server. Use /link {invite_code} first.");
+            return;
+        }
+
+        $topContributors = $this->getTopContributors($server, 10);
+
+        if ($topContributors->isEmpty()) {
+            $this->sendMessage($chatId, "📋 No goal contributions yet for <b>{$server->name}</b>.\n\nCreate some goals and start participating!");
+            return;
+        }
+
+        $message = "🏆 <b>Top Contributors for {$server->name}</b>\n\n";
+
+        $medals = ['🥇', '🥈', '🥉'];
+
+        foreach ($topContributors as $index => $contributor) {
+            $medal = $medals[$index] ?? '🏅';
+            $userName = $contributor->user->display_name ?? 'Unknown';
+            $totalProgress = $contributor->total_progress;
+            $goalsCount = $contributor->goals_count;
+
+            $message .= "{$medal} <b>{$userName}</b>\n";
+            $message .= "    📊 {$totalProgress} total progress • {$goalsCount} goals\n";
+        }
+
+        $message .= "\nKeep contributing to climb the leaderboard! 💪";
+
+        $this->sendMessage($chatId, $message);
+    }
+
+    /**
+     * Handle /upcoming command - Shows active goals sorted by deadline
+     */
+    protected function handleUpcomingCommand(string $chatId): void
+    {
+        $server = Server::where('telegram_chat_id', $chatId)->first();
+
+        if (!$server) {
+            $this->sendMessage($chatId, "❌ This chat is not linked to any server. Use /link {invite_code} first.");
+            return;
+        }
+
+        $upcomingGoals = $server->goals()
+            ->where('status', 'active')
+            ->whereNotNull('deadline')
+            ->where('deadline', '>=', now())
+            ->orderBy('deadline', 'asc')
+            ->take(10)
+            ->get();
+
+        // Also get goals without deadline
+        $noDeadlineGoals = $server->goals()
+            ->where('status', 'active')
+            ->whereNull('deadline')
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        if ($upcomingGoals->isEmpty() && $noDeadlineGoals->isEmpty()) {
+            $this->sendMessage($chatId, "📋 No active goals found for <b>{$server->name}</b>.");
+            return;
+        }
+
+        $message = "⏰ <b>Upcoming Goals for {$server->name}</b>\n\n";
+
+        // Goals with deadlines
+        if ($upcomingGoals->isNotEmpty()) {
+            $message .= "<b>Goals by Deadline:</b>\n";
+
+            foreach ($upcomingGoals as $goal) {
+                $daysLeft = now()->diffInDays($goal->deadline, false);
+                $progress = round($goal->completion_percentage, 1);
+                $urgencyEmoji = $daysLeft <= 3 ? '🔴' : ($daysLeft <= 7 ? '🟡' : '🟢');
+
+                $message .= "\n{$urgencyEmoji} <b>{$goal->title}</b>\n";
+                $message .= "   ⏳ {$daysLeft} days left • {$progress}% done\n";
+                $message .= "   👥 {$goal->participant_count} participants\n";
+            }
+        }
+
+        // Goals without deadlines
+        if ($noDeadlineGoals->isNotEmpty()) {
+            $message .= "\n<b>Ongoing (No Deadline):</b>\n";
+
+            foreach ($noDeadlineGoals as $goal) {
+                $progress = round($goal->completion_percentage, 1);
+                $message .= "• <b>{$goal->title}</b> - {$progress}% done\n";
+            }
+        }
+
+        $this->sendMessage($chatId, $message);
+    }
+
+    /**
+     * Get server goal statistics
+     */
+    protected function getServerGoalStats(Server $server): array
+    {
+        $goals = $server->goals();
+
+        $totalGoals = $goals->count();
+        $completedGoals = (clone $goals)->where('status', 'completed')->count();
+        $activeGoals = (clone $goals)->where('status', 'active')->count();
+
+        // Total participations across all goals
+        $totalParticipations = $server->goals()->withCount('participants')->get()->sum('participants_count');
+
+        // Recently completed (last 7 days)
+        $recentlyCompleted = $server->goals()
+            ->where('status', 'completed')
+            ->where('updated_at', '>=', now()->subDays(7))
+            ->count();
+
+        // Completion rate
+        $completionRate = $totalGoals > 0 ? round(($completedGoals / $totalGoals) * 100, 1) : 0;
+
+        // Average participants per active goal
+        $avgParticipants = $activeGoals > 0
+            ? round($server->activeGoals()->withCount('participants')->get()->avg('participants_count'), 1)
+            : 0;
+
+        return [
+            'total_goals' => $totalGoals,
+            'completed_goals' => $completedGoals,
+            'active_goals' => $activeGoals,
+            'total_participations' => $totalParticipations,
+            'recently_completed' => $recentlyCompleted,
+            'completion_rate' => $completionRate,
+            'avg_participants' => $avgParticipants,
+        ];
+    }
+
+    /**
+     * Get top contributors for a server
+     */
+    protected function getTopContributors(Server $server, int $limit = 10): \Illuminate\Support\Collection
+    {
+        return GoalParticipant::select('user_id')
+            ->selectRaw('SUM(individual_progress) as total_progress')
+            ->selectRaw('COUNT(DISTINCT goal_id) as goals_count')
+            ->whereHas('goal', function ($query) use ($server) {
+                $query->where('server_id', $server->id);
+            })
+            ->where('participation_status', 'active')
+            ->groupBy('user_id')
+            ->orderByDesc('total_progress')
+            ->limit($limit)
+            ->with('user')
+            ->get();
+    }
+
+    /**
+     * Register bot commands with Telegram API
+     *
+     * @return bool
+     */
+    public function setMyCommands(): bool
+    {
+        if (!$this->bot) {
+            Log::warning('Telegram bot not available (cURL issue) - commands not registered');
+            return false;
+        }
+
+        try {
+            $commands = [
+                ['command' => 'start', 'description' => 'Welcome message and setup info'],
+                ['command' => 'help', 'description' => 'Show available commands'],
+                ['command' => 'link', 'description' => 'Link chat to a gaming server'],
+                ['command' => 'goals', 'description' => 'View active community goals'],
+                ['command' => 'stats', 'description' => 'View server goal statistics'],
+                ['command' => 'leaderboard', 'description' => 'Top 10 goal contributors'],
+                ['command' => 'upcoming', 'description' => 'Goals sorted by deadline'],
+            ];
+
+            // Use HTTP client to call setMyCommands API
+            $response = \Illuminate\Support\Facades\Http::post(
+                "https://api.telegram.org/bot{$this->botToken}/setMyCommands",
+                ['commands' => $commands]
+            );
+
+            if ($response->successful() && $response->json('ok')) {
+                Log::info('Telegram bot commands registered successfully', [
+                    'commands_count' => count($commands)
+                ]);
+                return true;
+            }
+
+            Log::error('Failed to register Telegram bot commands', [
+                'response' => $response->json()
+            ]);
+            return false;
+
+        } catch (\Exception $e) {
+            Log::error('Exception registering Telegram bot commands', [
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
     }
 
     /**

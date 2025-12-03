@@ -409,4 +409,24 @@ class Server extends Model
 
         return $maxScore > 0 ? ($totalScore / $maxScore) * 100 : 0.0;
     }
+
+    // Phase 6: Telegram Notification Logs Relationship
+    public function telegramNotificationLogs()
+    {
+        return $this->hasMany(TelegramNotificationLog::class);
+    }
+
+    /**
+     * Get recent Telegram notification logs for this server.
+     *
+     * @param int $limit
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function recentTelegramLogs(int $limit = 20)
+    {
+        return $this->telegramNotificationLogs()
+            ->orderBy('created_at', 'desc')
+            ->limit($limit)
+            ->get();
+    }
 }

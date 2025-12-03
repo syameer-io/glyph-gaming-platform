@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Services\TelegramBotService;
 use App\Models\Server;
+use App\Models\TelegramNotificationLog;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 
@@ -265,6 +266,9 @@ class TelegramController extends Controller
             'notification_types.new_goal' => 'boolean',
             'notification_types.user_joined' => 'boolean',
             'notification_types.milestone_reached' => 'boolean',
+            'notification_types.team_created' => 'boolean',
+            'notification_types.team_member_joined' => 'boolean',
+            'notification_types.team_member_left' => 'boolean',
         ]);
 
         $settings = $server->telegram_settings ?? [];
