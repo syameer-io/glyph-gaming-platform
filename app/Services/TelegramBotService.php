@@ -477,7 +477,7 @@ class TelegramBotService
             $message .= "  👥 {$goal->participant_count} participants\n";
             
             if ($goal->deadline) {
-                $daysLeft = now()->diffInDays($goal->deadline, false);
+                $daysLeft = (int) now()->diffInDays($goal->deadline, false);
                 if ($daysLeft >= 0) {
                     $message .= "  ⏰ {$daysLeft} days remaining\n";
                 }
@@ -666,7 +666,7 @@ class TelegramBotService
             $message .= "<b>Goals by Deadline:</b>\n";
 
             foreach ($upcomingGoals as $goal) {
-                $daysLeft = now()->diffInDays($goal->deadline, false);
+                $daysLeft = (int) now()->diffInDays($goal->deadline, false);
                 $progress = round($goal->completion_percentage, 1);
                 $urgencyEmoji = $daysLeft <= 3 ? '🔴' : ($daysLeft <= 7 ? '🟡' : '🟢');
 
@@ -867,12 +867,12 @@ class TelegramBotService
         $message .= "🎯 Target: {$goal->target_value}\n";
         
         if ($goal->deadline) {
-            $daysLeft = now()->diffInDays($goal->deadline, false);
+            $daysLeft = (int) now()->diffInDays($goal->deadline, false);
             if ($daysLeft >= 0) {
                 $message .= "⏰ Deadline: {$daysLeft} days\n";
             }
         }
-        
+
         $difficulty = ucfirst($goal->difficulty);
         $difficultyEmoji = [
             'Easy' => '🟢',
@@ -1088,7 +1088,7 @@ class TelegramBotService
         $message .= "📋 Status: " . ucfirst($goal->status) . "\n";
 
         if ($goal->deadline) {
-            $daysLeft = now()->diffInDays($goal->deadline, false);
+            $daysLeft = (int) now()->diffInDays($goal->deadline, false);
             if ($daysLeft >= 0) {
                 $message .= "⏰ {$daysLeft} days remaining\n";
             } else {

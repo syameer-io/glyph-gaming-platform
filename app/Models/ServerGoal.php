@@ -253,7 +253,7 @@ class ServerGoal extends Model
             return null;
         }
 
-        $daysRemaining = now()->diffInDays($this->deadline, false);
+        $daysRemaining = (int) now()->diffInDays($this->deadline, false);
         return max(0, $daysRemaining);
     }
 
