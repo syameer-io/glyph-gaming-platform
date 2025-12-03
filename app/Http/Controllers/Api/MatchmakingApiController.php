@@ -117,6 +117,21 @@ class MatchmakingApiController extends Controller
                     $roleNeedsList[] = ucfirst(str_replace('_', ' ', $role));
                 }
 
+                // Language code to name mapping
+                $languageMap = [
+                    'en' => 'English', 'es' => 'Spanish', 'zh' => 'Chinese',
+                    'fr' => 'French', 'de' => 'German', 'pt' => 'Portuguese',
+                    'ru' => 'Russian', 'ja' => 'Japanese', 'ko' => 'Korean'
+                ];
+
+                // Map language codes to names
+                $languages = [];
+                if (!empty($team->languages) && is_array($team->languages)) {
+                    foreach ($team->languages as $langCode) {
+                        $languages[] = $languageMap[$langCode] ?? ucfirst($langCode);
+                    }
+                }
+
                 return [
                     'id' => $team->id,
                     'name' => $team->name,
@@ -127,8 +142,15 @@ class MatchmakingApiController extends Controller
                     'max_size' => $team->max_size,
                     'status' => $team->status,
                     'compatibility_score' => $compatibility['total_score'],
+                    'compatibility_breakdown' => $compatibility['breakdown'] ?? [],
                     'match_reasons' => $compatibility['reasons'],
                     'role_needs' => $roleNeedsList,
+                    // Team tags for detailed display
+                    'preferred_region' => $team->preferred_region,
+                    'required_roles' => $team->required_roles ?? [],
+                    'activity_times' => $team->activity_times ?? ($team->activity_time ? [$team->activity_time] : []),
+                    'languages' => $languages,
+                    'communication_required' => $team->communication_required ?? false,
                     'server' => [
                         'id' => $team->server->id,
                         'name' => $team->server->name,
@@ -139,8 +161,8 @@ class MatchmakingApiController extends Controller
                     ],
                     'members' => $team->activeMembers->take(5)->map(function ($member) {
                         return [
-                            'avatar_url' => $member->user->avatar_url ?? '/images/default-avatar.png',
-                            'display_name' => $member->user->display_name ?? $member->user->name,
+                            'avatar_url' => $member->user->avatar_url,
+                            'display_name' => $member->user->display_name ?? $member->user->name ?? 'Member',
                         ];
                     })->toArray(),
                 ];

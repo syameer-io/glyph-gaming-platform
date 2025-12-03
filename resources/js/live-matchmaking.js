@@ -294,6 +294,19 @@ class LiveMatchmakingManager {
         const container = document.getElementById('live-recommendations-content');
         if (!container) return;
 
+        // Check if server-rendered content already exists (team-card components from Blade)
+        const hasServerRenderedContent = container.querySelector('.team-card') !== null;
+
+        // On initial load, if server has already rendered detailed team cards, preserve them
+        if (hasServerRenderedContent && !this._hasReplacedInitialContent) {
+            console.log('[LiveMatchmaking] Preserving server-rendered recommendations with detailed UI');
+            this._hasReplacedInitialContent = true;
+
+            // Still attach event listeners to existing cards
+            this.attachRecommendationEventListeners();
+            return;
+        }
+
         // Get all recommendations
         const allRecommendations = [];
         this.recommendations.forEach((teams, requestId) => {
@@ -304,7 +317,10 @@ class LiveMatchmakingManager {
         });
 
         if (allRecommendations.length === 0) {
-            container.innerHTML = this.getEmptyRecommendationsHTML();
+            // Only show empty state if there's no server-rendered content
+            if (!hasServerRenderedContent) {
+                container.innerHTML = this.getEmptyRecommendationsHTML();
+            }
             return;
         }
 
@@ -315,7 +331,7 @@ class LiveMatchmakingManager {
         const topRecommendations = allRecommendations.slice(0, 3);
 
         container.innerHTML = this.getRecommendationsHTML(topRecommendations);
-        
+
         // Add event listeners to recommendation cards
         this.attachRecommendationEventListeners();
     }
@@ -350,10 +366,10 @@ class LiveMatchmakingManager {
 
     getRecommendationCardHTML(team) {
         const compatibilityColor = this.getCompatibilityColor(team.compatibility_score || 0);
-        const roleNeeds = team.role_needs || [];
-        
+        const breakdown = team.compatibility_breakdown || {};
+
         return `
-            <div class="recommendation-card" data-team-id="${team.id}" style="
+            <div class="recommendation-card team-card" data-team-id="${team.id}" style="
                 background: linear-gradient(135deg, #18181b 0%, #27272a 100%);
                 border-radius: 8px;
                 padding: 16px;
@@ -363,24 +379,15 @@ class LiveMatchmakingManager {
                 overflow: hidden;
             ">
                 <div style="position: absolute; top: 0; right: 0; width: 4px; height: 100%; background: ${compatibilityColor};"></div>
-                
+
+                <!-- Header with Team Name and Match Score -->
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
                     <div style="flex: 1;">
-                        <div style="font-weight: 600; color: #efeff1; margin-bottom: 4px;">${team.name}</div>
-                        <div style="color: #b3b3b5; font-size: 14px; margin-bottom: 8px;">${team.game_name || 'Unknown Game'}</div>
-                        <div style="display: flex; gap: 8px; align-items: center;">
-                            <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px; font-weight: 600; text-transform: uppercase;">
-                                ${team.skill_level || 'Casual'}
-                            </span>
-                            ${roleNeeds.length > 0 ? `
-                                <span style="background-color: #3f3f46; color: #b3b3b5; padding: 2px 6px; border-radius: 3px; font-size: 11px;">
-                                    Needs: ${roleNeeds.slice(0, 2).join(', ')}${roleNeeds.length > 2 ? '...' : ''}
-                                </span>
-                            ` : ''}
-                        </div>
+                        <div style="font-weight: 600; color: #efeff1; margin-bottom: 4px; font-size: 16px;">${team.name}</div>
+                        <div style="color: #b3b3b5; font-size: 14px;">${team.game_name || 'Unknown Game'}</div>
                     </div>
                     <div style="text-align: right;">
-                        <div style="font-size: 24px; font-weight: 700; color: ${compatibilityColor}; line-height: 1;">
+                        <div style="font-size: 28px; font-weight: 700; color: ${compatibilityColor}; line-height: 1;">
                             ${Math.round(team.compatibility_score || 0)}%
                         </div>
                         <div style="font-size: 11px; color: #b3b3b5; text-transform: uppercase; letter-spacing: 0.5px;">
@@ -389,22 +396,93 @@ class LiveMatchmakingManager {
                     </div>
                 </div>
 
+                <!-- Detailed Compatibility Breakdown -->
+                ${Object.keys(breakdown).length > 0 ? `
+                    <div style="
+                        display: grid;
+                        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+                        gap: 8px;
+                        padding: 12px;
+                        background-color: #0e0e10;
+                        border-radius: 8px;
+                        margin-bottom: 12px;
+                    ">
+                        ${Object.entries(breakdown).map(([key, value]) => `
+                            <div style="text-align: center;">
+                                <div style="font-size: 10px; color: #71717a; text-transform: uppercase; margin-bottom: 2px;">
+                                    ${this.formatBreakdownKey(key)}
+                                </div>
+                                <div style="font-size: 14px; font-weight: 600; color: ${value >= 70 ? '#10b981' : (value >= 50 ? '#f59e0b' : '#71717a')};">
+                                    ${Math.round(value)}%
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+
+                <!-- Team Tags -->
+                <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px;">
+                    ${team.skill_level ? `
+                        <span style="font-size: 11px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; font-weight: 500;">
+                            ${team.skill_level}
+                        </span>
+                    ` : ''}
+                    <span style="font-size: 11px; background-color: #3f3f46; color: #b3b3b5; padding: 4px 8px; border-radius: 4px;">
+                        ${team.current_size || 0}/${team.max_size || 5} Members
+                    </span>
+                    ${team.preferred_region ? `
+                        <span style="font-size: 11px; background-color: #3f3f46; color: #b3b3b5; padding: 4px 8px; border-radius: 4px; text-transform: uppercase;">
+                            ${team.preferred_region.replace(/_/g, ' ')}
+                        </span>
+                    ` : ''}
+                    ${(team.required_roles || []).map(role => `
+                        <span style="font-size: 11px; background-color: rgba(102, 126, 234, 0.2); color: #8b9aef; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; font-weight: 500; border: 1px solid rgba(102, 126, 234, 0.3);">
+                            ${role.replace(/_/g, ' ')}
+                        </span>
+                    `).join('')}
+                    ${(team.activity_times || []).map(time => `
+                        <span style="font-size: 11px; background-color: rgba(245, 158, 11, 0.2); color: #fbbf24; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; font-weight: 500; border: 1px solid rgba(245, 158, 11, 0.3);">
+                            ${time.replace(/_/g, ' ')}
+                        </span>
+                    `).join('')}
+                    ${(team.languages || []).map(lang => `
+                        <span style="font-size: 11px; background-color: rgba(16, 185, 129, 0.2); color: #10b981; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; font-weight: 500; border: 1px solid rgba(16, 185, 129, 0.3);">
+                            ${lang}
+                        </span>
+                    `).join('')}
+                    ${team.communication_required ? `
+                        <span style="font-size: 11px; background-color: #3f3f46; color: #b3b3b5; padding: 4px 8px; border-radius: 4px; text-transform: uppercase;">
+                            Voice Chat
+                        </span>
+                    ` : ''}
+                </div>
+
+                <!-- Member Avatars -->
                 <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <div style="display: flex; margin-right: 8px;">
-                            ${team.members ? team.members.slice(0, 3).map(member => `
-                                <img src="${member.avatar_url || '/images/default-avatar.png'}" 
-                                     alt="${member.display_name}" 
-                                     style="width: 24px; height: 24px; border-radius: 50%; margin-left: -4px; border: 2px solid #18181b;"
-                                     title="${member.display_name}">
+                            ${team.members ? team.members.slice(0, 5).map((member, idx) => `
+                                <img src="${member.avatar_url || this.getDefaultAvatarUrl(member.display_name)}"
+                                     alt="${member.display_name || 'Member'}"
+                                     style="width: 28px; height: 28px; border-radius: 50%; margin-left: ${idx > 0 ? '-8px' : '0'}; border: 2px solid #18181b;"
+                                     title="${member.display_name || 'Member'}"
+                                     onerror="this.src='https://ui-avatars.com/api/?name=User&background=5865F2&color=fff&size=128&bold=true'">
                             `).join('') : ''}
                         </div>
-                        <span style="color: #b3b3b5; font-size: 12px;">
-                            ${team.current_size || 0}/${team.max_size || 5} members
-                        </span>
                     </div>
                 </div>
 
+                <!-- Why It's a Good Match -->
+                ${team.match_reasons && team.match_reasons.length > 0 ? `
+                    <div style="padding: 10px; background-color: rgba(102, 126, 234, 0.1); border-radius: 6px; border-left: 3px solid #667eea; margin-bottom: 12px;">
+                        <div style="font-size: 10px; color: #8b9aef; margin-bottom: 4px; text-transform: uppercase; font-weight: 600;">Why It's a Good Match</div>
+                        <div style="font-size: 12px; color: #d4d4d8;">
+                            ${team.match_reasons.slice(0, 3).join(' • ')}
+                        </div>
+                    </div>
+                ` : ''}
+
+                <!-- Action Buttons -->
                 <div style="display: flex; gap: 8px; justify-content: flex-end;">
                     <button onclick="LiveMatchmaking.viewTeam(${team.id})" class="btn btn-secondary btn-sm">
                         View Team
@@ -413,17 +491,20 @@ class LiveMatchmakingManager {
                         Request to Join
                     </button>
                 </div>
-
-                ${team.match_reasons ? `
-                    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #3f3f46;">
-                        <div style="font-size: 11px; color: #b3b3b5; margin-bottom: 4px;">WHY IT'S A GOOD MATCH:</div>
-                        <div style="font-size: 12px; color: #d4d4d8;">
-                            ${team.match_reasons.slice(0, 2).join(' • ')}
-                        </div>
-                    </div>
-                ` : ''}
             </div>
         `;
+    }
+
+    formatBreakdownKey(key) {
+        const keyMap = {
+            'skill': 'Skill',
+            'composition': 'Comp',
+            'region': 'Region',
+            'schedule': 'Schedule',
+            'language': 'Lang',
+            'size': 'Size'
+        };
+        return keyMap[key] || key.charAt(0).toUpperCase() + key.slice(1);
     }
 
     getCompatibilityColor(score) {
@@ -431,6 +512,12 @@ class LiveMatchmakingManager {
         if (score >= 60) return '#f59e0b'; // yellow
         if (score >= 40) return '#f97316'; // orange
         return '#ef4444'; // red
+    }
+
+    getDefaultAvatarUrl(name) {
+        const displayName = name || 'User';
+        const encodedName = encodeURIComponent(displayName);
+        return `https://ui-avatars.com/api/?name=${encodedName}&background=5865F2&color=fff&size=128&bold=true`;
     }
 
     attachRecommendationEventListeners() {
@@ -673,20 +760,87 @@ class LiveMatchmakingManager {
     showAllRecommendations() {
         // Show modal with all recommendations
         const modal = document.createElement('div');
+        modal.className = 'live-matchmaking-modal';
         modal.innerHTML = `
-            <div class="modal-backdrop" onclick="this.parentElement.remove()">
-                <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 800px;">
-                    <div class="modal-header">
-                        <h3>All Team Recommendations</h3>
-                        <button onclick="this.closest('.modal-backdrop').remove()" class="modal-close">×</button>
+            <div class="mm-modal-backdrop" style="
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0, 0, 0, 0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 9999;
+                backdrop-filter: blur(4px);
+            ">
+                <div class="mm-modal-content" style="
+                    background-color: #1e1f22;
+                    border-radius: 12px;
+                    width: 95%;
+                    max-width: 800px;
+                    max-height: 85vh;
+                    display: flex;
+                    flex-direction: column;
+                    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+                    overflow: hidden;
+                " onclick="event.stopPropagation()">
+                    <div class="mm-modal-header" style="
+                        padding: 20px;
+                        border-bottom: 1px solid #3f3f46;
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        flex-shrink: 0;
+                    ">
+                        <h3 style="font-size: 18px; font-weight: 600; color: #f2f3f5; margin: 0;">
+                            All Team Recommendations
+                        </h3>
+                        <button style="
+                            width: 32px;
+                            height: 32px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            background: none;
+                            border: none;
+                            border-radius: 6px;
+                            color: #71717a;
+                            cursor: pointer;
+                            font-size: 24px;
+                            transition: all 0.15s ease;
+                        " onmouseover="this.style.background='rgba(255,255,255,0.1)';this.style.color='#fff'"
+                           onmouseout="this.style.background='none';this.style.color='#71717a'"
+                           onclick="this.closest('.live-matchmaking-modal').remove()">×</button>
                     </div>
-                    <div class="modal-body">
+                    <div class="mm-modal-body" style="
+                        padding: 20px;
+                        overflow-y: auto;
+                        flex: 1;
+                    ">
                         ${this.getAllRecommendationsHTML()}
                     </div>
                 </div>
             </div>
         `;
-        
+
+        // Close modal when clicking backdrop
+        modal.querySelector('.mm-modal-backdrop').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) {
+                modal.remove();
+            }
+        });
+
+        // Close modal on Escape key
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+                modal.remove();
+                document.removeEventListener('keydown', handleEscape);
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
+
         document.body.appendChild(modal);
     }
 

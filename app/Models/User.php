@@ -138,6 +138,25 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the user's avatar URL with fallback to UI Avatars.
+     *
+     * @return string Avatar URL
+     */
+    public function getAvatarUrlAttribute(): string
+    {
+        // Check if profile has an avatar
+        if ($this->profile && !empty($this->profile->avatar_url)) {
+            return $this->profile->avatar_url;
+        }
+
+        // Fallback to UI Avatars service using display name or username
+        $name = $this->display_name ?? $this->username ?? 'User';
+        $encodedName = urlencode($name);
+
+        return "https://ui-avatars.com/api/?name={$encodedName}&background=5865F2&color=fff&size=128&bold=true";
+    }
+
+    /**
      * Set the user's status.
      *
      * Phase 2: Member List Enhancement

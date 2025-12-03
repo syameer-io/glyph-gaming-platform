@@ -232,11 +232,12 @@ Route::middleware('auth')->group(function () {
             return \App\Models\Team::findOrFail($team)->load('activeMembers.user');
         })->name('teams.members');
         
-        // Matchmaking API  
-        Route::get('/matchmaking/active-requests', function () {
-            return auth()->user()->activeMatchmakingRequests()->with('server')->get();
-        })->name('matchmaking.active');
-        
+        // Note: Matchmaking API routes are defined in routes/api.php using MatchmakingApiController
+        // - GET /api/matchmaking/active-requests
+        // - POST /api/matchmaking/find-compatible-teams
+        // - GET /api/matchmaking/live-recommendations
+        // - GET /api/matchmaking/live-team-updates
+
         // Goal API
         Route::get('/goals/{goal}/leaderboard', function ($goal) {
             $goal = \App\Models\ServerGoal::findOrFail($goal);

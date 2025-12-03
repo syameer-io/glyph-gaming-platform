@@ -24,7 +24,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 // Matchmaking API Routes
-Route::middleware(['auth'])->prefix('matchmaking')->group(function () {
+// Note: Using 'web' middleware to enable session-based auth for same-origin requests
+Route::middleware(['web', 'auth'])->prefix('matchmaking')->group(function () {
     Route::get('/active-requests', [MatchmakingApiController::class, 'getActiveRequests']);
     Route::post('/find-compatible-teams', [MatchmakingApiController::class, 'findCompatibleTeams']);
     Route::get('/live-recommendations', [MatchmakingApiController::class, 'getLiveRecommendations']);
