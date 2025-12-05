@@ -13,15 +13,14 @@ class SteamApiService
     protected $client;
     protected $apiKey;
     protected $gamingSessionService;
+    /**
+     * Supported games for skill calculation (Phase 1: Limited to 3 games)
+     * Other games (Apex, Rust, PUBG, R6S, Fall Guys) can be added in future phases
+     */
     protected $supportedGames = [
         730 => 'CS2',
-        570 => 'Dota 2', 
+        570 => 'Dota 2',
         230410 => 'Warframe',
-        1172470 => 'Apex Legends',
-        252490 => 'Rust',
-        578080 => 'PUBG',
-        359550 => 'Rainbow Six Siege',
-        433850 => 'Fall Guys',
     ];
 
     public function __construct(GamingSessionService $gamingSessionService)
@@ -309,6 +308,73 @@ class SteamApiService
         }
 
         return $achievements;
+    }
+
+    /**
+     * Fetch detailed game stats from Steam GetUserStatsForGame API
+     *
+     * This method retrieves player statistics for specific games that support
+     * the Steam stats API. Currently only CS2 (730) provides reliable data.
+     *
+     * Stats returned for CS2 include:
+     * - total_kills, total_deaths (for K/D ratio)
+     * - total_shots_hit, total_shots_fired (for accuracy)
+     * - total_wins, total_rounds_played (for win rate)
+     *
+     * @param string $steamId User's Steam ID (64-bit format)
+     * @param int $gameAppId Game's Steam App ID
+     * @return array|null Associative array of stat name => value, or null if unavailable
+     */
+    public function getGameStats(string $steamId, int $gameAppId): ?array
+    {
+        // Only CS2 supports this API reliably
+        // Dota 2 and Warframe use different stat systems
+        if ($gameAppId !== 730) {
+            return null;
+        }
+
+        $cacheKey = "game_stats_{$steamId}_{$gameAppId}";
+
+        return Cache::remember($cacheKey, 300, function () use ($steamId, $gameAppId) {
+            try {
+                $response = $this->client->get('ISteamUserStats/GetUserStatsForGame/v2/', [
+                    'query' => [
+                        'key' => $this->apiKey,
+                        'steamid' => $steamId,
+                        'appid' => $gameAppId,
+                    ],
+                ]);
+
+                $data = json_decode($response->getBody()->getContents(), true);
+
+                if (isset($data['playerstats']['stats'])) {
+                    // Convert array of {name, value} objects to keyed format
+                    // From: [{"name": "total_kills", "value": 1234}, ...]
+                    // To: ["total_kills" => 1234, ...]
+                    $stats = [];
+                    foreach ($data['playerstats']['stats'] as $stat) {
+                        $stats[$stat['name']] = $stat['value'];
+                    }
+
+                    Log::info("Fetched CS2 stats for Steam ID {$steamId}", [
+                        'kills' => $stats['total_kills'] ?? 0,
+                        'deaths' => $stats['total_deaths'] ?? 0,
+                        'rounds' => $stats['total_rounds_played'] ?? 0,
+                    ]);
+
+                    return $stats;
+                }
+
+                return null;
+            } catch (\Exception $e) {
+                // Common reasons for failure:
+                // - Profile is private
+                // - User doesn't own the game
+                // - Game has no stats schema
+                Log::info("Could not fetch game stats for {$steamId}/{$gameAppId}: " . $e->getMessage());
+                return null;
+            }
+        });
     }
 
     public function batchFetchUserData($users)
