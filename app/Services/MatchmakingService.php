@@ -702,6 +702,19 @@ class MatchmakingService
         $teamSkillLevel = $team->skill_level ?? 'intermediate';
         $requestSkillLevel = $request->skill_level ?? 'intermediate';
 
+        // Handle unranked players with neutral compatibility
+        if ($requestSkillLevel === 'unranked') {
+            // Unranked players get 50% compatibility with all teams
+            // This allows them to match but with reduced confidence
+            \Log::debug('MatchmakingService::calculateSkillCompatibilityForTeam - Unranked player', [
+                'team_id' => $team->id,
+                'request_user_id' => $request->user_id,
+                'request_skill_level' => $requestSkillLevel,
+                'compatibility' => 50.0,
+            ]);
+            return 50.0;
+        }
+
         // Convert to numeric values for calculation
         $teamSkillNumeric = $this->convertSkillLevelToNumeric($teamSkillLevel);
         $requestSkillNumeric = $this->convertSkillLevelToNumeric($requestSkillLevel);
@@ -1886,6 +1899,8 @@ class MatchmakingService
      * - intermediate → 2
      * - advanced → 3
      * - expert → 4
+     * - unranked → 2 (treated as intermediate for calculations)
+     * - any → 2 (treated as intermediate for calculations)
      * - null/invalid → 2 (default to intermediate)
      *
      * @param string|null $skillLevel Categorical skill level
@@ -1904,6 +1919,8 @@ class MatchmakingService
             'intermediate' => 2,
             'advanced' => 3,
             'expert' => 4,
+            'unranked' => 2,  // Treat unranked as intermediate for calculations
+            'any' => 2,       // Treat 'any' as intermediate too
             default => 2 // Default to intermediate for invalid values
         };
     }

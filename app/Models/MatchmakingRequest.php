@@ -127,12 +127,17 @@ class MatchmakingRequest extends Model
      */
     private function calculateSkillCompatibility(self $otherRequest): float
     {
+        // Handle unranked players with neutral compatibility
+        if ($this->skill_level === 'unranked' || $otherRequest->skill_level === 'unranked') {
+            return 0.5; // 50% neutral compatibility for unranked players
+        }
+
         if (!$this->skill_score || !$otherRequest->skill_score) {
             return 0.5; // Neutral if no skill data
         }
 
         $skillDifference = abs($this->skill_score - $otherRequest->skill_score);
-        
+
         // Perfect match at 0 difference, decreasing as difference increases
         return max(0, 1 - ($skillDifference / 50));
     }

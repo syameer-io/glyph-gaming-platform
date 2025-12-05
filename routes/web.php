@@ -133,6 +133,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('matchmaking')->name('matchmaking.')->group(function () {
         Route::get('/', [MatchmakingController::class, 'index'])->name('index');
         Route::post('/', [MatchmakingController::class, 'store'])->name('store');
+        Route::get('/skill-preview', [MatchmakingController::class, 'getSkillPreview'])->name('skill-preview');
         Route::post('/find-teammates', [MatchmakingController::class, 'findTeammates'])->name('find.teammates');
         Route::post('/find-teams', [MatchmakingController::class, 'findCompatibleTeamsForRequest'])->name('find.teams');
         Route::post('/auto-match', [MatchmakingController::class, 'autoMatch'])->name('auto.match');

@@ -659,12 +659,12 @@
                                                 @endif
                                             </div>
                                         </div>
-                                        <div style="text-align: right;">
+                                        <div style="position: relative;">
                                             <button onclick="toggleGoalActions('{{ $goal->id }}')" style="background: none; border: none; color: #71717a; font-size: 18px; cursor: pointer; padding: 4px;">⋮</button>
-                                            <div class="goal-actions" id="goal-actions-{{ $goal->id }}" style="display: none; position: absolute; background-color: #18181b; border: 1px solid #3f3f46; border-radius: 6px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); z-index: 100; min-width: 120px; right: 0; margin-top: 4px;">
-                                                <button onclick="syncGoalProgress('{{ $goal->id }}')" style="display: block; width: 100%; padding: 8px 12px; background: none; border: none; color: #ffffff; text-align: left; cursor: pointer; font-size: 14px; border-radius: 6px 6px 0 0;">Sync Progress</button>
-                                                <button onclick="editGoal('{{ $goal->id }}')" style="display: block; width: 100%; padding: 8px 12px; background: none; border: none; color: #ffffff; text-align: left; cursor: pointer; font-size: 14px;">Edit Goal</button>
-                                                <button onclick="deleteGoal('{{ $goal->id }}')" style="display: block; width: 100%; padding: 8px 12px; background: none; border: none; color: #f87171; text-align: left; cursor: pointer; font-size: 14px; border-radius: 0 0 6px 6px;">Delete Goal</button>
+                                            <div class="goal-actions" id="goal-actions-{{ $goal->id }}" style="display: none; position: absolute; top: 100%; right: 0; background-color: #18181b; border: 1px solid #3f3f46; border-radius: 6px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); z-index: 100; min-width: 140px; margin-top: 4px;">
+                                                <button onclick="syncGoalProgress('{{ $goal->id }}')" style="display: block; width: 100%; padding: 10px 14px; background: none; border: none; color: #ffffff; text-align: left; cursor: pointer; font-size: 14px; border-radius: 6px 6px 0 0; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#3f3f46'" onmouseout="this.style.backgroundColor='transparent'">Sync Progress</button>
+                                                <button onclick="editGoal('{{ $goal->id }}')" style="display: block; width: 100%; padding: 10px 14px; background: none; border: none; color: #ffffff; text-align: left; cursor: pointer; font-size: 14px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#3f3f46'" onmouseout="this.style.backgroundColor='transparent'">Edit Goal</button>
+                                                <button onclick="deleteGoal('{{ $goal->id }}')" style="display: block; width: 100%; padding: 10px 14px; background: none; border: none; color: #f87171; text-align: left; cursor: pointer; font-size: 14px; border-radius: 0 0 6px 6px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#dc2626'; this.style.color='#ffffff'" onmouseout="this.style.backgroundColor='transparent'; this.style.color='#f87171'">Delete Goal</button>
                                             </div>
                                         </div>
                                     </div>

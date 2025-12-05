@@ -204,4 +204,125 @@ class MatchmakingRegressionTest extends TestCase
         $this->assertEquals($score1['breakdown']['skill'], $score2['breakdown']['skill'],
             "Skill matching should be symmetric: INT->EXP = EXP->INT");
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Phase 5: Unranked Player Compatibility Tests
+    |--------------------------------------------------------------------------
+    |
+    | Tests for automatic skill calculation (Phase 3-5):
+    | - Unranked players get 50% neutral compatibility
+    | - 'any' and 'unranked' are treated as intermediate in numeric conversion
+    | - Ranked players maintain normal compatibility calculations
+    |
+    */
+
+    /** @test */
+    public function unranked_players_get_neutral_50_percent_compatibility()
+    {
+        // Create unranked player request
+        $unrankedRequest = MatchmakingRequest::factory()->create([
+            'skill_level' => 'unranked',
+            'game_appid' => '730',
+        ]);
+
+        // Create expert team
+        $expertTeam = Team::factory()->create([
+            'skill_level' => 'expert',
+            'game_appid' => '730',
+            'current_size' => 2,
+            'max_size' => 5,
+        ]);
+
+        // Create beginner team
+        $beginnerTeam = Team::factory()->create([
+            'skill_level' => 'beginner',
+            'game_appid' => '730',
+            'current_size' => 2,
+            'max_size' => 5,
+        ]);
+
+        // Calculate compatibility - unranked should get 50% for skill component
+        $expertCompatibility = $this->service->calculateDetailedCompatibility($expertTeam, $unrankedRequest);
+        $beginnerCompatibility = $this->service->calculateDetailedCompatibility($beginnerTeam, $unrankedRequest);
+
+        echo "\n=== UNRANKED PLAYER COMPATIBILITY ===\n";
+        echo "Unranked vs Expert Team - Skill: {$expertCompatibility['breakdown']['skill']}%\n";
+        echo "Unranked vs Beginner Team - Skill: {$beginnerCompatibility['breakdown']['skill']}%\n";
+
+        // Unranked players should get exactly 50% skill compatibility with ALL teams
+        $this->assertEquals(50.0, $expertCompatibility['breakdown']['skill'],
+            "Unranked player should get 50% skill compatibility with Expert team");
+
+        $this->assertEquals(50.0, $beginnerCompatibility['breakdown']['skill'],
+            "Unranked player should get 50% skill compatibility with Beginner team");
+    }
+
+    /** @test */
+    public function ranked_players_still_use_normal_skill_calculation()
+    {
+        // Create intermediate player request (ranked)
+        $rankedRequest = MatchmakingRequest::factory()->create([
+            'skill_level' => 'intermediate',
+            'game_appid' => '730',
+        ]);
+
+        // Create intermediate team (same skill)
+        $sameSkillTeam = Team::factory()->create([
+            'skill_level' => 'intermediate',
+            'game_appid' => '730',
+            'current_size' => 2,
+            'max_size' => 5,
+        ]);
+
+        // Create expert team (different skill)
+        $differentSkillTeam = Team::factory()->create([
+            'skill_level' => 'expert',
+            'game_appid' => '730',
+            'current_size' => 2,
+            'max_size' => 5,
+        ]);
+
+        $sameSkillCompatibility = $this->service->calculateDetailedCompatibility($sameSkillTeam, $rankedRequest);
+        $differentSkillCompatibility = $this->service->calculateDetailedCompatibility($differentSkillTeam, $rankedRequest);
+
+        echo "\n=== RANKED PLAYER COMPATIBILITY ===\n";
+        echo "Intermediate vs Intermediate - Skill: {$sameSkillCompatibility['breakdown']['skill']}%\n";
+        echo "Intermediate vs Expert - Skill: {$differentSkillCompatibility['breakdown']['skill']}%\n";
+
+        // Same skill should be high (100%)
+        $this->assertGreaterThan(90, $sameSkillCompatibility['breakdown']['skill'],
+            "Same skill level should have >90% compatibility");
+
+        // Different skill should be low (with 2 level gap penalty)
+        $this->assertLessThan(25, $differentSkillCompatibility['breakdown']['skill'],
+            "2+ level skill gap should have <25% compatibility");
+
+        // Ranked players should NOT get neutral 50%
+        $this->assertNotEquals(50.0, $sameSkillCompatibility['breakdown']['skill'],
+            "Ranked players should NOT get neutral 50%");
+    }
+
+    /** @test */
+    public function unranked_numeric_conversion_returns_intermediate_value()
+    {
+        // Test the convertSkillLevelToNumeric method handles 'unranked' and 'any'
+        $reflection = new \ReflectionClass($this->service);
+        $method = $reflection->getMethod('convertSkillLevelToNumeric');
+        $method->setAccessible(true);
+
+        // 'unranked' should map to 2 (intermediate)
+        $unrankedValue = $method->invoke($this->service, 'unranked');
+        $this->assertEquals(2, $unrankedValue, "'unranked' should convert to 2 (intermediate)");
+
+        // 'any' should map to 2 (intermediate)
+        $anyValue = $method->invoke($this->service, 'any');
+        $this->assertEquals(2, $anyValue, "'any' should convert to 2 (intermediate)");
+
+        // Standard levels should still work
+        $this->assertEquals(1, $method->invoke($this->service, 'beginner'));
+        $this->assertEquals(2, $method->invoke($this->service, 'intermediate'));
+        $this->assertEquals(3, $method->invoke($this->service, 'advanced'));
+        $this->assertEquals(4, $method->invoke($this->service, 'expert'));
+    }
 }

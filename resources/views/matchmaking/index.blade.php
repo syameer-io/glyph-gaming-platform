@@ -701,14 +701,11 @@
             @csrf
             <div class="form-group">
                 <label for="game_appid">Game *</label>
-                <select id="game_appid" name="game_appid" required onchange="updateGameName()">
+                <select id="game_appid" name="game_appid" required onchange="updateGameName(); loadSkillPreview(this.value);">
                     <option value="">Select a game...</option>
                     <option value="730" data-name="Counter-Strike 2">Counter-Strike 2</option>
                     <option value="570" data-name="Dota 2">Dota 2</option>
                     <option value="230410" data-name="Warframe">Warframe</option>
-                    <option value="1172470" data-name="Apex Legends">Apex Legends</option>
-                    <option value="252490" data-name="Rust">Rust</option>
-                    <option value="578080" data-name="PUBG">PUBG</option>
                 </select>
                 <input type="hidden" id="game_name" name="game_name" value="">
             </div>
@@ -722,14 +719,16 @@
                 </select>
             </div>
             <div class="form-group">
-                <label for="skill_level">Skill Level</label>
-                <select id="skill_level" name="skill_level">
-                    <option value="any">Any Skill</option>
-                    <option value="beginner">Beginner</option>
-                    <option value="intermediate">Intermediate</option>
-                    <option value="advanced">Advanced</option>
-                    <option value="expert">Expert</option>
-                </select>
+                <label>Your Skill Level</label>
+                <div id="skill_display_container">
+                    <div id="skill_display" style="color: #71717a; font-size: 14px; padding: 10px 0;">
+                        Select a game to see your skill level
+                    </div>
+                </div>
+                <input type="hidden" id="skill_level" name="skill_level" value="unranked">
+                <small style="color: #71717a; font-size: 12px; margin-top: 4px; display: block;">
+                    Calculated automatically from your Steam stats
+                </small>
             </div>
             <div class="form-group">
                 <label for="preferred_roles">Preferred Roles</label>
@@ -825,13 +824,212 @@ function updateGameName() {
     const gameSelect = document.getElementById('game_appid');
     const gameNameInput = document.getElementById('game_name');
     const selectedOption = gameSelect.options[gameSelect.selectedIndex];
-    
+
     if (selectedOption && selectedOption.dataset.name) {
         gameNameInput.value = selectedOption.dataset.name;
     } else {
         gameNameInput.value = '';
     }
 }
+
+// Auto-skill calculation - Load skill preview when game is selected
+async function loadSkillPreview(gameAppId) {
+    const skillDisplay = document.getElementById('skill_display');
+    const skillLevelInput = document.getElementById('skill_level');
+
+    if (!skillDisplay) return;
+
+    if (!gameAppId) {
+        skillDisplay.innerHTML = `
+            <div style="color: #71717a; font-size: 14px; padding: 10px 0;">
+                Select a game to see your skill level
+            </div>
+        `;
+        if (skillLevelInput) skillLevelInput.value = 'unranked';
+        return;
+    }
+
+    // Show loading state
+    skillDisplay.innerHTML = `
+        <div style="color: #71717a; font-size: 14px; padding: 10px 0;">
+            <span style="display: inline-block; animation: spin 1s linear infinite;">⏳</span> Loading your skill level...
+        </div>
+    `;
+
+    try {
+        const response = await fetch(`/matchmaking/skill-preview?game_appid=${gameAppId}`, {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch skill data');
+        }
+
+        const data = await response.json();
+        updateSkillDisplay(data);
+
+    } catch (error) {
+        console.error('Error fetching skill:', error);
+        skillDisplay.innerHTML = `
+            <div style="color: #ef4444; font-size: 14px; padding: 10px 0;">
+                ❌ Could not load skill level. Please try again.
+            </div>
+        `;
+        if (skillLevelInput) skillLevelInput.value = 'unranked';
+    }
+}
+
+function updateSkillDisplay(data) {
+    const skillDisplay = document.getElementById('skill_display');
+    const skillLevelInput = document.getElementById('skill_level');
+    if (!skillDisplay) return;
+
+    const { skill_level, skill_score, breakdown, is_unranked } = data;
+
+    // Update hidden input for form submission
+    if (skillLevelInput) {
+        skillLevelInput.value = skill_level || 'unranked';
+    }
+
+    const levelColors = {
+        'expert': '#10b981',
+        'advanced': '#667eea',
+        'intermediate': '#f59e0b',
+        'beginner': '#71717a',
+        'unranked': '#9ca3af',
+    };
+
+    const levelIcons = {
+        'expert': '⭐',
+        'advanced': '🎯',
+        'intermediate': '📊',
+        'beginner': '🎮',
+        'unranked': '❓',
+    };
+
+    const color = levelColors[skill_level] || '#71717a';
+    const icon = levelIcons[skill_level] || '❓';
+
+    let breakdownHtml = '';
+    if (!is_unranked && breakdown) {
+        breakdownHtml = `<div style="font-weight: 600; margin-bottom: 12px; color: #efeff1;">Skill Breakdown</div>`;
+        for (const [key, value] of Object.entries(breakdown)) {
+            // Skip 'note' (handled separately) and 'weights' (rendered as a special section)
+            if (key !== 'note' && key !== 'weights') {
+                const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                let displayValue = value;
+
+                if (key.includes('hours')) {
+                    displayValue = `${parseFloat(value).toFixed(1)} hrs`;
+                } else if (key.includes('ratio')) {
+                    displayValue = parseFloat(value).toFixed(2);
+                } else if (!isNaN(value)) {
+                    displayValue = `${parseFloat(value).toFixed(1)}%`;
+                }
+
+                breakdownHtml += `
+                    <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #27272a; font-size: 13px;">
+                        <span style="color: #a1a1aa;">${label}</span>
+                        <span style="color: #efeff1; font-weight: 500;">${displayValue}</span>
+                    </div>
+                `;
+            }
+        }
+
+        // Render weights as a formatted section if present
+        if (breakdown.weights && typeof breakdown.weights === 'object') {
+            const weightsFormatted = Object.entries(breakdown.weights)
+                .map(([k, v]) => `${k.replace(/_/g, ' ')}: ${(v * 100).toFixed(0)}%`)
+                .join(', ');
+            breakdownHtml += `
+                <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #27272a; font-size: 13px;">
+                    <span style="color: #a1a1aa;">Weights</span>
+                    <span style="color: #efeff1; font-weight: 500; font-size: 11px; text-align: right; max-width: 180px;">${weightsFormatted}</span>
+                </div>
+            `;
+        }
+
+        if (breakdown && breakdown.note) {
+            breakdownHtml += `
+                <div style="margin-top: 10px; padding: 8px; background: #0e0e10; border-radius: 4px; font-size: 12px; color: #71717a;">
+                    ℹ️ ${breakdown.note}
+                </div>
+            `;
+        }
+    } else {
+        breakdownHtml = `
+            <div style="font-weight: 600; margin-bottom: 8px; color: #efeff1;">Why Unranked?</div>
+            <p style="font-size: 13px; color: #a1a1aa; margin: 0 0 8px 0;">
+                We couldn't find enough game data.
+            </p>
+            <ul style="font-size: 12px; color: #71717a; margin: 0; padding-left: 16px;">
+                <li>Haven't played this game yet</li>
+                <li>Steam profile is private</li>
+                <li>Less than 10 hours playtime</li>
+            </ul>
+        `;
+    }
+
+    skillDisplay.innerHTML = `
+        <div style="position: relative;">
+            <div style="
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                padding: 10px 16px;
+                background-color: ${color}20;
+                border: 1px solid ${color}40;
+                border-radius: 8px;
+                cursor: pointer;
+            " class="skill-badge" onclick="toggleSkillTooltip()">
+                <span style="font-size: 18px;">${icon}</span>
+                <div>
+                    <div style="font-size: 14px; font-weight: 600; color: ${color}; text-transform: uppercase;">
+                        ${is_unranked ? 'Unranked' : skill_level.charAt(0).toUpperCase() + skill_level.slice(1)}
+                    </div>
+                    ${!is_unranked && skill_score ? `<div style="font-size: 11px; color: #b3b3b5;">Score: ${Math.round(skill_score)}/100</div>` : ''}
+                </div>
+                <span style="margin-left: 4px; color: #71717a; font-size: 14px;">ℹ️</span>
+            </div>
+
+            <div id="skill-tooltip" style="
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                margin-top: 8px;
+                background-color: #18181b;
+                border: 1px solid #3f3f46;
+                border-radius: 8px;
+                padding: 16px;
+                min-width: 280px;
+                z-index: 100;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            ">
+                ${breakdownHtml}
+            </div>
+        </div>
+    `;
+}
+
+function toggleSkillTooltip() {
+    const tooltip = document.getElementById('skill-tooltip');
+    if (tooltip) {
+        tooltip.style.display = tooltip.style.display === 'none' ? 'block' : 'none';
+    }
+}
+
+// Close skill tooltip when clicking outside
+document.addEventListener('click', function(e) {
+    const tooltip = document.getElementById('skill-tooltip');
+    const badge = document.querySelector('.skill-badge');
+    if (tooltip && badge && !badge.contains(e.target) && !tooltip.contains(e.target)) {
+        tooltip.style.display = 'none';
+    }
+});
 
 function showCreateTeamModal() {
     window.location.href = '{{ route('teams.create') }}';

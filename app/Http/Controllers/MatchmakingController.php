@@ -168,7 +168,6 @@ class MatchmakingController extends Controller
                 'preferred_roles' => 'array',
                 'preferred_roles.*' => 'string|max:50',
                 'message' => 'nullable|string|max:500',
-                'skill_level' => 'nullable|in:any,beginner,intermediate,advanced,expert',
                 'preferred_regions' => 'nullable|array',
                 'preferred_regions.*' => 'string|in:NA,EU,ASIA,SA,OCEANIA,AFRICA,MIDDLE_EAST',
                 'availability_hours' => 'nullable|array',
@@ -195,13 +194,9 @@ class MatchmakingController extends Controller
                 ], 409);
             }
 
-            // Get user's skill score for the game
-            $steamData = [];
-            if ($user->profile && $user->profile->steam_data) {
-                $steamData = $user->profile->steam_data;
-            }
-            $skillMetrics = $steamData['skill_metrics'] ?? [];
-            $skillScore = $skillMetrics[$request->game_appid]['skill_score'] ?? 50;
+            // Calculate skill automatically using SkillCalculationService
+            $skillCalculationService = app(\App\Services\SkillCalculationService::class);
+            $skillData = $skillCalculationService->calculateSkillForGame($user, $request->game_appid);
 
             $matchmakingRequest = MatchmakingRequest::create([
                 'user_id' => $user->id,
@@ -209,8 +204,8 @@ class MatchmakingController extends Controller
                 'game_name' => $request->game_name,
                 'request_type' => $request->request_type,
                 'preferred_roles' => $request->preferred_roles ?? [],
-                'skill_level' => $request->skill_level ?? 'any',
-                'skill_score' => $skillScore,
+                'skill_level' => $skillData['skill_level'],
+                'skill_score' => $skillData['skill_score'] ?? 50,
                 'status' => 'active',
                 'description' => $request->message,
                 'expires_at' => now()->addDays(7), // Request expires in 7 days
@@ -254,6 +249,61 @@ class MatchmakingController extends Controller
             
             return response()->json([
                 'error' => 'Error creating matchmaking request: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get user's calculated skill for a specific game (AJAX endpoint)
+     * Used to preview skill before creating matchmaking request
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getSkillPreview(Request $request): JsonResponse
+    {
+        $request->validate([
+            'game_appid' => 'required|string',
+        ]);
+
+        $user = Auth::user();
+        $gameAppId = $request->input('game_appid');
+
+        // Validate game is supported for skill calculation
+        $supportedGames = [730, 570, 230410]; // CS2, Dota 2, Warframe
+        if (!in_array((int)$gameAppId, $supportedGames)) {
+            return response()->json([
+                'success' => true,
+                'skill_level' => 'unranked',
+                'skill_score' => null,
+                'breakdown' => ['note' => 'Game not supported for skill calculation'],
+                'is_unranked' => true,
+            ]);
+        }
+
+        try {
+            $skillCalculationService = app(\App\Services\SkillCalculationService::class);
+            $skillData = $skillCalculationService->calculateSkillForGame($user, $gameAppId);
+            $breakdown = $skillCalculationService->getSkillBreakdown($user, $gameAppId);
+
+            return response()->json([
+                'success' => true,
+                'skill_level' => $skillData['skill_level'],
+                'skill_score' => $skillData['skill_score'],
+                'breakdown' => $breakdown,
+                'is_unranked' => $skillData['skill_level'] === 'unranked',
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Skill preview error: ' . $e->getMessage(), [
+                'user_id' => $user->id,
+                'game_appid' => $gameAppId,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Error calculating skill preview',
+                'skill_level' => 'unranked',
+                'is_unranked' => true,
             ], 500);
         }
     }
