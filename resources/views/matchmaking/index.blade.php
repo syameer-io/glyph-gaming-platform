@@ -701,7 +701,7 @@
             @csrf
             <div class="form-group">
                 <label for="game_appid">Game *</label>
-                <select id="game_appid" name="game_appid" required onchange="updateGameName(); loadSkillPreview(this.value);">
+                <select id="game_appid" name="game_appid" required onchange="updateGameName(); loadSkillPreview(this.value); updateRoleOptions(this.value);">
                     <option value="">Select a game...</option>
                     <option value="730" data-name="Counter-Strike 2">Counter-Strike 2</option>
                     <option value="570" data-name="Dota 2">Dota 2</option>
@@ -732,17 +732,9 @@
             </div>
             <div class="form-group">
                 <label for="preferred_roles">Preferred Roles</label>
-                <select id="preferred_roles" name="preferred_roles[]" multiple>
-                    <option value="entry_fragger">Entry Fragger</option>
-                    <option value="support">Support</option>
-                    <option value="awper">AWPer</option>
-                    <option value="igl">In-Game Leader</option>
-                    <option value="lurker">Lurker</option>
-                    <option value="carry">Carry</option>
-                    <option value="mid">Mid</option>
-                    <option value="offlaner">Offlaner</option>
-                    <option value="jungler">Jungler</option>
-                </select>
+                <div id="role_selection_container">
+                    <p style="color: #71717a; font-size: 14px; padding: 10px 0; margin: 0;">Select a game to see available roles</p>
+                </div>
                 <small style="color: #b3b3b5;">Hold Ctrl/Cmd to select multiple roles</small>
             </div>
             <div class="form-group">
@@ -830,6 +822,51 @@ function updateGameName() {
     } else {
         gameNameInput.value = '';
     }
+}
+
+// Game-specific roles configuration
+const GAME_ROLES = {
+    '730': [ // Counter-Strike 2
+        { value: 'entry_fragger', label: 'Entry Fragger' },
+        { value: 'awper', label: 'AWPer' },
+        { value: 'igl', label: 'In-Game Leader' },
+        { value: 'lurker', label: 'Lurker' },
+        { value: 'support', label: 'Support' },
+        { value: 'anchor', label: 'Anchor' }
+    ],
+    '570': [ // Dota 2
+        { value: 'carry', label: 'Carry (Pos 1)' },
+        { value: 'mid', label: 'Mid (Pos 2)' },
+        { value: 'offlaner', label: 'Offlaner (Pos 3)' },
+        { value: 'soft_support', label: 'Soft Support (Pos 4)' },
+        { value: 'hard_support', label: 'Hard Support (Pos 5)' }
+    ],
+    '230410': [ // Warframe
+        { value: 'dps', label: 'DPS' },
+        { value: 'tank', label: 'Tank' },
+        { value: 'support', label: 'Support' },
+        { value: 'crowd_control', label: 'Crowd Control' }
+    ]
+};
+
+// Update role options based on selected game
+function updateRoleOptions(gameAppId) {
+    const container = document.getElementById('role_selection_container');
+    if (!container) return;
+
+    const roles = GAME_ROLES[gameAppId];
+
+    if (!roles) {
+        container.innerHTML = '<p style="color: #71717a; font-size: 14px; padding: 10px 0; margin: 0;">Select a game to see available roles</p>';
+        return;
+    }
+
+    let html = '<select id="preferred_roles" name="preferred_roles[]" multiple>';
+    roles.forEach(role => {
+        html += `<option value="${role.value}">${role.label}</option>`;
+    });
+    html += '</select>';
+    container.innerHTML = html;
 }
 
 // Auto-skill calculation - Load skill preview when game is selected

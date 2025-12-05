@@ -407,11 +407,6 @@
                                     <option value="730" {{ old('game_appid') == '730' ? 'selected' : '' }}>Counter-Strike 2</option>
                                     <option value="570" {{ old('game_appid') == '570' ? 'selected' : '' }}>Dota 2</option>
                                     <option value="230410" {{ old('game_appid') == '230410' ? 'selected' : '' }}>Warframe</option>
-                                    <option value="1172470" {{ old('game_appid') == '1172470' ? 'selected' : '' }}>Apex Legends</option>
-                                    <option value="252490" {{ old('game_appid') == '252490' ? 'selected' : '' }}>Rust</option>
-                                    <option value="578080" {{ old('game_appid') == '578080' ? 'selected' : '' }}>PUBG</option>
-                                    <option value="359550" {{ old('game_appid') == '359550' ? 'selected' : '' }}>Rainbow Six Siege</option>
-                                    <option value="433850" {{ old('game_appid') == '433850' ? 'selected' : '' }}>Fall Guys</option>
                                 </select>
                                 <input type="hidden" id="game_name" name="game_name" value="{{ old('game_name') }}">
                                 <div id="game-info" class="game-info" style="display: none;"></div>
@@ -515,51 +510,8 @@
                         <div class="form-group">
                             <label>Required Roles (Optional)</label>
                             <div class="form-description">Select roles you're looking for. Leave empty if you're flexible</div>
-                            <div class="role-selection" style="margin-top: 12px;">
-                                <label class="role-option">
-                                    <input type="checkbox" name="required_roles[]" value="entry_fragger">
-                                    <span>Entry Fragger</span>
-                                </label>
-                                <label class="role-option">
-                                    <input type="checkbox" name="required_roles[]" value="support">
-                                    <span>Support</span>
-                                </label>
-                                <label class="role-option">
-                                    <input type="checkbox" name="required_roles[]" value="awper">
-                                    <span>AWPer</span>
-                                </label>
-                                <label class="role-option">
-                                    <input type="checkbox" name="required_roles[]" value="igl">
-                                    <span>IGL</span>
-                                </label>
-                                <label class="role-option">
-                                    <input type="checkbox" name="required_roles[]" value="lurker">
-                                    <span>Lurker</span>
-                                </label>
-                                <label class="role-option">
-                                    <input type="checkbox" name="required_roles[]" value="carry">
-                                    <span>Carry</span>
-                                </label>
-                                <label class="role-option">
-                                    <input type="checkbox" name="required_roles[]" value="mid">
-                                    <span>Mid</span>
-                                </label>
-                                <label class="role-option">
-                                    <input type="checkbox" name="required_roles[]" value="offlaner">
-                                    <span>Offlaner</span>
-                                </label>
-                                <label class="role-option">
-                                    <input type="checkbox" name="required_roles[]" value="dps">
-                                    <span>DPS</span>
-                                </label>
-                                <label class="role-option">
-                                    <input type="checkbox" name="required_roles[]" value="tank">
-                                    <span>Tank</span>
-                                </label>
-                                <label class="role-option">
-                                    <input type="checkbox" name="required_roles[]" value="healer">
-                                    <span>Healer</span>
-                                </label>
+                            <div id="role_selection_container" class="role-selection" style="margin-top: 12px;">
+                                <p style="color: #71717a; margin: 0; padding: 8px 0;">Select a game to see available roles</p>
                             </div>
                         </div>
 
@@ -676,56 +628,39 @@ const gameInfo = {
         description: 'Tactical FPS requiring precise aim, strategy, and team coordination.',
         recommendedSize: 5,
         sizeLabel: '5 Players (Competitive 5v5)',
-        roles: ['Entry Fragger', 'Support', 'AWPer', 'IGL', 'Lurker']
+        roles: [
+            { value: 'entry_fragger', label: 'Entry Fragger' },
+            { value: 'awper', label: 'AWPer' },
+            { value: 'igl', label: 'In-Game Leader' },
+            { value: 'lurker', label: 'Lurker' },
+            { value: 'support', label: 'Support' },
+            { value: 'anchor', label: 'Anchor' }
+        ]
     },
     '570': {
         name: 'Dota 2',
         description: 'MOBA with complex mechanics, requiring strategic thinking and role coordination.',
         recommendedSize: 5,
         sizeLabel: '5 Players (Standard MOBA)',
-        roles: ['Carry', 'Mid', 'Offlaner', 'Support', 'Hard Support']
+        roles: [
+            { value: 'carry', label: 'Carry (Pos 1)' },
+            { value: 'mid', label: 'Mid (Pos 2)' },
+            { value: 'offlaner', label: 'Offlaner (Pos 3)' },
+            { value: 'soft_support', label: 'Soft Support (Pos 4)' },
+            { value: 'hard_support', label: 'Hard Support (Pos 5)' }
+        ]
     },
     '230410': {
         name: 'Warframe',
         description: 'Co-op action game with diverse Warframes and role specializations.',
         recommendedSize: 4,
         sizeLabel: '4 Players (Full Squad)',
-        roles: ['DPS', 'Support', 'Tank', 'Specialist']
-    },
-    '1172470': {
-        name: 'Apex Legends',
-        description: 'Battle royale emphasizing team composition and tactical play.',
-        recommendedSize: 3,
-        sizeLabel: '3 Players (Trio)',
-        roles: ['Assault', 'Recon', 'Support']
-    },
-    '252490': {
-        name: 'Rust',
-        description: 'Survival game with base building and PvP combat.',
-        recommendedSize: 5,
-        sizeLabel: '5 Players (Zerg Squad)',
-        roles: ['Builder', 'Farmer', 'PvP', 'Scout', 'Leader']
-    },
-    '578080': {
-        name: 'PUBG',
-        description: 'Battle royale with realistic gunplay and tactical teamwork.',
-        recommendedSize: 4,
-        sizeLabel: '4 Players (Squad)',
-        roles: ['Entry', 'Support', 'Sniper', 'Scout']
-    },
-    '359550': {
-        name: 'Rainbow Six Siege',
-        description: 'Tactical shooter emphasizing strategy, communication, and operator synergy.',
-        recommendedSize: 5,
-        sizeLabel: '5 Players (Ranked Team)',
-        roles: ['Entry', 'Support', 'Anchor', 'Roamer', 'IGL']
-    },
-    '1446780': {
-        name: 'Fall Guys',
-        description: 'Party game with chaotic mini-games and team challenges.',
-        recommendedSize: 4,
-        sizeLabel: '4 Players (Squad Show)',
-        roles: ['Grabber', 'Support', 'Speedrunner', 'Tank']
+        roles: [
+            { value: 'dps', label: 'DPS' },
+            { value: 'tank', label: 'Tank' },
+            { value: 'support', label: 'Support' },
+            { value: 'crowd_control', label: 'Crowd Control' }
+        ]
     }
 };
 
@@ -760,6 +695,9 @@ function updateGameInfo() {
         // Update member slots with new size
         updateMemberSlots();
         updatePreview();
+
+        // Update role checkboxes based on selected game
+        updateRoleCheckboxes(selectedGame);
     } else {
         // No game selected - reset team size
         sizeSelect.innerHTML = '<option value="">Select a game first...</option>';
@@ -767,7 +705,35 @@ function updateGameInfo() {
         sizeSelect.disabled = true;
         sizeInfoDiv.style.display = 'none';
         gameInfoDiv.style.display = 'none';
+
+        // Reset role checkboxes
+        updateRoleCheckboxes(null);
     }
+}
+
+// Update role checkboxes based on selected game
+function updateRoleCheckboxes(gameAppId) {
+    const container = document.getElementById('role_selection_container');
+    if (!container) return;
+
+    if (!gameAppId || !gameInfo[gameAppId]) {
+        container.innerHTML = '<p style="color: #71717a; margin: 0; padding: 8px 0;">Select a game to see available roles</p>';
+        return;
+    }
+
+    const roles = gameInfo[gameAppId].roles;
+    let html = '';
+
+    roles.forEach(role => {
+        html += `
+            <label class="role-option">
+                <input type="checkbox" name="required_roles[]" value="${role.value}">
+                <span>${role.label}</span>
+            </label>
+        `;
+    });
+
+    container.innerHTML = html;
 }
 
 function updateMemberSlots() {
