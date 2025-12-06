@@ -127,6 +127,11 @@
     border-radius: 6px;
     color: #b3b3b5;
     transition: all 0.15s ease;
+    /* Button-specific resets */
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
 }
 
 .voice-back-btn:hover {

@@ -94,11 +94,11 @@
         <!-- Voice Channel Header -->
         <header class="voice-view-header">
             <div class="voice-header-left">
-                <a href="{{ route('server.show', $server) }}" class="voice-back-btn" title="Back to Server">
+                <button type="button" class="voice-back-btn" @click="backToServer()" title="Back to Server">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
                     </svg>
-                </a>
+                </button>
                 <div class="voice-header-info">
                     <div class="voice-header-channel">
                         <svg class="voice-header-icon" viewBox="0 0 24 24" fill="currentColor">
@@ -632,6 +632,23 @@ document.addEventListener('alpine:init', () => {
             } catch (error) {
                 console.error('Failed to disconnect:', error);
             }
+        },
+
+        /**
+         * Navigate back to server with proper voice cleanup
+         * This prevents CSRF token mismatch on rejoin by making a POST request before navigation
+         */
+        async backToServer() {
+            try {
+                // Properly disconnect from voice first (same as Disconnect button)
+                if (typeof window.disconnectVoice === 'function') {
+                    await window.disconnectVoice();
+                }
+            } catch (error) {
+                console.error('Failed to disconnect during back navigation:', error);
+            }
+            // Navigate to server page
+            window.location.href = `/servers/${this.serverId}`;
         },
 
         async toggleMute() {
