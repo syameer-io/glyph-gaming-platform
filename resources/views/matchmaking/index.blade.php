@@ -637,8 +637,8 @@
                             @if(empty($topRecommendations))
                                 <div style="text-align: center; padding: 40px; color: #b3b3b5;">
                                     <div style="font-size: 24px; margin-bottom: 12px;">🎯</div>
-                                    <p>No active matchmaking requests</p>
-                                    <p style="font-size: 14px; margin-top: 8px;">Create a matchmaking request to get personalized recommendations</p>
+                                    <p>No compatible teams found</p>
+                                    <p style="font-size: 14px; margin-top: 8px;">Try adjusting your criteria or check back later for new teams</p>
                                     <button onclick="showCreateRequestModal()" class="btn btn-primary" style="margin-top: 16px;">
                                         Find Teammates
                                     </button>
