@@ -60,15 +60,35 @@
                         </form>
                     @endif
                 @elseif(auth()->check() && auth()->id() === $user->id)
-                    <div style="display: flex; gap: 12px;">
-                        <a href="{{ route('profile.edit') }}" class="btn btn-primary">Edit Profile</a>
+                    <div class="profile-actions">
+                        <div class="profile-actions-buttons">
+                            <a href="{{ route('profile.edit') }}" class="btn-profile-primary">
+                                <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"/>
+                                    <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"/>
+                                </svg>
+                                <span>Edit Profile</span>
+                            </a>
+                            @if($user->steam_id)
+                                <button onclick="refreshSteamData()" class="btn-profile-secondary" id="refresh-steam-btn">
+                                    <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" class="refresh-icon">
+                                        <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span id="refresh-text">Refresh Steam</span>
+                                    <span id="refresh-loading" style="display: none;">
+                                        <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" class="animate-spin">
+                                            <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </span>
+                                </button>
+                            @endif
+                        </div>
                         @if($user->steam_id)
-                            <button onclick="refreshSteamData()" class="btn btn-secondary" id="refresh-steam-btn">
-                                <span id="refresh-text">Refresh Steam Data</span>
-                                <span id="refresh-loading" style="display: none;">Refreshing...</span>
-                            </button>
-                            <div style="font-size: 12px; color: #71717a; margin-top: 8px; max-width: 300px;">
-                                Note: Game status updates may take 1-5 minutes after launching. Check Steam privacy settings if games don't appear.
+                            <div class="profile-steam-note">
+                                <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                </svg>
+                                <span>Game status updates may take 1-5 minutes. Check Steam privacy settings if games don't appear.</span>
                             </div>
                         @endif
                     </div>
@@ -82,47 +102,67 @@
     <div class="container">
         <div class="grid grid-cols-2" style="grid-template-columns: 2fr 1fr;">
             <div>
-                <div class="card" style="margin-bottom: 24px;">
-                    <h3 class="card-header">About</h3>
-                    <p style="color: #b3b3b5;">{{ $user->profile->bio ?: 'This user hasn\'t written a bio yet.' }}</p>
+                <div class="profile-card">
+                    <div class="profile-card-header">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" style="color: #667eea;">
+                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                        </svg>
+                        <h3 class="profile-card-title">About</h3>
+                    </div>
+                    <p class="{{ $user->profile->bio ? 'profile-bio' : 'profile-bio profile-bio-empty' }}">
+                        {{ $user->profile->bio ?: 'This user hasn\'t written a bio yet.' }}
+                    </p>
                 </div>
 
                 @if($user->steam_id && $user->profile->steam_data)
-                    <div class="card" style="margin-bottom: 24px;">
-                        <h3 class="card-header">🎮 Gaming Preferences</h3>
-                        <p style="color: #b3b3b5; margin-bottom: 16px; font-size: 14px;">Based on Steam activity and playtime data</p>
-                        
+                    <div class="profile-card">
+                        <div class="profile-card-header">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" style="color: #667eea;">
+                                <path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"/>
+                            </svg>
+                            <h3 class="profile-card-title">Gaming Preferences</h3>
+                        </div>
+                        <p class="profile-card-subtitle" style="margin-bottom: 20px;">Based on Steam activity and playtime data</p>
+
                         @if($user->gamingPreferences && $user->gamingPreferences->count() > 0)
                             <div style="display: grid; gap: 16px;">
                                 @foreach($user->gamingPreferences->sortByDesc('playtime_forever')->take(6) as $preference)
-                                    <div style="padding: 16px; background-color: #0e0e10; border-radius: 8px; border-left: 4px solid #667eea;">
-                                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-                                            <div style="flex: 1;">
-                                                <h4 style="margin: 0; color: #efeff1; font-weight: 600; font-size: 16px;">{{ $preference->game_name }}</h4>
-                                                <div style="display: flex; gap: 16px; margin-top: 4px; font-size: 14px; color: #b3b3b5;">
-                                                    <span>{{ round($preference->playtime_forever / 60, 1) }} hours total</span>
+                                    <div class="game-preference-card">
+                                        <div class="game-preference-header">
+                                            <div class="game-preference-info">
+                                                <h4 class="game-preference-name">{{ $preference->game_name }}</h4>
+                                                <div class="game-preference-stats">
+                                                    <span class="stat-item">
+                                                        <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
+                                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                                                        </svg>
+                                                        {{ round($preference->playtime_forever / 60, 1) }}h total
+                                                    </span>
                                                     @if($preference->playtime_2weeks > 0)
-                                                        <span style="color: #10b981;">{{ round($preference->playtime_2weeks / 60, 1) }} hours recent</span>
+                                                        <span class="stat-item stat-recent">
+                                                            <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
+                                                                <path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd"/>
+                                                            </svg>
+                                                            {{ round($preference->playtime_2weeks / 60, 1) }}h recent
+                                                        </span>
                                                     @endif
                                                 </div>
                                             </div>
-                                            <div style="text-align: right;">
+                                            <div class="game-preference-badges">
                                                 @if($preference->skill_level)
-                                                    <div style="background-color: #3f3f46; color: #efeff1; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; margin-bottom: 4px;">
+                                                    <span class="skill-badge skill-{{ $preference->skill_level }}">
                                                         {{ ucfirst($preference->skill_level) }}
-                                                    </div>
+                                                    </span>
                                                 @endif
-                                                <div style="font-size: 12px; color: #71717a;">
-                                                    {{ ucfirst($preference->preference_level) }} priority
-                                                </div>
+                                                <span class="priority-badge">{{ ucfirst($preference->preference_level) }} priority</span>
                                             </div>
                                         </div>
-                                        
+
                                         <!-- Gaming activity bar -->
-                                        <div style="margin-top: 12px;">
-                                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                                                <span style="font-size: 12px; color: #b3b3b5;">Gaming Activity</span>
-                                                <span style="font-size: 12px; color: #71717a;">
+                                        <div class="game-activity-bar">
+                                            <div class="activity-bar-header">
+                                                <span class="activity-label">Gaming Activity</span>
+                                                <span class="activity-timestamp">
                                                     @if($preference->last_played)
                                                         Last played {{ \Carbon\Carbon::parse($preference->last_played)->diffForHumans() }}
                                                     @else
@@ -130,20 +170,22 @@
                                                     @endif
                                                 </span>
                                             </div>
-                                            <div style="width: 100%; height: 6px; background-color: #3f3f46; border-radius: 3px; overflow: hidden;">
+                                            <div class="activity-progress-track">
                                                 @php
                                                     $maxPlaytime = $user->gamingPreferences->max('playtime_forever');
                                                     $activityPercentage = $maxPlaytime > 0 ? ($preference->playtime_forever / $maxPlaytime) * 100 : 0;
                                                 @endphp
-                                                <div style="height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); width: {{ $activityPercentage }}%; transition: width 0.3s ease;"></div>
+                                                <div class="activity-progress-fill" style="width: {{ $activityPercentage }}%">
+                                                    <div class="activity-glow"></div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 @endforeach
-                                
+
                                 @if($user->gamingPreferences->count() > 6)
-                                    <div style="text-align: center; margin-top: 8px;">
-                                        <span style="color: #71717a; font-size: 14px;">And {{ $user->gamingPreferences->count() - 6 }} more games</span>
+                                    <div class="see-more-link" style="cursor: default;">
+                                        <span>And {{ $user->gamingPreferences->count() - 6 }} more games</span>
                                     </div>
                                 @endif
                             </div>
@@ -155,8 +197,13 @@
                         @endif
                     </div>
 
-                    <div class="card">
-                        <h3 class="card-header">Steam Games</h3>
+                    <div class="profile-card">
+                        <div class="profile-card-header">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" style="color: #667eea;">
+                                <path d="M2 6a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zm14.5 4.5a.5.5 0 10-1 0 .5.5 0 001 0zm-1.5 2a.5.5 0 100-1 .5.5 0 000 1zm-1.5-.5a.5.5 0 10-1 0 .5.5 0 001 0zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h1a1 1 0 001-1v-1H9.5a.5.5 0 010-1H10V8a1 1 0 00-1-1H8z"/>
+                            </svg>
+                            <h3 class="profile-card-title">Steam Games</h3>
+                        </div>
                         @forelse($user->profile->steam_games as $game)
                             <div class="game-card">
                                 <div class="game-icon">
@@ -201,61 +248,116 @@
                     </div>
                 @endif
 
-                <div class="card" style="margin-bottom: 24px;">
-                    <h3 class="card-header">Stats</h3>
-                    <div style="display: flex; flex-direction: column; gap: 16px;">
-                        <div>
-                            <div style="font-size: 14px; color: #71717a;">Member Since</div>
-                            <div style="font-size: 18px; font-weight: 600;">{{ $user->created_at->format('F Y') }}</div>
+                <div class="profile-card">
+                    <div class="profile-card-header">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" style="color: #667eea;">
+                            <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zm6-4a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zm6-3a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
+                        </svg>
+                        <h3 class="profile-card-title">Stats</h3>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-item-card">
+                            <div class="stat-icon stat-icon-calendar">
+                                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-label">Member Since</span>
+                                <span class="stat-value">{{ $user->created_at->format('F Y') }}</span>
+                            </div>
                         </div>
                         @if($user->steam_id)
-                            <div>
-                                <div style="font-size: 14px; color: #71717a;">Total Playtime</div>
-                                <div style="font-size: 18px; font-weight: 600;">{{ round($user->profile->total_playtime / 60, 1) }} hours</div>
+                            <div class="stat-item-card">
+                                <div class="stat-icon stat-icon-time">
+                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <div class="stat-content">
+                                    <span class="stat-label">Total Playtime</span>
+                                    <span class="stat-value">{{ round($user->profile->total_playtime / 60, 1) }} hours</span>
+                                </div>
                             </div>
                         @endif
-                        <div>
-                            <div style="font-size: 14px; color: #71717a;">Servers</div>
-                            <div style="font-size: 18px; font-weight: 600;">{{ $user->servers->count() }}</div>
+                        <div class="stat-item-card">
+                            <div class="stat-icon stat-icon-server">
+                                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm14 1a1 1 0 11-2 0 1 1 0 012 0zM2 13a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2zm14 1a1 1 0 11-2 0 1 1 0 012 0z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-label">Servers</span>
+                                <span class="stat-value">{{ $user->servers->count() }}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 @if($user->steam_id && isset($user->profile->steam_data['friends']) && $user->profile->steam_data['friends']['count'] > 0)
-                    <div class="card" style="margin-bottom: 24px;">
-                        <h3 class="card-header">🎮 Steam Friends ({{ $user->profile->steam_data['friends']['count'] }})</h3>
+                    <div class="profile-card">
+                        <div class="profile-card-header">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" style="color: #667eea;">
+                                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+                            </svg>
+                            <h3 class="profile-card-title">Steam Friends</h3>
+                            <span style="margin-left: auto; font-size: 13px; color: #71717a;">({{ $user->profile->steam_data['friends']['count'] }})</span>
+                        </div>
                         @foreach(array_slice($user->profile->steam_data['friends']['friends'] ?? [], 0, 5) as $friend)
-                            <div style="display: flex; align-items: center; padding: 8px; background-color: #0e0e10; border-radius: 6px; margin-bottom: 8px;">
-                                <img src="{{ $friend['avatar'] ?? '' }}" alt="{{ $friend['personaname'] ?? 'Friend' }}" style="width: 32px; height: 32px; border-radius: 50%; margin-right: 12px;">
-                                <div style="flex: 1;">
-                                    <div style="font-weight: 600; font-size: 14px;">{{ $friend['personaname'] ?? 'Unknown' }}</div>
-                                    <div style="font-size: 12px; color: #71717a;">
+                            <div class="friend-item">
+                                <div class="friend-avatar-wrapper">
+                                    <img src="{{ $friend['avatar'] ?? '' }}" alt="{{ $friend['personaname'] ?? 'Friend' }}" class="friend-avatar">
+                                    <span class="friend-status {{ ($friend['personastate'] ?? 0) > 0 ? 'status-online' : 'status-offline' }}"></span>
+                                </div>
+                                <div class="friend-info">
+                                    <span class="friend-name">{{ $friend['personaname'] ?? 'Unknown' }}</span>
+                                    <span class="friend-activity">
                                         @if(isset($friend['gameextrainfo']))
-                                            Playing {{ $friend['gameextrainfo'] }}
+                                            <span class="friend-playing">
+                                                <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"/>
+                                                </svg>
+                                                {{ $friend['gameextrainfo'] }}
+                                            </span>
                                         @else
                                             {{ ucfirst($friend['personastate_text'] ?? 'offline') }}
                                         @endif
-                                    </div>
+                                    </span>
                                 </div>
                             </div>
                         @endforeach
                         @if(count($user->profile->steam_data['friends']['friends'] ?? []) > 5)
-                            <div style="text-align: center; color: #71717a; font-size: 12px; margin-top: 8px;">
-                                And {{ count($user->profile->steam_data['friends']['friends']) - 5 }} more friends
+                            <div class="see-more-link" style="cursor: default;">
+                                <span>And {{ count($user->profile->steam_data['friends']['friends']) - 5 }} more friends</span>
                             </div>
                         @endif
                     </div>
                 @endif
 
-                <div class="card">
-                    <h3 class="card-header">Servers</h3>
+                <div class="profile-card">
+                    <div class="profile-card-header">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" style="color: #667eea;">
+                            <path fill-rule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm14 1a1 1 0 11-2 0 1 1 0 012 0zM2 13a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2zm14 1a1 1 0 11-2 0 1 1 0 012 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <h3 class="profile-card-title">Servers</h3>
+                    </div>
                     @forelse($user->servers->take(5) as $server)
-                        <div style="padding: 12px; background-color: #0e0e10; border-radius: 8px; margin-bottom: 8px;">
-                            <div style="font-weight: 600;">{{ $server->name }}</div>
-                            <div style="font-size: 12px; color: #71717a;">{{ $server->members->count() }} members</div>
+                        <div class="server-item">
+                            <div class="server-icon">
+                                {{ strtoupper(substr($server->name, 0, 1)) }}
+                            </div>
+                            <div class="server-info">
+                                <span class="server-name">{{ $server->name }}</span>
+                                <span class="server-members">
+                                    <svg viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+                                    </svg>
+                                    {{ $server->members->count() }} members
+                                </span>
+                            </div>
                         </div>
                     @empty
-                        <p style="color: #71717a;">Not in any servers yet</p>
+                        <p style="color: #71717a; text-align: center; padding: 20px;">Not in any servers yet</p>
                     @endforelse
                 </div>
             </div>
