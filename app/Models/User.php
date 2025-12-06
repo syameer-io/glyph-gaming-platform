@@ -373,11 +373,14 @@ class User extends Authenticatable
             return [
                 'id' => $lobby->id,
                 'game_id' => $lobby->game_id,
+                'game_name' => $lobby->getGameName(),
                 'join_method' => $lobby->join_method,
                 'join_link' => $lobby->generateJoinLink(),
                 'display_format' => $lobby->getDisplayFormat(),
                 'time_remaining' => $lobby->timeRemaining(),
+                'time_remaining_minutes' => $lobby->timeRemaining(),
                 'is_persistent' => $lobby->expires_at === null,
+                'expires_at' => $lobby->expires_at?->toIso8601String(),
                 'created_at' => $lobby->created_at->toIso8601String(),
             ];
         });

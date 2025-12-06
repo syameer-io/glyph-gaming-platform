@@ -194,10 +194,10 @@
             </div>
 
             <div>
-                {{-- Multi-Game Lobby Manager (Week 2) --}}
+                {{-- Lobby Display (display-only - creation at /lobbies) --}}
                 @if(auth()->check())
                     <div style="margin-bottom: 24px;">
-                        <x-lobby-manager :user="$user" :combined-games="$combinedGames" :is-own-profile="auth()->id() === $user->id" />
+                        <x-lobby-display :user="$user" :is-own-profile="auth()->id() === $user->id" />
                     </div>
                 @endif
 

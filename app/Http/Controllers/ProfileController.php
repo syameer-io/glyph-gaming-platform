@@ -52,10 +52,9 @@ class ProfileController extends Controller
         // Load gaming preferences filtered by available join configurations
         $user->load(['gamingPreferencesWithJoinConfigs']);
 
-        // Get combined list of games for lobby creation (user's games + all supported games)
-        $combinedGames = $user->getCombinedLobbyGames();
+        // Note: Lobby creation moved to /lobbies page, combinedGames no longer needed here
 
-        return view('profile.show', compact('user', 'isFriend', 'friendRequestPending', 'friendRequestReceived', 'combinedGames'));
+        return view('profile.show', compact('user', 'isFriend', 'friendRequestPending', 'friendRequestReceived'));
     }
 
     public function edit()
