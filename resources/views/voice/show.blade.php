@@ -28,7 +28,7 @@
     <!-- Left Sidebar (Server Channels) -->
     <aside class="voice-view-sidebar">
         {{-- Server Header --}}
-        <div class="server-header" style="padding: 12px 16px; border-bottom: 1px solid #3f3f46;">
+        <div class="server-header voice-sidebar-header">
             <x-server-dropdown
                 :server="$server"
                 :isAdmin="auth()->user()->isServerAdmin($server->id)"
@@ -111,24 +111,14 @@
                     </span>
                 </div>
             </div>
-            <div class="voice-header-actions">
-                <button class="voice-header-btn" @click="showInviteModal = true" title="Invite Friends">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+            <div class="voice-header-right">
+                <div class="header-call-timer">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="timer-icon">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12,6 12,12 16,14"/>
                     </svg>
-                    <span>Invite</span>
-                </button>
-                <button class="voice-header-btn" @click="showActivityModal = true" title="Choose Activity">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    <span>Activity</span>
-                </button>
-                <button class="voice-header-btn" @click="showTextChat = !showTextChat" :class="{ 'active': showTextChat }" title="Toggle Text Chat">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-                    </svg>
-                </button>
+                    <span x-text="formattedDuration">0:00</span>
+                </div>
             </div>
         </header>
 
@@ -204,13 +194,6 @@
                     <span class="status-dot" :class="connectionStatus"></span>
                     <span class="status-text" x-text="connectionStatusText">Voice Connected</span>
                 </div>
-                <div class="call-timer">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="timer-icon">
-                        <circle cx="12" cy="12" r="10"/>
-                        <polyline points="12,6 12,12 16,14"/>
-                    </svg>
-                    <span x-text="formattedDuration">0:00</span>
-                </div>
             </div>
 
             <div class="control-bar-buttons">
@@ -252,13 +235,6 @@
                         <path d="M20 18c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/>
                     </svg>
                     <span class="btn-label">Share</span>
-                </button>
-
-                <button class="control-btn" @click="showActivityModal = true" title="Activities">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M21.58 16.09l-1.09-7.66C20.21 6.46 18.52 5 16.53 5H7.47C5.48 5 3.79 6.46 3.51 8.43l-1.09 7.66C2.2 17.63 3.39 19 4.94 19H9v-3H6.44l.82-6H9v2c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-2h1.74l.82 6H15v3h4.06c1.55 0 2.74-1.37 2.52-2.91zM12 12v-2h-2v2H8l4-4 4 4h-4z"/>
-                    </svg>
-                    <span class="btn-label">Activity</span>
                 </button>
 
                 <button class="control-btn" @click="$dispatch('open-voice-settings')" title="Voice Settings">
@@ -459,14 +435,6 @@
         <div class="stat-row">
             <span class="stat-label">Ping</span>
             <span class="stat-value" x-text="ping + 'ms'"></span>
-        </div>
-        <div class="stat-row">
-            <span class="stat-label">Region</span>
-            <span class="stat-value">Auto</span>
-        </div>
-        <div class="stat-row">
-            <span class="stat-label">Codec</span>
-            <span class="stat-value">Opus</span>
         </div>
     </div>
 </div>
