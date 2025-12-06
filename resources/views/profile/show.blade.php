@@ -22,9 +22,14 @@
                 <h1>{{ $user->display_name }}</h1>
                 <p>{{ '@' . $user->username }}</p>
                 <div style="margin-top: 16px;">
-                    <span class="status-indicator {{ $user->profile->status === 'online' ? 'status-online' : 'status-offline' }}"></span>
-                    <span style="color: white;">{{ ucfirst($user->profile->status) }}</span>
-                    @if($user->profile->current_game)
+                    @if($privacyContext['canSeeOnlineStatus'])
+                        <span class="status-indicator {{ $user->profile->status === 'online' ? 'status-online' : 'status-offline' }}"></span>
+                        <span style="color: white;">{{ ucfirst($user->profile->status) }}</span>
+                    @else
+                        <span class="status-indicator status-offline"></span>
+                        <span style="color: white;">Offline</span>
+                    @endif
+                    @if($privacyContext['canSeeGamingActivity'] && $user->profile->current_game)
                         <span style="margin-left: 16px; color: #10b981;" data-gaming-status>
                             Playing {{ $user->profile->current_game['name'] }}
                             @if(isset($user->profile->current_game['server_name']))
@@ -114,7 +119,7 @@
                     </p>
                 </div>
 
-                @if($user->steam_id && $user->profile->steam_data)
+                @if($privacyContext['canSeeSteamData'] && $user->steam_id && $user->profile->steam_data)
                     <div class="profile-card">
                         <div class="profile-card-header">
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" style="color: #667eea;">
@@ -237,14 +242,26 @@
                             <p style="color: #71717a;">No games to display</p>
                         @endforelse
                     </div>
+                @elseif($user->steam_id && !$privacyContext['canSeeSteamData'])
+                    <div class="profile-card">
+                        <div class="profile-card-header">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" style="color: #52525b;">
+                                <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
+                            </svg>
+                            <h3 class="profile-card-title">Steam Data</h3>
+                        </div>
+                        <p style="color: #71717a; text-align: center; padding: 30px;">
+                            {{ $user->display_name }} has chosen to keep their Steam data private.
+                        </p>
+                    </div>
                 @endif
             </div>
 
             <div>
                 {{-- Lobby Display (display-only - creation at /lobbies) --}}
-                @if(auth()->check())
+                @if(auth()->check() && $privacyContext['canSeeLobbies'])
                     <div style="margin-bottom: 24px;">
-                        <x-lobby-display :user="$user" :is-own-profile="auth()->id() === $user->id" />
+                        <x-lobby-display :user="$user" :is-own-profile="$privacyContext['isOwnProfile']" />
                     </div>
                 @endif
 
@@ -267,7 +284,7 @@
                                 <span class="stat-value">{{ $user->created_at->format('F Y') }}</span>
                             </div>
                         </div>
-                        @if($user->steam_id)
+                        @if($user->steam_id && $privacyContext['canSeeSteamData'])
                             <div class="stat-item-card">
                                 <div class="stat-icon stat-icon-time">
                                     <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
@@ -294,7 +311,7 @@
                     </div>
                 </div>
 
-                @if($user->steam_id && isset($user->profile->steam_data['friends']) && $user->profile->steam_data['friends']['count'] > 0)
+                @if($privacyContext['canSeeSteamFriends'] && $user->steam_id && isset($user->profile->steam_data['friends']) && $user->profile->steam_data['friends']['count'] > 0)
                     <div class="profile-card">
                         <div class="profile-card-header">
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" style="color: #667eea;">
@@ -334,32 +351,34 @@
                     </div>
                 @endif
 
-                <div class="profile-card">
-                    <div class="profile-card-header">
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" style="color: #667eea;">
-                            <path fill-rule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm14 1a1 1 0 11-2 0 1 1 0 012 0zM2 13a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2zm14 1a1 1 0 11-2 0 1 1 0 012 0z" clip-rule="evenodd"/>
-                        </svg>
-                        <h3 class="profile-card-title">Servers</h3>
-                    </div>
-                    @forelse($user->servers->take(5) as $server)
-                        <div class="server-item">
-                            <div class="server-icon">
-                                {{ strtoupper(substr($server->name, 0, 1)) }}
-                            </div>
-                            <div class="server-info">
-                                <span class="server-name">{{ $server->name }}</span>
-                                <span class="server-members">
-                                    <svg viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
-                                    </svg>
-                                    {{ $server->members->count() }} members
-                                </span>
-                            </div>
+                @if($privacyContext['canSeeServers'])
+                    <div class="profile-card">
+                        <div class="profile-card-header">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" style="color: #667eea;">
+                                <path fill-rule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm14 1a1 1 0 11-2 0 1 1 0 012 0zM2 13a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2zm14 1a1 1 0 11-2 0 1 1 0 012 0z" clip-rule="evenodd"/>
+                            </svg>
+                            <h3 class="profile-card-title">Servers</h3>
                         </div>
-                    @empty
-                        <p style="color: #71717a; text-align: center; padding: 20px;">Not in any servers yet</p>
-                    @endforelse
-                </div>
+                        @forelse($user->servers->take(5) as $server)
+                            <div class="server-item">
+                                <div class="server-icon">
+                                    {{ strtoupper(substr($server->name, 0, 1)) }}
+                                </div>
+                                <div class="server-info">
+                                    <span class="server-name">{{ $server->name }}</span>
+                                    <span class="server-members">
+                                        <svg viewBox="0 0 20 20" fill="currentColor">
+                                            <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+                                        </svg>
+                                        {{ $server->members->count() }} members
+                                    </span>
+                                </div>
+                            </div>
+                        @empty
+                            <p style="color: #71717a; text-align: center; padding: 20px;">Not in any servers yet</p>
+                        @endforelse
+                    </div>
+                @endif
             </div>
         </div>
     </div>

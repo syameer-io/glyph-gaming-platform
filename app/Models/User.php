@@ -184,6 +184,32 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
+    /**
+     * Check if this user is friends with another user.
+     * Checks both directions of the friendship relation.
+     *
+     * @param User $otherUser The user to check friendship with
+     * @return bool True if they are accepted friends
+     */
+    public function isFriendWith(User $otherUser): bool
+    {
+        // Check if this user sent friend request that was accepted
+        $sentFriendship = $this->friends()
+            ->where('friend_id', $otherUser->id)
+            ->wherePivot('status', 'accepted')
+            ->exists();
+
+        if ($sentFriendship) {
+            return true;
+        }
+
+        // Check if other user sent friend request that was accepted
+        return $otherUser->friends()
+            ->where('friend_id', $this->id)
+            ->wherePivot('status', 'accepted')
+            ->exists();
+    }
+
     public function servers()
     {
         return $this->belongsToMany(Server::class, 'server_members')

@@ -12,6 +12,7 @@ class SettingsController extends Controller
     public function index()
     {
         $user = Auth::user();
+        $user->load('profile');
         return view('settings.index', compact('user'));
     }
 
@@ -46,15 +47,22 @@ class SettingsController extends Controller
         $request->validate([
             'show_steam_data' => 'boolean',
             'show_online_status' => 'boolean',
+            'show_gaming_activity' => 'boolean',
+            'show_steam_friends' => 'boolean',
+            'show_servers' => 'boolean',
+            'show_lobbies_to_friends_only' => 'boolean',
+            'profile_visible_to_friends_only' => 'boolean',
         ]);
 
-        // In a real application, you'd store these in a separate settings table
-        // For now, we'll store them in the session
-        session([
-            'privacy_settings' => [
-                'show_steam_data' => $request->boolean('show_steam_data'),
-                'show_online_status' => $request->boolean('show_online_status'),
-            ]
+        // Persist privacy settings to the database
+        $user->profile->update([
+            'show_steam_data' => $request->boolean('show_steam_data'),
+            'show_online_status' => $request->boolean('show_online_status'),
+            'show_gaming_activity' => $request->boolean('show_gaming_activity'),
+            'show_steam_friends' => $request->boolean('show_steam_friends'),
+            'show_servers' => $request->boolean('show_servers'),
+            'show_lobbies_to_friends_only' => $request->boolean('show_lobbies_to_friends_only'),
+            'profile_visible_to_friends_only' => $request->boolean('profile_visible_to_friends_only'),
         ]);
 
         return back()->with('success', 'Privacy settings updated successfully!');

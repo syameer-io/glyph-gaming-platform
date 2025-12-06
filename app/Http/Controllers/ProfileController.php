@@ -22,11 +22,12 @@ class ProfileController extends Controller
         $user->load(['profile', 'servers']);
 
         $currentUser = Auth::user();
+        $isOwnProfile = $currentUser && $currentUser->id === $user->id;
         $isFriend = false;
         $friendRequestPending = false;
         $friendRequestReceived = false;
 
-        if ($currentUser && $currentUser->id !== $user->id) {
+        if ($currentUser && !$isOwnProfile) {
             $friendship = $currentUser->friends()
                 ->wherePivot('friend_id', $user->id)
                 ->first();
@@ -49,12 +50,29 @@ class ProfileController extends Controller
             }
         }
 
+        // Check if profile is visible to the current user
+        if (!$user->profile->isProfileVisibleTo($currentUser)) {
+            // Return a restricted view for non-friends when profile is friends-only
+            return view('profile.restricted', compact('user', 'isFriend', 'friendRequestPending', 'friendRequestReceived'));
+        }
+
+        // Build privacy context for conditional rendering
+        $privacyContext = [
+            'canSeeSteamData' => $user->profile->shouldShowSteamData($currentUser),
+            'canSeeOnlineStatus' => $user->profile->shouldShowOnlineStatus($currentUser),
+            'canSeeGamingActivity' => $user->profile->shouldShowGamingActivity($currentUser),
+            'canSeeSteamFriends' => $user->profile->shouldShowSteamFriends($currentUser),
+            'canSeeServers' => $user->profile->shouldShowServers($currentUser),
+            'canSeeLobbies' => $user->profile->shouldShowLobbies($currentUser),
+            'isOwnProfile' => $isOwnProfile,
+        ];
+
         // Load gaming preferences filtered by available join configurations
         $user->load(['gamingPreferencesWithJoinConfigs']);
 
         // Note: Lobby creation moved to /lobbies page, combinedGames no longer needed here
 
-        return view('profile.show', compact('user', 'isFriend', 'friendRequestPending', 'friendRequestReceived'));
+        return view('profile.show', compact('user', 'isFriend', 'friendRequestPending', 'friendRequestReceived', 'privacyContext'));
     }
 
     public function edit()

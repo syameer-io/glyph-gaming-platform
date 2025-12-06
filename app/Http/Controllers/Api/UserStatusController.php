@@ -237,6 +237,30 @@ class UserStatusController extends Controller
                 'target_user_id' => $user->id
             ]);
 
+            $viewer = auth()->user();
+
+            // Check privacy settings
+            $canSeeStatus = $user->profile->shouldShowOnlineStatus($viewer);
+            $canSeeActivity = $user->profile->shouldShowGamingActivity($viewer);
+
+            // If status is hidden, return offline response
+            if (!$canSeeStatus) {
+                return response()->json([
+                    'success' => true,
+                    'data' => [
+                        'status' => 'offline',
+                        'status_label' => 'Offline',
+                        'status_color' => UserStatus::STATUS_COLORS['offline'],
+                        'custom_text' => null,
+                        'custom_emoji' => null,
+                        'full_custom_status' => null,
+                        'has_custom_status' => false,
+                        'activity' => null,
+                        'privacy_hidden' => true,
+                    ]
+                ], 200);
+            }
+
             $userStatus = $user->userStatus;
 
             if (!$userStatus) {
@@ -251,7 +275,7 @@ class UserStatusController extends Controller
                         'custom_emoji' => null,
                         'full_custom_status' => null,
                         'has_custom_status' => false,
-                        'activity' => $user->getDisplayActivity(),
+                        'activity' => $canSeeActivity ? $user->getDisplayActivity() : null,
                     ]
                 ], 200);
             }
@@ -262,12 +286,12 @@ class UserStatusController extends Controller
                     'status' => $userStatus->status,
                     'status_label' => $userStatus->getDisplayStatus(),
                     'status_color' => $userStatus->getStatusColor(),
-                    'custom_text' => $userStatus->custom_text,
-                    'custom_emoji' => $userStatus->custom_emoji,
-                    'full_custom_status' => $userStatus->getFullCustomStatus(),
-                    'has_custom_status' => $userStatus->hasCustomStatus(),
+                    'custom_text' => $canSeeActivity ? $userStatus->custom_text : null,
+                    'custom_emoji' => $canSeeActivity ? $userStatus->custom_emoji : null,
+                    'full_custom_status' => $canSeeActivity ? $userStatus->getFullCustomStatus() : null,
+                    'has_custom_status' => $canSeeActivity ? $userStatus->hasCustomStatus() : false,
                     'expires_at' => $userStatus->expires_at?->toIso8601String(),
-                    'activity' => $user->getDisplayActivity(),
+                    'activity' => $canSeeActivity ? $user->getDisplayActivity() : null,
                 ]
             ], 200);
 
@@ -311,24 +335,47 @@ class UserStatusController extends Controller
             }
 
             $userIds = $request->input('user_ids');
+            $viewer = auth()->user();
 
-            // Fetch all statuses in one query
+            // Fetch all statuses and users with profiles in optimized queries
             $statuses = UserStatus::whereIn('user_id', $userIds)
                 ->get()
                 ->keyBy('user_id');
+
+            $users = User::with('profile')
+                ->whereIn('id', $userIds)
+                ->get()
+                ->keyBy('id');
 
             // Build response with fallback for users without status records
             $result = [];
             foreach ($userIds as $userId) {
                 $status = $statuses->get($userId);
+                $user = $users->get($userId);
 
-                $result[$userId] = [
-                    'status' => $status?->status ?? 'offline',
-                    'status_color' => $status?->getStatusColor() ?? UserStatus::STATUS_COLORS['offline'],
-                    'custom_text' => $status?->custom_text,
-                    'custom_emoji' => $status?->custom_emoji,
-                    'has_custom_status' => $status?->hasCustomStatus() ?? false,
-                ];
+                // Check privacy settings
+                $canSeeStatus = $user?->profile?->shouldShowOnlineStatus($viewer) ?? true;
+                $canSeeActivity = $user?->profile?->shouldShowGamingActivity($viewer) ?? true;
+
+                if (!$canSeeStatus) {
+                    // Return hidden status
+                    $result[$userId] = [
+                        'status' => 'offline',
+                        'status_color' => UserStatus::STATUS_COLORS['offline'],
+                        'custom_text' => null,
+                        'custom_emoji' => null,
+                        'has_custom_status' => false,
+                        'privacy_hidden' => true,
+                    ];
+                } else {
+                    $result[$userId] = [
+                        'status' => $status?->status ?? 'offline',
+                        'status_color' => $status?->getStatusColor() ?? UserStatus::STATUS_COLORS['offline'],
+                        'custom_text' => $canSeeActivity ? $status?->custom_text : null,
+                        'custom_emoji' => $canSeeActivity ? $status?->custom_emoji : null,
+                        'has_custom_status' => $canSeeActivity ? ($status?->hasCustomStatus() ?? false) : false,
+                    ];
+                }
             }
 
             return response()->json([

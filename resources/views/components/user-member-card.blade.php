@@ -31,14 +31,18 @@
 @php
     use App\Models\UserStatus;
 
+    // Get current viewer for privacy checks
+    $viewer = auth()->user();
+
     // Get user's roles in this server
     $userRoles = $user->roles()
         ->wherePivot('server_id', $server->id)
         ->orderBy('position', 'desc')
         ->get();
 
-    // Get active lobbies
-    $lobbies = $user->gameLobbies ?? collect();
+    // Privacy-aware lobby check
+    $canSeeLobby = $user->profile->shouldShowLobbies($viewer);
+    $lobbies = $canSeeLobby ? ($user->gameLobbies ?? collect()) : collect();
     $activeLobbies = $lobbies->filter(fn($lobby) => $lobby->isActive());
 
     // Game icon mapping (Steam CDN)
@@ -75,14 +79,16 @@
     // Get banner color or use role color as gradient
     $bannerGradient = "linear-gradient(135deg, {$roleColor}60 0%, {$roleColor}30 100%)";
 
-    // Get user's current status
-    $status = $user->getCurrentStatus();
-    $statusColor = $user->getStatusColor();
-    $statusLabel = UserStatus::STATUS_LABELS[$status] ?? 'Offline';
+    // Privacy-aware status
+    $canSeeStatus = $user->profile->shouldShowOnlineStatus($viewer);
+    $status = $canSeeStatus ? $user->getCurrentStatus() : 'offline';
+    $statusColor = $canSeeStatus ? $user->getStatusColor() : UserStatus::STATUS_COLORS['offline'];
+    $statusLabel = $canSeeStatus ? (UserStatus::STATUS_LABELS[$status] ?? 'Offline') : 'Offline';
 
-    // Get custom status
-    $customStatus = $user->getCustomStatus();
-    $activity = $user->getDisplayActivity();
+    // Privacy-aware activity
+    $canSeeActivity = $user->profile->shouldShowGamingActivity($viewer);
+    $customStatus = $canSeeActivity ? $user->getCustomStatus() : null;
+    $activity = $canSeeActivity ? $user->getDisplayActivity() : null;
 
     // Check friendship status with current user
     $currentUser = auth()->user();

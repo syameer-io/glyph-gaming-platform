@@ -93,32 +93,113 @@
                 <div id="privacy" class="settings-content" style="display: none;">
                     <div class="card">
                         <h3 class="card-header">Privacy Settings</h3>
+                        <p style="color: #71717a; margin-bottom: 24px;">Control what information others can see on your profile</p>
                         <form method="POST" action="{{ route('settings.privacy') }}">
                             @csrf
                             @method('PUT')
-                            
-                            <div style="margin-bottom: 24px;">
-                                <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
-                                    <input type="checkbox" name="show_steam_data" value="1" 
-                                        {{ session('privacy_settings.show_steam_data', true) ? 'checked' : '' }}
-                                        style="width: auto;">
-                                    <div>
-                                        <div style="font-weight: 600;">Show Steam Data on Profile</div>
-                                        <div style="font-size: 14px; color: #71717a;">Display your games, playtime, and achievements</div>
-                                    </div>
-                                </label>
+
+                            {{-- Profile Visibility Section --}}
+                            <div style="margin-bottom: 32px;">
+                                <h4 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #a1a1aa;">Profile Visibility</h4>
+
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer;">
+                                        <input type="checkbox" name="profile_visible_to_friends_only" value="1"
+                                            {{ ($user->profile->profile_visible_to_friends_only ?? false) ? 'checked' : '' }}
+                                            style="width: auto; margin-top: 4px;">
+                                        <div>
+                                            <div style="font-weight: 600;">Profile Visible to Friends Only</div>
+                                            <div style="font-size: 14px; color: #71717a;">Only friends can view your full profile. Others will see limited information.</div>
+                                        </div>
+                                    </label>
+                                </div>
                             </div>
 
-                            <div style="margin-bottom: 24px;">
-                                <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
-                                    <input type="checkbox" name="show_online_status" value="1" 
-                                        {{ session('privacy_settings.show_online_status', true) ? 'checked' : '' }}
-                                        style="width: auto;">
-                                    <div>
-                                        <div style="font-weight: 600;">Show Online Status</div>
-                                        <div style="font-size: 14px; color: #71717a;">Let others see when you're online</div>
-                                    </div>
-                                </label>
+                            {{-- Status & Activity Section --}}
+                            <div style="margin-bottom: 32px;">
+                                <h4 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #a1a1aa;">Status & Activity</h4>
+
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer;">
+                                        <input type="checkbox" name="show_online_status" value="1"
+                                            {{ ($user->profile->show_online_status ?? true) ? 'checked' : '' }}
+                                            style="width: auto; margin-top: 4px;">
+                                        <div>
+                                            <div style="font-weight: 600;">Show Online Status</div>
+                                            <div style="font-size: 14px; color: #71717a;">Let others see when you're online or offline</div>
+                                        </div>
+                                    </label>
+                                </div>
+
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer;">
+                                        <input type="checkbox" name="show_gaming_activity" value="1"
+                                            {{ ($user->profile->show_gaming_activity ?? true) ? 'checked' : '' }}
+                                            style="width: auto; margin-top: 4px;">
+                                        <div>
+                                            <div style="font-weight: 600;">Show Gaming Activity</div>
+                                            <div style="font-size: 14px; color: #71717a;">Display which game you're currently playing</div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            {{-- Steam Data Section --}}
+                            <div style="margin-bottom: 32px;">
+                                <h4 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #a1a1aa;">Steam Data</h4>
+
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer;">
+                                        <input type="checkbox" name="show_steam_data" value="1"
+                                            {{ ($user->profile->show_steam_data ?? true) ? 'checked' : '' }}
+                                            style="width: auto; margin-top: 4px;">
+                                        <div>
+                                            <div style="font-weight: 600;">Show Steam Data on Profile</div>
+                                            <div style="font-size: 14px; color: #71717a;">Display your games, playtime, and achievements</div>
+                                        </div>
+                                    </label>
+                                </div>
+
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer;">
+                                        <input type="checkbox" name="show_steam_friends" value="1"
+                                            {{ ($user->profile->show_steam_friends ?? true) ? 'checked' : '' }}
+                                            style="width: auto; margin-top: 4px;">
+                                        <div>
+                                            <div style="font-weight: 600;">Show Steam Friends</div>
+                                            <div style="font-size: 14px; color: #71717a;">Display your Steam friends list on your profile</div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            {{-- Community Section --}}
+                            <div style="margin-bottom: 32px;">
+                                <h4 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #a1a1aa;">Community</h4>
+
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer;">
+                                        <input type="checkbox" name="show_servers" value="1"
+                                            {{ ($user->profile->show_servers ?? true) ? 'checked' : '' }}
+                                            style="width: auto; margin-top: 4px;">
+                                        <div>
+                                            <div style="font-weight: 600;">Show Server Memberships</div>
+                                            <div style="font-size: 14px; color: #71717a;">Display which servers you're a member of</div>
+                                        </div>
+                                    </label>
+                                </div>
+
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer;">
+                                        <input type="checkbox" name="show_lobbies_to_friends_only" value="1"
+                                            {{ ($user->profile->show_lobbies_to_friends_only ?? false) ? 'checked' : '' }}
+                                            style="width: auto; margin-top: 4px;">
+                                        <div>
+                                            <div style="font-weight: 600;">Lobbies Visible to Friends Only</div>
+                                            <div style="font-size: 14px; color: #71717a;">Only friends can see and join your game lobbies</div>
+                                        </div>
+                                    </label>
+                                </div>
                             </div>
 
                             <button type="submit" class="btn btn-primary">Save Privacy Settings</button>

@@ -25,24 +25,30 @@
 ])
 
 @php
-    // Get member's current status (online, idle, dnd, offline)
-    $status = $member->getCurrentStatus();
+    // Get the current viewer for privacy checks
+    $viewer = auth()->user();
 
-    // Get activity text (Steam game or custom status)
-    $activity = $member->getDisplayActivity();
+    // Privacy-aware status (show 'offline' if hidden)
+    $canSeeStatus = $member->profile->shouldShowOnlineStatus($viewer);
+    $status = $canSeeStatus ? $member->getCurrentStatus() : 'offline';
 
-    // Check for active lobby
-    $memberLobbies = $member->gameLobbies ?? collect();
+    // Privacy-aware activity (hide if privacy enabled)
+    $canSeeActivity = $member->profile->shouldShowGamingActivity($viewer);
+    $activity = $canSeeActivity ? $member->getDisplayActivity() : null;
+
+    // Privacy-aware lobby check
+    $canSeeLobby = $member->profile->shouldShowLobbies($viewer);
+    $memberLobbies = $canSeeLobby ? ($member->gameLobbies ?? collect()) : collect();
     $hasActiveLobby = $memberLobbies->filter(fn($l) => $l->isActive())->isNotEmpty();
 
     // Get role color with fallback
     $roleColor = $role->color ?? '#ffffff';
 
-    // Check if playing a game
-    $isPlaying = $member->isPlayingGame();
+    // Check if playing a game (privacy-aware)
+    $isPlaying = $canSeeActivity ? $member->isPlayingGame() : false;
 
-    // Get custom status details
-    $customStatus = $member->getCustomStatus();
+    // Get custom status details (privacy-aware)
+    $customStatus = $canSeeActivity ? $member->getCustomStatus() : null;
 @endphp
 
 <div

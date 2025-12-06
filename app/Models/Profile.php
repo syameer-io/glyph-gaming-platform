@@ -24,11 +24,27 @@ class Profile extends Model
         'steam_data',
         'steam_lobby_link',
         'steam_lobby_link_updated_at',
+        // Privacy settings
+        'show_steam_data',
+        'show_online_status',
+        'show_gaming_activity',
+        'show_steam_friends',
+        'show_servers',
+        'show_lobbies_to_friends_only',
+        'profile_visible_to_friends_only',
     ];
 
     protected $casts = [
         'steam_data' => 'array',
         'steam_lobby_link_updated_at' => 'datetime',
+        // Privacy settings
+        'show_steam_data' => 'boolean',
+        'show_online_status' => 'boolean',
+        'show_gaming_activity' => 'boolean',
+        'show_steam_friends' => 'boolean',
+        'show_servers' => 'boolean',
+        'show_lobbies_to_friends_only' => 'boolean',
+        'profile_visible_to_friends_only' => 'boolean',
     ];
 
     public function user()
@@ -235,5 +251,131 @@ class Profile extends Model
 
         // Return as integer (rounded down), ensuring it's never negative
         return max(0, (int) floor($remaining));
+    }
+
+    // ==========================================
+    // Privacy Settings Methods
+    // ==========================================
+
+    /**
+     * Check if a specific privacy setting allows visibility.
+     *
+     * @param string $setting The privacy setting to check
+     * @param User|null $viewer The user viewing the profile (null for public/guest)
+     * @return bool Whether the data should be visible
+     */
+    public function canShow(string $setting, ?User $viewer = null): bool
+    {
+        // Owner always sees everything on their own profile
+        if ($viewer && $viewer->id === $this->user_id) {
+            return true;
+        }
+
+        // Check if profile is friends-only
+        if ($this->profile_visible_to_friends_only) {
+            if (!$viewer || !$this->user->isFriendWith($viewer)) {
+                return false;
+            }
+        }
+
+        // Check the specific setting (default to true if column doesn't exist yet)
+        return (bool) ($this->{$setting} ?? true);
+    }
+
+    /**
+     * Check if online status should be shown to viewer.
+     *
+     * @param User|null $viewer
+     * @return bool
+     */
+    public function shouldShowOnlineStatus(?User $viewer = null): bool
+    {
+        return $this->canShow('show_online_status', $viewer);
+    }
+
+    /**
+     * Check if Steam data should be shown to viewer.
+     *
+     * @param User|null $viewer
+     * @return bool
+     */
+    public function shouldShowSteamData(?User $viewer = null): bool
+    {
+        return $this->canShow('show_steam_data', $viewer);
+    }
+
+    /**
+     * Check if gaming activity (current game) should be shown to viewer.
+     *
+     * @param User|null $viewer
+     * @return bool
+     */
+    public function shouldShowGamingActivity(?User $viewer = null): bool
+    {
+        return $this->canShow('show_gaming_activity', $viewer);
+    }
+
+    /**
+     * Check if Steam friends should be shown to viewer.
+     *
+     * @param User|null $viewer
+     * @return bool
+     */
+    public function shouldShowSteamFriends(?User $viewer = null): bool
+    {
+        return $this->canShow('show_steam_friends', $viewer);
+    }
+
+    /**
+     * Check if server memberships should be shown to viewer.
+     *
+     * @param User|null $viewer
+     * @return bool
+     */
+    public function shouldShowServers(?User $viewer = null): bool
+    {
+        return $this->canShow('show_servers', $viewer);
+    }
+
+    /**
+     * Check if lobbies should be shown to viewer.
+     *
+     * @param User|null $viewer
+     * @return bool
+     */
+    public function shouldShowLobbies(?User $viewer = null): bool
+    {
+        // Owner always sees their own lobbies
+        if ($viewer && $viewer->id === $this->user_id) {
+            return true;
+        }
+
+        // Check if lobbies are friends-only
+        if ($this->show_lobbies_to_friends_only) {
+            return $viewer && $this->user->isFriendWith($viewer);
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if the full profile is visible to viewer.
+     *
+     * @param User|null $viewer
+     * @return bool
+     */
+    public function isProfileVisibleTo(?User $viewer = null): bool
+    {
+        // Owner always sees their own profile
+        if ($viewer && $viewer->id === $this->user_id) {
+            return true;
+        }
+
+        // Check friends-only setting
+        if ($this->profile_visible_to_friends_only) {
+            return $viewer && $this->user->isFriendWith($viewer);
+        }
+
+        return true;
     }
 }
