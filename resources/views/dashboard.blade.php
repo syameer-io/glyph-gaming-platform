@@ -206,11 +206,20 @@
                         <div style="padding: 16px; background-color: #0e0e10; border-radius: 8px; margin-bottom: 12px; border-left: 4px solid #f59e0b;">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
                                 <div style="flex: 1;">
-                                    <h4 style="margin: 0; color: #efeff1; font-weight: 600;">{{ $request->gameName ?? 'Unknown Game' }}</h4>
+                                    <h4 style="margin: 0; color: #efeff1; font-weight: 600;">{{ $request->game_name ?? 'Unknown Game' }}</h4>
                                     <p style="margin: 4px 0; color: #b3b3b5; font-size: 14px;">
-                                        {{ ucfirst($request->preferred_skill_level) }} • 
-                                        {{ ucfirst(str_replace('_', ' ', $request->preferred_region)) }} • 
-                                        {{ ucfirst(str_replace('_', ' ', $request->preferred_role)) }}
+                                        {{ ucfirst($request->skill_level ?? 'any') }} •
+                                        @if($request->preferred_regions && count($request->preferred_regions) > 0)
+                                            {{ ucfirst(str_replace('_', ' ', $request->preferred_regions[0])) }}
+                                        @else
+                                            Any Region
+                                        @endif
+                                        •
+                                        @if($request->preferred_roles && count($request->preferred_roles) > 0)
+                                            {{ implode(', ', array_map('ucfirst', array_map(fn($role) => str_replace('_', ' ', $role), $request->preferred_roles))) }}
+                                        @else
+                                            Any Role
+                                        @endif
                                     </p>
                                 </div>
                                 <div style="display: flex; align-items: center; gap: 6px; padding: 4px 8px; background-color: rgba(102, 126, 234, 0.2); color: #667eea; border-radius: 4px; font-size: 12px; font-weight: 600;">
