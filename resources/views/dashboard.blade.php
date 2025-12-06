@@ -22,6 +22,7 @@
                 <a href="{{ route('friends.index') }}" class="link">Friends</a>
                 <a href="{{ route('matchmaking.index') }}" class="link">Matchmaking</a>
                 <a href="{{ route('teams.index') }}" class="link">Teams</a>
+                <a href="{{ route('lobbies.index') }}" class="link">Lobbies</a>
                 <a href="{{ route('servers.discover') }}" class="link">Servers</a>
                 <a href="{{ route('settings') }}" class="link">Settings</a>
                 <div class="navbar-user">
