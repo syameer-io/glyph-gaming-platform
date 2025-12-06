@@ -2,12 +2,14 @@
  * Lobby Page - Alpine.js Component
  * Dedicated page for creating and managing game lobbies
  * Phase 2: Visual Game Selection UI with step-by-step flow
+ * Phase 3: Browse Lobbies Feed from friends and server members
  */
-window.lobbyPage = function(userId, gamesData = []) {
+window.lobbyPage = function(userId, gamesData = [], friendIdsData = []) {
     return {
         // State
         userId: userId,
         games: gamesData, // All available games passed from server
+        friendIds: friendIdsData, // Friend IDs for real-time updates
         selectedGame: '',
         selectedGameName: '',
         selectedGameImg: '',
@@ -32,6 +34,16 @@ window.lobbyPage = function(userId, gamesData = []) {
         currentStep: 1,
         copiedLobbyId: null,
 
+        // Phase 3: Feed State
+        feedLobbies: [],
+        feedLoading: false,
+        feedFilter: {
+            game: '',
+            source: 'all'
+        },
+        copiedFeedLobbyId: null,
+        echoChannels: [],
+
         // Method descriptions for UI
         methodDescriptions: {
             'steam_lobby': 'Share your Steam lobby link for instant join',
@@ -47,7 +59,10 @@ window.lobbyPage = function(userId, gamesData = []) {
         init() {
             console.log('[LobbyPage] Initializing for user:', this.userId);
             console.log('[LobbyPage] Games available:', this.games.length);
+            console.log('[LobbyPage] Friends for real-time:', this.friendIds.length);
             this.loadActiveLobbies();
+            this.loadFeed();
+            this.setupRealtimeListeners();
 
             // Set up 1-second interval for countdown updates
             setInterval(() => {
@@ -494,6 +509,163 @@ window.lobbyPage = function(userId, gamesData = []) {
             } catch (error) {
                 console.error('[LobbyPage] Failed to copy:', error);
             }
+        },
+
+        // =====================================================
+        // PHASE 3: FEED METHODS
+        // =====================================================
+
+        /**
+         * Load lobby feed from friends and server members
+         */
+        async loadFeed() {
+            this.feedLoading = true;
+            try {
+                const params = new URLSearchParams();
+                if (this.feedFilter.game) {
+                    params.append('game_id', this.feedFilter.game);
+                }
+                if (this.feedFilter.source) {
+                    params.append('source', this.feedFilter.source);
+                }
+
+                const url = `/api/lobbies/feed${params.toString() ? '?' + params.toString() : ''}`;
+                console.log('[LobbyPage] Loading feed:', url);
+
+                const response = await fetch(url, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                    },
+                    credentials: 'same-origin'
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    this.feedLobbies = data.lobbies || [];
+                    console.log('[LobbyPage] Loaded', this.feedLobbies.length, 'feed lobbies');
+                } else {
+                    console.error('[LobbyPage] Feed load failed:', data.message);
+                    this.feedLobbies = [];
+                }
+            } catch (error) {
+                console.error('[LobbyPage] Failed to load feed:', error);
+                this.feedLobbies = [];
+            } finally {
+                this.feedLoading = false;
+            }
+        },
+
+        /**
+         * Set up real-time listeners for lobby updates from friends
+         */
+        setupRealtimeListeners() {
+            // Check if Echo is available
+            if (typeof window.Echo === 'undefined') {
+                console.warn('[LobbyPage] Echo not available, real-time updates disabled');
+                return;
+            }
+
+            console.log('[LobbyPage] Setting up real-time listeners for', this.friendIds.length, 'friends');
+
+            // Listen to each friend's lobby channel
+            this.friendIds.forEach(friendId => {
+                const channelName = `user.${friendId}.lobby`;
+
+                try {
+                    const channel = window.Echo.private(channelName)
+                        .listen('.lobby.created', (e) => {
+                            console.log('[LobbyPage] Friend created lobby:', e);
+                            this.handleLobbyCreated(e);
+                        })
+                        .listen('.lobby.deleted', (e) => {
+                            console.log('[LobbyPage] Friend deleted lobby:', e);
+                            this.handleLobbyDeleted(e);
+                        })
+                        .listen('.lobby.expired', (e) => {
+                            console.log('[LobbyPage] Friend lobby expired:', e);
+                            this.handleLobbyDeleted(e);
+                        });
+
+                    this.echoChannels.push({ name: channelName, channel });
+                } catch (error) {
+                    console.warn('[LobbyPage] Failed to subscribe to channel:', channelName, error);
+                }
+            });
+        },
+
+        /**
+         * Handle lobby created event - reload feed
+         */
+        handleLobbyCreated(event) {
+            // Reload feed to get the new lobby with full data
+            this.loadFeed();
+        },
+
+        /**
+         * Handle lobby deleted event - remove from feed
+         */
+        handleLobbyDeleted(event) {
+            const lobbyId = event.lobby_id || event.lobbyId;
+            if (lobbyId) {
+                this.feedLobbies = this.feedLobbies.filter(lobby => lobby.id !== lobbyId);
+                console.log('[LobbyPage] Removed lobby from feed:', lobbyId);
+            }
+        },
+
+        /**
+         * Check if lobby can be joined directly (steam:// link)
+         */
+        canDirectJoin(lobby) {
+            if (!lobby.join_link) return false;
+            return lobby.join_link.startsWith('steam://');
+        },
+
+        /**
+         * Copy feed lobby join info to clipboard
+         */
+        async copyFeedJoinInfo(lobby) {
+            const text = lobby.join_info || lobby.join_link || '';
+            if (!text) {
+                console.warn('[LobbyPage] No join info to copy');
+                return;
+            }
+
+            try {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(text);
+                } else {
+                    // Fallback for older browsers
+                    const textarea = document.createElement('textarea');
+                    textarea.value = text;
+                    textarea.style.position = 'fixed';
+                    textarea.style.opacity = '0';
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                }
+                this.copiedFeedLobbyId = lobby.id;
+                setTimeout(() => this.copiedFeedLobbyId = null, 2000);
+                console.log('[LobbyPage] Copied join info:', text);
+            } catch (error) {
+                console.error('[LobbyPage] Failed to copy feed join info:', error);
+            }
+        },
+
+        /**
+         * Clean up Echo channels on destroy
+         */
+        destroy() {
+            console.log('[LobbyPage] Cleaning up', this.echoChannels.length, 'Echo channels');
+            this.echoChannels.forEach(({ name }) => {
+                try {
+                    window.Echo.leave(name);
+                } catch (error) {
+                    console.warn('[LobbyPage] Failed to leave channel:', name, error);
+                }
+            });
+            this.echoChannels = [];
         }
     };
 };

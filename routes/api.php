@@ -40,6 +40,7 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::put('/lobbies/{lobby}', [LobbyController::class, 'update']);
     Route::delete('/lobbies/{lobby}', [LobbyController::class, 'destroy']);
     Route::get('/lobbies/my-lobbies', [LobbyController::class, 'myLobbies']);
+    Route::get('/lobbies/feed', [LobbyController::class, 'feed'])->middleware('throttle:30,1');
 
     // Lobby status endpoints for integration (Phase 1)
     Route::post('/lobbies/bulk-status', [LobbyStatusController::class, 'bulkStatus'])

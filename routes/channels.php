@@ -170,3 +170,33 @@ Broadcast::channel('user.{userId}.gaming-status', function ($user, $userId) {
     // User can only listen to their own gaming status channel
     return (int) $user->id === (int) $userId;
 });
+
+// ===== LOBBY CHANNELS =====
+
+/**
+ * User lobby channel - For lobby creation/deletion notifications
+ * Channel format: user.{userId}.lobby
+ *
+ * Used by: Lobbies page feed (Phase 3)
+ * Authorization: User can subscribe to their friends' lobby channels
+ */
+Broadcast::channel('user.{userId}.lobby', function ($user, $userId) {
+    // Users can always listen to their own lobby channel
+    if ((int) $user->id === (int) $userId) {
+        return true;
+    }
+
+    // Users can listen to their friends' lobby channels
+    $isFriend = $user->friends()
+        ->wherePivot('status', 'accepted')
+        ->where('users.id', $userId)
+        ->exists();
+
+    Log::info('[Broadcasting] User lobby channel auth attempt', [
+        'authenticated_user_id' => $user->id ?? 'NULL',
+        'target_user_id' => $userId,
+        'is_friend' => $isFriend,
+    ]);
+
+    return $isFriend;
+});

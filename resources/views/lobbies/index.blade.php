@@ -731,6 +731,310 @@
         }
     }
 
+    /* =====================================================
+       FEED SECTION STYLES (Phase 3)
+       ===================================================== */
+    .feed-section {
+        background-color: #18181b;
+        border-radius: 12px;
+        padding: 24px;
+        border: 1px solid #3f3f46;
+    }
+
+    .feed-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .feed-header h2 {
+        color: #efeff1;
+        font-size: 20px;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .feed-controls {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .feed-filter {
+        padding: 8px 12px;
+        background-color: #0e0e10;
+        border: 1px solid #3f3f46;
+        border-radius: 6px;
+        color: #efeff1;
+        font-size: 13px;
+        cursor: pointer;
+        transition: border-color 0.2s;
+        min-width: 140px;
+    }
+
+    .feed-filter:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+
+    .feed-filter option {
+        background-color: #18181b;
+        color: #efeff1;
+    }
+
+    .refresh-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 8px 14px;
+        background-color: #3f3f46;
+        color: #b3b3b5;
+        border: none;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .refresh-btn:hover {
+        background-color: #52525b;
+        color: #efeff1;
+    }
+
+    .refresh-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .refresh-btn svg {
+        transition: transform 0.3s ease;
+    }
+
+    .refresh-btn.loading svg {
+        animation: spin 1s linear infinite;
+    }
+
+    .feed-loading {
+        text-align: center;
+        padding: 48px 24px;
+        color: #71717a;
+    }
+
+    .feed-loading .loading-spinner {
+        width: 32px;
+        height: 32px;
+        margin: 0 auto 16px;
+    }
+
+    .feed-empty {
+        text-align: center;
+        padding: 48px 24px;
+        color: #71717a;
+    }
+
+    .feed-empty svg {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 16px;
+        opacity: 0.5;
+    }
+
+    .feed-empty p {
+        margin: 0 0 8px 0;
+        font-size: 14px;
+    }
+
+    .feed-empty-subtitle {
+        font-size: 13px;
+        color: #52525b;
+    }
+
+    .feed-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 16px;
+    }
+
+    .feed-card {
+        background-color: #0e0e10;
+        border: 1px solid #3f3f46;
+        border-radius: 10px;
+        padding: 16px;
+        transition: all 0.2s ease;
+    }
+
+    .feed-card:hover {
+        border-color: #667eea;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .feed-card-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .feed-user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #3f3f46;
+    }
+
+    .feed-user-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .feed-user-name {
+        color: #efeff1;
+        font-size: 14px;
+        font-weight: 600;
+        margin: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .feed-user-source {
+        font-size: 12px;
+        color: #71717a;
+        margin: 2px 0 0 0;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .feed-source-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 10px;
+        font-weight: 600;
+        padding: 2px 6px;
+        border-radius: 4px;
+        text-transform: uppercase;
+    }
+
+    .feed-source-badge.friend {
+        background-color: rgba(16, 185, 129, 0.15);
+        color: #10b981;
+    }
+
+    .feed-source-badge.server {
+        background-color: rgba(102, 126, 234, 0.15);
+        color: #667eea;
+    }
+
+    .feed-card-body {
+        margin-bottom: 12px;
+    }
+
+    .feed-game-name {
+        color: #efeff1;
+        font-size: 16px;
+        font-weight: 600;
+        margin: 0 0 6px 0;
+    }
+
+    .feed-join-method {
+        color: #b3b3b5;
+        font-size: 13px;
+        margin: 0 0 8px 0;
+    }
+
+    .feed-time-remaining {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: #10b981;
+    }
+
+    .feed-time-remaining.expiring {
+        color: #ef4444;
+    }
+
+    .feed-card-footer {
+        display: flex;
+        gap: 8px;
+    }
+
+    .feed-join-btn {
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 10px 16px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .feed-join-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .feed-copy-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 14px;
+        background-color: #3f3f46;
+        color: #b3b3b5;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .feed-copy-btn:hover {
+        background-color: #52525b;
+        color: #efeff1;
+    }
+
+    .feed-copy-btn.copied {
+        background-color: rgba(16, 185, 129, 0.15);
+        color: #10b981;
+    }
+
+    @media (max-width: 768px) {
+        .feed-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .feed-controls {
+            width: 100%;
+        }
+
+        .feed-filter {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .feed-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
     [x-cloak] { display: none !important; }
 </style>
 @endpush
@@ -765,7 +1069,7 @@
 </nav>
 
 <main>
-    <div class="container" x-data="lobbyPage({{ $user->id }}, {{ json_encode($combinedGames) }})">
+    <div class="container" x-data="lobbyPage({{ $user->id }}, {{ json_encode($combinedGames) }}, {{ json_encode($friendIds) }})">
         @if (session('success'))
             <div class="alert alert-success">
                 {{ session('success') }}
@@ -1197,6 +1501,170 @@
                             <p>No games available. Connect your Steam account to get started.</p>
                         </div>
                     </template>
+                </div>
+
+                <!-- =====================================================
+                     PHASE 3: ACTIVE LOBBIES FEED
+                     ===================================================== -->
+                <div class="feed-section">
+                    <!-- Feed Header -->
+                    <div class="feed-header">
+                        <h2>Active Lobbies from Your Network</h2>
+                        <div class="feed-controls">
+                            <!-- Game Filter -->
+                            <select
+                                class="feed-filter"
+                                x-model="feedFilter.game"
+                                @change="loadFeed()"
+                            >
+                                <option value="">All Games</option>
+                                @foreach($supportedGames as $game)
+                                    <option value="{{ $game['game_id'] }}">{{ $game['game_name'] }}</option>
+                                @endforeach
+                            </select>
+
+                            <!-- Source Filter -->
+                            <select
+                                class="feed-filter"
+                                x-model="feedFilter.source"
+                                @change="loadFeed()"
+                            >
+                                <option value="all">All Sources</option>
+                                <option value="friends">Friends Only</option>
+                                <option value="servers">Server Members</option>
+                            </select>
+
+                            <!-- Refresh Button -->
+                            <button
+                                type="button"
+                                class="refresh-btn"
+                                :class="{ 'loading': feedLoading }"
+                                @click="loadFeed()"
+                                :disabled="feedLoading"
+                            >
+                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/>
+                                </svg>
+                                <span x-show="!feedLoading">Refresh</span>
+                                <span x-show="feedLoading" x-cloak>Loading...</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Loading State -->
+                    <div x-show="feedLoading && feedLobbies.length === 0" x-cloak class="feed-loading">
+                        <div class="loading-spinner"></div>
+                        <p>Loading lobbies from your network...</p>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div x-show="!feedLoading && feedLobbies.length === 0" x-cloak class="feed-empty">
+                        <svg fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/>
+                        </svg>
+                        <p>No active lobbies from your network</p>
+                        <p class="feed-empty-subtitle">
+                            <template x-if="feedFilter.source === 'friends'">
+                                <span>Your friends haven't created any lobbies yet.</span>
+                            </template>
+                            <template x-if="feedFilter.source === 'servers'">
+                                <span>No server members have active lobbies.</span>
+                            </template>
+                            <template x-if="feedFilter.source === 'all'">
+                                <span>When your friends or server members create lobbies, they'll appear here.</span>
+                            </template>
+                        </p>
+                    </div>
+
+                    <!-- Feed Grid -->
+                    <div x-show="feedLobbies.length > 0" class="feed-grid">
+                        <template x-for="lobby in feedLobbies" :key="lobby.id">
+                            <div class="feed-card">
+                                <!-- Card Header: User Info -->
+                                <div class="feed-card-header">
+                                    <img
+                                        :src="lobby.user.avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(lobby.user.display_name) + '&background=667eea&color=fff'"
+                                        :alt="lobby.user.display_name"
+                                        class="feed-user-avatar"
+                                    >
+                                    <div class="feed-user-info">
+                                        <p class="feed-user-name" x-text="lobby.user.display_name"></p>
+                                        <p class="feed-user-source">
+                                            <span
+                                                class="feed-source-badge"
+                                                :class="lobby.source"
+                                                x-text="lobby.source === 'friend' ? 'Friend' : 'Server'"
+                                            ></span>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Card Body: Game & Lobby Info -->
+                                <div class="feed-card-body">
+                                    <h3 class="feed-game-name" x-text="lobby.game_name"></h3>
+                                    <p class="feed-join-method" x-text="lobby.display_format"></p>
+                                    <div
+                                        class="feed-time-remaining"
+                                        :class="{ 'expiring': lobby.expires_at && getTimeRemainingMinutes(lobby.expires_at) < 5 }"
+                                    >
+                                        <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span x-text="formatTimeRemaining(lobby.expires_at)"></span>
+                                    </div>
+                                </div>
+
+                                <!-- Card Footer: Actions -->
+                                <div class="feed-card-footer">
+                                    <!-- Direct Join (for steam:// links) -->
+                                    <template x-if="canDirectJoin(lobby)">
+                                        <a
+                                            :href="lobby.join_link"
+                                            class="feed-join-btn"
+                                            target="_blank"
+                                        >
+                                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
+                                            </svg>
+                                            Join Lobby
+                                        </a>
+                                    </template>
+
+                                    <!-- Copy Info (for non-steam links) -->
+                                    <template x-if="!canDirectJoin(lobby)">
+                                        <button
+                                            type="button"
+                                            class="feed-join-btn"
+                                            @click="copyFeedJoinInfo(lobby)"
+                                        >
+                                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
+                                                <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/>
+                                                <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"/>
+                                            </svg>
+                                            Copy Join Info
+                                        </button>
+                                    </template>
+
+                                    <!-- Copy Button -->
+                                    <button
+                                        type="button"
+                                        class="feed-copy-btn"
+                                        :class="{ 'copied': copiedFeedLobbyId === lobby.id }"
+                                        @click="copyFeedJoinInfo(lobby)"
+                                        :title="copiedFeedLobbyId === lobby.id ? 'Copied!' : 'Copy to clipboard'"
+                                    >
+                                        <svg x-show="copiedFeedLobbyId !== lobby.id" width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/>
+                                            <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"/>
+                                        </svg>
+                                        <svg x-show="copiedFeedLobbyId === lobby.id" x-cloak width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
                 </div>
             </div>
         </div>

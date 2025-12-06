@@ -47,11 +47,18 @@ class LobbyPageController extends Controller
                 'game_name' => GameLobby::getGameNameById($config->game_id),
             ]);
 
+        // Get friend IDs for real-time lobby updates (Phase 3)
+        $friendIds = $user->friends()
+            ->wherePivot('status', 'accepted')
+            ->pluck('users.id')
+            ->toArray();
+
         return view('lobbies.index', compact(
             'user',
             'combinedGames',
             'activeLobbies',
-            'supportedGames'
+            'supportedGames',
+            'friendIds'
         ));
     }
 }
