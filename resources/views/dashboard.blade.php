@@ -294,9 +294,17 @@
                     @forelse($recentActivity as $activity)
                         <div style="padding: 12px; background-color: #0e0e10; border-radius: 8px; margin-bottom: 8px;">
                             @if($activity['type'] === 'message')
-                                <p><strong>{{ $activity['user'] }}</strong> posted in #{{ $activity['channel'] }}</p>
+                                <p><strong>{{ $activity['user'] }}</strong> posted in <span style="color: #a78bfa;">#{{ $activity['channel'] }}</span></p>
+                                <p style="font-size: 11px; color: #52525b;">in {{ $activity['server'] }}</p>
                             @elseif($activity['type'] === 'join')
-                                <p><strong>{{ $activity['user'] }}</strong> joined {{ $activity['server'] }}</p>
+                                <p><strong>{{ $activity['user'] }}</strong> joined <span style="color: #10b981;">{{ $activity['server'] }}</span></p>
+                            @elseif($activity['type'] === 'team_join')
+                                <p><strong>{{ $activity['user'] }}</strong> joined team <span style="color: #f59e0b;">{{ $activity['server'] }}</span></p>
+                                @if($activity['channel'])
+                                    <p style="font-size: 11px; color: #52525b;">{{ $activity['channel'] }}</p>
+                                @endif
+                            @elseif($activity['type'] === 'friend_accept')
+                                <p><strong>{{ $activity['user'] }}</strong> <span style="color: #ec4899;">accepted your friend request</span></p>
                             @endif
                             <p style="font-size: 12px; color: #71717a; margin-top: 4px;">{{ $activity['time'] }}</p>
                         </div>
