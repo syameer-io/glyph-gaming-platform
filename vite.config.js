@@ -11,7 +11,8 @@ export default defineConfig({
                 'resources/css/voice-view.css',
                 'resources/js/app.js',
                 'resources/js/voice-chat.js',
-                'resources/js/voice-view.js'
+                'resources/js/voice-view.js',
+                'resources/js/lobby-page.js'
             ],
             refresh: true,
         }),

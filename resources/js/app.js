@@ -9,6 +9,7 @@ import './gaming-status';
 import './realtime-phase3';
 import './live-matchmaking';
 import './lobby-manager';
+import './lobby-page';
 import './voice-sidebar';
 import { Chart, registerables } from 'chart.js';
 

@@ -20,6 +20,7 @@ use App\Http\Controllers\VoiceController;
 use App\Http\Controllers\Admin\MatchmakingConfigurationController;
 use App\Http\Controllers\DirectMessageController;
 use App\Http\Controllers\VoiceChannelController;
+use App\Http\Controllers\LobbyPageController;
 
 // Guest routes
 Route::middleware('guest')->group(function () {
@@ -170,6 +171,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/{team}/stats', [TeamController::class, 'stats'])->name('stats');
         Route::get('/matchmaking/{gameAppid}', [TeamController::class, 'forMatchmaking'])->name('for.matchmaking');
     });
+
+    // Game Lobbies - Dedicated page
+    Route::get('/lobbies', [LobbyPageController::class, 'index'])->name('lobbies.index');
 
     // Phase 3: Server Goal Management routes
     Route::prefix('servers/{server}/goals')->name('server.goals.')->group(function () {
