@@ -3,16 +3,7 @@
 @section('title', $user->display_name . ' - Profile')
 
 @section('content')
-<nav class="navbar">
-    <div class="container">
-        <div class="navbar-content">
-            <a href="{{ route('dashboard') }}" class="navbar-brand">Glyph</a>
-            <div class="navbar-nav">
-                <a href="{{ route('dashboard') }}" class="btn btn-secondary btn-sm">Back to Dashboard</a>
-            </div>
-        </div>
-    </div>
-</nav>
+<x-navbar />
 
 <div class="profile-header">
     <div class="container">

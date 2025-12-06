@@ -255,35 +255,7 @@
 @section('content')
 <div style="display: flex; flex-direction: column; height: 100vh;">
     <!-- Navigation Bar -->
-    <nav class="navbar">
-        <div class="container">
-            <div class="navbar-content">
-                <a href="{{ route('dashboard') }}" class="navbar-brand">Glyph</a>
-                <div class="navbar-nav">
-                    <a href="{{ route('dm.index') }}" class="link" style="position: relative; color: #667eea;">
-                        Messages
-                        @if($totalUnreadCount > 0)
-                            <span style="position: absolute; top: -8px; right: -12px; background-color: #ef4444; color: white; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 9999px; min-width: 18px; text-align: center;">
-                                {{ $totalUnreadCount > 99 ? '99+' : $totalUnreadCount }}
-                            </span>
-                        @endif
-                    </a>
-                    <a href="{{ route('friends.index') }}" class="link">Friends</a>
-                    <a href="{{ route('dashboard') }}" class="link">Dashboard</a>
-                    <div class="navbar-user">
-                        <a href="{{ route('profile.show', auth()->user()->username) }}">
-                            <img src="{{ auth()->user()->profile->avatar_url }}" alt="{{ auth()->user()->display_name }}" class="user-avatar">
-                        </a>
-                        <span>{{ auth()->user()->display_name }}</span>
-                    </div>
-                    <form method="POST" action="{{ route('logout') }}" style="display: inline;">
-                        @csrf
-                        <button type="submit" class="btn btn-secondary btn-sm">Logout</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <x-navbar active-section="messages" />
 
     <!-- Alert Messages -->
     <div class="container" style="padding-top: 16px;">

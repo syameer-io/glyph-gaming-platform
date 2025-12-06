@@ -3,29 +3,7 @@
 @section('title', 'Discover Servers - Glyph')
 
 @section('content')
-<nav class="navbar">
-    <div class="container">
-        <div class="navbar-content">
-            <a href="{{ route('dashboard') }}" class="navbar-brand">Glyph</a>
-            <div class="navbar-nav">
-                <a href="{{ route('dashboard') }}" class="link">Dashboard</a>
-                <a href="{{ route('friends.index') }}" class="link">Friends</a>
-                <a href="{{ route('friends.search') }}" class="link">Find Friends</a>
-                <a href="{{ route('settings') }}" class="link">Settings</a>
-                <div class="navbar-user">
-                    <a href="{{ route('profile.show', auth()->user()->username) }}">
-                        <img src="{{ auth()->user()->profile->avatar_url }}" alt="{{ auth()->user()->display_name }}" class="user-avatar">
-                    </a>
-                    <span>{{ auth()->user()->display_name }}</span>
-                </div>
-                <form method="POST" action="{{ route('logout') }}" style="display: inline;">
-                    @csrf
-                    <button type="submit" class="btn btn-secondary btn-sm">Logout</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</nav>
+<x-navbar active-section="servers" />
 
 <main>
     <div class="container">

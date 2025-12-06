@@ -3,28 +3,7 @@
 @section('title', 'Friends - Glyph')
 
 @section('content')
-<nav class="navbar">
-    <div class="container">
-        <div class="navbar-content">
-            <a href="{{ route('dashboard') }}" class="navbar-brand">Glyph</a>
-            <div class="navbar-nav">
-                <a href="{{ route('dm.index') }}" class="link" style="position: relative;">
-                    Messages
-                    @php
-                        $unreadDmCount = auth()->user()->getUnreadDmCount();
-                    @endphp
-                    @if($unreadDmCount > 0)
-                        <span style="position: absolute; top: -8px; right: -12px; background-color: #ef4444; color: white; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 9999px; min-width: 18px; text-align: center;">
-                            {{ $unreadDmCount > 99 ? '99+' : $unreadDmCount }}
-                        </span>
-                    @endif
-                </a>
-                <a href="{{ route('friends.search') }}" class="btn btn-primary btn-sm">Find Friends</a>
-                <a href="{{ route('dashboard') }}" class="btn btn-secondary btn-sm">Back to Dashboard</a>
-            </div>
-        </div>
-    </div>
-</nav>
+<x-navbar active-section="friends" />
 
 <main>
     <div class="container">

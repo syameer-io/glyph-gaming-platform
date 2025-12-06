@@ -11,6 +11,7 @@ import './live-matchmaking';
 import './lobby-manager';
 import './lobby-page';
 import './voice-sidebar';
+import './navbar';
 import { Chart, registerables } from 'chart.js';
 
 // Import utility modules

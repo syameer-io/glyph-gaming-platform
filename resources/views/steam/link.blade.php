@@ -3,16 +3,7 @@
 @section('title', 'Link Steam Account - Glyph')
 
 @section('content')
-<nav class="navbar">
-    <div class="container">
-        <div class="navbar-content">
-            <a href="{{ route('dashboard') }}" class="navbar-brand">Glyph</a>
-            <div class="navbar-nav">
-                <a href="{{ route('dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
-            </div>
-        </div>
-    </div>
-</nav>
+<x-navbar />
 
 <main>
     <div class="container">

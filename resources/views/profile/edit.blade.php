@@ -3,16 +3,7 @@
 @section('title', 'Edit Profile - Glyph')
 
 @section('content')
-<nav class="navbar">
-    <div class="container">
-        <div class="navbar-content">
-            <a href="{{ route('dashboard') }}" class="navbar-brand">Glyph</a>
-            <div class="navbar-nav">
-                <a href="{{ route('profile.show', auth()->user()->username) }}" class="btn btn-secondary btn-sm">View Profile</a>
-            </div>
-        </div>
-    </div>
-</nav>
+<x-navbar />
 
 <main>
     <div class="container" style="max-width: 800px;">

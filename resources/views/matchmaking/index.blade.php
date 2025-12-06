@@ -399,31 +399,7 @@
 @endpush
 
 @section('content')
-<nav class="navbar">
-    <div class="container">
-        <div class="navbar-content">
-            <a href="{{ route('dashboard') }}" class="navbar-brand">Glyph</a>
-            <div class="navbar-nav">
-                <a href="{{ route('dashboard') }}" class="link">Dashboard</a>
-                <a href="{{ route('matchmaking.index') }}" class="link" style="color: #667eea;">Matchmaking</a>
-                <a href="{{ route('teams.index') }}" class="link">Teams</a>
-                <a href="{{ route('lobbies.index') }}" class="link">Lobbies</a>
-                <a href="{{ route('servers.discover') }}" class="link">Servers</a>
-                <a href="{{ route('settings') }}" class="link">Settings</a>
-                <div class="navbar-user">
-                    <a href="{{ route('profile.show', auth()->user()->username) }}">
-                        <img src="{{ auth()->user()->profile->avatar_url }}" alt="{{ auth()->user()->display_name }}" class="user-avatar">
-                    </a>
-                    <span>{{ auth()->user()->display_name }}</span>
-                </div>
-                <form method="POST" action="{{ route('logout') }}" style="display: inline;">
-                    @csrf
-                    <button type="submit" class="btn btn-secondary btn-sm">Logout</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</nav>
+<x-navbar active-section="matchmaking" />
 
 <main>
     <div class="container">

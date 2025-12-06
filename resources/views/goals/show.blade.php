@@ -87,17 +87,7 @@
 @endpush
 
 @section('content')
-<nav class="navbar">
-    <div class="container">
-        <div class="navbar-content">
-            <a href="{{ route('dashboard') }}" class="navbar-brand">Glyph</a>
-            <div class="navbar-nav">
-                <a href="{{ route('server.show', $server) }}" class="btn btn-secondary btn-sm" style="margin-right: 8px;">Back to Server</a>
-                <a href="{{ route('dashboard') }}" class="btn btn-secondary btn-sm">Dashboard</a>
-            </div>
-        </div>
-    </div>
-</nav>
+<x-navbar />
 
 <main>
     <div class="container">

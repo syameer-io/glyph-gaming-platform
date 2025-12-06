@@ -3,42 +3,7 @@
 @section('title', 'Dashboard - Glyph')
 
 @section('content')
-<nav class="navbar">
-    <div class="container">
-        <div class="navbar-content">
-            <a href="{{ route('dashboard') }}" class="navbar-brand">Glyph</a>
-            <div class="navbar-nav">
-                <a href="{{ route('dm.index') }}" class="link" style="position: relative;">
-                    Messages
-                    @php
-                        $unreadDmCount = auth()->user()->getUnreadDmCount();
-                    @endphp
-                    @if($unreadDmCount > 0)
-                        <span style="position: absolute; top: -8px; right: -12px; background-color: #ef4444; color: white; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 9999px; min-width: 18px; text-align: center;">
-                            {{ $unreadDmCount > 99 ? '99+' : $unreadDmCount }}
-                        </span>
-                    @endif
-                </a>
-                <a href="{{ route('friends.index') }}" class="link">Friends</a>
-                <a href="{{ route('matchmaking.index') }}" class="link">Matchmaking</a>
-                <a href="{{ route('teams.index') }}" class="link">Teams</a>
-                <a href="{{ route('lobbies.index') }}" class="link">Lobbies</a>
-                <a href="{{ route('servers.discover') }}" class="link">Servers</a>
-                <a href="{{ route('settings') }}" class="link">Settings</a>
-                <div class="navbar-user">
-                    <a href="{{ route('profile.show', auth()->user()->username) }}">
-                        <img src="{{ $user->profile->avatar_url }}" alt="{{ $user->display_name }}" class="user-avatar">
-                    </a>
-                    <span>{{ $user->display_name }}</span>
-                </div>
-                <form method="POST" action="{{ route('logout') }}" style="display: inline;">
-                    @csrf
-                    <button type="submit" class="btn btn-secondary btn-sm">Logout</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</nav>
+<x-navbar />
 
 <main>
     <div class="container">
@@ -58,18 +23,18 @@
             <div>
                 <h1 style="margin-bottom: 24px;">Welcome back, {{ $user->display_name }}!</h1>
                 
-                <div class="card" style="margin-bottom: 24px;">
-                    <h3 class="card-header">Quick Actions</h3>
-                    <div class="grid grid-cols-3" style="gap: 12px;">
-                        <a href="{{ route('matchmaking.index') }}" class="btn btn-primary">🎯 Find Teammates</a>
-                        <a href="{{ route('teams.index') }}" class="btn btn-primary">👥 Browse Teams</a>
-                        <a href="{{ route('servers.discover') }}" class="btn btn-primary">🔍 Discover Servers</a>
-                        <a href="{{ route('teams.create') }}" class="btn btn-secondary">Create Team</a>
-                        <a href="{{ route('server.create') }}" class="btn btn-secondary">Create Server</a>
+                <div class="card" style="margin-bottom: 20px; padding: 20px;">
+                    <h3 class="card-header" style="margin-bottom: 12px;">Quick Actions</h3>
+                    <div class="grid grid-cols-3" style="gap: 10px;">
+                        <a href="{{ route('matchmaking.index') }}" class="btn btn-primary" style="padding: 10px 16px; font-size: 14px;">🎯 Find Teammates</a>
+                        <a href="{{ route('teams.index') }}" class="btn btn-primary" style="padding: 10px 16px; font-size: 14px;">👥 Browse Teams</a>
+                        <a href="{{ route('servers.discover') }}" class="btn btn-primary" style="padding: 10px 16px; font-size: 14px;">🔍 Discover Servers</a>
+                        <a href="{{ route('teams.create') }}" class="btn btn-secondary" style="padding: 10px 16px; font-size: 14px;">Create Team</a>
+                        <a href="{{ route('server.create') }}" class="btn btn-secondary" style="padding: 10px 16px; font-size: 14px;">Create Server</a>
                         @if(!$user->steam_id)
-                            <a href="{{ route('steam.link') }}" class="btn btn-secondary">Link Steam</a>
+                            <a href="{{ route('steam.link') }}" class="btn btn-secondary" style="padding: 10px 16px; font-size: 14px;">Link Steam</a>
                         @else
-                            <a href="{{ route('profile.show', $user->username) }}" class="btn btn-secondary">View Profile</a>
+                            <a href="{{ route('profile.show', $user->username) }}" class="btn btn-secondary" style="padding: 10px 16px; font-size: 14px;">View Profile</a>
                         @endif
                     </div>
                 </div>
@@ -341,20 +306,35 @@
                         </div>
                     </div>
                 @empty
-                    <p style="color: #71717a; text-align: center; padding: 24px 0;">No friends online</p>
+                    <div style="text-align: center; padding: 24px 16px; background-color: #0e0e10; border-radius: 8px; border: 2px dashed #27272a;">
+                        <div style="width: 48px; height: 48px; margin: 0 auto 12px; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="2">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <line x1="19" y1="8" x2="19" y2="14"></line>
+                                <line x1="22" y1="11" x2="16" y2="11"></line>
+                            </svg>
+                        </div>
+                        <p style="color: #b3b3b5; font-size: 14px; margin-bottom: 12px;">No friends online</p>
+                        <a href="{{ route('friends.search') }}" style="color: #667eea; font-size: 13px; text-decoration: none;">Find friends</a>
+                    </div>
                 @endforelse
 
                 @if($user->servers && $user->servers->isNotEmpty())
-                    <h3 style="margin-top: 32px; margin-bottom: 16px;">Your Servers</h3>
+                    <div style="height: 1px; background-color: #27272a; margin: 24px 0;"></div>
+                    <h3 style="margin-bottom: 16px;">Your Servers</h3>
                     @foreach($user->servers as $server)
                         <a href="{{ route('server.show', $server) }}" class="sidebar-link">
                             <div style="display: flex; align-items: center; gap: 12px;">
                                 @if($server->icon_url)
-                                <img src="{{ $server->icon_url }}" alt="{{ $server->name }}" style="width: 32px; height: 32px; border-radius: 8px;">
+                                <img src="{{ $server->icon_url }}" alt="{{ $server->name }}" style="width: 32px; height: 32px; border-radius: 8px; object-fit: cover;">
                                 @else
-                                    <div style="width: 32px; height: 32px; background-color: #667eea; border-radius: 8px;"></div>
+                                    <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 14px;">{{ substr($server->name, 0, 2) }}</div>
                                 @endif
-                                <span>{{ $server->name }}</span>
+                                <div style="flex: 1; min-width: 0;">
+                                    <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $server->name }}</div>
+                                    <div style="font-size: 11px; color: #71717a;">{{ $server->members->count() }} members</div>
+                                </div>
                             </div>
                         </a>
                     @endforeach

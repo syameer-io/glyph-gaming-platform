@@ -1040,33 +1040,7 @@
 @endpush
 
 @section('content')
-<nav class="navbar">
-    <div class="container">
-        <div class="navbar-content">
-            <a href="{{ route('dashboard') }}" class="navbar-brand">Glyph</a>
-            <div class="navbar-nav">
-                <a href="{{ route('dashboard') }}" class="link">Dashboard</a>
-                <a href="{{ route('dm.index') }}" class="link">Messages</a>
-                <a href="{{ route('friends.index') }}" class="link">Friends</a>
-                <a href="{{ route('matchmaking.index') }}" class="link">Matchmaking</a>
-                <a href="{{ route('teams.index') }}" class="link">Teams</a>
-                <a href="{{ route('lobbies.index') }}" class="link" style="color: #667eea;">Lobbies</a>
-                <a href="{{ route('servers.discover') }}" class="link">Servers</a>
-                <a href="{{ route('settings') }}" class="link">Settings</a>
-                <div class="navbar-user">
-                    <a href="{{ route('profile.show', auth()->user()->username) }}">
-                        <img src="{{ auth()->user()->profile->avatar_url }}" alt="{{ auth()->user()->display_name }}" class="user-avatar">
-                    </a>
-                    <span>{{ auth()->user()->display_name }}</span>
-                </div>
-                <form method="POST" action="{{ route('logout') }}" style="display: inline;">
-                    @csrf
-                    <button type="submit" class="btn btn-secondary btn-sm">Logout</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</nav>
+<x-navbar active-section="lobbies" />
 
 <main>
     <div class="container" x-data="lobbyPage({{ $user->id }}, {{ json_encode($combinedGames) }}, {{ json_encode($friendIds) }})">
