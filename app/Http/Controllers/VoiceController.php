@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\AgoraService;
 use App\Models\Server;
 use App\Models\Channel;
+use App\Models\User;
 use App\Events\VoiceUserJoined;
 use App\Events\VoiceUserLeft;
 use App\Events\VoiceUserMuted;
@@ -12,6 +13,7 @@ use App\Events\VoiceUserSpeaking;
 use App\Events\VoiceUserDeafened;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Exception;
 
@@ -119,7 +121,37 @@ class VoiceController extends Controller
                 ], 403);
             }
 
-            // SECURITY CHECK 3: Check if muted users are allowed to join voice
+            // SECURITY CHECK 3: Check connect permission via Gate (server-level)
+            if (!Gate::allows('connectVoice', $server)) {
+                Log::warning('User without connect permission attempted to join voice channel', [
+                    'user_id' => $user->id,
+                    'username' => $user->username,
+                    'server_id' => $server->id,
+                    'channel_id' => $channelId
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You do not have permission to connect to voice channels.'
+                ], 403);
+            }
+
+            // SECURITY CHECK 4: Check channel-specific override for connect
+            if (!$user->hasServerPermission('connect', $server->id, $channelId)) {
+                Log::warning('User without channel connect permission attempted to join voice channel', [
+                    'user_id' => $user->id,
+                    'username' => $user->username,
+                    'server_id' => $server->id,
+                    'channel_id' => $channelId
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You cannot connect to this voice channel.'
+                ], 403);
+            }
+
+            // SECURITY CHECK 5: Check if muted users are allowed to join voice
             // Note: For university demonstration, we allow muted users to join voice
             // but they will be unable to send text messages. Server admins can decide
             // if voice access should also be restricted for muted users.
@@ -297,6 +329,25 @@ class VoiceController extends Controller
             // Load channel with server
             $channel = Channel::with('server')->findOrFail($channelId);
             $server = $channel->server;
+
+            // Check speak permission when unmuting (trying to speak)
+            if (!$isMuted) {
+                // Check server-level speak permission
+                if (!Gate::allows('speakVoice', $server)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'You do not have permission to speak in voice channels.'
+                    ], 403);
+                }
+
+                // Check channel-specific override for speak
+                if (!$user->hasServerPermission('speak', $server->id, $channelId)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'You do not have permission to speak in this voice channel.'
+                    ], 403);
+                }
+            }
 
             // Update mute status
             $session = $this->agoraService->updateMuteStatus($user->id, $channelId, $isMuted);

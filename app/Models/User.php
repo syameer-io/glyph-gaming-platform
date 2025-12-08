@@ -6,6 +6,8 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 
 class User extends Authenticatable
 {
@@ -241,6 +243,289 @@ class User extends Authenticatable
             ->where('name', $roleName)
             ->exists();
     }
+
+    // =========================================================================
+    // Phase 1 - Role Permissions System
+    // =========================================================================
+
+    /**
+     * Get all roles for a user in a specific server, ordered by position descending.
+     * Higher position = more authority.
+     *
+     * @param int $serverId The server ID
+     * @return Collection Collection of Role models
+     */
+    public function getServerRoles(int $serverId): Collection
+    {
+        return $this->roles()
+            ->wherePivot('server_id', $serverId)
+            ->orderByDesc('position')
+            ->get();
+    }
+
+    /**
+     * Get the highest role position for this user in a server.
+     * Used for hierarchy checks (can only manage users with lower position).
+     *
+     * @param int $serverId The server ID
+     * @return int The highest position, or 0 if no roles
+     */
+    public function getHighestRolePosition(int $serverId): int
+    {
+        $highestRole = $this->roles()
+            ->wherePivot('server_id', $serverId)
+            ->orderByDesc('position')
+            ->first();
+
+        return $highestRole ? $highestRole->position : 0;
+    }
+
+    /**
+     * Check if user has a specific permission in a server.
+     * Optionally checks channel-specific overrides.
+     *
+     * Permission resolution order:
+     * 1. Server creator ALWAYS returns true
+     * 2. Check cache for computed permissions
+     * 3. If cache miss, compute permissions from all roles
+     * 4. Apply channel overrides if channelId provided (deny takes precedence)
+     *
+     * @param string $permission The permission key to check
+     * @param int $serverId The server ID
+     * @param int|null $channelId Optional channel ID for channel-specific overrides
+     * @return bool
+     */
+    public function hasServerPermission(string $permission, int $serverId, ?int $channelId = null): bool
+    {
+        // Server creator ALWAYS has all permissions
+        $server = Server::find($serverId);
+        if ($server && $server->creator_id === $this->id) {
+            return true;
+        }
+
+        // Get computed permissions (cached)
+        $permissions = $this->computeServerPermissions($serverId, $channelId);
+
+        // Check for administrator permission first (grants all)
+        $adminPermission = config('permissions.administrator', 'administrator');
+        if (in_array($adminPermission, $permissions)) {
+            return true;
+        }
+
+        return in_array($permission, $permissions);
+    }
+
+    /**
+     * Compute aggregated permissions for a user in a server.
+     * Combines permissions from all user's roles, with channel overrides.
+     *
+     * Channel override rules:
+     * - 'deny' takes precedence over 'allow'
+     * - 'inherit' uses role's default
+     *
+     * Results are cached for 5 minutes (configurable via config/permissions.php).
+     *
+     * @param int $serverId The server ID
+     * @param int|null $channelId Optional channel ID for channel-specific overrides
+     * @return array Array of permission keys the user has
+     */
+    public function computeServerPermissions(int $serverId, ?int $channelId = null): array
+    {
+        // Build cache key
+        $cacheKey = $channelId
+            ? "user_{$this->id}_server_{$serverId}_channel_{$channelId}_permissions"
+            : "user_{$this->id}_server_{$serverId}_permissions";
+
+        $cacheTtl = config('permissions.cache_ttl', 300);
+
+        return Cache::remember($cacheKey, $cacheTtl, function () use ($serverId, $channelId) {
+            // Get all user's roles in this server
+            $roles = $this->getServerRoles($serverId);
+
+            if ($roles->isEmpty()) {
+                return [];
+            }
+
+            // Aggregate base permissions from all roles
+            $basePermissions = [];
+            foreach ($roles as $role) {
+                $rolePermissions = $role->permissions ?? [];
+                $basePermissions = array_merge($basePermissions, $rolePermissions);
+            }
+            $basePermissions = array_unique($basePermissions);
+
+            // If no channel specified, return base permissions
+            if ($channelId === null) {
+                return array_values($basePermissions);
+            }
+
+            // Apply channel overrides
+            // Track allowed and denied permissions from overrides
+            $channelAllowed = [];
+            $channelDenied = [];
+
+            foreach ($roles as $role) {
+                $overrides = $role->getChannelOverrides($channelId);
+                foreach ($overrides as $override) {
+                    if ($override->isDeny()) {
+                        $channelDenied[] = $override->permission;
+                    } elseif ($override->isAllow()) {
+                        $channelAllowed[] = $override->permission;
+                    }
+                    // 'inherit' does nothing - uses base permission
+                }
+            }
+
+            // Deny takes precedence: remove denied permissions
+            $effectivePermissions = array_diff($basePermissions, $channelDenied);
+
+            // Add explicitly allowed permissions (that weren't denied)
+            foreach ($channelAllowed as $permission) {
+                if (!in_array($permission, $channelDenied)) {
+                    $effectivePermissions[] = $permission;
+                }
+            }
+
+            return array_values(array_unique($effectivePermissions));
+        });
+    }
+
+    /**
+     * Check if user can manage another user based on role hierarchy.
+     * Users can only manage other users with STRICTLY lower role positions.
+     *
+     * @param User $targetUser The user to potentially manage
+     * @param int $serverId The server ID
+     * @return bool
+     */
+    public function canManageUser(User $targetUser, int $serverId): bool
+    {
+        // Server creator can manage anyone
+        $server = Server::find($serverId);
+        if ($server && $server->creator_id === $this->id) {
+            return true;
+        }
+
+        // Cannot manage yourself
+        if ($this->id === $targetUser->id) {
+            return false;
+        }
+
+        // Cannot manage the server creator
+        if ($server && $server->creator_id === $targetUser->id) {
+            return false;
+        }
+
+        // Get both users' highest role positions
+        $myPosition = $this->getHighestRolePosition($serverId);
+        $targetPosition = $targetUser->getHighestRolePosition($serverId);
+
+        // Can only manage users with STRICTLY lower position
+        return $myPosition > $targetPosition;
+    }
+
+    /**
+     * Check if user can manage a role based on hierarchy.
+     * Users can only manage roles with STRICTLY lower positions than their highest role.
+     *
+     * @param Role $role The role to potentially manage
+     * @param int $serverId The server ID
+     * @return bool
+     */
+    public function canManageRole(Role $role, int $serverId): bool
+    {
+        // Server creator can manage any role
+        $server = Server::find($serverId);
+        if ($server && $server->creator_id === $this->id) {
+            return true;
+        }
+
+        // Get user's highest role position
+        $myPosition = $this->getHighestRolePosition($serverId);
+
+        // Can only manage roles with STRICTLY lower position
+        return $myPosition > $role->position;
+    }
+
+    /**
+     * Invalidate permission cache for this user.
+     * Called when user's roles change.
+     *
+     * @param int|null $serverId Optional specific server ID (null clears all)
+     * @return void
+     */
+    public function invalidatePermissionCache(?int $serverId = null): void
+    {
+        if ($serverId !== null) {
+            // Clear cache for specific server
+            Cache::forget("user_{$this->id}_server_{$serverId}_permissions");
+            Cache::forget("user_{$this->id}_server_{$serverId}_channel_permissions");
+
+            // Clear channel-specific caches for this server
+            // We need to get all channels in the server and clear those caches
+            $server = Server::with('channels')->find($serverId);
+            if ($server) {
+                foreach ($server->channels as $channel) {
+                    Cache::forget("user_{$this->id}_server_{$serverId}_channel_{$channel->id}_permissions");
+                }
+            }
+        } else {
+            // Clear cache for all servers user is a member of
+            $serverIds = $this->servers()->pluck('servers.id');
+            foreach ($serverIds as $sid) {
+                Cache::forget("user_{$this->id}_server_{$sid}_permissions");
+                Cache::forget("user_{$this->id}_server_{$sid}_channel_permissions");
+
+                // Clear channel-specific caches
+                $server = Server::with('channels')->find($sid);
+                if ($server) {
+                    foreach ($server->channels as $channel) {
+                        Cache::forget("user_{$this->id}_server_{$sid}_channel_{$channel->id}_permissions");
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Check if user has any of the specified permissions in a server.
+     *
+     * @param array $permissions Array of permission keys
+     * @param int $serverId The server ID
+     * @param int|null $channelId Optional channel ID
+     * @return bool
+     */
+    public function hasAnyServerPermission(array $permissions, int $serverId, ?int $channelId = null): bool
+    {
+        foreach ($permissions as $permission) {
+            if ($this->hasServerPermission($permission, $serverId, $channelId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Check if user has all of the specified permissions in a server.
+     *
+     * @param array $permissions Array of permission keys
+     * @param int $serverId The server ID
+     * @param int|null $channelId Optional channel ID
+     * @return bool
+     */
+    public function hasAllServerPermissions(array $permissions, int $serverId, ?int $channelId = null): bool
+    {
+        foreach ($permissions as $permission) {
+            if (!$this->hasServerPermission($permission, $serverId, $channelId)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // =========================================================================
+    // End Phase 1 - Role Permissions System
+    // =========================================================================
 
     public function gamingPreferences()
     {

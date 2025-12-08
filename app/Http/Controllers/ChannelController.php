@@ -11,6 +11,7 @@ use App\Events\MessageEdited;
 use App\Events\MessageDeleted;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
@@ -101,10 +102,20 @@ class ChannelController extends Controller
 
         $user = Auth::user();
 
-        // Check membership and access including mute status
-        $accessCheck = $this->checkMembershipAndAccess($server, $user, true);
+        // Check basic membership (not banned)
+        $accessCheck = $this->checkMembershipAndAccess($server, $user, false);
         if ($accessCheck['error']) {
             return response()->json(['error' => $accessCheck['error']], 403);
+        }
+
+        // Check server-level send_messages permission via Gate
+        if (!Gate::allows('sendMessages', $server)) {
+            return response()->json(['error' => 'You do not have permission to send messages in this server'], 403);
+        }
+
+        // Check channel-specific override for send_messages
+        if (!$user->hasServerPermission('send_messages', $server->id, $channel->id)) {
+            return response()->json(['error' => 'You do not have permission to send messages in this channel'], 403);
         }
 
         $message = Message::create([
@@ -213,24 +224,39 @@ class ChannelController extends Controller
     {
         $user = Auth::user();
 
-        // Check if user can delete this message
-        if (!$message->canDelete($user->id)) {
-            return response()->json(['error' => 'You can only delete your own messages'], 403);
-        }
-
         // Check if message belongs to this channel
         if ($message->channel_id !== $channel->id) {
             return response()->json(['error' => 'Message not found'], 404);
         }
 
-        // Check if user is still a member and not banned (don't check muted for delete)
+        // Check if user is still a member and not banned
         $accessCheck = $this->checkMembershipAndAccess($server, $user, false);
         if ($accessCheck['error']) {
             return response()->json(['error' => 'You cannot delete messages'], 403);
         }
 
+        // Enhanced permission check for deletion
+        $canDelete = false;
+
+        // Case 1: User owns the message
+        if ($message->user_id === $user->id) {
+            $canDelete = true;
+        }
+        // Case 2: User has manage_messages permission AND higher role than message author
+        elseif (Gate::allows('manageMessages', $server)) {
+            // Get the message author for hierarchy check
+            $messageAuthor = $message->user;
+            if ($messageAuthor && $user->canManageUser($messageAuthor, $server->id)) {
+                $canDelete = true;
+            }
+        }
+
+        if (!$canDelete) {
+            return response()->json(['error' => 'You cannot delete this message'], 403);
+        }
+
         $messageId = $message->id;
-        
+
         // Broadcast the message deletion to all users in the channel
         broadcast(new MessageDeleted($messageId, $channel));
 
