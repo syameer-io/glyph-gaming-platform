@@ -48,35 +48,28 @@ class ServerController extends Controller
                 $server->channels()->create($channelData);
             }
 
-            // Create Server Admin role
+            // Create Server Admin role with administrator permission
+            // The 'administrator' permission grants all other permissions via PermissionService
             $adminRole = Role::create([
                 'server_id' => $server->id,
                 'name' => 'Server Admin',
                 'color' => '#E91E63',
                 'position' => 100,
-                'permissions' => [
-                    'manage_server',
-                    'manage_channels',
-                    'manage_roles',
-                    'manage_members',
-                    'kick_members',
-                    'ban_members',
-                    'mute_members',
-                    'send_messages',
-                    'view_channels',
-                ],
+                'permissions' => config('permissions.defaults.server_admin', ['administrator']),
             ]);
 
-            // Create Member role
+            // Create Member role with default permissions including voice
             $memberRole = Role::create([
                 'server_id' => $server->id,
                 'name' => 'Member',
                 'color' => '#99AAB5',
                 'position' => 0,
-                'permissions' => [
-                    'send_messages',
+                'permissions' => config('permissions.defaults.member', [
                     'view_channels',
-                ],
+                    'send_messages',
+                    'connect',
+                    'speak',
+                ]),
             ]);
 
             // Add creator as server member with admin role

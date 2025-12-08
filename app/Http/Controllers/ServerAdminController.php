@@ -18,9 +18,15 @@ class ServerAdminController extends Controller
     public function settings(Server $server)
     {
         Gate::authorize('manage', $server);
-        
-        $server->load(['channels', 'members.profile', 'roles', 'tags', 'goals']);
-        
+
+        $server->load([
+            'channels.permissionOverrides',
+            'members.profile',
+            'roles',
+            'tags',
+            'goals'
+        ]);
+
         return view('servers.admin.settings', compact('server'));
     }
 
@@ -266,7 +272,12 @@ class ServerAdminController extends Controller
             'name' => $request->name,
             'color' => $request->color,
             'position' => $position,
-            'permissions' => ['send_messages', 'view_channels'],
+            'permissions' => [
+                'view_channels',
+                'send_messages',
+                'connect',
+                'speak',
+            ],
         ]);
 
         return redirect()->route('server.admin.settings', $server)
@@ -639,5 +650,24 @@ class ServerAdminController extends Controller
             ->delete();
 
         return response()->json(['success' => true, 'message' => 'Channel permissions updated']);
+    }
+
+    /**
+     * Get permission configuration for the frontend.
+     * Returns categorized permissions and all permission keys.
+     *
+     * @param Server $server
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getPermissionConfig(Server $server)
+    {
+        Gate::authorize('manageRoles', $server);
+
+        $permissionService = app(PermissionService::class);
+
+        return response()->json([
+            'categories' => $permissionService->getPermissionConfig(),
+            'all' => config('permissions.all', []),
+        ]);
     }
 }

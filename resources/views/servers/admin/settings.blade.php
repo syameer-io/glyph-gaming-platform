@@ -242,27 +242,46 @@
                     @foreach(['text' => 'Text Channels', 'voice' => 'Voice Channels'] as $type => $label)
                         <p style="font-size: 14px; font-weight: 600; color: #71717a; text-transform: uppercase; margin-top: 24px; margin-bottom: 12px;">{{ $label }}</p>
                         @foreach($server->channels->where('type', $type) as $channel)
+                            @php
+                                // Get existing channel overrides for this channel
+                                $channelOverrides = $channel->permissionOverrides ?? collect();
+                            @endphp
                             <div style="background-color: #0e0e10; border-radius: 8px; margin-bottom: 12px; padding: 12px;">
                                 <div class="channel-item" style="background-color: transparent; margin: 0; padding: 0;">
                                     <div>
                                         <span style="color: #71717a; margin-right: 8px;">{{ $type === 'text' ? '#' : '🔊' }}</span>
                                         <span>{{ $channel->name }}</span>
                                     </div>
-                                    <div class="kebab-menu">
-                                        <button class="kebab-button" onclick="toggleKebabMenu('channel-{{ $channel->id }}')">⋮</button>
-                                        <div class="kebab-dropdown" id="kebab-channel-{{ $channel->id }}">
-                                            <button class="kebab-option" onclick="toggleChannelEdit('{{ $channel->id }}'); closeKebabMenu('channel-{{ $channel->id }}')">Edit</button>
-                                            @if($server->channels->where('type', $type)->count() > 1)
-                                                <form method="POST" action="{{ route('server.admin.channel.delete', [$server, $channel]) }}" style="display: inline;">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="kebab-option danger" onclick="return confirm('Delete this channel?')">Delete</button>
-                                                </form>
-                                            @endif
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        {{-- Permission Overrides Button --}}
+                                        <button type="button"
+                                                class="btn btn-sm"
+                                                style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background-color: #3f3f46; color: #efeff1; border: none; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;"
+                                                onmouseover="this.style.backgroundColor='#52525b'"
+                                                onmouseout="this.style.backgroundColor='#3f3f46'"
+                                                onclick="toggleChannelOverrides('{{ $channel->id }}')">
+                                            <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
+                                            </svg>
+                                            Overrides
+                                        </button>
+
+                                        <div class="kebab-menu">
+                                            <button class="kebab-button" onclick="toggleKebabMenu('channel-{{ $channel->id }}')">⋮</button>
+                                            <div class="kebab-dropdown" id="kebab-channel-{{ $channel->id }}">
+                                                <button class="kebab-option" onclick="toggleChannelEdit('{{ $channel->id }}'); closeKebabMenu('channel-{{ $channel->id }}')">Edit</button>
+                                                @if($server->channels->where('type', $type)->count() > 1)
+                                                    <form method="POST" action="{{ route('server.admin.channel.delete', [$server, $channel]) }}" style="display: inline;">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="kebab-option danger" onclick="return confirm('Delete this channel?')">Delete</button>
+                                                    </form>
+                                                @endif
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <!-- Edit Channel Form -->
                                 <div id="channel-edit-{{ $channel->id }}" style="display: none; margin-top: 16px;">
                                     <form method="POST" action="{{ route('server.admin.channel.update', [$server, $channel]) }}">
@@ -280,6 +299,88 @@
                                         </div>
                                         <small style="color: #71717a; font-size: 12px; display: block; margin-top: 8px;">Use lowercase letters, numbers, and hyphens only</small>
                                     </form>
+                                </div>
+
+                                <!-- Channel Permission Overrides Section -->
+                                <div id="channel-overrides-{{ $channel->id }}" style="display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid #303035;">
+                                    <h5 style="margin-bottom: 12px; color: #efeff1; font-size: 14px; font-weight: 600;">Permission Overrides</h5>
+                                    <p style="color: #71717a; font-size: 12px; margin-bottom: 16px;">
+                                        Customize permissions for specific roles in this channel. Use "Inherit" to use the default role permission.
+                                    </p>
+
+                                    @php
+                                        // Get relevant permissions based on channel type
+                                        $relevantPermissions = $type === 'text'
+                                            ? ['view_channels', 'send_messages', 'manage_messages']
+                                            : ['view_channels', 'connect', 'speak'];
+
+                                        $permissionLabels = [
+                                            'view_channels' => 'View',
+                                            'send_messages' => 'Send Messages',
+                                            'manage_messages' => 'Manage Messages',
+                                            'connect' => 'Connect',
+                                            'speak' => 'Speak',
+                                        ];
+                                    @endphp
+
+                                    <div style="overflow-x: auto;">
+                                        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                                            <thead>
+                                                <tr style="border-bottom: 1px solid #303035;">
+                                                    <th style="text-align: left; padding: 8px 12px; color: #71717a; font-weight: 600;">Role</th>
+                                                    @foreach($relevantPermissions as $permission)
+                                                        <th style="text-align: center; padding: 8px 12px; color: #71717a; font-weight: 600; min-width: 100px;">{{ $permissionLabels[$permission] }}</th>
+                                                    @endforeach
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($server->roles->where('name', '!=', 'Server Admin')->sortByDesc('position') as $role)
+                                                    <tr style="border-bottom: 1px solid #26262c;">
+                                                        <td style="padding: 10px 12px;">
+                                                            <span class="role-badge" style="background-color: {{ $role->color }}; color: white; font-size: 12px;">
+                                                                {{ $role->name }}
+                                                            </span>
+                                                        </td>
+                                                        @foreach($relevantPermissions as $permission)
+                                                            @php
+                                                                // Find existing override value for this role/permission combo
+                                                                $existingOverride = $channelOverrides
+                                                                    ->where('role_id', $role->id)
+                                                                    ->where('permission', $permission)
+                                                                    ->first();
+                                                                $currentValue = $existingOverride ? $existingOverride->value : 'inherit';
+                                                            @endphp
+                                                            <td style="padding: 10px 12px; text-align: center;">
+                                                                <select class="channel-override-select"
+                                                                        data-role="{{ $role->id }}"
+                                                                        data-permission="{{ $permission }}"
+                                                                        style="padding: 6px 10px; border-radius: 4px; border: 1px solid #3f3f46; background-color: #18181b; color: #efeff1; font-size: 12px; width: 90px; cursor: pointer;">
+                                                                    <option value="inherit" {{ $currentValue === 'inherit' ? 'selected' : '' }}>-- Inherit</option>
+                                                                    <option value="allow" {{ $currentValue === 'allow' ? 'selected' : '' }}>&#10003; Allow</option>
+                                                                    <option value="deny" {{ $currentValue === 'deny' ? 'selected' : '' }}>&#10007; Deny</option>
+                                                                </select>
+                                                            </td>
+                                                        @endforeach
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <div style="margin-top: 16px; display: flex; gap: 8px; justify-content: flex-end;">
+                                        <button type="button"
+                                                class="btn btn-secondary btn-sm"
+                                                style="padding: 8px 16px; font-size: 12px;"
+                                                onclick="toggleChannelOverrides('{{ $channel->id }}')">
+                                            Cancel
+                                        </button>
+                                        <button type="button"
+                                                class="btn btn-primary btn-sm"
+                                                style="padding: 8px 16px; font-size: 12px; background-color: #9147ff;"
+                                                onclick="saveChannelOverrides('{{ $channel->id }}')">
+                                            Save Overrides
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         @endforeach
@@ -382,24 +483,45 @@
                                         {{ $role->users()->wherePivot('server_id', $server->id)->count() }} members
                                     </span>
                                 </div>
-                                <div class="kebab-menu">
-                                    <button class="kebab-button" onclick="toggleKebabMenu('role-{{ $role->id }}')">⋮</button>
-                                    <div class="kebab-dropdown" id="kebab-role-{{ $role->id }}">
-                                        <button class="kebab-option" onclick="toggleRoleMembers('{{ $role->id }}'); closeKebabMenu('role-{{ $role->id }}')">
-                                            Manage Members
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    {{-- Permissions Button - Only for custom roles --}}
+                                    @if(!in_array($role->name, ['Server Admin', 'Member']))
+                                        <button type="button"
+                                                class="btn btn-sm"
+                                                style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background-color: #3f3f46; color: #efeff1; border: none; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;"
+                                                onmouseover="this.style.backgroundColor='#52525b'"
+                                                onmouseout="this.style.backgroundColor='#3f3f46'"
+                                                onclick="openPermissionsModal({{ $role->id }}, '{{ addslashes($role->name) }}', '{{ $role->color }}', {{ json_encode($role->permissions ?? []) }})">
+                                            <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                            </svg>
+                                            Permissions
                                         </button>
-                                        @if($role->name !== 'Server Admin' && $role->name !== 'Member')
-                                            <button class="kebab-option" onclick="toggleEditRole('{{ $role->id }}'); closeKebabMenu('role-{{ $role->id }}')">
-                                                Edit
+                                    @else
+                                        <span style="font-size: 11px; color: #71717a; padding: 6px 12px; background-color: #26262c; border-radius: 6px;">
+                                            Default Role
+                                        </span>
+                                    @endif
+
+                                    <div class="kebab-menu">
+                                        <button class="kebab-button" onclick="toggleKebabMenu('role-{{ $role->id }}')">⋮</button>
+                                        <div class="kebab-dropdown" id="kebab-role-{{ $role->id }}">
+                                            <button class="kebab-option" onclick="toggleRoleMembers('{{ $role->id }}'); closeKebabMenu('role-{{ $role->id }}')">
+                                                Manage Members
                                             </button>
-                                            <form method="POST" action="{{ route('server.admin.role.delete', [$server, $role]) }}" style="display: inline;">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="kebab-option danger" onclick="return confirm('Are you sure you want to delete this role? This will remove it from all members.')">
-                                                    Delete
+                                            @if($role->name !== 'Server Admin' && $role->name !== 'Member')
+                                                <button class="kebab-option" onclick="toggleEditRole('{{ $role->id }}'); closeKebabMenu('role-{{ $role->id }}')">
+                                                    Edit
                                                 </button>
-                                            </form>
-                                        @endif
+                                                <form method="POST" action="{{ route('server.admin.role.delete', [$server, $role]) }}" style="display: inline;">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="kebab-option danger" onclick="return confirm('Are you sure you want to delete this role? This will remove it from all members.')">
+                                                        Delete
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1718,5 +1840,229 @@ function showTab(tabName, element) {
         loadTelegramStatus();
     }
 }
+
+// ============================================
+// Role Permissions Modal Functions (Phase 5)
+// ============================================
+
+// Permission modal state
+let currentRolePermissions = [];
+let permissionConfig = null;
+
+// Load permission config on page load
+async function loadPermissionConfig() {
+    try {
+        const response = await fetch('{{ route("server.admin.permissions.config", $server) }}');
+        if (response.ok) {
+            const data = await response.json();
+            permissionConfig = data.categories;
+            console.log('Permission config loaded:', permissionConfig);
+        } else {
+            console.error('Failed to load permission config:', response.status);
+        }
+    } catch (error) {
+        console.error('Failed to load permission config:', error);
+    }
+}
+
+// Open permissions modal
+function openPermissionsModal(roleId, roleName, roleColor, permissions) {
+    if (!permissionConfig) {
+        alert('Permission configuration not loaded. Please refresh the page.');
+        return;
+    }
+
+    currentRolePermissions = permissions || [];
+
+    document.getElementById('modal-role-id').value = roleId;
+    document.getElementById('modal-role-badge').textContent = roleName;
+    document.getElementById('modal-role-badge').style.backgroundColor = roleColor;
+    document.getElementById('modal-role-badge').style.color = isLightColor(roleColor) ? '#1f1f23' : '#efeff1';
+
+    // Build permission categories
+    const container = document.getElementById('permission-categories');
+    container.innerHTML = '';
+
+    for (const [categoryKey, category] of Object.entries(permissionConfig)) {
+        const categoryDiv = document.createElement('div');
+        categoryDiv.className = 'permission-category';
+
+        let permissionsHtml = '';
+        for (const [permKey, perm] of Object.entries(category.permissions)) {
+            const isDangerous = perm.dangerous || false;
+            const isChecked = currentRolePermissions.includes(permKey);
+
+            permissionsHtml += `
+                <div class="permission-item ${isDangerous ? 'dangerous' : ''}">
+                    <label class="toggle-switch permission-toggle">
+                        <input type="checkbox"
+                               name="permissions[]"
+                               value="${permKey}"
+                               ${isChecked ? 'checked' : ''}>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <div class="permission-info">
+                        <div class="permission-label">
+                            ${perm.label}
+                            ${isDangerous ? '<span class="danger-badge">DANGEROUS</span>' : ''}
+                        </div>
+                        <div class="permission-description">${perm.description}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        categoryDiv.innerHTML = `
+            <h4>${category.label}</h4>
+            ${permissionsHtml}
+        `;
+
+        container.appendChild(categoryDiv);
+    }
+
+    // Add Administrator permission at the top (special category)
+    const adminDiv = document.createElement('div');
+    adminDiv.className = 'permission-category';
+    const hasAdmin = currentRolePermissions.includes('administrator');
+    adminDiv.innerHTML = `
+        <h4>Special</h4>
+        <div class="permission-item dangerous">
+            <label class="toggle-switch permission-toggle">
+                <input type="checkbox"
+                       name="permissions[]"
+                       value="administrator"
+                       ${hasAdmin ? 'checked' : ''}>
+                <span class="toggle-slider"></span>
+            </label>
+            <div class="permission-info">
+                <div class="permission-label">
+                    Administrator
+                    <span class="danger-badge">DANGEROUS</span>
+                </div>
+                <div class="permission-description">Grants all permissions. Members with this permission can perform any action regardless of other permission settings.</div>
+            </div>
+        </div>
+    `;
+    container.insertBefore(adminDiv, container.firstChild);
+
+    document.getElementById('role-permissions-modal').style.display = 'flex';
+}
+
+// Close permissions modal
+function closePermissionsModal() {
+    document.getElementById('role-permissions-modal').style.display = 'none';
+    currentRolePermissions = [];
+}
+
+// Save role permissions
+async function saveRolePermissions() {
+    const roleId = document.getElementById('modal-role-id').value;
+    const checkboxes = document.querySelectorAll('#permission-categories input[type="checkbox"]:checked');
+    const permissions = Array.from(checkboxes).map(cb => cb.value);
+
+    try {
+        const response = await fetch(`{{ url('servers/' . $server->id . '/admin/roles') }}/${roleId}/permissions`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ permissions })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            closePermissionsModal();
+            // Show success message
+            const successDiv = document.createElement('div');
+            successDiv.className = 'alert alert-success';
+            successDiv.textContent = 'Permissions updated successfully!';
+            successDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 1100; padding: 12px 20px; background-color: #10b981; color: white; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);';
+            document.body.appendChild(successDiv);
+            setTimeout(() => successDiv.remove(), 3000);
+        } else {
+            alert(data.error || 'Error updating permissions');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error updating permissions');
+    }
+}
+
+// Helper to determine if color is light
+function isLightColor(hexColor) {
+    const hex = hexColor.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    return brightness > 155;
+}
+
+// ============================================
+// Channel Permission Overrides Functions (Phase 5)
+// ============================================
+
+// Toggle channel overrides section visibility
+function toggleChannelOverrides(channelId) {
+    const el = document.getElementById(`channel-overrides-${channelId}`);
+    if (el) {
+        el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
+}
+
+// Save channel permission overrides
+async function saveChannelOverrides(channelId) {
+    const selects = document.querySelectorAll(`#channel-overrides-${channelId} .channel-override-select`);
+    const overrides = [];
+
+    selects.forEach(select => {
+        overrides.push({
+            role_id: parseInt(select.dataset.role),
+            permission: select.dataset.permission,
+            value: select.value
+        });
+    });
+
+    try {
+        const response = await fetch(`{{ url('servers/' . $server->id . '/admin/channels') }}/${channelId}/permissions`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ overrides })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            // Show success message
+            const successDiv = document.createElement('div');
+            successDiv.className = 'alert alert-success';
+            successDiv.textContent = 'Channel permissions updated!';
+            successDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 1100; padding: 12px 20px; background-color: #10b981; color: white; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);';
+            document.body.appendChild(successDiv);
+            setTimeout(() => successDiv.remove(), 3000);
+        } else {
+            alert(data.error || 'Error updating channel permissions');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error updating channel permissions');
+    }
+}
+
+// Load config on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadPermissionConfig();
+});
 </script>
+
+{{-- Include Role Permissions Modal Component --}}
+@include('components.role-permissions-modal')
+
 @endsection

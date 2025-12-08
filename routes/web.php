@@ -119,7 +119,19 @@ Route::middleware('auth')->group(function () {
         Route::delete('/roles/{role}', [ServerAdminController::class, 'deleteRole'])->name('role.delete');
         Route::post('/roles/assign', [ServerAdminController::class, 'assignRole'])->name('role.assign');
         Route::delete('/roles/{role}/users/{user}', [ServerAdminController::class, 'removeRole'])->name('role.remove');
-        
+
+        // Role permission management (Phase 4)
+        Route::patch('/roles/{role}/permissions', [ServerAdminController::class, 'updateRolePermissions'])
+            ->name('role.permissions');
+
+        // Channel permission overrides (Phase 4)
+        Route::patch('/channels/{channel}/permissions', [ServerAdminController::class, 'updateChannelOverrides'])
+            ->name('channel.permissions');
+
+        // Get permission configuration for frontend (Phase 4)
+        Route::get('/permissions/config', [ServerAdminController::class, 'getPermissionConfig'])
+            ->name('permissions.config');
+
         // Tag management
         Route::post('/tags', [ServerAdminController::class, 'addTag'])->name('tag.add');
         Route::delete('/tags/{tagId}', [ServerAdminController::class, 'removeTag'])->name('tag.remove');
