@@ -38,15 +38,201 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated Gradient Mesh Background */
+        .auth-container::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            background:
+                radial-gradient(ellipse 80% 50% at 20% 40%, rgba(102, 126, 234, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse 60% 60% at 80% 20%, rgba(118, 75, 162, 0.12) 0%, transparent 50%),
+                radial-gradient(ellipse 50% 70% at 50% 80%, rgba(102, 126, 234, 0.1) 0%, transparent 50%);
+            animation: meshFloat 20s ease-in-out infinite;
+        }
+
+        @keyframes meshFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); opacity: 1; }
+            25% { transform: translate(2%, -2%) scale(1.02); opacity: 0.9; }
+            50% { transform: translate(-1%, 1%) scale(0.98); opacity: 1; }
+            75% { transform: translate(-2%, -1%) scale(1.01); opacity: 0.95; }
         }
 
         .auth-box {
             background-color: #18181b;
-            border-radius: 12px;
-            padding: 40px;
+            border-radius: 16px;
+            padding: 48px;
             width: 100%;
             max-width: 480px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            box-shadow:
+                0 4px 6px rgba(0, 0, 0, 0.1),
+                0 10px 20px rgba(0, 0, 0, 0.15),
+                0 20px 40px rgba(0, 0, 0, 0.2);
+            position: relative;
+            z-index: 1;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            animation: authBoxEntrance 0.5s ease-out;
+        }
+
+        .auth-box:hover {
+            border-color: rgba(102, 126, 234, 0.35);
+        }
+
+        @keyframes authBoxEntrance {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Auth Form Input Enhancements */
+        .input-with-icon {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-with-icon input[type="text"],
+        .input-with-icon input[type="email"],
+        .input-with-icon input[type="password"] {
+            padding-left: 44px !important;
+            padding-right: 44px;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 14px;
+            width: 20px;
+            height: 20px;
+            color: #71717a;
+            pointer-events: none;
+            transition: color 0.2s;
+        }
+
+        .input-with-icon:focus-within .input-icon {
+            color: #667eea;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            background: none;
+            border: none;
+            padding: 4px;
+            cursor: pointer;
+            color: #71717a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+        }
+
+        .password-toggle:hover {
+            color: #b3b3b5;
+        }
+
+        .password-toggle svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Full Width Button */
+        .btn-full {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Loading State */
+        .btn-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .spinner {
+            width: 18px;
+            height: 18px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        /* OTP Input Styles */
+        .otp-input-container {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin: 16px 0 24px;
+        }
+
+        .otp-input {
+            width: 52px;
+            height: 64px;
+            text-align: center;
+            font-size: 28px;
+            font-weight: 600;
+            background-color: #0e0e10;
+            border: 2px solid #3f3f46;
+            border-radius: 12px;
+            color: #efeff1;
+            caret-color: #667eea;
+            transition: all 0.2s ease;
+            padding: 0;
+        }
+
+        .otp-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background-color: #18181b;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        .otp-input.has-value {
+            border-color: #667eea;
+            background-color: rgba(102, 126, 234, 0.05);
+        }
+
+        .otp-input::placeholder {
+            color: #52525b;
+        }
+
+        .otp-input::-webkit-outer-spin-button,
+        .otp-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        @media (max-width: 400px) {
+            .otp-input-container {
+                gap: 8px;
+            }
+            .otp-input {
+                width: 44px;
+                height: 56px;
+                font-size: 24px;
+            }
+        }
+
+        /* Reduced motion preference */
+        @media (prefers-reduced-motion: reduce) {
+            .auth-container::before {
+                animation: none;
+            }
+            .auth-box {
+                animation: none;
+            }
         }
 
         .logo {

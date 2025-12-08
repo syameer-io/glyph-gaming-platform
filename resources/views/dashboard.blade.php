@@ -435,4 +435,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+
+{{-- Steam Reminder Modal - Shows for users without Steam linked --}}
+@if($showSteamReminder ?? false)
+    <x-steam-reminder-modal :show="true" />
+@endif
 @endsection

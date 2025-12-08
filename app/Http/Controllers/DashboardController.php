@@ -52,7 +52,11 @@ class DashboardController extends Controller
         // Get recent activity from user's servers, teams, and friends
         $recentActivity = $this->getRecentActivity($user);
 
-        return view('dashboard', compact('user', 'onlineFriends', 'recommendations', 'recentActivity'));
+        // Check if we should show Steam reminder popup
+        // Show only if user hasn't linked Steam and hasn't dismissed in this session
+        $showSteamReminder = !$user->steam_id && !session('steam_reminder_dismissed');
+
+        return view('dashboard', compact('user', 'onlineFriends', 'recommendations', 'recentActivity', 'showSteamReminder'));
     }
 
     /**

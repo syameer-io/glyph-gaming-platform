@@ -49,6 +49,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/steam/auth', [SteamAuthController::class, 'redirect'])->name('steam.auth');
     Route::get('/auth/steam/callback', [SteamAuthController::class, 'callback'])->name('steam.callback');
 
+    // Steam reminder dismissal (session-based)
+    Route::post('/steam/reminder/dismiss', function () {
+        session(['steam_reminder_dismissed' => true]);
+        return response()->json(['success' => true]);
+    })->name('steam.reminder.dismiss');
+
     // Profile routes
     Route::get('/profile/{username}', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('/settings/profile', [ProfileController::class, 'edit'])->name('profile.edit');
