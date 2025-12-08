@@ -224,7 +224,12 @@ class Role extends Model
 
     /**
      * Invalidate permission caches for all users who have this role.
-     * Called when role permissions change.
+     * Called when role permissions or channel overrides change.
+     *
+     * This method clears:
+     * - Server-level permission cache
+     * - General channel permissions cache
+     * - Channel-specific permission caches for each channel
      *
      * @return void
      */
@@ -237,11 +242,40 @@ class Role extends Model
             ->wherePivot('server_id', $serverId)
             ->pluck('users.id');
 
+        // For Member role, also include users with no explicit roles (implicit members)
+        if ($this->name === 'Member') {
+            $server = $this->server;
+            if ($server) {
+                // Get users who have ANY role in this server
+                $usersWithRoleIds = \Illuminate\Support\Facades\DB::table('user_roles')
+                    ->where('server_id', $serverId)
+                    ->pluck('user_id')
+                    ->unique();
+
+                // Get server members who have no roles
+                $implicitMemberIds = $server->members()
+                    ->whereNotIn('users.id', $usersWithRoleIds->toArray())
+                    ->pluck('users.id');
+
+                // Merge explicit and implicit member IDs
+                $userIds = $userIds->merge($implicitMemberIds)->unique();
+            }
+        }
+
+        // Get all channels in this server for channel-specific cache clearing
+        $server = Server::with('channels')->find($serverId);
+        $channelIds = $server ? $server->channels->pluck('id') : collect();
+
         foreach ($userIds as $userId) {
-            // Invalidate the user's permission cache for this server
+            // Invalidate the user's server-level permission cache
             Cache::forget("user_{$userId}_server_{$serverId}_permissions");
-            // Also invalidate channel-specific caches
+            // Invalidate general channel permissions cache
             Cache::forget("user_{$userId}_server_{$serverId}_channel_permissions");
+
+            // Invalidate channel-specific permission caches
+            foreach ($channelIds as $channelId) {
+                Cache::forget("user_{$userId}_server_{$serverId}_channel_{$channelId}_permissions");
+            }
         }
     }
 
@@ -310,6 +344,91 @@ class Role extends Model
         return $this->channelOverrides()
             ->where('channel_id', $channelId)
             ->get();
+    }
+
+    /**
+     * Get the count of users who have this role in its server.
+     *
+     * For the "Member" role, this includes both:
+     * - Users with explicit Member role assignment
+     * - Server members who have NO roles assigned (implicit members)
+     *
+     * This ensures the member count accurately reflects all users
+     * who should be considered as having the Member role.
+     *
+     * @return int The number of members with this role
+     */
+    public function getMemberCount(): int
+    {
+        $serverId = $this->server_id;
+
+        // Get users with explicit role assignment
+        $explicitCount = $this->users()
+            ->wherePivot('server_id', $serverId)
+            ->count();
+
+        // For the Member role, also count server members with no roles
+        if ($this->name === 'Member') {
+            $server = $this->server;
+            if ($server) {
+                // Get all server member IDs
+                $serverMemberIds = $server->members()->pluck('users.id');
+
+                // Get users who have ANY role in this server
+                $usersWithRoles = \Illuminate\Support\Facades\DB::table('user_roles')
+                    ->where('server_id', $serverId)
+                    ->pluck('user_id')
+                    ->unique();
+
+                // Count members who have no roles (implicit members)
+                $implicitMemberCount = $serverMemberIds->diff($usersWithRoles)->count();
+
+                return $explicitCount + $implicitMemberCount;
+            }
+        }
+
+        return $explicitCount;
+    }
+
+    /**
+     * Get all users who have this role in its server.
+     *
+     * For the "Member" role, this includes both users with explicit
+     * Member role assignment AND server members with no roles assigned.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getMembersForServer(): \Illuminate\Database\Eloquent\Collection
+    {
+        $serverId = $this->server_id;
+
+        // Get users with explicit role assignment
+        $explicitUsers = $this->users()
+            ->wherePivot('server_id', $serverId)
+            ->get();
+
+        // For the Member role, also include server members with no roles
+        if ($this->name === 'Member') {
+            $server = $this->server;
+            if ($server) {
+                // Get users who have ANY role in this server
+                $usersWithRoleIds = \Illuminate\Support\Facades\DB::table('user_roles')
+                    ->where('server_id', $serverId)
+                    ->pluck('user_id')
+                    ->unique()
+                    ->toArray();
+
+                // Get server members who have no roles
+                $implicitMembers = $server->members()
+                    ->whereNotIn('users.id', $usersWithRoleIds)
+                    ->get();
+
+                // Merge explicit and implicit members, removing duplicates
+                return $explicitUsers->merge($implicitMembers)->unique('id');
+            }
+        }
+
+        return $explicitUsers;
     }
 
     /**

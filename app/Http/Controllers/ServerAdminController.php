@@ -626,10 +626,12 @@ class ServerAdminController extends Controller
 
         // Validate that all role_ids belong to this server
         $serverRoleIds = $server->roles()->pluck('id')->toArray();
+        $affectedRoleIds = [];
         foreach ($request->overrides ?? [] as $override) {
             if (!in_array($override['role_id'], $serverRoleIds)) {
                 return response()->json(['error' => 'Invalid role for this server'], 400);
             }
+            $affectedRoleIds[] = $override['role_id'];
         }
 
         // Apply overrides
@@ -649,6 +651,11 @@ class ServerAdminController extends Controller
             ->where('value', 'inherit')
             ->delete();
 
+        // Explicitly invalidate permission caches for all affected roles
+        // This ensures caches are cleared even if model events don't fire correctly
+        $permissionService = app(PermissionService::class);
+        $permissionService->invalidateServerCache($server);
+
         return response()->json(['success' => true, 'message' => 'Channel permissions updated']);
     }
 
@@ -666,7 +673,7 @@ class ServerAdminController extends Controller
         $permissionService = app(PermissionService::class);
 
         return response()->json([
-            'categories' => $permissionService->getPermissionConfig(),
+            'categories' => $permissionService->getPermissionCategories(),
             'all' => config('permissions.all', []),
         ]);
     }

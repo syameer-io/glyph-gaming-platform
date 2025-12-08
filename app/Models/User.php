@@ -697,16 +697,24 @@ class User extends Authenticatable
         });
     }
 
+    /**
+     * Check if user has server admin/management privileges.
+     *
+     * This uses the permission system to check if the user has
+     * the 'manage_server' permission through any of their roles,
+     * not just the "Server Admin" role name.
+     *
+     * Returns true if:
+     * - User is the server creator
+     * - User has 'administrator' permission
+     * - User has 'manage_server' permission through any role
+     *
+     * @param int $serverId
+     * @return bool
+     */
     public function isServerAdmin($serverId)
     {
-        // Check if user is the server creator
-        $server = \App\Models\Server::find($serverId);
-        if ($server && $server->creator_id === $this->id) {
-            return true;
-        }
-        
-        // Check if user has Server Admin role
-        return $this->hasRole('Server Admin', $serverId);
+        return $this->hasServerPermission('manage_server', $serverId);
     }
 
     public function getTopGames($limit = 3)

@@ -228,7 +228,7 @@
                         @endif
                         
                         <div style="display: flex; gap: 12px;">
-                            <input type="text" name="name" placeholder="channel-name" pattern="[a-z0-9-]+" required style="flex: 3;" value="{{ old('name') }}">
+                            <input type="text" name="name" placeholder="channel-name" pattern="[a-z0-9\-]+" required style="flex: 3;" value="{{ old('name') }}">
                             <select name="type" required style="flex: 1;">
                                 <option value="text" {{ old('type') === 'text' ? 'selected' : '' }}>Text Channel</option>
                                 <option value="voice" {{ old('type') === 'voice' ? 'selected' : '' }}>Voice Channel</option>
@@ -289,7 +289,7 @@
                                         @method('PUT')
                                         <h5 style="margin-bottom: 12px;">Edit Channel</h5>
                                         <div style="display: flex; gap: 12px;">
-                                            <input type="text" name="name" value="{{ $channel->name }}" pattern="[a-z0-9-]+" required style="flex: 3;" placeholder="channel-name">
+                                            <input type="text" name="name" value="{{ $channel->name }}" pattern="[a-z0-9\-]+" required style="flex: 3;" placeholder="channel-name">
                                             <select name="type" required style="flex: 1;">
                                                 <option value="text" {{ $channel->type === 'text' ? 'selected' : '' }}>Text Channel</option>
                                                 <option value="voice" {{ $channel->type === 'voice' ? 'selected' : '' }}>Voice Channel</option>
@@ -480,7 +480,7 @@
                                         {{ $role->name }}
                                     </span>
                                     <span style="margin-left: 12px; color: #71717a; font-size: 14px;">
-                                        {{ $role->users()->wherePivot('server_id', $server->id)->count() }} members
+                                        {{ $role->getMemberCount() }} members
                                     </span>
                                 </div>
                                 <div style="display: flex; align-items: center; gap: 8px;">
@@ -491,7 +491,7 @@
                                                 style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background-color: #3f3f46; color: #efeff1; border: none; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;"
                                                 onmouseover="this.style.backgroundColor='#52525b'"
                                                 onmouseout="this.style.backgroundColor='#3f3f46'"
-                                                onclick="openPermissionsModal({{ $role->id }}, '{{ addslashes($role->name) }}', '{{ $role->color }}', {{ json_encode($role->permissions ?? []) }})">
+                                                onclick="openPermissionsModalFromData({{ $role->id }})">
                                             <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                             </svg>
@@ -566,14 +566,22 @@
                                         </div>
                                     </form>
                                     
-                                    @foreach($role->users()->wherePivot('server_id', $server->id)->get() as $user)
+                                    @foreach($role->getMembersForServer() as $user)
                                         <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px; background-color: #18181b; border-radius: 4px; margin-bottom: 4px;">
                                             <span>{{ $user->display_name }}</span>
-                                            <form method="POST" action="{{ route('server.admin.role.remove', [$server, $user, $role]) }}">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-danger btn-sm" style="padding: 4px 8px; font-size: 12px;">Remove</button>
-                                            </form>
+                                            @if($role->users()->wherePivot('server_id', $server->id)->where('users.id', $user->id)->exists())
+                                                {{-- Only show remove button for users with explicit role assignment --}}
+                                                <form method="POST" action="{{ route('server.admin.role.remove', [$server, $user, $role]) }}">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-danger btn-sm" style="padding: 4px 8px; font-size: 12px;">Remove</button>
+                                                </form>
+                                            @else
+                                                {{-- Implicit members (no explicit role) - show badge instead of remove button --}}
+                                                <span style="font-size: 11px; color: #71717a; padding: 4px 8px; background-color: #26262c; border-radius: 4px;">
+                                                    Implicit
+                                                </span>
+                                            @endif
                                         </div>
                                     @endforeach
                                 </div>
@@ -1849,6 +1857,18 @@ function showTab(tabName, element) {
 let currentRolePermissions = [];
 let permissionConfig = null;
 
+// Store role data for all roles (used to persist permissions after AJAX save)
+let rolePermissionsData = {
+    @foreach($server->roles as $role)
+    {{ $role->id }}: {
+        id: {{ $role->id }},
+        name: '{{ addslashes($role->name) }}',
+        color: '{{ $role->color }}',
+        permissions: @json($role->permissions ?? [])
+    },
+    @endforeach
+};
+
 // Load permission config on page load
 async function loadPermissionConfig() {
     try {
@@ -1863,6 +1883,16 @@ async function loadPermissionConfig() {
     } catch (error) {
         console.error('Failed to load permission config:', error);
     }
+}
+
+// Open permissions modal from stored role data (uses rolePermissionsData object)
+function openPermissionsModalFromData(roleId) {
+    const roleData = rolePermissionsData[roleId];
+    if (!roleData) {
+        alert('Role not found. Please refresh the page.');
+        return;
+    }
+    openPermissionsModal(roleId, roleData.name, roleData.color, roleData.permissions);
 }
 
 // Open permissions modal
@@ -1974,6 +2004,11 @@ async function saveRolePermissions() {
         const data = await response.json();
 
         if (response.ok && data.success) {
+            // Update the stored role permissions data so reopening modal shows correct values
+            if (rolePermissionsData[roleId]) {
+                rolePermissionsData[roleId].permissions = permissions;
+            }
+
             closePermissionsModal();
             // Show success message
             const successDiv = document.createElement('div');

@@ -197,6 +197,23 @@ class TeamService
                         ]);
                     }
 
+                    // Assign the default Member role if user doesn't have any role in this server
+                    $hasAnyRole = $user->roles()
+                        ->wherePivot('server_id', $server->id)
+                        ->exists();
+
+                    if (!$hasAnyRole) {
+                        $memberRole = $server->roles()->where('name', 'Member')->first();
+                        if ($memberRole) {
+                            $user->roles()->attach($memberRole->id, ['server_id' => $server->id]);
+                            Log::info('TeamService::addMemberToTeam - Assigned default Member role to user', [
+                                'user_id' => $user->id,
+                                'server_id' => $server->id,
+                                'role_id' => $memberRole->id,
+                            ]);
+                        }
+                    }
+
                     Log::info('TeamService::addMemberToTeam - User successfully joined server', [
                         'user_id' => $user->id,
                         'server_id' => $server->id,
