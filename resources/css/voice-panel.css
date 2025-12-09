@@ -10,24 +10,11 @@
 
 /* ================================
    CSS Variables
+   Theme colors are defined in themes.css
    ================================ */
 :root {
-    --voice-panel-bg: #232428;
-    --voice-panel-border: #1e1f22;
-    --voice-connected: #23a559;
-    --voice-connecting: #f0b232;
     --voice-reconnecting: #f0b232;
-    --voice-failed: #ed4245;
-    --voice-button-bg: #313338;
-    --voice-button-hover: #404249;
-    --voice-button-active: #ed4245;
-    --voice-quality-excellent: #43b581;
-    --voice-quality-good: #faa61a;
-    --voice-quality-poor: #f04747;
     --voice-quality-bad: #ed4245;
-    --voice-text-primary: #f2f3f5;
-    --voice-text-secondary: #949ba4;
-    --voice-text-muted: #71717a;
 }
 
 /* ================================

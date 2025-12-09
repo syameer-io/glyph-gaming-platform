@@ -1,4 +1,5 @@
 import './bootstrap';
+import './theme-switcher';
 
 // CRITICAL: Import Alpine components BEFORE starting Alpine
 // This ensures all x-data components are registered before Alpine.start()

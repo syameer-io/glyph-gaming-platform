@@ -13,36 +13,15 @@
  */
 
 /* =============================================================================
-   CSS Custom Properties (Header Design System)
+   CSS Custom Properties (Header-specific non-theme values)
+   Theme colors are defined in themes.css
    ============================================================================= */
 
 :root {
-    /* Header Colors */
-    --header-bg: #2b2d31;
-    --header-border: #1e1f22;
-    --header-text: #f2f3f5;
-    --header-icon: #b5bac1;
-    --header-icon-hover: #dbdee1;
-
-    /* Dropdown Colors */
-    --dropdown-bg: #111214;
-    --dropdown-hover: #36373d;
-    --dropdown-separator: #3d3e45;
-    --dropdown-text: #b5bac1;
-    --dropdown-text-hover: #ffffff;
-
-    /* Boost Colors */
+    /* Boost Colors (brand-specific, same in both themes) */
     --boost-pink: #ff73fa;
     --boost-purple: #9b59b6;
-
-    /* Search Modal */
-    --search-bg: #1e1f22;
-    --search-input-bg: #383a40;
-    --search-border: #3f3f46;
     --search-highlight: #5865f2;
-
-    /* Badge Colors */
-    --notification-badge: #ed4245;
 }
 
 /* =============================================================================

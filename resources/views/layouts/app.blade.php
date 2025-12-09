@@ -1,7 +1,6 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="{{ auth()->check() && auth()->user()->profile ? (auth()->user()->profile->theme ?? 'dark') : 'dark' }}">
 <head>
-    <!-- TESTING LAYOUT EDITS - THIS SHOULD APPEAR -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -9,6 +8,23 @@
     <meta name="server-id" content="{{ $server->id }}">
     @endif
     <title>@yield('title', 'Glyph')</title>
+
+    {{-- FOUC Prevention: Set theme before CSS loads --}}
+    <script>
+        (function() {
+            // Get theme from server-rendered attribute or localStorage
+            var theme = document.documentElement.getAttribute('data-theme');
+            if (!theme || theme === 'dark') {
+                // Check localStorage for guest preference
+                var storedTheme = localStorage.getItem('glyph-theme');
+                if (storedTheme && (storedTheme === 'dark' || storedTheme === 'light')) {
+                    theme = storedTheme;
+                    document.documentElement.setAttribute('data-theme', theme);
+                }
+            }
+        })();
+    </script>
+
     <style>
         * {
             margin: 0;
@@ -18,8 +34,8 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: #0e0e10;
-            color: #efeff1;
+            background-color: var(--color-bg-primary, #0e0e10);
+            color: var(--color-text-primary, #efeff1);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -49,9 +65,9 @@
             inset: 0;
             z-index: 0;
             background:
-                radial-gradient(ellipse 80% 50% at 20% 40%, rgba(102, 126, 234, 0.15) 0%, transparent 50%),
-                radial-gradient(ellipse 60% 60% at 80% 20%, rgba(118, 75, 162, 0.12) 0%, transparent 50%),
-                radial-gradient(ellipse 50% 70% at 50% 80%, rgba(102, 126, 234, 0.1) 0%, transparent 50%);
+                radial-gradient(ellipse 80% 50% at 20% 40%, var(--auth-gradient-1, rgba(102, 126, 234, 0.15)) 0%, transparent 50%),
+                radial-gradient(ellipse 60% 60% at 80% 20%, var(--auth-gradient-2, rgba(118, 75, 162, 0.12)) 0%, transparent 50%),
+                radial-gradient(ellipse 50% 70% at 50% 80%, var(--auth-gradient-3, rgba(102, 126, 234, 0.1)) 0%, transparent 50%);
             animation: meshFloat 20s ease-in-out infinite;
         }
 
@@ -63,23 +79,20 @@
         }
 
         .auth-box {
-            background-color: #18181b;
+            background-color: var(--auth-box-bg, #18181b);
             border-radius: 16px;
             padding: 48px;
             width: 100%;
             max-width: 480px;
-            box-shadow:
-                0 4px 6px rgba(0, 0, 0, 0.1),
-                0 10px 20px rgba(0, 0, 0, 0.15),
-                0 20px 40px rgba(0, 0, 0, 0.2);
+            box-shadow: var(--shadow-xl, 0 20px 40px rgba(0, 0, 0, 0.4));
             position: relative;
             z-index: 1;
-            border: 1px solid rgba(102, 126, 234, 0.2);
+            border: 1px solid var(--auth-box-border, rgba(102, 126, 234, 0.2));
             animation: authBoxEntrance 0.5s ease-out;
         }
 
         .auth-box:hover {
-            border-color: rgba(102, 126, 234, 0.35);
+            border-color: var(--auth-box-border-hover, rgba(102, 126, 234, 0.35));
         }
 
         @keyframes authBoxEntrance {
@@ -106,13 +119,13 @@
             left: 14px;
             width: 20px;
             height: 20px;
-            color: #71717a;
+            color: var(--color-text-muted, #71717a);
             pointer-events: none;
             transition: color 0.2s;
         }
 
         .input-with-icon:focus-within .input-icon {
-            color: #667eea;
+            color: var(--accent-primary, #667eea);
         }
 
         .password-toggle {
@@ -122,7 +135,7 @@
             border: none;
             padding: 4px;
             cursor: pointer;
-            color: #71717a;
+            color: var(--color-text-muted, #71717a);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -130,7 +143,7 @@
         }
 
         .password-toggle:hover {
-            color: #b3b3b5;
+            color: var(--color-text-secondary, #b3b3b5);
         }
 
         .password-toggle svg {
@@ -183,29 +196,29 @@
             text-align: center;
             font-size: 28px;
             font-weight: 600;
-            background-color: #0e0e10;
-            border: 2px solid #3f3f46;
+            background-color: var(--color-input-bg, #0e0e10);
+            border: 2px solid var(--color-input-border, #3f3f46);
             border-radius: 12px;
-            color: #efeff1;
-            caret-color: #667eea;
+            color: var(--color-text-primary, #efeff1);
+            caret-color: var(--accent-primary, #667eea);
             transition: all 0.2s ease;
             padding: 0;
         }
 
         .otp-input:focus {
             outline: none;
-            border-color: #667eea;
-            background-color: #18181b;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+            border-color: var(--color-input-border-focus, #667eea);
+            background-color: var(--color-input-bg-focus, #18181b);
+            box-shadow: 0 0 0 3px var(--accent-primary-light, rgba(102, 126, 234, 0.2));
         }
 
         .otp-input.has-value {
-            border-color: #667eea;
-            background-color: rgba(102, 126, 234, 0.05);
+            border-color: var(--accent-primary, #667eea);
+            background-color: var(--accent-primary-light, rgba(102, 126, 234, 0.05));
         }
 
         .otp-input::placeholder {
-            color: #52525b;
+            color: var(--color-text-faint, #52525b);
         }
 
         .otp-input::-webkit-outer-spin-button,
@@ -258,7 +271,7 @@
             margin-bottom: 8px;
             font-size: 14px;
             font-weight: 500;
-            color: #b3b3b5;
+            color: var(--color-text-secondary, #b3b3b5);
         }
 
         input[type="text"],
@@ -268,10 +281,10 @@
         select {
             width: 100%;
             padding: 12px 16px;
-            background-color: #0e0e10;
-            border: 2px solid #3f3f46;
+            background-color: var(--color-input-bg, #0e0e10);
+            border: 2px solid var(--color-input-border, #3f3f46);
             border-radius: 8px;
-            color: #efeff1;
+            color: var(--color-input-text, #efeff1);
             font-size: 16px;
             transition: all 0.2s;
             font-family: inherit;
@@ -286,8 +299,8 @@
         textarea:focus,
         select:focus {
             outline: none;
-            border-color: #667eea;
-            background-color: #18181b;
+            border-color: var(--color-input-border-focus, #667eea);
+            background-color: var(--color-input-bg-focus, #18181b);
         }
 
         .btn {
@@ -314,30 +327,30 @@
         }
 
         .btn-secondary {
-            background-color: #3f3f46;
-            color: #efeff1;
+            background-color: var(--btn-secondary-bg, #3f3f46);
+            color: var(--btn-secondary-text, #efeff1);
         }
 
         .btn-secondary:hover {
-            background-color: #52525b;
+            background-color: var(--btn-secondary-bg-hover, #52525b);
         }
 
         .btn-danger {
-            background-color: #dc2626;
-            color: white;
+            background-color: var(--btn-danger-bg, #dc2626);
+            color: var(--btn-danger-text, white);
         }
 
         .btn-danger:hover {
-            background-color: #b91c1c;
+            background-color: var(--btn-danger-bg-hover, #b91c1c);
         }
 
         .btn-success {
-            background-color: #059669;
-            color: white;
+            background-color: var(--btn-success-bg, #059669);
+            color: var(--btn-success-text, white);
         }
 
         .btn-success:hover {
-            background-color: #047857;
+            background-color: var(--btn-success-bg-hover, #047857);
         }
 
         .btn-sm {
@@ -353,15 +366,15 @@
         }
 
         .alert-success {
-            background-color: #065f46;
-            color: #6ee7b7;
-            border: 1px solid #047857;
+            background-color: var(--alert-success-bg, rgba(16, 185, 129, 0.1));
+            color: var(--alert-success-text, #10b981);
+            border: 1px solid var(--alert-success-border, #10b981);
         }
 
         .alert-error {
-            background-color: #7f1d1d;
-            color: #fca5a5;
-            border: 1px solid #991b1b;
+            background-color: var(--alert-error-bg, rgba(239, 68, 68, 0.1));
+            color: var(--alert-error-text, #ef4444);
+            border: 1px solid var(--alert-error-border, #ef4444);
         }
 
         .text-center {
@@ -373,20 +386,20 @@
         }
 
         .link {
-            color: #667eea;
+            color: var(--color-text-link, #667eea);
             text-decoration: none;
             transition: color 0.2s;
         }
 
         .link:hover {
-            color: #764ba2;
+            color: var(--color-text-link-hover, #764ba2);
             text-decoration: underline;
         }
 
         .navbar {
-            background-color: #18181b;
+            background-color: var(--navbar-bg, #18181b);
             padding: 16px 0;
-            border-bottom: 1px solid #3f3f46;
+            border-bottom: 1px solid var(--navbar-border, #3f3f46);
         }
 
         .navbar-content {
@@ -443,21 +456,21 @@
         }
 
         .card {
-            background-color: #18181b;
+            background-color: var(--card-bg, #18181b);
             border-radius: 12px;
             padding: 24px;
-            border: 1px solid #3f3f46;
+            border: 1px solid var(--card-border, #3f3f46);
         }
 
         .card-header {
             font-size: 20px;
             font-weight: 600;
             margin-bottom: 16px;
-            color: #efeff1;
+            color: var(--color-text-primary, #efeff1);
         }
 
         .sidebar {
-            background-color: #18181b;
+            background-color: var(--color-surface, #18181b);
             border-radius: 12px;
             padding: 24px;
             height: fit-content;
@@ -472,19 +485,19 @@
         .sidebar-link {
             display: block;
             padding: 12px 16px;
-            color: #b3b3b5;
+            color: var(--color-text-secondary, #b3b3b5);
             text-decoration: none;
             border-radius: 8px;
             transition: all 0.2s;
         }
 
         .sidebar-link:hover {
-            background-color: #3f3f46;
-            color: #efeff1;
+            background-color: var(--color-surface-hover, #3f3f46);
+            color: var(--color-text-primary, #efeff1);
         }
 
         .sidebar-link.active {
-            background-color: #667eea;
+            background-color: var(--accent-primary, #667eea);
             color: white;
         }
 
@@ -493,7 +506,7 @@
             align-items: center;
             gap: 16px;
             padding: 16px;
-            background-color: #0e0e10;
+            background-color: var(--color-bg-primary, #0e0e10);
             border-radius: 8px;
             margin-bottom: 12px;
         }
@@ -511,12 +524,12 @@
 
         .user-card-name {
             font-weight: 600;
-            color: #efeff1;
+            color: var(--color-text-primary, #efeff1);
         }
 
         .user-card-username {
             font-size: 14px;
-            color: #71717a;
+            color: var(--color-text-muted, #71717a);
         }
 
         .status-indicator {
@@ -528,11 +541,11 @@
         }
 
         .status-online {
-            background-color: #10b981;
+            background-color: var(--status-online, #10b981);
         }
 
         .status-offline {
-            background-color: #6b7280;
+            background-color: var(--status-offline, #6b7280);
         }
 
         .profile-header {
@@ -567,25 +580,25 @@
         .tabs {
             display: flex;
             gap: 8px;
-            border-bottom: 2px solid #3f3f46;
+            border-bottom: 2px solid var(--color-border-primary, #3f3f46);
             margin-bottom: 24px;
         }
 
         .tab {
             padding: 12px 24px;
-            color: #b3b3b5;
+            color: var(--color-text-secondary, #b3b3b5);
             text-decoration: none;
             border-bottom: 2px solid transparent;
             transition: all 0.2s;
         }
 
         .tab:hover {
-            color: #efeff1;
+            color: var(--color-text-primary, #efeff1);
         }
 
         .tab.active {
-            color: #667eea;
-            border-bottom-color: #667eea;
+            color: var(--accent-primary, #667eea);
+            border-bottom-color: var(--accent-primary, #667eea);
         }
 
         .game-card {
@@ -593,7 +606,7 @@
             align-items: center;
             gap: 16px;
             padding: 16px;
-            background-color: #0e0e10;
+            background-color: var(--color-bg-primary, #0e0e10);
             border-radius: 8px;
             margin-bottom: 12px;
         }
@@ -601,7 +614,7 @@
         .game-icon {
             width: 48px;
             height: 48px;
-            background-color: #3f3f46;
+            background-color: var(--color-surface-hover, #3f3f46);
             border-radius: 8px;
             display: flex;
             align-items: center;
@@ -614,19 +627,19 @@
 
         .game-name {
             font-weight: 600;
-            color: #efeff1;
+            color: var(--color-text-primary, #efeff1);
             margin-bottom: 4px;
         }
 
         .game-playtime {
             font-size: 14px;
-            color: #71717a;
+            color: var(--color-text-muted, #71717a);
         }
 
         .achievement-progress {
             width: 100%;
             height: 8px;
-            background-color: #3f3f46;
+            background-color: var(--color-surface-hover, #3f3f46);
             border-radius: 4px;
             overflow: hidden;
             margin-top: 8px;
@@ -634,14 +647,14 @@
 
         .achievement-progress-bar {
             height: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--accent-gradient, linear-gradient(135deg, #667eea 0%, #764ba2 100%));
             transition: width 0.3s ease;
         }
 
         .empty-state {
             text-align: center;
             padding: 48px 24px;
-            color: #71717a;
+            color: var(--color-text-muted, #71717a);
         }
 
         .empty-state-icon {

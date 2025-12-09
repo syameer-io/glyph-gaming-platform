@@ -12,34 +12,11 @@
  */
 
 /* =============================================================================
-   CSS Custom Properties (Member List Design System)
+   CSS Custom Properties (Member List - Non-theme values)
+   Theme colors are defined in themes.css
    ============================================================================= */
 
 :root {
-    /* Status Colors */
-    --status-online: #43b581;
-    --status-idle: #faa61a;
-    --status-dnd: #f04747;
-    --status-offline: #747f8d;
-    --status-streaming: #9147ff;
-
-    /* Member List Colors */
-    --member-hover-bg: #2e2e32;
-    --member-active-bg: #393c43;
-    --role-header-text: #96989d;
-    --member-username: #ffffff;
-    --member-username-offline: #a3a6aa;
-    --member-activity: #b5bac1;
-    --member-activity-playing: #43b581;
-
-    /* Badge Colors */
-    --badge-voice: #43b581;
-    --badge-live: #f04747;
-    --badge-bot: #5865f2;
-
-    /* Crown Color */
-    --crown-color: #f0b132;
-
     /* Transitions */
     --member-transition: 150ms ease;
 

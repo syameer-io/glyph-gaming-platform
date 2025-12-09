@@ -31,6 +31,7 @@
                     <a href="#account" class="sidebar-link active" onclick="showSettingsTab('account', this)">Account</a>
                     <a href="#profile" class="sidebar-link" onclick="showSettingsTab('profile', this)">Profile</a>
                     <a href="#privacy" class="sidebar-link" onclick="showSettingsTab('privacy', this)">Privacy</a>
+                    <a href="#appearance" class="sidebar-link" onclick="showSettingsTab('appearance', this)">Appearance</a>
                 </div>
             </div>
 
@@ -197,6 +198,93 @@
                         </form>
                     </div>
                 </div>
+
+                <!-- Appearance Settings -->
+                <div id="appearance" class="settings-content" style="display: none;">
+                    <div class="card">
+                        <h3 class="card-header">Appearance Settings</h3>
+                        <p style="color: var(--color-text-muted, #71717a); margin-bottom: 24px;">Customize the look and feel of Glyph</p>
+
+                        <div style="margin-bottom: 32px;">
+                            <h4 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--color-text-secondary, #a1a1aa);">Theme</h4>
+                            <p style="font-size: 14px; color: var(--color-text-muted, #71717a); margin-bottom: 20px;">Choose how Glyph looks to you. Select a theme that's easy on your eyes.</p>
+
+                            <div class="theme-options" style="display: flex; gap: 24px; flex-wrap: wrap;">
+                                <!-- Dark Theme Option -->
+                                <label class="theme-option" style="cursor: pointer; position: relative;">
+                                    <input type="radio" name="theme" value="dark"
+                                           {{ ($user->profile->theme ?? 'dark') === 'dark' ? 'checked' : '' }}
+                                           onchange="handleThemeChange(this.value)"
+                                           style="position: absolute; opacity: 0; pointer-events: none;">
+                                    <div class="theme-preview theme-preview-dark"
+                                         style="width: 180px; height: 120px; border-radius: 12px; border: 3px solid transparent;
+                                                background: #0e0e10; position: relative; overflow: hidden;
+                                                transition: border-color 0.2s, transform 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+                                        <!-- Mini preview of dark theme -->
+                                        <div style="height: 24px; background: #18181b; border-bottom: 1px solid #3f3f46; display: flex; align-items: center; padding: 0 8px;">
+                                            <div style="width: 8px; height: 8px; border-radius: 50%; background: #ef4444; margin-right: 4px;"></div>
+                                            <div style="width: 8px; height: 8px; border-radius: 50%; background: #f59e0b; margin-right: 4px;"></div>
+                                            <div style="width: 8px; height: 8px; border-radius: 50%; background: #22c55e;"></div>
+                                        </div>
+                                        <div style="display: flex; height: 96px;">
+                                            <div style="width: 45px; background: #1e1e22; border-right: 1px solid #27272a; padding: 8px 4px;">
+                                                <div style="height: 6px; width: 100%; background: #3f3f46; border-radius: 3px; margin-bottom: 6px;"></div>
+                                                <div style="height: 6px; width: 80%; background: #667eea; border-radius: 3px; margin-bottom: 6px;"></div>
+                                                <div style="height: 6px; width: 100%; background: #3f3f46; border-radius: 3px;"></div>
+                                            </div>
+                                            <div style="flex: 1; padding: 8px;">
+                                                <div style="height: 8px; width: 70%; background: #3f3f46; border-radius: 4px; margin-bottom: 8px;"></div>
+                                                <div style="height: 6px; width: 90%; background: #27272a; border-radius: 3px; margin-bottom: 6px;"></div>
+                                                <div style="height: 6px; width: 60%; background: #27272a; border-radius: 3px; margin-bottom: 12px;"></div>
+                                                <div style="height: 20px; width: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 4px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div style="text-align: center; margin-top: 12px;">
+                                        <div style="font-weight: 600; font-size: 15px;">Dark</div>
+                                        <div style="font-size: 12px; color: var(--color-text-muted, #71717a);">Easy on the eyes</div>
+                                    </div>
+                                </label>
+
+                                <!-- Light Theme Option -->
+                                <label class="theme-option" style="cursor: pointer; position: relative;">
+                                    <input type="radio" name="theme" value="light"
+                                           {{ ($user->profile->theme ?? 'dark') === 'light' ? 'checked' : '' }}
+                                           onchange="handleThemeChange(this.value)"
+                                           style="position: absolute; opacity: 0; pointer-events: none;">
+                                    <div class="theme-preview theme-preview-light"
+                                         style="width: 180px; height: 120px; border-radius: 12px; border: 3px solid transparent;
+                                                background: #f5f5f5; position: relative; overflow: hidden;
+                                                transition: border-color 0.2s, transform 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                                        <!-- Mini preview of light theme -->
+                                        <div style="height: 24px; background: #ffffff; border-bottom: 1px solid #e0e0e0; display: flex; align-items: center; padding: 0 8px;">
+                                            <div style="width: 8px; height: 8px; border-radius: 50%; background: #ef4444; margin-right: 4px;"></div>
+                                            <div style="width: 8px; height: 8px; border-radius: 50%; background: #f59e0b; margin-right: 4px;"></div>
+                                            <div style="width: 8px; height: 8px; border-radius: 50%; background: #22c55e;"></div>
+                                        </div>
+                                        <div style="display: flex; height: 96px;">
+                                            <div style="width: 45px; background: #f0f0f0; border-right: 1px solid #e0e0e0; padding: 8px 4px;">
+                                                <div style="height: 6px; width: 100%; background: #d4d4d4; border-radius: 3px; margin-bottom: 6px;"></div>
+                                                <div style="height: 6px; width: 80%; background: #667eea; border-radius: 3px; margin-bottom: 6px;"></div>
+                                                <div style="height: 6px; width: 100%; background: #d4d4d4; border-radius: 3px;"></div>
+                                            </div>
+                                            <div style="flex: 1; padding: 8px; background: #ffffff;">
+                                                <div style="height: 8px; width: 70%; background: #e0e0e0; border-radius: 4px; margin-bottom: 8px;"></div>
+                                                <div style="height: 6px; width: 90%; background: #eeeeee; border-radius: 3px; margin-bottom: 6px;"></div>
+                                                <div style="height: 6px; width: 60%; background: #eeeeee; border-radius: 3px; margin-bottom: 12px;"></div>
+                                                <div style="height: 20px; width: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 4px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div style="text-align: center; margin-top: 12px;">
+                                        <div style="font-weight: 600; font-size: 15px;">Light</div>
+                                        <div style="font-size: 12px; color: var(--color-text-muted, #71717a);">Clean and bright</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -208,17 +296,75 @@ function showSettingsTab(tabName, element) {
     document.querySelectorAll('.settings-content').forEach(content => {
         content.style.display = 'none';
     });
-    
+
     // Remove active class from all links
     document.querySelectorAll('.sidebar-link').forEach(link => {
         link.classList.remove('active');
     });
-    
+
     // Show selected content
     document.getElementById(tabName).style.display = 'block';
-    
+
     // Add active class to clicked link
     element.classList.add('active');
 }
+
+// Theme handling
+function handleThemeChange(theme) {
+    // Update visual selection
+    updateThemePreviewBorders(theme);
+
+    // Apply theme instantly using ThemeSwitcher if available
+    if (window.ThemeSwitcher) {
+        window.ThemeSwitcher.setTheme(theme);
+    } else {
+        // Fallback: Apply theme directly
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('glyph-theme', theme);
+
+        // Save to server
+        saveThemeToServer(theme);
+    }
+}
+
+function updateThemePreviewBorders(selectedTheme) {
+    // Remove border from all previews
+    document.querySelectorAll('.theme-preview').forEach(preview => {
+        preview.style.borderColor = 'transparent';
+        preview.style.transform = 'scale(1)';
+    });
+
+    // Add border to selected preview
+    const selectedInput = document.querySelector(`input[name="theme"][value="${selectedTheme}"]`);
+    if (selectedInput) {
+        const preview = selectedInput.closest('.theme-option').querySelector('.theme-preview');
+        if (preview) {
+            preview.style.borderColor = '#667eea';
+            preview.style.transform = 'scale(1.02)';
+        }
+    }
+}
+
+function saveThemeToServer(theme) {
+    fetch('{{ route("settings.appearance") }}', {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ theme: theme })
+    }).catch(error => {
+        console.error('Error saving theme:', error);
+    });
+}
+
+// Initialize theme preview borders on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const checkedTheme = document.querySelector('input[name="theme"]:checked');
+    if (checkedTheme) {
+        updateThemePreviewBorders(checkedTheme.value);
+    }
+});
 </script>
 @endsection

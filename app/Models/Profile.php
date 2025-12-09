@@ -32,6 +32,7 @@ class Profile extends Model
         'show_servers',
         'show_lobbies_to_friends_only',
         'profile_visible_to_friends_only',
+        'theme',
     ];
 
     protected $casts = [

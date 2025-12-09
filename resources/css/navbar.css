@@ -1,29 +1,19 @@
 /**
  * Navbar Component Styles
  * Consolidated navigation with dropdowns and mobile support
+ *
+ * Theme variables are defined in themes.css
  */
 
 /* =============================================================================
-   CSS Custom Properties (Navbar Design System)
+   Non-Theme CSS Custom Properties (Navbar-specific sizing)
    ============================================================================= */
 
 :root {
-    /* Navbar */
     --navbar-height: 56px;
-    --navbar-bg: #18181b;
-    --navbar-border: #27272a;
-
-    /* Dropdown */
-    --dropdown-bg: #111214;
-    --dropdown-hover: rgba(102, 126, 234, 0.15);
-    --dropdown-text: #b5bac1;
-    --dropdown-text-hover: #ffffff;
     --dropdown-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     --dropdown-separator: #3d3e45;
-
-    /* Mobile Drawer */
     --mobile-drawer-width: 280px;
-    --mobile-overlay-bg: rgba(0, 0, 0, 0.7);
 }
 
 /* =============================================================================

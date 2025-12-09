@@ -81,6 +81,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
     Route::put('/settings/account', [SettingsController::class, 'updateAccount'])->name('settings.account');
     Route::put('/settings/privacy', [SettingsController::class, 'updatePrivacy'])->name('settings.privacy');
+    Route::put('/settings/appearance', [SettingsController::class, 'updateAppearance'])->name('settings.appearance');
 
     // Server routes
     Route::get('/servers/create', [ServerController::class, 'create'])->name('server.create');

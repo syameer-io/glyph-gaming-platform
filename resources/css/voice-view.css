@@ -10,14 +10,11 @@
 
 /* ================================
    CSS Variables
+   Theme colors are defined in themes.css
    ================================ */
 :root {
-    --voice-view-bg: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-    --voice-card-bg: rgba(30, 30, 46, 0.8);
-    --voice-card-hover: rgba(40, 40, 60, 0.9);
     --voice-grid-gap: 24px;
     --voice-avatar-size: 96px;
-    --voice-speaking-color: #43b581;
     --voice-sidebar-width: 240px;
     --voice-header-height: 56px;
     --voice-control-height: 72px;

@@ -1,0 +1,541 @@
+/* =============================================================================
+   Theme System - Centralized CSS Variables for Dark/Light Mode
+   ============================================================================= */
+
+/* Dark Theme (Default) */
+:root,
+[data-theme="dark"] {
+    /* =========================================================================
+       Core Background Colors
+       ========================================================================= */
+    --color-bg-primary: #0e0e10;
+    --color-bg-secondary: #18181b;
+    --color-bg-tertiary: #1e1e22;
+    --color-bg-elevated: #27272a;
+
+    /* =========================================================================
+       Surface Colors (Cards, Panels, Containers)
+       ========================================================================= */
+    --color-surface: #18181b;
+    --color-surface-hover: #27272a;
+    --color-surface-active: #3f3f46;
+    --color-surface-elevated: #27272a;
+
+    /* =========================================================================
+       Border Colors
+       ========================================================================= */
+    --color-border-primary: #3f3f46;
+    --color-border-secondary: #27272a;
+    --color-border-subtle: #52525b;
+    --color-border-focus: #667eea;
+
+    /* =========================================================================
+       Text Colors
+       ========================================================================= */
+    --color-text-primary: #efeff1;
+    --color-text-secondary: #b3b3b5;
+    --color-text-muted: #71717a;
+    --color-text-faint: #52525b;
+    --color-text-link: #667eea;
+    --color-text-link-hover: #8b9ff0;
+
+    /* =========================================================================
+       Input & Form Colors
+       ========================================================================= */
+    --color-input-bg: #0e0e10;
+    --color-input-bg-hover: #18181b;
+    --color-input-bg-focus: #18181b;
+    --color-input-border: #3f3f46;
+    --color-input-border-hover: #52525b;
+    --color-input-border-focus: #667eea;
+    --color-input-text: #efeff1;
+    --color-input-placeholder: #71717a;
+
+    /* =========================================================================
+       Sidebar Colors
+       ========================================================================= */
+    --sidebar-bg: #1e1e22;
+    --sidebar-bg-secondary: #2b2d31;
+    --sidebar-bg-tertiary: #313338;
+    --sidebar-category-text: #96989d;
+    --sidebar-channel-text: #949ba4;
+    --sidebar-channel-hover: #3f3f46;
+    --sidebar-channel-active: #404249;
+    --sidebar-channel-active-text: #ffffff;
+    --sidebar-unread-pill: #ffffff;
+    --sidebar-add-button: #b5bac1;
+    --sidebar-add-button-hover: #dbdee1;
+    --sidebar-separator: #3f3f46;
+    --sidebar-border: #27272a;
+
+    /* =========================================================================
+       Navbar Colors
+       ========================================================================= */
+    --navbar-bg: #18181b;
+    --navbar-border: #27272a;
+    --navbar-text: #b5bac1;
+    --navbar-text-hover: #ffffff;
+    --dropdown-bg: #111214;
+    --dropdown-hover: rgba(102, 126, 234, 0.15);
+    --dropdown-text: #b5bac1;
+    --dropdown-text-hover: #ffffff;
+    --dropdown-border: #27272a;
+
+    /* =========================================================================
+       Header Colors (Channel/Server Header)
+       ========================================================================= */
+    --header-bg: #2b2d31;
+    --header-border: #1e1f22;
+    --header-text: #f2f3f5;
+    --header-icon: #b5bac1;
+    --header-icon-hover: #dbdee1;
+
+    /* =========================================================================
+       Card Colors
+       ========================================================================= */
+    --card-bg: #18181b;
+    --card-bg-hover: #1e1e22;
+    --card-border: #3f3f46;
+    --card-border-hover: #52525b;
+
+    /* =========================================================================
+       Button Colors
+       ========================================================================= */
+    --btn-primary-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --btn-primary-bg-hover: linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%);
+    --btn-primary-text: #ffffff;
+    --btn-secondary-bg: #3f3f46;
+    --btn-secondary-bg-hover: #52525b;
+    --btn-secondary-text: #efeff1;
+    --btn-danger-bg: #dc2626;
+    --btn-danger-bg-hover: #b91c1c;
+    --btn-danger-text: #ffffff;
+    --btn-success-bg: #059669;
+    --btn-success-bg-hover: #047857;
+    --btn-success-text: #ffffff;
+
+    /* =========================================================================
+       Alert/Notification Colors
+       ========================================================================= */
+    --alert-success-bg: rgba(16, 185, 129, 0.1);
+    --alert-success-border: #10b981;
+    --alert-success-text: #10b981;
+    --alert-error-bg: rgba(239, 68, 68, 0.1);
+    --alert-error-border: #ef4444;
+    --alert-error-text: #ef4444;
+    --alert-warning-bg: rgba(245, 158, 11, 0.1);
+    --alert-warning-border: #f59e0b;
+    --alert-warning-text: #f59e0b;
+    --alert-info-bg: rgba(102, 126, 234, 0.1);
+    --alert-info-border: #667eea;
+    --alert-info-text: #667eea;
+
+    /* =========================================================================
+       Voice Channel Colors
+       ========================================================================= */
+    --voice-connected: #23a559;
+    --voice-connecting: #f0b232;
+    --voice-disconnected: #ed4245;
+    --voice-panel-bg: #232428;
+    --voice-panel-border: #1e1f22;
+    --voice-button-bg: #313338;
+    --voice-button-hover: #404249;
+    --voice-button-active: #ed4245;
+    --voice-quality-excellent: #43b581;
+    --voice-quality-good: #faa61a;
+    --voice-quality-poor: #f04747;
+    --voice-view-bg: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    --voice-card-bg: rgba(30, 30, 46, 0.8);
+    --voice-card-hover: rgba(40, 40, 60, 0.9);
+    --voice-speaking-color: #43b581;
+
+    /* =========================================================================
+       Status Colors
+       ========================================================================= */
+    --status-online: #43b581;
+    --status-idle: #faa61a;
+    --status-dnd: #f04747;
+    --status-offline: #747f8d;
+    --status-streaming: #9147ff;
+
+    /* =========================================================================
+       Member List Colors
+       ========================================================================= */
+    --member-hover-bg: #2e2e32;
+    --member-active-bg: #393c43;
+    --role-header-text: #96989d;
+    --member-username: #ffffff;
+    --member-username-offline: #a3a6aa;
+    --member-activity: #b5bac1;
+    --member-activity-playing: #43b581;
+
+    /* =========================================================================
+       Badge Colors
+       ========================================================================= */
+    --badge-voice: #43b581;
+    --badge-live: #f04747;
+    --badge-bot: #5865f2;
+    --crown-color: #f0b132;
+    --notification-badge: #ed4245;
+
+    /* =========================================================================
+       Accent Colors (Brand - Same for both themes)
+       ========================================================================= */
+    --accent-primary: #667eea;
+    --accent-primary-hover: #5a6fd6;
+    --accent-primary-light: rgba(102, 126, 234, 0.15);
+    --accent-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --accent-success: #23a559;
+    --accent-warning: #f0b232;
+    --accent-danger: #ed4245;
+
+    /* =========================================================================
+       Auth/Login Page Colors
+       ========================================================================= */
+    --auth-gradient-1: rgba(102, 126, 234, 0.15);
+    --auth-gradient-2: rgba(118, 75, 162, 0.12);
+    --auth-gradient-3: rgba(102, 126, 234, 0.1);
+    --auth-box-bg: #18181b;
+    --auth-box-border: rgba(102, 126, 234, 0.2);
+    --auth-box-border-hover: rgba(102, 126, 234, 0.35);
+
+    /* =========================================================================
+       Scrollbar Colors
+       ========================================================================= */
+    --scrollbar-track: #1e1e22;
+    --scrollbar-thumb: #3f3f46;
+    --scrollbar-thumb-hover: #52525b;
+
+    /* =========================================================================
+       Modal/Overlay Colors
+       ========================================================================= */
+    --modal-overlay: rgba(0, 0, 0, 0.7);
+    --modal-bg: #18181b;
+    --modal-border: #3f3f46;
+
+    /* =========================================================================
+       Shadow Colors
+       ========================================================================= */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.3);
+    --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.4);
+
+    /* =========================================================================
+       Transition Timing
+       ========================================================================= */
+    --transition-fast: 150ms ease;
+    --transition-medium: 200ms ease;
+    --transition-slow: 300ms ease;
+
+    /* =========================================================================
+       Spacing
+       ========================================================================= */
+    --sidebar-padding-x: 8px;
+    --sidebar-padding-y: 4px;
+    --category-gap: 16px;
+    --channel-gap: 2px;
+
+    /* =========================================================================
+       Border Radius
+       ========================================================================= */
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+    --radius-xl: 12px;
+    --radius-2xl: 16px;
+
+    /* =========================================================================
+       Search Colors
+       ========================================================================= */
+    --search-bg: #1e1f22;
+    --search-input-bg: #383a40;
+    --search-border: #3f3f46;
+}
+
+/* =============================================================================
+   Light Theme
+   ============================================================================= */
+
+[data-theme="light"] {
+    /* =========================================================================
+       Core Background Colors (Warm grays, not pure white)
+       ========================================================================= */
+    --color-bg-primary: #f5f5f5;
+    --color-bg-secondary: #ffffff;
+    --color-bg-tertiary: #fafafa;
+    --color-bg-elevated: #ffffff;
+
+    /* =========================================================================
+       Surface Colors (Cards, Panels, Containers)
+       ========================================================================= */
+    --color-surface: #ffffff;
+    --color-surface-hover: #f0f0f0;
+    --color-surface-active: #e5e5e5;
+    --color-surface-elevated: #ffffff;
+
+    /* =========================================================================
+       Border Colors
+       ========================================================================= */
+    --color-border-primary: #e0e0e0;
+    --color-border-secondary: #eeeeee;
+    --color-border-subtle: #d4d4d4;
+    --color-border-focus: #667eea;
+
+    /* =========================================================================
+       Text Colors
+       ========================================================================= */
+    --color-text-primary: #1a1a1a;
+    --color-text-secondary: #4a4a4a;
+    --color-text-muted: #737373;
+    --color-text-faint: #a3a3a3;
+    --color-text-link: #5a6fd6;
+    --color-text-link-hover: #4a5fc6;
+
+    /* =========================================================================
+       Input & Form Colors
+       ========================================================================= */
+    --color-input-bg: #ffffff;
+    --color-input-bg-hover: #fafafa;
+    --color-input-bg-focus: #ffffff;
+    --color-input-border: #d4d4d4;
+    --color-input-border-hover: #b3b3b3;
+    --color-input-border-focus: #667eea;
+    --color-input-text: #1a1a1a;
+    --color-input-placeholder: #a3a3a3;
+
+    /* =========================================================================
+       Sidebar Colors
+       ========================================================================= */
+    --sidebar-bg: #f0f0f0;
+    --sidebar-bg-secondary: #e8e8e8;
+    --sidebar-bg-tertiary: #e0e0e0;
+    --sidebar-category-text: #737373;
+    --sidebar-channel-text: #4a4a4a;
+    --sidebar-channel-hover: #e0e0e0;
+    --sidebar-channel-active: #d4d4d4;
+    --sidebar-channel-active-text: #1a1a1a;
+    --sidebar-unread-pill: #1a1a1a;
+    --sidebar-add-button: #737373;
+    --sidebar-add-button-hover: #4a4a4a;
+    --sidebar-separator: #e0e0e0;
+    --sidebar-border: #d4d4d4;
+
+    /* =========================================================================
+       Navbar Colors
+       ========================================================================= */
+    --navbar-bg: #ffffff;
+    --navbar-border: #e0e0e0;
+    --navbar-text: #4a4a4a;
+    --navbar-text-hover: #1a1a1a;
+    --dropdown-bg: #ffffff;
+    --dropdown-hover: rgba(102, 126, 234, 0.1);
+    --dropdown-text: #4a4a4a;
+    --dropdown-text-hover: #1a1a1a;
+    --dropdown-border: #e0e0e0;
+
+    /* =========================================================================
+       Header Colors (Channel/Server Header)
+       ========================================================================= */
+    --header-bg: #f5f5f5;
+    --header-border: #e0e0e0;
+    --header-text: #1a1a1a;
+    --header-icon: #737373;
+    --header-icon-hover: #4a4a4a;
+
+    /* =========================================================================
+       Card Colors
+       ========================================================================= */
+    --card-bg: #ffffff;
+    --card-bg-hover: #fafafa;
+    --card-border: #e0e0e0;
+    --card-border-hover: #d4d4d4;
+
+    /* =========================================================================
+       Button Colors (Primary gradient stays same for brand)
+       ========================================================================= */
+    --btn-primary-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --btn-primary-bg-hover: linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%);
+    --btn-primary-text: #ffffff;
+    --btn-secondary-bg: #e5e5e5;
+    --btn-secondary-bg-hover: #d4d4d4;
+    --btn-secondary-text: #1a1a1a;
+    --btn-danger-bg: #dc2626;
+    --btn-danger-bg-hover: #b91c1c;
+    --btn-danger-text: #ffffff;
+    --btn-success-bg: #059669;
+    --btn-success-bg-hover: #047857;
+    --btn-success-text: #ffffff;
+
+    /* =========================================================================
+       Alert/Notification Colors
+       ========================================================================= */
+    --alert-success-bg: rgba(16, 185, 129, 0.1);
+    --alert-success-border: #10b981;
+    --alert-success-text: #059669;
+    --alert-error-bg: rgba(239, 68, 68, 0.1);
+    --alert-error-border: #ef4444;
+    --alert-error-text: #dc2626;
+    --alert-warning-bg: rgba(245, 158, 11, 0.1);
+    --alert-warning-border: #f59e0b;
+    --alert-warning-text: #d97706;
+    --alert-info-bg: rgba(102, 126, 234, 0.1);
+    --alert-info-border: #667eea;
+    --alert-info-text: #5a6fd6;
+
+    /* =========================================================================
+       Voice Channel Colors
+       ========================================================================= */
+    --voice-connected: #16a34a;
+    --voice-connecting: #d97706;
+    --voice-disconnected: #dc2626;
+    --voice-panel-bg: #f5f5f5;
+    --voice-panel-border: #e0e0e0;
+    --voice-button-bg: #e5e5e5;
+    --voice-button-hover: #d4d4d4;
+    --voice-button-active: #dc2626;
+    --voice-quality-excellent: #16a34a;
+    --voice-quality-good: #d97706;
+    --voice-quality-poor: #dc2626;
+    --voice-view-bg: linear-gradient(135deg, #f0f0f5 0%, #e8e8f0 100%);
+    --voice-card-bg: rgba(255, 255, 255, 0.9);
+    --voice-card-hover: rgba(250, 250, 250, 0.95);
+    --voice-speaking-color: #16a34a;
+
+    /* =========================================================================
+       Status Colors (Slightly adjusted for light mode contrast)
+       ========================================================================= */
+    --status-online: #16a34a;
+    --status-idle: #d97706;
+    --status-dnd: #dc2626;
+    --status-offline: #9ca3af;
+    --status-streaming: #7c3aed;
+
+    /* =========================================================================
+       Member List Colors
+       ========================================================================= */
+    --member-hover-bg: #f0f0f0;
+    --member-active-bg: #e5e5e5;
+    --role-header-text: #737373;
+    --member-username: #1a1a1a;
+    --member-username-offline: #737373;
+    --member-activity: #4a4a4a;
+    --member-activity-playing: #16a34a;
+
+    /* =========================================================================
+       Badge Colors
+       ========================================================================= */
+    --badge-voice: #16a34a;
+    --badge-live: #dc2626;
+    --badge-bot: #5865f2;
+    --crown-color: #d97706;
+    --notification-badge: #dc2626;
+
+    /* =========================================================================
+       Accent Colors (Brand - Same for both themes)
+       ========================================================================= */
+    --accent-primary: #667eea;
+    --accent-primary-hover: #5a6fd6;
+    --accent-primary-light: rgba(102, 126, 234, 0.1);
+    --accent-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --accent-success: #16a34a;
+    --accent-warning: #d97706;
+    --accent-danger: #dc2626;
+
+    /* =========================================================================
+       Auth/Login Page Colors
+       ========================================================================= */
+    --auth-gradient-1: rgba(102, 126, 234, 0.08);
+    --auth-gradient-2: rgba(118, 75, 162, 0.06);
+    --auth-gradient-3: rgba(102, 126, 234, 0.05);
+    --auth-box-bg: #ffffff;
+    --auth-box-border: rgba(102, 126, 234, 0.15);
+    --auth-box-border-hover: rgba(102, 126, 234, 0.25);
+
+    /* =========================================================================
+       Scrollbar Colors
+       ========================================================================= */
+    --scrollbar-track: #f0f0f0;
+    --scrollbar-thumb: #d4d4d4;
+    --scrollbar-thumb-hover: #b3b3b3;
+
+    /* =========================================================================
+       Modal/Overlay Colors
+       ========================================================================= */
+    --modal-overlay: rgba(0, 0, 0, 0.5);
+    --modal-bg: #ffffff;
+    --modal-border: #e0e0e0;
+
+    /* =========================================================================
+       Shadow Colors (Lighter for light mode)
+       ========================================================================= */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.12);
+    --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.15);
+
+    /* =========================================================================
+       Search Colors
+       ========================================================================= */
+    --search-bg: #f5f5f5;
+    --search-input-bg: #ffffff;
+    --search-border: #e0e0e0;
+}
+
+/* =============================================================================
+   Theme Transition (Applied after initial load to prevent FOUC)
+   ============================================================================= */
+
+html.theme-transition,
+html.theme-transition *,
+html.theme-transition *::before,
+html.theme-transition *::after {
+    transition:
+        background-color 0.3s ease,
+        border-color 0.3s ease,
+        color 0.3s ease,
+        fill 0.3s ease,
+        box-shadow 0.3s ease !important;
+}
+
+/* =============================================================================
+   Scrollbar Styling (Theme-aware)
+   ============================================================================= */
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+}
+
+/* Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+/* =============================================================================
+   Selection Styling (Theme-aware)
+   ============================================================================= */
+
+::selection {
+    background-color: var(--accent-primary);
+    color: #ffffff;
+}
+
+::-moz-selection {
+    background-color: var(--accent-primary);
+    color: #ffffff;
+}

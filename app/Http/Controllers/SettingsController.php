@@ -67,4 +67,25 @@ class SettingsController extends Controller
 
         return back()->with('success', 'Privacy settings updated successfully!');
     }
+
+    public function updateAppearance(Request $request)
+    {
+        $request->validate([
+            'theme' => 'required|in:dark,light',
+        ]);
+
+        $user = Auth::user();
+        $user->profile->update([
+            'theme' => $request->theme,
+        ]);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'theme' => $request->theme,
+            ]);
+        }
+
+        return back()->with('success', 'Appearance settings updated successfully!');
+    }
 }

@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import './themes.css';
 @import './realtime-phase3.css';
 @import './lobby.css';
 @import './sidebar.css';
@@ -19,61 +20,7 @@
 }
 
 /* =============================================================================
-   CSS Custom Properties (Design System Variables)
+   CSS Custom Properties are now defined in themes.css
+   This file imports themes.css which contains all design system variables
+   with support for both dark and light themes.
    ============================================================================= */
-
-:root {
-    /* Sidebar Background Colors */
-    --sidebar-bg: #1e1e22;
-    --sidebar-bg-secondary: #2b2d31;
-    --sidebar-bg-tertiary: #313338;
-
-    /* Sidebar Text Colors */
-    --sidebar-category-text: #96989d;
-    --sidebar-channel-text: #949ba4;
-    --sidebar-channel-hover: #3f3f46;
-    --sidebar-channel-active: #404249;
-    --sidebar-channel-active-text: #ffffff;
-
-    /* Sidebar Interactive Elements */
-    --sidebar-unread-pill: #ffffff;
-    --sidebar-add-button: #b5bac1;
-    --sidebar-add-button-hover: #dbdee1;
-
-    /* Sidebar Borders & Dividers */
-    --sidebar-separator: #3f3f46;
-    --sidebar-border: #27272a;
-
-    /* Voice Channel Colors */
-    --voice-connected: #23a559;
-    --voice-connecting: #f0b232;
-    --voice-disconnected: #ed4245;
-
-    /* Accent Colors */
-    --accent-primary: #667eea;
-    --accent-primary-hover: #5a6fd6;
-    --accent-success: #23a559;
-    --accent-warning: #f0b232;
-    --accent-danger: #ed4245;
-
-    /* Text Colors */
-    --text-normal: #f2f3f5;
-    --text-muted: #949ba4;
-    --text-faint: #6d6f78;
-
-    /* Transition Timing */
-    --transition-fast: 150ms ease;
-    --transition-medium: 200ms ease;
-    --transition-slow: 300ms ease;
-
-    /* Spacing */
-    --sidebar-padding-x: 8px;
-    --sidebar-padding-y: 4px;
-    --category-gap: 16px;
-    --channel-gap: 2px;
-
-    /* Border Radius */
-    --radius-sm: 4px;
-    --radius-md: 6px;
-    --radius-lg: 8px;
-}
