@@ -161,15 +161,6 @@
             </div>
         </div>
 
-        {{-- Footer --}}
-        <div class="settings-footer">
-            <a href="{{ route('settings') }}" class="settings-link">
-                Open Full Voice Settings
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-                </svg>
-            </a>
-        </div>
     </div>
 </div>
 
@@ -333,18 +324,30 @@ function voiceSettingsPopup() {
 
         /**
          * Toggle noise suppression
+         * Calls VoiceChat method which will recreate audio track if needed
          */
-        toggleNoiseSuppression() {
+        async toggleNoiseSuppression() {
             this.noiseSuppression = !this.noiseSuppression;
             this.saveSettings();
+
+            // Call voiceChat method if available (will recreate track during call)
+            if (window.voiceChat && typeof window.voiceChat.setNoiseSuppression === 'function') {
+                await window.voiceChat.setNoiseSuppression(this.noiseSuppression);
+            }
         },
 
         /**
          * Toggle echo cancellation
+         * Calls VoiceChat method which will recreate audio track if needed
          */
-        toggleEchoCancellation() {
+        async toggleEchoCancellation() {
             this.echoCancellation = !this.echoCancellation;
             this.saveSettings();
+
+            // Call voiceChat method if available (will recreate track during call)
+            if (window.voiceChat && typeof window.voiceChat.setEchoCancellation === 'function') {
+                await window.voiceChat.setEchoCancellation(this.echoCancellation);
+            }
         },
 
         /**

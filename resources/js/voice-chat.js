@@ -77,6 +77,16 @@ class VoiceChat {
         // Participants tracking
         this.participants = new Map(); // uid -> {id, username, isMuted}
 
+        // Voice settings state (loaded from localStorage)
+        this.savedSettings = null;
+        this.currentInputDevice = null;
+        this.currentOutputDevice = null;
+        this.inputVolumeLevel = 100;  // 0-100 UI scale
+        this.outputVolumeLevel = 100; // 0-100 UI scale
+
+        // Track remote audio tracks for volume control
+        this.remoteAudioTracks = new Map(); // uid -> audioTrack
+
         // Network quality tracking
         this.networkQuality = {
             uplink: 0,
@@ -145,6 +155,360 @@ class VoiceChat {
                 '\n\nSecure context is available. Voice chat should work correctly.\n' +
                 'Current URL:', window.location.href
             );
+        }
+    }
+
+    /**
+     * Load saved voice settings from localStorage
+     * Called during initialization and before joining channels
+     *
+     * @returns {Object} Settings object with defaults
+     */
+    loadSavedSettings() {
+        const defaultSettings = {
+            inputDevice: '',
+            outputDevice: '',
+            inputVolume: 100,
+            outputVolume: 100,
+            noiseSuppression: true,
+            echoCancellation: true
+        };
+
+        try {
+            const saved = localStorage.getItem('voiceSettings');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                this.savedSettings = { ...defaultSettings, ...parsed };
+            } else {
+                this.savedSettings = defaultSettings;
+            }
+        } catch (e) {
+            console.warn('[VoiceChat] Failed to load saved settings:', e);
+            this.savedSettings = defaultSettings;
+        }
+
+        // Apply settings to internal state
+        this.currentInputDevice = this.savedSettings.inputDevice;
+        this.currentOutputDevice = this.savedSettings.outputDevice;
+        this.inputVolumeLevel = this.savedSettings.inputVolume;
+        this.outputVolumeLevel = this.savedSettings.outputVolume;
+
+        console.log('[VoiceChat] Settings loaded:', this.savedSettings);
+        return this.savedSettings;
+    }
+
+    /**
+     * Get available microphone devices using Agora SDK
+     *
+     * @returns {Promise<Array>} Array of microphone devices
+     */
+    async getMicrophones() {
+        try {
+            const devices = await AgoraRTC.getMicrophones();
+            console.log('[VoiceChat] Available microphones:', devices);
+            return devices;
+        } catch (error) {
+            console.warn('[VoiceChat] Agora getMicrophones failed, using browser API:', error);
+            // Fallback to browser API
+            try {
+                const allDevices = await navigator.mediaDevices.enumerateDevices();
+                return allDevices.filter(d => d.kind === 'audioinput');
+            } catch (e) {
+                console.error('[VoiceChat] Browser device enumeration failed:', e);
+                return [];
+            }
+        }
+    }
+
+    /**
+     * Get available speaker/playback devices using Agora SDK
+     *
+     * @returns {Promise<Array>} Array of speaker devices
+     */
+    async getPlaybackDevices() {
+        try {
+            const devices = await AgoraRTC.getPlaybackDevices();
+            console.log('[VoiceChat] Available playback devices:', devices);
+            return devices;
+        } catch (error) {
+            console.warn('[VoiceChat] Agora getPlaybackDevices failed, using browser API:', error);
+            // Fallback to browser API
+            try {
+                const allDevices = await navigator.mediaDevices.enumerateDevices();
+                return allDevices.filter(d => d.kind === 'audiooutput');
+            } catch (e) {
+                console.error('[VoiceChat] Browser device enumeration failed:', e);
+                return [];
+            }
+        }
+    }
+
+    /**
+     * Set the input (microphone) device
+     * If connected, switches the device on the active audio track
+     *
+     * @param {string} deviceId - The device ID to switch to
+     * @returns {Promise<boolean>} Success status
+     */
+    async setInputDevice(deviceId) {
+        console.log('[VoiceChat] Setting input device:', deviceId);
+        this.currentInputDevice = deviceId;
+
+        if (!this.localAudioTrack || !this.isConnected) {
+            console.log('[VoiceChat] Not connected, device will be used on next join');
+            return true;
+        }
+
+        try {
+            // Agora SDK method to switch microphone
+            await this.localAudioTrack.setDevice(deviceId);
+            console.log('[VoiceChat] Input device switched successfully');
+
+            this.showNotification('Microphone changed', 'success');
+            return true;
+        } catch (error) {
+            console.error('[VoiceChat] Failed to switch input device:', error);
+
+            // If device switch fails, provide helpful error
+            if (error.code === 'DEVICE_NOT_FOUND' || error.code === 'NOT_READABLE') {
+                this.showError('Failed to switch microphone. Device may be in use or disconnected.');
+            } else {
+                this.showError('Failed to switch microphone. Please try again.');
+            }
+            return false;
+        }
+    }
+
+    /**
+     * Set the output (speaker) device
+     * Applies to all remote audio tracks
+     *
+     * @param {string} deviceId - The device ID to switch to
+     * @returns {Promise<boolean>} Success status
+     */
+    async setOutputDevice(deviceId) {
+        console.log('[VoiceChat] Setting output device:', deviceId);
+        this.currentOutputDevice = deviceId;
+
+        if (!this.isConnected || !this.client) {
+            console.log('[VoiceChat] Not connected, device will be used on next join');
+            return true;
+        }
+
+        try {
+            // Apply to all remote users' audio tracks
+            let successCount = 0;
+            let failCount = 0;
+
+            for (const user of this.client.remoteUsers) {
+                if (user.audioTrack) {
+                    try {
+                        await user.audioTrack.setPlaybackDevice(deviceId);
+                        successCount++;
+                    } catch (trackError) {
+                        console.warn('[VoiceChat] Failed to set output device for user:', user.uid, trackError);
+                        failCount++;
+                    }
+                }
+            }
+
+            if (failCount === 0) {
+                console.log('[VoiceChat] Output device switched for all users:', successCount);
+                this.showNotification('Speaker changed', 'success');
+                return true;
+            } else {
+                console.warn('[VoiceChat] Partial output device switch:', successCount, 'success,', failCount, 'failed');
+                this.showNotification('Speaker partially changed', 'warning');
+                return true;
+            }
+        } catch (error) {
+            console.error('[VoiceChat] Failed to switch output device:', error);
+            this.showError('Failed to switch speaker. Please try again.');
+            return false;
+        }
+    }
+
+    /**
+     * Set input (microphone) volume level
+     * UI uses 0-100, SDK uses 0-1000
+     *
+     * @param {number} volume - Volume level from 0-100 (or 0-1 if normalized)
+     * @returns {boolean} Success status
+     */
+    setInputVolume(volume) {
+        // Handle both 0-1 and 0-100 input
+        const normalizedVolume = volume > 1 ? volume : volume * 100;
+        this.inputVolumeLevel = Math.round(normalizedVolume);
+
+        // SDK expects 0-1000 range (100 = original volume)
+        const sdkVolume = Math.round(normalizedVolume * 10);
+
+        console.log('[VoiceChat] Setting input volume:', normalizedVolume, '% (SDK:', sdkVolume, ')');
+
+        if (!this.localAudioTrack) {
+            console.log('[VoiceChat] No local audio track, volume will be applied on join');
+            return true;
+        }
+
+        try {
+            this.localAudioTrack.setVolume(sdkVolume);
+            console.log('[VoiceChat] Input volume set successfully');
+            return true;
+        } catch (error) {
+            console.error('[VoiceChat] Failed to set input volume:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Set output (speaker) volume level
+     * Applies to all remote audio tracks
+     * UI uses 0-100, SDK uses 0-100 for remote tracks
+     *
+     * @param {number} volume - Volume level from 0-100 (or 0-1 if normalized)
+     * @returns {boolean} Success status
+     */
+    setOutputVolume(volume) {
+        // Handle both 0-1 and 0-100 input
+        const normalizedVolume = volume > 1 ? volume : volume * 100;
+        this.outputVolumeLevel = Math.round(normalizedVolume);
+
+        console.log('[VoiceChat] Setting output volume:', normalizedVolume, '%');
+
+        if (!this.isConnected || !this.client) {
+            console.log('[VoiceChat] Not connected, volume will be applied on join');
+            return true;
+        }
+
+        try {
+            // Apply to all remote users' audio tracks
+            // Remote track volume uses 0-100 scale directly
+            for (const user of this.client.remoteUsers) {
+                if (user.audioTrack) {
+                    // If deafened, keep at 0; otherwise apply the volume
+                    const effectiveVolume = this.isDeafened ? 0 : normalizedVolume;
+                    user.audioTrack.setVolume(effectiveVolume);
+                }
+            }
+            console.log('[VoiceChat] Output volume set for all users');
+            return true;
+        } catch (error) {
+            console.error('[VoiceChat] Failed to set output volume:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Toggle noise suppression (ANS)
+     * IMPORTANT: Requires audio track recreation to take effect during call
+     *
+     * @param {boolean} enabled - Whether to enable noise suppression
+     * @returns {Promise<boolean>} Success status
+     */
+    async setNoiseSuppression(enabled) {
+        console.log('[VoiceChat] Setting noise suppression:', enabled);
+
+        // Update saved settings
+        this.loadSavedSettings();
+        this.savedSettings.noiseSuppression = enabled;
+        localStorage.setItem('voiceSettings', JSON.stringify(this.savedSettings));
+
+        // If not connected, setting will apply on next join
+        if (!this.isConnected || !this.localAudioTrack) {
+            console.log('[VoiceChat] Not connected, noise suppression will apply on next join');
+            return true;
+        }
+
+        // Recreate audio track to apply new setting
+        return await this.recreateAudioTrack();
+    }
+
+    /**
+     * Toggle echo cancellation (AEC)
+     * IMPORTANT: Requires audio track recreation to take effect during call
+     *
+     * @param {boolean} enabled - Whether to enable echo cancellation
+     * @returns {Promise<boolean>} Success status
+     */
+    async setEchoCancellation(enabled) {
+        console.log('[VoiceChat] Setting echo cancellation:', enabled);
+
+        // Update saved settings
+        this.loadSavedSettings();
+        this.savedSettings.echoCancellation = enabled;
+        localStorage.setItem('voiceSettings', JSON.stringify(this.savedSettings));
+
+        // If not connected, setting will apply on next join
+        if (!this.isConnected || !this.localAudioTrack) {
+            console.log('[VoiceChat] Not connected, echo cancellation will apply on next join');
+            return true;
+        }
+
+        // Recreate audio track to apply new setting
+        return await this.recreateAudioTrack();
+    }
+
+    /**
+     * Recreate the local audio track with current settings
+     * Used when AEC/ANS settings change during a call
+     *
+     * @returns {Promise<boolean>} Success status
+     */
+    async recreateAudioTrack() {
+        console.log('[VoiceChat] Recreating audio track with new settings...');
+
+        try {
+            // Store current mute state
+            const wasMuted = this.isMuted;
+
+            // Unpublish current track
+            if (this.localAudioTrack) {
+                await this.client.unpublish([this.localAudioTrack]);
+                this.localAudioTrack.stop();
+                this.localAudioTrack.close();
+                this.localAudioTrack = null;
+            }
+
+            // Load fresh settings
+            this.loadSavedSettings();
+
+            // Build new audio track config
+            const audioTrackConfig = {
+                encoderConfig: 'music_standard',
+                AEC: this.savedSettings.echoCancellation,
+                ANS: this.savedSettings.noiseSuppression,
+                AGC: true
+            };
+
+            if (this.currentInputDevice) {
+                audioTrackConfig.microphoneId = this.currentInputDevice;
+            }
+
+            console.log('[VoiceChat] Creating new audio track with config:', audioTrackConfig);
+
+            // Create new track
+            this.localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack(audioTrackConfig);
+
+            // Apply input volume
+            const sdkInputVolume = Math.round(this.inputVolumeLevel * 10);
+            this.localAudioTrack.setVolume(sdkInputVolume);
+
+            // Restore mute state
+            if (wasMuted) {
+                await this.localAudioTrack.setEnabled(false);
+            }
+
+            // Publish new track
+            await this.client.publish([this.localAudioTrack]);
+
+            console.log('[VoiceChat] Audio track recreated and published successfully');
+            this.showNotification('Audio settings updated', 'success');
+            return true;
+
+        } catch (error) {
+            console.error('[VoiceChat] Failed to recreate audio track:', error);
+            this.showError('Failed to update audio settings. You may need to rejoin the channel.');
+            return false;
         }
     }
 
@@ -238,6 +602,9 @@ class VoiceChat {
         this.client.on('user-left', (user, reason) => {
             console.log('Remote user left:', user.uid, 'Reason:', reason);
 
+            // Remove from remote audio tracks map
+            this.remoteAudioTracks.delete(user.uid);
+
             // Remove participant
             this.participants.delete(user.uid);
             this.updateParticipantsList();
@@ -257,9 +624,29 @@ class VoiceChat {
                     await this.client.subscribe(user, mediaType);
                     console.log('Subscribed to user audio:', user.uid);
 
-                    // Play the remote audio track
+                    // Get the remote audio track
                     const remoteAudioTrack = user.audioTrack;
+
+                    // Apply saved output device if set
+                    if (this.currentOutputDevice) {
+                        try {
+                            await remoteAudioTrack.setPlaybackDevice(this.currentOutputDevice);
+                            console.log('[VoiceChat] Applied output device to user:', user.uid);
+                        } catch (deviceError) {
+                            console.warn('[VoiceChat] Could not set output device for new user:', deviceError);
+                        }
+                    }
+
+                    // Apply saved output volume (respecting deafen state)
+                    const effectiveVolume = this.isDeafened ? 0 : this.outputVolumeLevel;
+                    remoteAudioTrack.setVolume(effectiveVolume);
+                    console.log('[VoiceChat] Applied volume to user:', user.uid, 'volume:', effectiveVolume);
+
+                    // Play the remote audio track
                     remoteAudioTrack.play();
+
+                    // Store reference for later volume/device adjustments
+                    this.remoteAudioTracks.set(user.uid, remoteAudioTrack);
 
                     // Update participant status
                     if (this.participants.has(user.uid)) {
@@ -658,15 +1045,32 @@ class VoiceChat {
 
             console.log('Joined Agora channel successfully');
 
-            // Create and publish local audio track (microphone)
-            this.localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack({
-                encoderConfig: 'music_standard', // High quality audio for gaming
-                AEC: true, // Acoustic Echo Cancellation
-                ANS: true, // Automatic Noise Suppression
-                AGC: true, // Automatic Gain Control
-            });
+            // Load saved voice settings before creating audio track
+            this.loadSavedSettings();
 
-            console.log('Microphone audio track created');
+            // Build audio track config from saved settings
+            const audioTrackConfig = {
+                encoderConfig: 'music_standard', // High quality audio for gaming
+                AEC: this.savedSettings.echoCancellation, // Acoustic Echo Cancellation
+                ANS: this.savedSettings.noiseSuppression, // Automatic Noise Suppression
+                AGC: true, // Automatic Gain Control (always enabled)
+            };
+
+            // Add specific microphone device if saved
+            if (this.savedSettings.inputDevice) {
+                audioTrackConfig.microphoneId = this.savedSettings.inputDevice;
+            }
+
+            console.log('[VoiceChat] Creating audio track with config:', audioTrackConfig);
+
+            // Create and publish local audio track (microphone)
+            this.localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack(audioTrackConfig);
+
+            // Apply saved input volume (SDK uses 0-1000, saved is 0-100)
+            const sdkInputVolume = Math.round(this.savedSettings.inputVolume * 10);
+            this.localAudioTrack.setVolume(sdkInputVolume);
+
+            console.log('Microphone audio track created with volume:', sdkInputVolume);
 
             // Publish local audio to the channel
             await this.client.publish([this.localAudioTrack]);
@@ -856,7 +1260,8 @@ class VoiceChat {
                     if (newDeafenState) {
                         user.audioTrack.setVolume(0);
                     } else {
-                        user.audioTrack.setVolume(100);
+                        // Restore to saved output volume level (not hardcoded 100)
+                        user.audioTrack.setVolume(this.outputVolumeLevel);
                     }
                 }
             }
@@ -1263,6 +1668,11 @@ class VoiceChat {
                 clearTimeout(timeout);
             }
             this.speakingTimeouts.clear();
+        }
+
+        // Clear remote audio tracks
+        if (this.remoteAudioTracks) {
+            this.remoteAudioTracks.clear();
         }
 
         // Clear reconnect timer
