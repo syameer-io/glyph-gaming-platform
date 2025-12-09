@@ -134,21 +134,6 @@
                     </div>
                 </div>
                 <h2 class="empty-title">It's quiet here...</h2>
-                <p class="empty-subtitle">Invite friends to join your voice channel!</p>
-                <div class="empty-actions">
-                    <button class="empty-btn primary" @click="showInviteModal = true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
-                        </svg>
-                        Invite Friends
-                    </button>
-                    <button class="empty-btn secondary" @click="showActivityModal = true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        Choose Activity
-                    </button>
-                </div>
             </div>
 
             <!-- User Grid (when users present) -->
@@ -519,6 +504,11 @@ document.addEventListener('alpine:init', () => {
         },
 
         setupEventListeners() {
+            // REAL-TIME speaking indicator from Agora SDK (no server round-trip)
+            window.addEventListener('voice-user-speaking', (e) => {
+                this.handleDirectSpeakingUpdate(e.detail);
+            });
+
             // Connection events
             window.addEventListener('voice-connected', (e) => {
                 this.isConnected = true;
@@ -803,6 +793,19 @@ document.addEventListener('alpine:init', () => {
             const user = this.users.find(u => u.id === event.user_id);
             if (user) {
                 user.isSpeaking = event.is_speaking;
+            }
+        },
+
+        /**
+         * Handle direct speaking updates from Agora SDK (real-time)
+         * This bypasses WebSocket for instant (<100ms) UI updates
+         */
+        handleDirectSpeakingUpdate(detail) {
+            const { userId, isSpeaking } = detail;
+
+            const user = this.users.find(u => u.id === userId);
+            if (user) {
+                user.isSpeaking = isSpeaking;
             }
         },
 

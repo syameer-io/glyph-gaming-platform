@@ -63,6 +63,10 @@ class VoiceChat {
         this.lastSpeakingBroadcast = 0;
         this.speakingBroadcastInterval = 200; // Max 5 updates per second
 
+        // Speaking state tracking for all users (UID -> timeout)
+        this.speakingTimeouts = new Map();
+        this.speakingStopDelay = 250; // ms before marking as not speaking
+
         // Current channel information
         this.currentChannelId = null;
         this.currentChannelName = null;
@@ -312,32 +316,47 @@ class VoiceChat {
             this.handleConnectionStateChange(curState, prevState, reason);
         });
 
-        // Volume indicator for speaking detection
+        // Volume indicator for speaking detection (real-time)
         this.client.enableAudioVolumeIndicator();
         this.client.on('volume-indicator', (volumes) => {
             volumes.forEach((volume) => {
+                // Map volume.uid to user ID (uid=0 is local user)
+                const userId = volume.uid === 0 ? this.currentUid : volume.uid;
                 const isCurrentUser = volume.uid === this.currentUid || volume.uid === 0;
 
-                // volume.level ranges from 0 to 100
-                if (volume.level > 5) { // Speaking threshold
-                    // Trigger speaking animation in UI
+                const isSpeaking = volume.level > 5; // Speaking threshold
+
+                // Clear existing timeout for this user
+                if (this.speakingTimeouts.has(userId)) {
+                    clearTimeout(this.speakingTimeouts.get(userId));
+                }
+
+                if (isSpeaking) {
+                    // Dispatch speaking event immediately for real-time UI update
+                    this.dispatchSpeakingEvent(userId, true, volume.level);
+
+                    // Set timeout to mark as not speaking after delay (smooth transition)
+                    const timeout = setTimeout(() => {
+                        this.dispatchSpeakingEvent(userId, false, 0);
+                        this.speakingTimeouts.delete(userId);
+                    }, this.speakingStopDelay);
+
+                    this.speakingTimeouts.set(userId, timeout);
+
+                    // Trigger callback if registered
                     if (this.callbacks.onUserSpeaking) {
-                        this.callbacks.onUserSpeaking(volume.uid, volume.level);
+                        this.callbacks.onUserSpeaking(userId, volume.level, true);
                     }
 
-                    // Broadcast local user speaking status to server (debounced)
+                    // Broadcast local user status to server (for logging/fallback)
                     if (isCurrentUser && !this.isSpeaking) {
                         this.isSpeaking = true;
                         this.broadcastSpeakingStatus(true);
                     }
 
-                    // Reset speaking timeout for current user
                     if (isCurrentUser) {
                         this.resetSpeakingTimeout();
                     }
-                } else if (isCurrentUser && this.isSpeaking) {
-                    // User stopped speaking (level dropped below threshold)
-                    // Will be handled by timeout for smoother transition
                 }
             });
         });
@@ -947,6 +966,24 @@ class VoiceChat {
     }
 
     /**
+     * Dispatch speaking event for UI updates
+     * Allows Alpine.js to update immediately without WebSocket delay
+     *
+     * @param {number} userId - User ID (matches database user ID)
+     * @param {boolean} isSpeaking - Whether user is speaking
+     * @param {number} volumeLevel - Volume level (0-100)
+     */
+    dispatchSpeakingEvent(userId, isSpeaking, volumeLevel = 0) {
+        window.dispatchEvent(new CustomEvent('voice-user-speaking', {
+            detail: {
+                userId: userId,
+                isSpeaking: isSpeaking,
+                volumeLevel: volumeLevel
+            }
+        }));
+    }
+
+    /**
      * Update UI based on connection status
      *
      * @param {string} state - Connection state
@@ -1219,6 +1256,14 @@ class VoiceChat {
      */
     async cleanup() {
         console.log('Cleaning up voice chat resources...');
+
+        // Clear speaking timeouts
+        if (this.speakingTimeouts) {
+            for (const timeout of this.speakingTimeouts.values()) {
+                clearTimeout(timeout);
+            }
+            this.speakingTimeouts.clear();
+        }
 
         // Clear reconnect timer
         if (this.reconnectTimer) {
