@@ -51,52 +51,82 @@
 
         <!-- Benefits List -->
         <div style="background-color: #0e0e10; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
-            <div style="display: flex; flex-direction: column; gap: 16px;">
-                <div style="display: flex; align-items: flex-start; gap: 12px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <!-- 1. Show Your Gaming Activity -->
+                <div style="display: flex; align-items: flex-start; gap: 10px;">
                     <div style="width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                         <svg width="16" height="16" fill="white" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
                         </svg>
                     </div>
                     <div>
-                        <div style="color: #efeff1; font-weight: 600; font-size: 14px;">Show Your Gaming Activity</div>
-                        <div style="color: #71717a; font-size: 13px;">Display what you're playing to friends</div>
+                        <div style="color: #efeff1; font-weight: 600; font-size: 13px;">Gaming Activity</div>
+                        <div style="color: #71717a; font-size: 12px;">Show what you're playing</div>
                     </div>
                 </div>
 
-                <div style="display: flex; align-items: flex-start; gap: 12px;">
+                <!-- 2. Game Library & Skill Badges -->
+                <div style="display: flex; align-items: flex-start; gap: 10px;">
                     <div style="width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                         <svg width="16" height="16" fill="white" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
                         </svg>
                     </div>
                     <div>
-                        <div style="color: #efeff1; font-weight: 600; font-size: 14px;">Personalized Recommendations</div>
-                        <div style="color: #71717a; font-size: 13px;">Get server suggestions based on your games</div>
+                        <div style="color: #efeff1; font-weight: 600; font-size: 13px;">Game Library</div>
+                        <div style="color: #71717a; font-size: 12px;">Games & skill badges</div>
                     </div>
                 </div>
 
-                <div style="display: flex; align-items: flex-start; gap: 12px;">
+                <!-- 3. Personalized Recommendations -->
+                <div style="display: flex; align-items: flex-start; gap: 10px;">
                     <div style="width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                         <svg width="16" height="16" fill="white" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                         </svg>
                     </div>
                     <div>
-                        <div style="color: #efeff1; font-weight: 600; font-size: 14px;">Smart Team Matching</div>
-                        <div style="color: #71717a; font-size: 13px;">Find teammates with similar skill levels</div>
+                        <div style="color: #efeff1; font-weight: 600; font-size: 13px;">Recommendations</div>
+                        <div style="color: #71717a; font-size: 12px;">Personalized suggestions</div>
                     </div>
                 </div>
 
-                <div style="display: flex; align-items: flex-start; gap: 12px;">
+                <!-- 4. Smart Matchmaking -->
+                <div style="display: flex; align-items: flex-start; gap: 10px;">
                     <div style="width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                         <svg width="16" height="16" fill="white" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/>
                         </svg>
                     </div>
                     <div>
-                        <div style="color: #efeff1; font-weight: 600; font-size: 14px;">Achievement Showcase</div>
-                        <div style="color: #71717a; font-size: 13px;">Display your gaming achievements on your profile</div>
+                        <div style="color: #efeff1; font-weight: 600; font-size: 13px;">Matchmaking</div>
+                        <div style="color: #71717a; font-size: 12px;">Find skill-matched teams</div>
+                    </div>
+                </div>
+
+                <!-- 5. Achievement Leaderboards -->
+                <div style="display: flex; align-items: flex-start; gap: 10px;">
+                    <div style="width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <svg width="16" height="16" fill="white" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div style="color: #efeff1; font-weight: 600; font-size: 13px;">Leaderboards</div>
+                        <div style="color: #71717a; font-size: 12px;">Track achievements</div>
+                    </div>
+                </div>
+
+                <!-- 6. Multi-Game Lobbies -->
+                <div style="display: flex; align-items: flex-start; gap: 10px;">
+                    <div style="width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <svg width="16" height="16" fill="white" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div style="color: #efeff1; font-weight: 600; font-size: 13px;">Game Lobbies</div>
+                        <div style="color: #71717a; font-size: 12px;">CS2, Dota 2 & more</div>
                     </div>
                 </div>
             </div>
