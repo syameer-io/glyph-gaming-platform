@@ -10,16 +10,16 @@
     }
 
     .dm-scrollable::-webkit-scrollbar-track {
-        background: #18181b;
+        background: var(--color-surface);
     }
 
     .dm-scrollable::-webkit-scrollbar-thumb {
-        background-color: #3f3f46;
+        background-color: var(--color-border-primary);
         border-radius: 4px;
     }
 
     .dm-scrollable::-webkit-scrollbar-thumb:hover {
-        background-color: #52525b;
+        background-color: var(--color-text-faint);
     }
 
     /* Conversation item styling */
@@ -36,11 +36,11 @@
     }
 
     .conversation-item:hover {
-        background-color: #27272a;
+        background-color: var(--color-bg-elevated);
     }
 
     .conversation-item.selected {
-        background-color: #3f3f46;
+        background-color: var(--color-surface-active);
     }
 
     .conversation-item.unread {
@@ -64,7 +64,7 @@
         width: 12px;
         height: 12px;
         border-radius: 50%;
-        border: 2px solid #18181b;
+        border: 2px solid var(--color-surface);
     }
 
     .avatar-wrapper .status-dot.online {
@@ -106,12 +106,12 @@
     }
 
     .dm-modal {
-        background-color: #18181b;
+        background-color: var(--color-surface);
         border-radius: 12px;
         padding: 24px;
         width: 90%;
         max-width: 480px;
-        border: 1px solid #3f3f46;
+        border: 1px solid var(--color-border-primary);
         max-height: 80vh;
         display: flex;
         flex-direction: column;
@@ -127,13 +127,13 @@
     .dm-modal-title {
         font-size: 18px;
         font-weight: 600;
-        color: #efeff1;
+        color: var(--color-text-primary);
     }
 
     .dm-modal-close {
         background: none;
         border: none;
-        color: #71717a;
+        color: var(--color-text-muted);
         font-size: 24px;
         cursor: pointer;
         padding: 4px;
@@ -142,17 +142,17 @@
     }
 
     .dm-modal-close:hover {
-        color: #efeff1;
+        color: var(--color-text-primary);
     }
 
     /* Friend search in modal */
     .friend-search-input {
         width: 100%;
         padding: 12px 16px;
-        background-color: #0e0e10;
-        border: 2px solid #3f3f46;
+        background-color: var(--color-bg-primary);
+        border: 2px solid var(--color-border-primary);
         border-radius: 8px;
-        color: #efeff1;
+        color: var(--color-text-primary);
         font-size: 14px;
         margin-bottom: 16px;
         transition: border-color 0.15s;
@@ -180,13 +180,13 @@
     }
 
     .friend-item:hover {
-        background-color: #27272a;
+        background-color: var(--color-bg-elevated);
     }
 
     /* Keyboard navigation highlight */
     .friend-item.keyboard-focused,
     .conversation-item.keyboard-focused {
-        background-color: #3f3f46;
+        background-color: var(--color-surface-active);
         outline: 2px solid #667eea;
         outline-offset: -2px;
     }
@@ -212,14 +212,14 @@
     /* Time formatting */
     .conversation-time {
         font-size: 12px;
-        color: #71717a;
+        color: var(--color-text-muted);
         white-space: nowrap;
     }
 
     /* Message preview */
     .message-preview {
         font-size: 13px;
-        color: #a1a1aa;
+        color: var(--color-text-muted);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -227,7 +227,7 @@
     }
 
     .message-preview.unread {
-        color: #efeff1;
+        color: var(--color-text-primary);
         font-weight: 500;
     }
 
@@ -242,7 +242,7 @@
             height: auto !important;
             max-height: 40vh;
             border-right: none !important;
-            border-bottom: 1px solid #3f3f46;
+            border-bottom: 1px solid var(--color-border-primary);
         }
 
         .dm-welcome {
@@ -275,11 +275,11 @@
     <!-- Main Layout -->
     <div class="dm-layout" style="display: flex; flex: 1; overflow: hidden;">
         <!-- Left Sidebar: Conversations List -->
-        <div class="dm-sidebar" style="width: 320px; background-color: #18181b; border-right: 1px solid #3f3f46; display: flex; flex-direction: column; height: 100%;">
+        <div class="dm-sidebar" style="width: 320px; background-color: var(--color-surface); border-right: 1px solid var(--color-border-primary); display: flex; flex-direction: column; height: 100%;">
             <!-- Header -->
-            <div style="padding: 16px; border-bottom: 1px solid #3f3f46;">
+            <div style="padding: 16px; border-bottom: 1px solid var(--color-border-primary);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                    <h2 style="font-size: 20px; font-weight: 600; color: #efeff1; margin: 0;">Messages</h2>
+                    <h2 style="font-size: 20px; font-weight: 600; color: var(--color-text-primary); margin: 0;">Messages</h2>
                     <button id="newMessageBtn" class="btn btn-primary btn-sm" style="padding: 8px 12px;">
                         New Message
                     </button>
@@ -290,9 +290,9 @@
                         type="text"
                         id="conversationSearch"
                         placeholder="Search conversations..."
-                        style="width: 100%; padding: 10px 16px 10px 40px; background-color: #0e0e10; border: 1px solid #3f3f46; border-radius: 8px; color: #efeff1; font-size: 14px;"
+                        style="width: 100%; padding: 10px 16px 10px 40px; background-color: var(--color-bg-primary); border: 1px solid var(--color-border-primary); border-radius: 8px; color: var(--color-text-primary); font-size: 14px;"
                     >
-                    <svg style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: #71717a;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--color-text-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                     </svg>
                 </div>
@@ -316,7 +316,7 @@
                         </div>
                         <div style="flex: 1; min-width: 0;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                                <span style="font-weight: 600; color: #efeff1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                <span style="font-weight: 600; color: var(--color-text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                     {{ $conversation->other_participant->display_name }}
                                 </span>
                                 @if($conversation->latestMessage)
@@ -347,8 +347,8 @@
                         <svg class="dm-empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
                         </svg>
-                        <h3 style="color: #efeff1; margin-bottom: 8px;">No conversations yet</h3>
-                        <p style="color: #71717a; margin-bottom: 16px;">Start a conversation with one of your friends</p>
+                        <h3 style="color: var(--color-text-primary); margin-bottom: 8px;">No conversations yet</h3>
+                        <p style="color: var(--color-text-muted); margin-bottom: 16px;">Start a conversation with one of your friends</p>
                         <button onclick="openNewMessageModal()" class="btn btn-primary">
                             Start a Conversation
                         </button>
@@ -358,12 +358,12 @@
         </div>
 
         <!-- Right Panel: Welcome Message -->
-        <div class="dm-welcome" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #0e0e10; padding: 48px;">
-            <svg style="width: 120px; height: 120px; color: #3f3f46; margin-bottom: 24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="dm-welcome" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: var(--color-bg-primary); padding: 48px;">
+            <svg style="width: 120px; height: 120px; color: var(--color-border-primary); margin-bottom: 24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"/>
             </svg>
-            <h2 style="color: #efeff1; font-size: 24px; font-weight: 600; margin-bottom: 12px;">Your Messages</h2>
-            <p style="color: #71717a; text-align: center; max-width: 400px; margin-bottom: 24px;">
+            <h2 style="color: var(--color-text-primary); font-size: 24px; font-weight: 600; margin-bottom: 12px;">Your Messages</h2>
+            <p style="color: var(--color-text-muted); text-align: center; max-width: 400px; margin-bottom: 24px;">
                 Select a conversation from the sidebar or start a new one to begin messaging your friends.
             </p>
             <button onclick="openNewMessageModal()" class="btn btn-primary" style="padding: 12px 24px;">
@@ -408,15 +408,15 @@
                         <span class="status-dot {{ $friend->profile->status === 'online' ? 'online' : 'offline' }}" style="width: 10px; height: 10px;" data-user-status="{{ $friend->id }}"></span>
                     </div>
                     <div style="flex: 1;">
-                        <div style="font-weight: 600; color: #efeff1;">{{ $friend->display_name }}</div>
-                        <div style="font-size: 13px; color: #71717a;">{{ '@' . $friend->username }}</div>
+                        <div style="font-weight: 600; color: var(--color-text-primary);">{{ $friend->display_name }}</div>
+                        <div style="font-size: 13px; color: var(--color-text-muted);">{{ '@' . $friend->username }}</div>
                     </div>
                     @if($friend->profile->status === 'online')
                         <span style="font-size: 12px; color: #10b981;">Online</span>
                     @endif
                 </a>
             @empty
-                <div style="text-align: center; padding: 24px; color: #71717a;">
+                <div style="text-align: center; padding: 24px; color: var(--color-text-muted);">
                     <p style="margin-bottom: 12px;">No friends yet</p>
                     <a href="{{ route('friends.search') }}" class="btn btn-secondary btn-sm">Find Friends</a>
                 </div>

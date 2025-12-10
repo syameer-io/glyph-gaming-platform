@@ -11,7 +11,7 @@
     }
     
     .teams-sidebar {
-        background-color: #18181b;
+        background-color: var(--color-surface);
         border-radius: 12px;
         padding: 24px;
         height: fit-content;
@@ -34,10 +34,10 @@
     .search-input {
         flex: 1;
         padding: 12px 16px;
-        background-color: #0e0e10;
-        border: 2px solid #3f3f46;
+        background-color: var(--color-bg-primary);
+        border: 2px solid var(--color-border-primary);
         border-radius: 8px;
-        color: #efeff1;
+        color: var(--color-text-primary);
         font-size: 16px;
     }
     
@@ -51,31 +51,31 @@
     }
     
     .filter-section h4 {
-        color: #efeff1;
+        color: var(--color-text-primary);
         font-size: 16px;
         font-weight: 600;
         margin-bottom: 12px;
     }
-    
+
     .filter-group {
         margin-bottom: 16px;
     }
-    
+
     .filter-group label {
         display: block;
         font-size: 14px;
-        color: #b3b3b5;
+        color: var(--color-text-secondary);
         margin-bottom: 6px;
     }
-    
+
     .filter-group select,
     .filter-group input {
         width: 100%;
         padding: 8px 12px;
-        background-color: #0e0e10;
-        border: 1px solid #3f3f46;
+        background-color: var(--color-bg-primary);
+        border: 1px solid var(--color-border-primary);
         border-radius: 6px;
-        color: #efeff1;
+        color: var(--color-text-primary);
         font-size: 14px;
     }
     
@@ -92,10 +92,10 @@
     }
     
     .team-card {
-        background-color: #18181b;
+        background-color: var(--color-surface);
         border-radius: 12px;
         padding: 24px;
-        border: 1px solid #3f3f46;
+        border: 1px solid var(--color-border-primary);
         transition: all 0.2s;
         position: relative;
     }
@@ -120,14 +120,14 @@
     .team-name {
         font-size: 20px;
         font-weight: 600;
-        color: #efeff1;
+        color: var(--color-text-primary);
         margin-bottom: 4px;
         line-height: 1.3;
     }
-    
+
     .team-game {
         font-size: 14px;
-        color: #b3b3b5;
+        color: var(--color-text-secondary);
         margin-bottom: 8px;
     }
     
@@ -174,22 +174,22 @@
     
     .member-count {
         font-size: 12px;
-        color: #b3b3b5;
+        color: var(--color-text-secondary);
     }
-    
+
     .team-members {
         display: flex;
         gap: 8px;
         margin-bottom: 16px;
         flex-wrap: wrap;
     }
-    
+
     .member-avatar {
         width: 32px;
         height: 32px;
         border-radius: 50%;
         object-fit: cover;
-        border: 2px solid #3f3f46;
+        border: 2px solid var(--color-border-primary);
         transition: all 0.2s;
     }
     
@@ -202,18 +202,18 @@
         width: 32px;
         height: 32px;
         border-radius: 50%;
-        background-color: #0e0e10;
-        border: 2px dashed #3f3f46;
+        background-color: var(--color-bg-primary);
+        border: 2px dashed var(--color-border-primary);
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #71717a;
+        color: var(--color-text-muted);
         font-size: 14px;
         font-weight: 600;
     }
-    
+
     .team-description {
-        color: #b3b3b5;
+        color: var(--color-text-secondary);
         font-size: 14px;
         line-height: 1.5;
         margin-bottom: 16px;
@@ -231,8 +231,8 @@
     
     .team-tag {
         font-size: 11px;
-        background-color: #3f3f46;
-        color: #b3b3b5;
+        background-color: var(--color-surface-active);
+        color: var(--color-text-secondary);
         padding: 4px 8px;
         border-radius: 4px;
         text-transform: uppercase;
@@ -258,27 +258,27 @@
     }
     
     .results-count {
-        color: #b3b3b5;
+        color: var(--color-text-secondary);
         font-size: 14px;
     }
-    
+
     .sort-controls {
         display: flex;
         gap: 8px;
         align-items: center;
     }
-    
+
     .sort-label {
-        color: #b3b3b5;
+        color: var(--color-text-secondary);
         font-size: 14px;
     }
-    
+
     .sort-select {
         padding: 6px 10px;
-        background-color: #0e0e10;
-        border: 1px solid #3f3f46;
+        background-color: var(--color-bg-primary);
+        border: 1px solid var(--color-border-primary);
         border-radius: 6px;
-        color: #efeff1;
+        color: var(--color-text-primary);
         font-size: 14px;
     }
     
@@ -315,7 +315,7 @@
         display: inline-block;
         width: 20px;
         height: 20px;
-        border: 2px solid #3f3f46;
+        border: 2px solid var(--color-border-primary);
         border-radius: 50%;
         border-top-color: #667eea;
         animation: spin 1s ease-in-out infinite;
@@ -460,7 +460,7 @@
                         @foreach(auth()->user()->teams()->limit(3)->get() as $myTeam)
                             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                                 <div style="width: 8px; height: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%;"></div>
-                                <a href="{{ route('teams.show', $myTeam) }}" style="color: #b3b3b5; text-decoration: none; font-size: 14px; flex: 1;">{{ $myTeam->name }}</a>
+                                <a href="{{ route('teams.show', $myTeam) }}" style="color: var(--color-text-secondary); text-decoration: none; font-size: 14px; flex: 1;">{{ $myTeam->name }}</a>
                             </div>
                         @endforeach
                         @if(auth()->user()->teams()->count() > 3)
@@ -469,7 +469,7 @@
                             </div>
                         @endif
                     @else
-                        <div style="text-align: center; padding: 16px; color: #71717a; font-size: 14px;">
+                        <div style="text-align: center; padding: 16px; color: var(--color-text-muted); font-size: 14px;">
                             No teams yet
                         </div>
                     @endif
@@ -499,8 +499,8 @@
                 <!-- Empty State -->
                 <div class="empty-state">
                     <div style="font-size: 48px; margin-bottom: 16px;">👥</div>
-                    <h3 style="margin-bottom: 12px; color: #efeff1;">No Teams Found</h3>
-                    <p style="color: #b3b3b5; margin-bottom: 24px;">
+                    <h3 style="margin-bottom: 12px; color: var(--color-text-primary);">No Teams Found</h3>
+                    <p style="color: var(--color-text-secondary); margin-bottom: 24px;">
                         Be the first to create a team for your favorite game!
                     </p>
                     <a href="{{ route('teams.create') }}" class="btn btn-primary">Create Team</a>

@@ -18,32 +18,32 @@
                         </svg>
                     </div>
                     
-                    <h3 style="margin-bottom: 16px; color: #efeff1;">Why Link Your Steam Account?</h3>
-                    
-                    <div style="text-align: left; background-color: #0e0e10; padding: 24px; border-radius: 8px; margin-bottom: 32px;">
+                    <h3 style="margin-bottom: 16px; color: var(--color-text-primary);">Why Link Your Steam Account?</h3>
+
+                    <div style="text-align: left; background-color: var(--color-bg-primary); padding: 24px; border-radius: 8px; margin-bottom: 32px;">
                         <div style="margin-bottom: 16px; display: flex; align-items: start;">
                             <svg width="20" height="20" fill="#10b981" style="margin-right: 12px; flex-shrink: 0; margin-top: 2px;" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                             </svg>
-                            <span style="color: #b3b3b5;">Display your game library and total playtime on your profile</span>
+                            <span style="color: var(--color-text-secondary);">Display your game library and total playtime on your profile</span>
                         </div>
                         <div style="margin-bottom: 16px; display: flex; align-items: start;">
                             <svg width="20" height="20" fill="#10b981" style="margin-right: 12px; flex-shrink: 0; margin-top: 2px;" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                             </svg>
-                            <span style="color: #b3b3b5;">Show your achievements and game progress</span>
+                            <span style="color: var(--color-text-secondary);">Show your achievements and game progress</span>
                         </div>
                         <div style="margin-bottom: 16px; display: flex; align-items: start;">
                             <svg width="20" height="20" fill="#10b981" style="margin-right: 12px; flex-shrink: 0; margin-top: 2px;" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                             </svg>
-                            <span style="color: #b3b3b5;">Let friends see what you're currently playing</span>
+                            <span style="color: var(--color-text-secondary);">Let friends see what you're currently playing</span>
                         </div>
                         <div style="display: flex; align-items: start;">
                             <svg width="20" height="20" fill="#10b981" style="margin-right: 12px; flex-shrink: 0; margin-top: 2px;" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                             </svg>
-                            <span style="color: #b3b3b5;">Get matched with players who share your gaming interests</span>
+                            <span style="color: var(--color-text-secondary);">Get matched with players who share your gaming interests</span>
                         </div>
                     </div>
                 </div>
@@ -57,7 +57,7 @@
                     </span>
                 </a>
 
-                <p style="margin-top: 24px; color: #71717a; font-size: 14px;">
+                <p style="margin-top: 24px; color: var(--color-text-muted); font-size: 14px;">
                     Your Steam credentials are handled securely by Steam. We only receive your public profile information.
                 </p>
             </div>

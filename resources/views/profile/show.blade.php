@@ -24,10 +24,10 @@
                         <span style="margin-left: 16px; color: #10b981;" data-gaming-status>
                             Playing {{ $user->profile->current_game['name'] }}
                             @if(isset($user->profile->current_game['server_name']))
-                                <br><span style="font-size: 12px; color: #71717a;">{{ $user->profile->current_game['server_name'] }}</span>
+                                <br><span style="font-size: 12px; color: var(--color-text-muted);">{{ $user->profile->current_game['server_name'] }}</span>
                             @endif
                             @if(isset($user->profile->current_game['map']))
-                                <span style="font-size: 12px; color: #71717a;"> - {{ $user->profile->current_game['map'] }}</span>
+                                <span style="font-size: 12px; color: var(--color-text-muted);"> - {{ $user->profile->current_game['map'] }}</span>
                             @endif
                         </span>
                     @endif
@@ -186,9 +186,9 @@
                                 @endif
                             </div>
                         @else
-                            <div style="text-align: center; padding: 40px; background-color: #0e0e10; border-radius: 8px; border: 2px dashed #3f3f46;">
-                                <p style="color: #71717a; margin-bottom: 8px;">No gaming preferences found</p>
-                                <p style="color: #b3b3b5; font-size: 14px;">Gaming preferences are automatically generated from Steam activity</p>
+                            <div style="text-align: center; padding: 40px; background-color: var(--color-bg-primary); border-radius: 8px; border: 2px dashed var(--color-border-primary);">
+                                <p style="color: var(--color-text-muted); margin-bottom: 8px;">No gaming preferences found</p>
+                                <p style="color: var(--color-text-secondary); font-size: 14px;">Gaming preferences are automatically generated from Steam activity</p>
                             </div>
                         @endif
                     </div>
@@ -219,7 +219,7 @@
                                             $achievements = $user->profile->steam_data['achievements'][$game['appid']];
                                         @endphp
                                         <div style="margin-top: 8px;">
-                                            <div style="font-size: 12px; color: #b3b3b5; margin-bottom: 4px;">
+                                            <div style="font-size: 12px; color: var(--color-text-secondary); margin-bottom: 4px;">
                                                 Achievements: {{ $achievements['unlocked'] }}/{{ $achievements['total'] }} ({{ $achievements['percentage'] }}%)
                                             </div>
                                             <div class="achievement-progress">
@@ -230,7 +230,7 @@
                                 </div>
                             </div>
                         @empty
-                            <p style="color: #71717a;">No games to display</p>
+                            <p style="color: var(--color-text-muted);">No games to display</p>
                         @endforelse
                     </div>
                 @elseif($user->steam_id && !$privacyContext['canSeeSteamData'])
@@ -241,7 +241,7 @@
                             </svg>
                             <h3 class="profile-card-title">Steam Data</h3>
                         </div>
-                        <p style="color: #71717a; text-align: center; padding: 30px;">
+                        <p style="color: var(--color-text-muted); text-align: center; padding: 30px;">
                             {{ $user->display_name }} has chosen to keep their Steam data private.
                         </p>
                     </div>
@@ -309,7 +309,7 @@
                                 <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
                             </svg>
                             <h3 class="profile-card-title">Steam Friends</h3>
-                            <span style="margin-left: auto; font-size: 13px; color: #71717a;">({{ $user->profile->steam_data['friends']['count'] }})</span>
+                            <span style="margin-left: auto; font-size: 13px; color: var(--color-text-muted);">({{ $user->profile->steam_data['friends']['count'] }})</span>
                         </div>
                         @foreach(array_slice($user->profile->steam_data['friends']['friends'] ?? [], 0, 5) as $friend)
                             <div class="friend-item">
@@ -366,7 +366,7 @@
                                 </div>
                             </div>
                         @empty
-                            <p style="color: #71717a; text-align: center; padding: 20px;">Not in any servers yet</p>
+                            <p style="color: var(--color-text-muted); text-align: center; padding: 20px;">Not in any servers yet</p>
                         @endforelse
                     </div>
                 @endif
@@ -485,10 +485,10 @@ function updateGamingStatus(gameName, richPresence) {
     if (gameName) {
         let statusText = `Playing ${gameName}`;
         if (richPresence && richPresence.server_name) {
-            statusText += `<br><span style="font-size: 12px; color: #71717a;">${richPresence.server_name}</span>`;
+            statusText += `<br><span style="font-size: 12px; color: var(--color-text-muted);">${richPresence.server_name}</span>`;
         }
         if (richPresence && richPresence.map) {
-            statusText += `<span style="font-size: 12px; color: #71717a;"> - ${richPresence.map}</span>`;
+            statusText += `<span style="font-size: 12px; color: var(--color-text-muted);"> - ${richPresence.map}</span>`;
         }
         statusElement.innerHTML = statusText;
         statusElement.style.display = 'inline';

@@ -10,12 +10,12 @@
 }
 
 .toast {
-    background: #18181b;
-    border: 1px solid #27272a;
+    background: var(--color-surface, #18181b);
+    border: 1px solid var(--color-bg-elevated, #27272a);
     border-radius: 8px;
     margin-bottom: 12px;
     padding: 16px;
-    color: #f4f4f5;
+    color: var(--color-text-primary, #f4f4f5);
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
     transform: translateX(100%);
     opacity: 0;
@@ -180,7 +180,7 @@
     transition: all 0.3s ease;
     padding: 4px 8px;
     border-radius: 4px;
-    background: #27272a;
+    background: var(--color-bg-elevated, #27272a);
 }
 
 .member-count.updated {
@@ -189,11 +189,11 @@
 
 @keyframes countUpdate {
     0% {
-        background: #667eea;
+        background: var(--accent-primary, #667eea);
         transform: scale(1.1);
     }
     100% {
-        background: #27272a;
+        background: var(--color-bg-elevated, #27272a);
         transform: scale(1);
     }
 }

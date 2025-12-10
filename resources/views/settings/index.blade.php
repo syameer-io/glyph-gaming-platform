@@ -50,7 +50,7 @@
                             </div>
 
                             <h4 style="margin-top: 32px; margin-bottom: 16px;">Change Password</h4>
-                            <p style="color: #71717a; font-size: 14px; margin-bottom: 16px;">Leave blank to keep current password</p>
+                            <p style="color: var(--color-text-muted); font-size: 14px; margin-bottom: 16px;">Leave blank to keep current password</p>
 
                             <div class="form-group">
                                 <label for="current_password">Current Password</label>
@@ -76,7 +76,7 @@
                 <div id="profile" class="settings-content" style="display: none;">
                     <div class="card">
                         <h3 class="card-header">Profile Settings</h3>
-                        <p style="color: #b3b3b5; margin-bottom: 24px;">Edit your public profile information</p>
+                        <p style="color: var(--color-text-secondary); margin-bottom: 24px;">Edit your public profile information</p>
                         <a href="{{ route('profile.edit') }}" class="btn btn-primary">Edit Profile</a>
                     </div>
                 </div>
@@ -85,14 +85,14 @@
                 <div id="privacy" class="settings-content" style="display: none;">
                     <div class="card">
                         <h3 class="card-header">Privacy Settings</h3>
-                        <p style="color: #71717a; margin-bottom: 24px;">Control what information others can see on your profile</p>
+                        <p style="color: var(--color-text-muted); margin-bottom: 24px;">Control what information others can see on your profile</p>
                         <form method="POST" action="{{ route('settings.privacy') }}">
                             @csrf
                             @method('PUT')
 
                             {{-- Profile Visibility Section --}}
                             <div style="margin-bottom: 32px;">
-                                <h4 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #a1a1aa;">Profile Visibility</h4>
+                                <h4 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--color-text-secondary);">Profile Visibility</h4>
 
                                 <div style="margin-bottom: 20px;">
                                     <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer;">
@@ -101,7 +101,7 @@
                                             style="width: auto; margin-top: 4px;">
                                         <div>
                                             <div style="font-weight: 600;">Profile Visible to Friends Only</div>
-                                            <div style="font-size: 14px; color: #71717a;">Only friends can view your full profile. Others will see limited information.</div>
+                                            <div style="font-size: 14px; color: var(--color-text-muted);">Only friends can view your full profile. Others will see limited information.</div>
                                         </div>
                                     </label>
                                 </div>
@@ -109,7 +109,7 @@
 
                             {{-- Status & Activity Section --}}
                             <div style="margin-bottom: 32px;">
-                                <h4 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #a1a1aa;">Status & Activity</h4>
+                                <h4 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--color-text-secondary);">Status & Activity</h4>
 
                                 <div style="margin-bottom: 20px;">
                                     <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer;">
@@ -118,7 +118,7 @@
                                             style="width: auto; margin-top: 4px;">
                                         <div>
                                             <div style="font-weight: 600;">Show Online Status</div>
-                                            <div style="font-size: 14px; color: #71717a;">Let others see when you're online or offline</div>
+                                            <div style="font-size: 14px; color: var(--color-text-muted);">Let others see when you're online or offline</div>
                                         </div>
                                     </label>
                                 </div>
@@ -130,7 +130,7 @@
                                             style="width: auto; margin-top: 4px;">
                                         <div>
                                             <div style="font-weight: 600;">Show Gaming Activity</div>
-                                            <div style="font-size: 14px; color: #71717a;">Display which game you're currently playing</div>
+                                            <div style="font-size: 14px; color: var(--color-text-muted);">Display which game you're currently playing</div>
                                         </div>
                                     </label>
                                 </div>
@@ -138,7 +138,7 @@
 
                             {{-- Steam Data Section --}}
                             <div style="margin-bottom: 32px;">
-                                <h4 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #a1a1aa;">Steam Data</h4>
+                                <h4 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--color-text-secondary);">Steam Data</h4>
 
                                 <div style="margin-bottom: 20px;">
                                     <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer;">
@@ -147,7 +147,7 @@
                                             style="width: auto; margin-top: 4px;">
                                         <div>
                                             <div style="font-weight: 600;">Show Steam Data on Profile</div>
-                                            <div style="font-size: 14px; color: #71717a;">Display your games, playtime, and achievements</div>
+                                            <div style="font-size: 14px; color: var(--color-text-muted);">Display your games, playtime, and achievements</div>
                                         </div>
                                     </label>
                                 </div>
@@ -159,7 +159,7 @@
                                             style="width: auto; margin-top: 4px;">
                                         <div>
                                             <div style="font-weight: 600;">Show Steam Friends</div>
-                                            <div style="font-size: 14px; color: #71717a;">Display your Steam friends list on your profile</div>
+                                            <div style="font-size: 14px; color: var(--color-text-muted);">Display your Steam friends list on your profile</div>
                                         </div>
                                     </label>
                                 </div>
@@ -167,7 +167,7 @@
 
                             {{-- Community Section --}}
                             <div style="margin-bottom: 32px;">
-                                <h4 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #a1a1aa;">Community</h4>
+                                <h4 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--color-text-secondary);">Community</h4>
 
                                 <div style="margin-bottom: 20px;">
                                     <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer;">
@@ -176,7 +176,7 @@
                                             style="width: auto; margin-top: 4px;">
                                         <div>
                                             <div style="font-weight: 600;">Show Server Memberships</div>
-                                            <div style="font-size: 14px; color: #71717a;">Display which servers you're a member of</div>
+                                            <div style="font-size: 14px; color: var(--color-text-muted);">Display which servers you're a member of</div>
                                         </div>
                                     </label>
                                 </div>
@@ -188,7 +188,7 @@
                                             style="width: auto; margin-top: 4px;">
                                         <div>
                                             <div style="font-weight: 600;">Lobbies Visible to Friends Only</div>
-                                            <div style="font-size: 14px; color: #71717a;">Only friends can see and join your game lobbies</div>
+                                            <div style="font-size: 14px; color: var(--color-text-muted);">Only friends can see and join your game lobbies</div>
                                         </div>
                                     </label>
                                 </div>

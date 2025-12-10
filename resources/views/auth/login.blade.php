@@ -7,7 +7,7 @@
     <div class="auth-box">
         <div class="logo">
             <h1 class="font-gristela text-5xl">Glyph</h1>
-            <p style="color: #b3b3b5; margin-top: 8px;">Welcome back!</p>
+            <p style="color: var(--color-text-secondary); margin-top: 8px;">Welcome back!</p>
         </div>
 
         @if ($errors->any())
@@ -63,7 +63,7 @@
             </div>
         </form>
 
-        <p class="text-center mt-4" style="color: #b3b3b5;">
+        <p class="text-center mt-4" style="color: var(--color-text-secondary);">
             Don't have an account? <a href="{{ route('register') }}" class="link">Create one</a>
         </p>
     </div>

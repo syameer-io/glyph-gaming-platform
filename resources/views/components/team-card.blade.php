@@ -62,10 +62,10 @@
 @endphp
 
 <div class="team-card" style="
-    background-color: #18181b;
+    background-color: var(--color-surface);
     border-radius: 12px;
     padding: 24px;
-    border: 1px solid #3f3f46;
+    border: 1px solid var(--color-border-primary);
     transition: all 0.2s ease;
     position: relative;
     display: flex;
@@ -91,7 +91,7 @@
             <h3 style="
                 font-size: 20px;
                 font-weight: 600;
-                color: #efeff1;
+                color: var(--color-text-primary);
                 margin: 0 0 4px 0;
                 line-height: 1.3;
                 overflow: hidden;
@@ -103,7 +103,7 @@
 
             <div style="
                 font-size: 14px;
-                color: #b3b3b5;
+                color: var(--color-text-secondary);
                 margin-bottom: 8px;
             ">
                 {{ $team->game_name ?? 'Unknown Game' }}
@@ -145,7 +145,7 @@
             <div style="
                 text-align: center;
                 padding: 12px 16px;
-                background: rgba(14, 14, 16, 0.8);
+                background: var(--color-bg-primary);
                 border-radius: 8px;
                 border: 2px solid {{ $compatColor }};
                 min-width: 80px;
@@ -161,7 +161,7 @@
                 </div>
                 <div style="
                     font-size: 10px;
-                    color: #b3b3b5;
+                    color: var(--color-text-secondary);
                     text-transform: uppercase;
                     font-weight: 600;
                     letter-spacing: 0.5px;
@@ -184,7 +184,7 @@
                 </div>
                 <div style="
                     font-size: 12px;
-                    color: #b3b3b5;
+                    color: var(--color-text-secondary);
                 ">
                     {{ $team->activeMembers->count() }}/{{ $team->max_size }} members
                 </div>
@@ -209,12 +209,12 @@
                     height: 32px;
                     border-radius: 50%;
                     object-fit: cover;
-                    border: 2px solid #3f3f46;
+                    border: 2px solid var(--color-border-primary);
                     transition: all 0.2s ease;
                     cursor: pointer;
                 "
                 onmouseover="this.style.borderColor='#667eea'; this.style.transform='scale(1.1)';"
-                onmouseout="this.style.borderColor='#3f3f46'; this.style.transform='scale(1)';"
+                onmouseout="this.style.borderColor='var(--color-border-primary)'; this.style.transform='scale(1)';"
             >
         @endforeach
 
@@ -223,12 +223,12 @@
                 width: 32px;
                 height: 32px;
                 border-radius: 50%;
-                background-color: #0e0e10;
-                border: 2px dashed #3f3f46;
+                background-color: var(--color-bg-primary);
+                border: 2px dashed var(--color-border-primary);
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                color: #71717a;
+                color: var(--color-text-muted);
                 font-size: 14px;
                 font-weight: 600;
             ">+</div>
@@ -238,7 +238,7 @@
             <div style="
                 display: flex;
                 align-items: center;
-                color: #b3b3b5;
+                color: var(--color-text-secondary);
                 font-size: 12px;
                 margin-left: 4px;
             ">
@@ -250,7 +250,7 @@
     <!-- Team Description -->
     @if($truncatedDescription)
         <div style="
-            color: #b3b3b5;
+            color: var(--color-text-secondary);
             font-size: 14px;
             line-height: 1.5;
         ">
@@ -265,14 +265,14 @@
             grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
             gap: 8px;
             padding: 12px;
-            background-color: #0e0e10;
+            background-color: var(--color-bg-primary);
             border-radius: 8px;
         ">
             @foreach($compatibilityDetails as $key => $value)
                 <div style="text-align: center;">
                     <div style="
                         font-size: 11px;
-                        color: #71717a;
+                        color: var(--color-text-muted);
                         text-transform: uppercase;
                         margin-bottom: 2px;
                     ">
@@ -281,7 +281,7 @@
                     <div style="
                         font-size: 16px;
                         font-weight: 600;
-                        color: {{ $value >= 70 ? '#10b981' : ($value >= 50 ? '#f59e0b' : '#71717a') }};
+                        color: {{ $value >= 70 ? '#10b981' : ($value >= 50 ? '#f59e0b' : 'var(--color-text-muted)') }};
                     ">
                         {{ round($value) }}%
                     </div>
@@ -315,8 +315,8 @@
         @if($team->preferred_region)
             <span style="
                 font-size: 11px;
-                background-color: #3f3f46;
-                color: #b3b3b5;
+                background-color: var(--color-surface-active);
+                color: var(--color-text-secondary);
                 padding: 4px 8px;
                 border-radius: 4px;
                 text-transform: uppercase;
@@ -413,8 +413,8 @@
         @if($team->communication_required)
             <span style="
                 font-size: 11px;
-                background-color: #3f3f46;
-                color: #b3b3b5;
+                background-color: var(--color-surface-active);
+                color: var(--color-text-secondary);
                 padding: 4px 8px;
                 border-radius: 4px;
                 text-transform: uppercase;
@@ -438,8 +438,8 @@
             style="
                 flex: 1;
                 padding: 8px 16px;
-                background-color: #3f3f46;
-                color: #efeff1;
+                background-color: var(--color-surface-active);
+                color: var(--color-text-primary);
                 border: none;
                 border-radius: 6px;
                 font-size: 14px;
@@ -449,8 +449,8 @@
                 cursor: pointer;
                 transition: all 0.2s ease;
             "
-            onmouseover="this.style.backgroundColor='#52525b';"
-            onmouseout="this.style.backgroundColor='#3f3f46';"
+            onmouseover="this.style.backgroundColor='var(--color-text-faint)';"
+            onmouseout="this.style.backgroundColor='var(--color-surface-active)';"
         >
             View Team
         </a>

@@ -43,7 +43,7 @@
                         <div class="form-group">
                             <label for="bio">Bio</label>
                             <textarea id="bio" name="bio" rows="4" placeholder="Tell us about yourself...">{{ $user->profile->bio }}</textarea>
-                            <small style="color: #71717a; font-size: 12px;">Max 500 characters</small>
+                            <small style="color: var(--color-text-muted); font-size: 12px;">Max 500 characters</small>
                         </div>
                     </div>
                 </div>

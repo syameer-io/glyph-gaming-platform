@@ -817,16 +817,11 @@
 }
 
 /* =============================================================================
-   12. Dark Mode Enhancements (Already dark by default)
+   12. Theme Support
    ============================================================================= */
 
-/* Force dark mode colors even in light mode system preference */
-@media (prefers-color-scheme: light) {
-    .server-sidebar {
-        background-color: var(--sidebar-bg, #1e1e22);
-        color: var(--text-normal, #f2f3f5);
-    }
-}
+/* Theme colors are controlled via CSS variables in themes.css */
+/* The sidebar will automatically adapt to light/dark theme */
 
 /* =============================================================================
    13. Print Styles (Hide Interactive Sidebar)

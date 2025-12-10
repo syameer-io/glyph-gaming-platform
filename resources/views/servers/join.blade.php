@@ -9,7 +9,7 @@
     <div class="container" style="max-width: 600px;">
         <div class="auth-box" style="margin-top: 48px;">
             <h2 style="text-align: center; margin-bottom: 8px;">Join a Server</h2>
-            <p style="text-align: center; color: #b3b3b5; margin-bottom: 32px;">
+            <p style="text-align: center; color: var(--color-text-secondary); margin-bottom: 32px;">
                 Enter an invite code to join an existing server
             </p>
 
@@ -31,11 +31,11 @@
                            required autofocus>
                 </div>
 
-                <div style="margin-top: 24px; padding: 16px; background-color: #0e0e10; border-radius: 8px;">
-                    <p style="font-size: 14px; color: #b3b3b5;">
-                        <strong>Invite codes look like:</strong> ABCD1234
+                <div style="margin-top: 24px; padding: 16px; background-color: var(--color-bg-primary); border-radius: 8px;">
+                    <p style="font-size: 14px; color: var(--color-text-secondary);">
+                        <strong style="color: var(--color-text-primary);">Invite codes look like:</strong> ABCD1234
                     </p>
-                    <p style="font-size: 14px; color: #71717a; margin-top: 8px;">
+                    <p style="font-size: 14px; color: var(--color-text-muted); margin-top: 8px;">
                         Get an invite code from a server admin or member
                     </p>
                 </div>
