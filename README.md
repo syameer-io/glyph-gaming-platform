@@ -207,14 +207,9 @@ Glyph currently supports lobby creation and matchmaking for:
 
 | Game | Steam App ID | Join Methods |
 |------|--------------|--------------|
-| Counter-Strike 2 | 730 | Steam Lobby, Server Address |
-| Dota 2 | 570 | Steam Lobby, Lobby Code |
-| Apex Legends | 1172470 | Lobby Code |
-| Rust | 252490 | Server Address, Steam Connect |
-| PUBG | 578080 | Lobby Code |
-| Rainbow Six Siege | 359550 | Lobby Code |
-| Warframe | 230410 | Invite Code |
-| Fall Guys | 1097150 | Lobby Code |
+| Counter-Strike 2 | 730 | Steam Lobby |
+| Dota 2 | 570 | Steam Lobby |
+| Warframe | 230410 | Steam Lobby |
 
 ## Artisan Commands
 
