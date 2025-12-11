@@ -11,17 +11,17 @@
     
     .team-sidebar {
         width: 200px;
-        background-color: #18181b;
+        background-color: var(--color-surface);
         padding: 24px;
         border-radius: 12px;
         height: fit-content;
         position: sticky;
         top: 24px;
     }
-    
+
     .team-content {
         flex: 1;
-        background-color: #18181b;
+        background-color: var(--color-surface);
         padding: 24px;
         border-radius: 12px;
     }
@@ -145,7 +145,7 @@
         display: flex;
         align-items: center;
         padding: 16px;
-        background-color: #0e0e10;
+        background-color: var(--color-bg-primary);
         border-radius: 8px;
         margin-bottom: 12px;
         position: relative;
@@ -169,7 +169,7 @@
     
     .member-name {
         font-weight: 600;
-        color: #efeff1;
+        color: var(--color-text-primary);
         margin-bottom: 4px;
     }
     
@@ -186,7 +186,7 @@
     
     .member-status {
         font-size: 12px;
-        color: #b3b3b5;
+        color: var(--color-text-secondary);
     }
     
     .member-gaming-status {

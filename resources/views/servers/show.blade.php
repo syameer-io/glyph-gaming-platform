@@ -21,7 +21,7 @@
     .kebab-button {
         background: none;
         border: none;
-        color: #71717a;
+        color: var(--color-text-muted);
         font-size: 16px;
         cursor: pointer;
         padding: 8px;
@@ -30,16 +30,16 @@
     }
 
     .kebab-button:hover {
-        background-color: #3f3f46;
-        color: #ffffff;
+        background-color: var(--color-surface-active);
+        color: var(--color-text-primary);
     }
 
     .kebab-dropdown {
         position: absolute;
         top: 100%;
         right: 0;
-        background-color: #18181b;
-        border: 1px solid #3f3f46;
+        background-color: var(--color-surface);
+        border: 1px solid var(--color-border-primary);
         border-radius: 8px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         min-width: 120px;
@@ -57,7 +57,7 @@
         padding: 8px 12px;
         background: none;
         border: none;
-        color: #ffffff;
+        color: var(--color-text-primary);
         text-align: left;
         cursor: pointer;
         transition: background-color 0.2s;
@@ -65,7 +65,7 @@
     }
 
     .kebab-option:hover {
-        background-color: #3f3f46;
+        background-color: var(--color-surface-active);
     }
 
     .kebab-option:first-child {
@@ -88,13 +88,13 @@
     }
 
     .back-button:hover {
-        background-color: #3f3f46 !important;
-        color: #ffffff !important;
+        background-color: var(--color-surface-active) !important;
+        color: var(--color-text-primary) !important;
     }
 
     /* Voice Chat Styles */
     .voice-channel-link:hover {
-        background-color: #3f3f46;
+        background-color: var(--color-surface-active);
         border-radius: 4px;
         padding: 4px 8px;
         margin-left: -8px;
@@ -226,9 +226,9 @@
 @section('content')
 <div style="display: flex; height: 100vh;">
     <!-- Server Sidebar -->
-    <div style="width: 240px; background-color: #18181b; display: flex; flex-direction: column;">
+    <div style="width: 240px; background-color: var(--color-surface); display: flex; flex-direction: column;">
         {{-- Phase 3: Server Dropdown Header --}}
-        <div class="server-header" style="padding: 12px 16px; border-bottom: 1px solid #3f3f46;">
+        <div class="server-header" style="padding: 12px 16px; border-bottom: 1px solid var(--color-border-primary);">
             <x-server-dropdown
                 :server="$server"
                 :isAdmin="auth()->user()->isServerAdmin($server->id)"
@@ -277,13 +277,13 @@
         </div>
 
         <!-- User Section -->
-        <div style="padding: 16px; border-top: 1px solid #3f3f46; background-color: #0e0e10;">
+        <div style="padding: 16px; border-top: 1px solid var(--color-border-primary); background-color: var(--color-bg-primary);">
             <div style="display: flex; align-items: center; gap: 12px;">
                 <img src="{{ auth()->user()->profile->avatar_url }}" alt="{{ auth()->user()->display_name }}"
                      style="width: 32px; height: 32px; border-radius: 50%;">
                 <div style="flex: 1;">
-                    <div style="font-size: 14px; font-weight: 600;">{{ auth()->user()->display_name }}</div>
-                    <div style="font-size: 12px; color: #71717a;">{{ auth()->user()->username }}</div>
+                    <div style="font-size: 14px; font-weight: 600; color: var(--color-text-primary);">{{ auth()->user()->display_name }}</div>
+                    <div style="font-size: 12px; color: var(--color-text-muted);">{{ auth()->user()->username }}</div>
                 </div>
             </div>
         </div>
@@ -291,14 +291,14 @@
 
     <!-- Main Content -->
     <div
-        style="flex: 1; display: flex; flex-direction: column; background-color: #0e0e10;"
+        style="flex: 1; display: flex; flex-direction: column; background-color: var(--color-bg-primary);"
         x-data="{
             memberListVisible: localStorage.getItem('memberListVisible') !== 'false'
         }"
         @toggle-member-list.window="memberListVisible = $event.detail.visible"
     >
         <!-- Header Bar - Phase 3 Enhanced -->
-        <div class="channel-header" style="padding: 12px 16px; border-bottom: 1px solid #3f3f46; background-color: #18181b; display: flex; align-items: center; justify-content: space-between;">
+        <div class="channel-header" style="padding: 12px 16px; border-bottom: 1px solid var(--color-border-primary); background-color: var(--color-surface); display: flex; align-items: center; justify-content: space-between;">
             <div style="display: flex; align-items: center; gap: 12px;">
                 {{-- Breadcrumb Navigation --}}
                 <nav class="breadcrumb">
@@ -348,9 +348,9 @@
         
         <div style="flex: 1; overflow-y: auto; padding: 16px;">
             <!-- Welcome Section -->
-            <div style="text-align: center; margin-bottom: 32px; padding: 24px; background-color: #18181b; border-radius: 12px;">
-                <h2 style="margin-bottom: 16px;">Welcome to {{ $server->name }}!</h2>
-                <p style="color: #b3b3b5; margin-bottom: 24px;">{{ $server->description ?: 'This is the beginning of your server.' }}</p>
+            <div style="text-align: center; margin-bottom: 32px; padding: 24px; background-color: var(--color-surface); border-radius: 12px;">
+                <h2 style="margin-bottom: 16px; color: var(--color-text-primary);">Welcome to {{ $server->name }}!</h2>
+                <p style="color: var(--color-text-secondary); margin-bottom: 24px;">{{ $server->description ?: 'This is the beginning of your server.' }}</p>
                 @if($defaultChannel)
                     <a href="{{ route('channel.show', [$server, $defaultChannel]) }}" class="btn btn-primary">
                         Open #{{ $defaultChannel->name }}
@@ -362,25 +362,25 @@
             @if($activeGoals && $activeGoals->count() > 0)
                 <div id="goals-section" style="margin-bottom: 32px;">
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-                        <h3 style="margin: 0; color: #efeff1; font-size: 20px; font-weight: 600;">🏆 Active Community Goals</h3>
-                        <span style="color: #71717a; font-size: 14px;">{{ $activeGoals->count() }} active {{ $activeGoals->count() === 1 ? 'goal' : 'goals' }}</span>
+                        <h3 style="margin: 0; color: var(--color-text-primary); font-size: 20px; font-weight: 600;">🏆 Active Community Goals</h3>
+                        <span style="color: var(--color-text-muted); font-size: 14px;">{{ $activeGoals->count() }} active {{ $activeGoals->count() === 1 ? 'goal' : 'goals' }}</span>
                     </div>
 
                     <div style="display: grid; gap: 16px;">
                         @foreach($activeGoals as $goal)
-                            <div class="goal-card" data-goal-id="{{ $goal->id }}" style="background-color: #18181b; border-radius: 12px; padding: 20px; border-left: 4px solid #667eea;">
+                            <div class="goal-card" data-goal-id="{{ $goal->id }}" style="background-color: var(--color-surface); border-radius: 12px; padding: 20px; border-left: 4px solid #667eea;">
                                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
                                     <div style="flex: 1;">
-                                        <h4 style="margin: 0 0 8px 0; color: #efeff1; font-size: 18px; font-weight: 600;">{{ $goal->title }}</h4>
-                                        <p style="margin: 0 0 12px 0; color: #b3b3b5; font-size: 14px; line-height: 1.5;">{{ $goal->description }}</p>
-                                        
+                                        <h4 style="margin: 0 0 8px 0; color: var(--color-text-primary); font-size: 18px; font-weight: 600;">{{ $goal->title }}</h4>
+                                        <p style="margin: 0 0 12px 0; color: var(--color-text-secondary); font-size: 14px; line-height: 1.5;">{{ $goal->description }}</p>
+
                                         <!-- Goal Meta Information -->
                                         <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;">
                                             <span style="font-size: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; font-weight: 600;">
                                                 {{ ucfirst($goal->goal_type) }}
                                             </span>
                                             @if($goal->game_name)
-                                                <span style="font-size: 12px; background-color: #3f3f46; color: #b3b3b5; padding: 4px 8px; border-radius: 6px;">
+                                                <span style="font-size: 12px; background-color: var(--color-surface-active); color: var(--color-text-secondary); padding: 4px 8px; border-radius: 6px;">
                                                     🎮 {{ $goal->game_name }}
                                                 </span>
                                             @endif
@@ -416,13 +416,13 @@
                                 <!-- Progress Section -->
                                 <div style="margin-bottom: 16px;">
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                        <span style="font-size: 14px; color: #b3b3b5; font-weight: 500;">Progress</span>
-                                        <span class="progress-text" style="font-size: 14px; color: #efeff1; font-weight: 600;">
+                                        <span style="font-size: 14px; color: var(--color-text-secondary); font-weight: 500;">Progress</span>
+                                        <span class="progress-text" style="font-size: 14px; color: var(--color-text-primary); font-weight: 600;">
                                             {{ $goal->current_progress ?? 0 }} / {{ $goal->target_value }}
                                             ({{ $goal->target_value > 0 ? round(($goal->current_progress ?? 0) / $goal->target_value * 100, 1) : 0 }}%)
                                         </span>
                                     </div>
-                                    <div style="width: 100%; height: 8px; background-color: #3f3f46; border-radius: 4px; overflow: hidden;">
+                                    <div style="width: 100%; height: 8px; background-color: var(--color-surface-active); border-radius: 4px; overflow: hidden;">
                                         <div class="progress-bar" style="height: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 100%); width: {{ $goal->target_value > 0 ? min(($goal->current_progress ?? 0) / $goal->target_value * 100, 100) : 0 }}%; transition: width 0.8s ease;"></div>
                                     </div>
                                 </div>
@@ -430,25 +430,25 @@
                                 <!-- Participants Section -->
                                 <div style="display: flex; justify-content: space-between; align-items: center;">
                                     <div style="display: flex; align-items: center; gap: 12px;">
-                                        <span class="participant-count" style="font-size: 14px; color: #b3b3b5;">
+                                        <span class="participant-count" style="font-size: 14px; color: var(--color-text-secondary);">
                                             👥 {{ $goal->participants->where('participation_status', 'active')->count() }} participants
                                         </span>
                                         <div class="participants-list" style="display: flex;">
                                             @foreach($goal->participants->where('participation_status', 'active')->take(5) as $participant)
-                                                <img src="{{ $participant->user->profile->avatar_url }}" alt="{{ $participant->user->display_name }}" 
-                                                     style="width: 24px; height: 24px; border-radius: 50%; margin-left: -4px; border: 2px solid #18181b;"
+                                                <img src="{{ $participant->user->profile->avatar_url }}" alt="{{ $participant->user->display_name }}"
+                                                     style="width: 24px; height: 24px; border-radius: 50%; margin-left: -4px; border: 2px solid var(--color-surface);"
                                                      title="{{ $participant->user->display_name }} - {{ round($participant->contribution_percentage, 1) }}% contribution">
                                             @endforeach
                                             @if($goal->participants->where('participation_status', 'active')->count() > 5)
-                                                <div style="width: 24px; height: 24px; border-radius: 50%; background-color: #3f3f46; margin-left: -4px; border: 2px solid #18181b; display: flex; align-items: center; justify-content: center; color: #b3b3b5; font-size: 10px; font-weight: 600;">
+                                                <div style="width: 24px; height: 24px; border-radius: 50%; background-color: var(--color-surface-active); margin-left: -4px; border: 2px solid var(--color-surface); display: flex; align-items: center; justify-content: center; color: var(--color-text-secondary); font-size: 10px; font-weight: 600;">
                                                     +{{ $goal->participants->where('participation_status', 'active')->count() - 5 }}
                                                 </div>
                                             @endif
                                         </div>
                                     </div>
-                                    
+
                                     <div style="display: flex; gap: 8px;">
-                                        <button onclick="showGoalDetails({{ $goal->id }})" class="btn btn-sm" style="background-color: #3f3f46; color: #efeff1; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.2s;">
+                                        <button onclick="showGoalDetails({{ $goal->id }})" class="btn btn-sm" style="background-color: var(--color-surface-active); color: var(--color-text-primary); border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.2s;">
                                             View Details
                                         </button>
                                         @if($userParticipant)
@@ -463,10 +463,10 @@
                     </div>
                 </div>
             @else
-                <div style="text-align: center; padding: 40px; background-color: #18181b; border-radius: 12px; margin-bottom: 32px; border: 2px dashed #3f3f46;">
+                <div style="text-align: center; padding: 40px; background-color: var(--color-surface); border-radius: 12px; margin-bottom: 32px; border: 2px dashed var(--color-border-primary);">
                     <div style="font-size: 48px; margin-bottom: 16px;">🎯</div>
-                    <h3 style="color: #71717a; margin-bottom: 8px; font-weight: 600;">No Active Goals</h3>
-                    <p style="color: #b3b3b5; font-size: 14px; margin-bottom: 20px;">This server doesn't have any community goals yet.</p>
+                    <h3 style="color: var(--color-text-muted); margin-bottom: 8px; font-weight: 600;">No Active Goals</h3>
+                    <p style="color: var(--color-text-secondary); font-size: 14px; margin-bottom: 20px;">This server doesn't have any community goals yet.</p>
                     @if(auth()->user()->isServerAdmin($server->id))
                         <a href="{{ route('server.admin.settings', $server) }}#goals" class="btn btn-primary btn-sm">
                             Create Your First Goal
@@ -489,7 +489,7 @@
         x-transition:leave="transition ease-in duration-150"
         x-transition:leave-start="opacity-100 transform translate-x-0"
         x-transition:leave-end="opacity-0 transform translate-x-4"
-        style="width: 240px; background-color: #18181b; padding: 8px; overflow-y: auto;"
+        style="width: 240px; background-color: var(--color-surface); padding: 8px; overflow-y: auto;"
     >
         <div class="member-list-header">
             Members — {{ $server->members->count() }}

@@ -41,7 +41,7 @@
         display: flex;
         align-items: center;
         padding: 16px;
-        background-color: #0e0e10;
+        background-color: var(--color-bg-primary);
         border-radius: 8px;
         margin-bottom: 12px;
         transition: all 0.3s ease;
@@ -67,16 +67,16 @@
     .rank-1 { background: linear-gradient(135deg, #ffd700, #ffed4a); color: #1a1a1a; }
     .rank-2 { background: linear-gradient(135deg, #c0c0c0, #e5e7eb); color: #1a1a1a; }
     .rank-3 { background: linear-gradient(135deg, #cd7f32, #d97706); color: white; }
-    .rank-other { background-color: #3f3f46; color: #b3b3b5; }
-    
+    .rank-other { background-color: var(--color-surface-active); color: var(--color-text-secondary); }
+
     .milestone-item {
         display: flex;
         align-items: center;
         padding: 12px 16px;
-        background-color: #0e0e10;
+        background-color: var(--color-bg-primary);
         border-radius: 8px;
         margin-bottom: 8px;
-        border-left: 4px solid #3f3f46;
+        border-left: 4px solid var(--color-border-primary);
     }
     
     .milestone-achieved {
@@ -171,20 +171,20 @@
                                 <img src="{{ $participant['user']->profile->avatar_url }}" alt="{{ $participant['user']->display_name }}" 
                                      style="width: 48px; height: 48px; border-radius: 50%; margin-right: 16px;">
                                 <div style="flex: 1;">
-                                    <div style="font-weight: 600; color: #efeff1; margin-bottom: 4px;">{{ $participant['user']->display_name }}</div>
-                                    <div style="font-size: 14px; color: #b3b3b5;">
-                                        Progress: {{ $participant['progress'] }} • 
+                                    <div style="font-weight: 600; color: var(--color-text-primary); margin-bottom: 4px;">{{ $participant['user']->display_name }}</div>
+                                    <div style="font-size: 14px; color: var(--color-text-secondary);">
+                                        Progress: {{ $participant['progress'] }} •
                                         Contribution: {{ round($participant['contribution'], 1) }}%
                                     </div>
                                 </div>
                                 <div style="text-align: right;">
                                     <div style="font-size: 20px; font-weight: 700; color: #10b981;">{{ $participant['progress'] }}</div>
-                                    <div style="font-size: 12px; color: #71717a;">points</div>
+                                    <div style="font-size: 12px; color: var(--color-text-muted);">points</div>
                                 </div>
                             </div>
                         @endforeach
                     @else
-                        <div style="text-align: center; padding: 40px; color: #71717a;">
+                        <div style="text-align: center; padding: 40px; color: var(--color-text-muted);">
                             <div style="font-size: 48px; margin-bottom: 16px;">🏆</div>
                             <p>No participants yet. Be the first to join!</p>
                         </div>
@@ -200,22 +200,22 @@
                     
                     <div style="margin-bottom: 20px;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                            <span style="color: #b3b3b5;">Participants</span>
+                            <span style="color: var(--color-text-secondary);">Participants</span>
                             <span style="font-weight: 600;">{{ $goal->participants->where('participation_status', 'active')->count() }}</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                            <span style="color: #b3b3b5;">Created</span>
+                            <span style="color: var(--color-text-secondary);">Created</span>
                             <span style="font-weight: 600;">{{ $goal->created_at->format('M j, Y') }}</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                            <span style="color: #b3b3b5;">Status</span>
+                            <span style="color: var(--color-text-secondary);">Status</span>
                             <span style="padding: 4px 8px; background-color: #10b981; color: white; border-radius: 4px; font-size: 12px; font-weight: 600;">
                                 {{ ucfirst($goal->status) }}
                             </span>
                         </div>
                         @if($goal->deadline)
                             <div style="display: flex; justify-content: space-between;">
-                                <span style="color: #b3b3b5;">Time Left</span>
+                                <span style="color: var(--color-text-secondary);">Time Left</span>
                                 <span style="font-weight: 600; color: #f59e0b;">{{ \Carbon\Carbon::parse($goal->deadline)->diffForHumans() }}</span>
                             </div>
                         @endif
@@ -243,10 +243,10 @@
                                     {{ $milestone->is_achieved ? '✅' : '⏳' }}
                                 </div>
                                 <div style="flex: 1;">
-                                    <div style="font-weight: 600; color: {{ $milestone->is_achieved ? '#10b981' : '#efeff1' }}; margin-bottom: 2px;">
+                                    <div style="font-weight: 600; color: {{ $milestone->is_achieved ? '#10b981' : 'var(--color-text-primary)' }}; margin-bottom: 2px;">
                                         {{ $milestone->milestone_name }}
                                     </div>
-                                    <div style="font-size: 12px; color: #71717a;">
+                                    <div style="font-size: 12px; color: var(--color-text-muted);">
                                         {{ $milestone->progress_required }} / {{ $goal->target_value }}
                                     </div>
                                 </div>

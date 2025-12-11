@@ -34,7 +34,7 @@
                         </div>
                         <div class="user-card-username">{{ '@' . $friend->username }}</div>
                         @if($friend->profile->current_game)
-                            <div style="font-size: 12px; color: #10b981; margin-top: 4px;">
+                            <div style="font-size: 12px; color: var(--color-success, #10b981); margin-top: 4px;">
                                 Playing {{ $friend->profile->current_game['name'] }}
                             </div>
                         @endif
@@ -96,7 +96,7 @@
                     </div>
                 </div>
             @empty
-                <p style="color: #71717a; text-align: center; padding: 48px;">No pending friend requests</p>
+                <p style="color: var(--color-text-muted); text-align: center; padding: 48px;">No pending friend requests</p>
             @endforelse
         </div>
 
@@ -112,10 +112,10 @@
                         </div>
                         <div class="user-card-username">{{ '@' . $request->username }}</div>
                     </div>
-                    <span style="color: #71717a;">Pending</span>
+                    <span style="color: var(--color-text-muted);">Pending</span>
                 </div>
             @empty
-                <p style="color: #71717a; text-align: center; padding: 48px;">No sent friend requests</p>
+                <p style="color: var(--color-text-muted); text-align: center; padding: 48px;">No sent friend requests</p>
             @endforelse
         </div>
     </div>

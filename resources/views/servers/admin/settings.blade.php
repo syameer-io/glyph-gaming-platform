@@ -6,14 +6,14 @@
 <style>
     .settings-sidebar {
         width: 200px;
-        background-color: #18181b;
+        background-color: var(--color-surface);
         padding: 24px;
         border-radius: 12px;
     }
-    
+
     .settings-content {
         flex: 1;
-        background-color: #18181b;
+        background-color: var(--color-surface);
         padding: 24px;
         border-radius: 12px;
         margin-left: 24px;
@@ -31,7 +31,7 @@
         display: flex;
         align-items: center;
         padding: 12px;
-        background-color: #0e0e10;
+        background-color: var(--color-bg-primary);
         border-radius: 8px;
         margin-bottom: 8px;
     }
@@ -46,7 +46,7 @@
         align-items: center;
         justify-content: space-between;
         padding: 12px;
-        background-color: #0e0e10;
+        background-color: var(--color-bg-primary);
         border-radius: 8px;
         margin-bottom: 8px;
     }
@@ -64,7 +64,7 @@
         width: 50px;
         height: 40px;
         padding: 4px;
-        border: 2px solid #3f3f46;
+        border: 2px solid var(--color-border-primary);
         border-radius: 8px;
         cursor: pointer;
     }
@@ -77,7 +77,7 @@
     .kebab-button {
         background: none;
         border: none;
-        color: #71717a;
+        color: var(--color-text-muted);
         font-size: 18px;
         cursor: pointer;
         padding: 8px;
@@ -86,16 +86,16 @@
     }
 
     .kebab-button:hover {
-        background-color: #3f3f46;
-        color: #ffffff;
+        background-color: var(--color-surface-active);
+        color: var(--color-text-primary);
     }
 
     .kebab-dropdown {
         position: absolute;
         top: 100%;
         right: 0;
-        background-color: #18181b;
-        border: 1px solid #3f3f46;
+        background-color: var(--color-surface);
+        border: 1px solid var(--color-border-primary);
         border-radius: 8px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         min-width: 120px;
@@ -113,7 +113,7 @@
         padding: 8px 12px;
         background: none;
         border: none;
-        color: #ffffff;
+        color: var(--color-text-primary);
         text-align: left;
         cursor: pointer;
         transition: background-color 0.2s;
@@ -121,7 +121,7 @@
     }
 
     .kebab-option:hover {
-        background-color: #3f3f46;
+        background-color: var(--color-surface-active);
     }
 
     .kebab-option:first-child {
@@ -198,11 +198,11 @@
                             <textarea id="description" name="description" rows="3">{{ $server->description }}</textarea>
                         </div>
 
-                        <div style="margin-top: 24px; padding: 16px; background-color: #0e0e10; border-radius: 8px;">
+                        <div style="margin-top: 24px; padding: 16px; background-color: var(--color-bg-primary); border-radius: 8px;">
                             <p style="font-weight: 600; margin-bottom: 8px;">Server Info</p>
-                            <p style="font-size: 14px; color: #b3b3b5;">Created: {{ $server->created_at->format('F j, Y') }}</p>
-                            <p style="font-size: 14px; color: #b3b3b5;">Members: {{ $server->members->count() }}</p>
-                            <p style="font-size: 14px; color: #b3b3b5;">Invite Code: <code style="background-color: #18181b; padding: 2px 6px; border-radius: 4px;">{{ $server->invite_code }}</code></p>
+                            <p style="font-size: 14px; color: var(--color-text-secondary);">Created: {{ $server->created_at->format('F j, Y') }}</p>
+                            <p style="font-size: 14px; color: var(--color-text-secondary);">Members: {{ $server->members->count() }}</p>
+                            <p style="font-size: 14px; color: var(--color-text-secondary);">Invite Code: <code style="background-color: var(--color-surface); padding: 2px 6px; border-radius: 4px;">{{ $server->invite_code }}</code></p>
                         </div>
 
                         <button type="submit" class="btn btn-primary" style="margin-top: 24px;">Save Changes</button>
@@ -218,7 +218,7 @@
                         <h4 style="margin-bottom: 16px;">Create Channel</h4>
                         
                         @if ($errors->any())
-                            <div style="background-color: #dc2626; color: white; padding: 12px; border-radius: 4px; margin-bottom: 16px;">
+                            <div style="background-color: var(--accent-danger); color: white; padding: 12px; border-radius: 4px; margin-bottom: 16px;">
                                 <ul style="margin: 0; padding-left: 20px;">
                                     @foreach ($errors->all() as $error)
                                         <li>{{ $error }}</li>
@@ -235,30 +235,28 @@
                             </select>
                             <button type="submit" class="btn btn-primary">Create</button>
                         </div>
-                        <small style="color: #71717a; font-size: 12px;">Use lowercase letters, numbers, and hyphens only</small>
+                        <small style="color: var(--color-text-muted); font-size: 12px;">Use lowercase letters, numbers, and hyphens only</small>
                     </form>
 
                     <h4 style="margin-bottom: 16px;">Existing Channels</h4>
                     @foreach(['text' => 'Text Channels', 'voice' => 'Voice Channels'] as $type => $label)
-                        <p style="font-size: 14px; font-weight: 600; color: #71717a; text-transform: uppercase; margin-top: 24px; margin-bottom: 12px;">{{ $label }}</p>
+                        <p style="font-size: 14px; font-weight: 600; color: var(--color-text-muted); text-transform: uppercase; margin-top: 24px; margin-bottom: 12px;">{{ $label }}</p>
                         @foreach($server->channels->where('type', $type) as $channel)
                             @php
                                 // Get existing channel overrides for this channel
                                 $channelOverrides = $channel->permissionOverrides ?? collect();
                             @endphp
-                            <div style="background-color: #0e0e10; border-radius: 8px; margin-bottom: 12px; padding: 12px;">
+                            <div style="background-color: var(--color-bg-primary); border-radius: 8px; margin-bottom: 12px; padding: 12px;">
                                 <div class="channel-item" style="background-color: transparent; margin: 0; padding: 0;">
                                     <div>
-                                        <span style="color: #71717a; margin-right: 8px;">{{ $type === 'text' ? '#' : '🔊' }}</span>
+                                        <span style="color: var(--color-text-muted); margin-right: 8px;">{{ $type === 'text' ? '#' : '🔊' }}</span>
                                         <span>{{ $channel->name }}</span>
                                     </div>
                                     <div style="display: flex; align-items: center; gap: 8px;">
                                         {{-- Permission Overrides Button --}}
                                         <button type="button"
                                                 class="btn btn-sm"
-                                                style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background-color: #3f3f46; color: #efeff1; border: none; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;"
-                                                onmouseover="this.style.backgroundColor='#52525b'"
-                                                onmouseout="this.style.backgroundColor='#3f3f46'"
+                                                style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background-color: var(--color-surface-active); color: var(--color-text-primary); border: none; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;"
                                                 onclick="toggleChannelOverrides('{{ $channel->id }}')">
                                             <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
@@ -297,14 +295,14 @@
                                             <button type="submit" class="btn btn-primary">Update</button>
                                             <button type="button" class="btn btn-secondary" onclick="toggleChannelEdit('{{ $channel->id }}')">Cancel</button>
                                         </div>
-                                        <small style="color: #71717a; font-size: 12px; display: block; margin-top: 8px;">Use lowercase letters, numbers, and hyphens only</small>
+                                        <small style="color: var(--color-text-muted); font-size: 12px; display: block; margin-top: 8px;">Use lowercase letters, numbers, and hyphens only</small>
                                     </form>
                                 </div>
 
                                 <!-- Channel Permission Overrides Section -->
-                                <div id="channel-overrides-{{ $channel->id }}" style="display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid #303035;">
-                                    <h5 style="margin-bottom: 12px; color: #efeff1; font-size: 14px; font-weight: 600;">Permission Overrides</h5>
-                                    <p style="color: #71717a; font-size: 12px; margin-bottom: 16px;">
+                                <div id="channel-overrides-{{ $channel->id }}" style="display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--color-border-secondary);">
+                                    <h5 style="margin-bottom: 12px; color: var(--color-text-primary); font-size: 14px; font-weight: 600;">Permission Overrides</h5>
+                                    <p style="color: var(--color-text-muted); font-size: 12px; margin-bottom: 16px;">
                                         Customize permissions for specific roles in this channel. Use "Inherit" to use the default role permission.
                                     </p>
 
@@ -326,16 +324,16 @@
                                     <div style="overflow-x: auto;">
                                         <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
                                             <thead>
-                                                <tr style="border-bottom: 1px solid #303035;">
-                                                    <th style="text-align: left; padding: 8px 12px; color: #71717a; font-weight: 600;">Role</th>
+                                                <tr style="border-bottom: 1px solid var(--color-border-secondary);">
+                                                    <th style="text-align: left; padding: 8px 12px; color: var(--color-text-muted); font-weight: 600;">Role</th>
                                                     @foreach($relevantPermissions as $permission)
-                                                        <th style="text-align: center; padding: 8px 12px; color: #71717a; font-weight: 600; min-width: 100px;">{{ $permissionLabels[$permission] }}</th>
+                                                        <th style="text-align: center; padding: 8px 12px; color: var(--color-text-muted); font-weight: 600; min-width: 100px;">{{ $permissionLabels[$permission] }}</th>
                                                     @endforeach
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 @foreach($server->roles->where('name', '!=', 'Server Admin')->sortByDesc('position') as $role)
-                                                    <tr style="border-bottom: 1px solid #26262c;">
+                                                    <tr style="border-bottom: 1px solid var(--color-border-secondary);">
                                                         <td style="padding: 10px 12px;">
                                                             <span class="role-badge" style="background-color: {{ $role->color }}; color: white; font-size: 12px;">
                                                                 {{ $role->name }}
@@ -354,7 +352,7 @@
                                                                 <select class="channel-override-select"
                                                                         data-role="{{ $role->id }}"
                                                                         data-permission="{{ $permission }}"
-                                                                        style="padding: 6px 10px; border-radius: 4px; border: 1px solid #3f3f46; background-color: #18181b; color: #efeff1; font-size: 12px; width: 90px; cursor: pointer;">
+                                                                        style="padding: 6px 10px; border-radius: 4px; border: 1px solid var(--color-border-primary); background-color: var(--color-surface); color: var(--color-text-primary); font-size: 12px; width: 90px; cursor: pointer;">
                                                                     <option value="inherit" {{ $currentValue === 'inherit' ? 'selected' : '' }}>-- Inherit</option>
                                                                     <option value="allow" {{ $currentValue === 'allow' ? 'selected' : '' }}>&#10003; Allow</option>
                                                                     <option value="deny" {{ $currentValue === 'deny' ? 'selected' : '' }}>&#10007; Deny</option>
@@ -376,7 +374,7 @@
                                         </button>
                                         <button type="button"
                                                 class="btn btn-primary btn-sm"
-                                                style="padding: 8px 16px; font-size: 12px; background-color: #9147ff;"
+                                                style="padding: 8px 16px; font-size: 12px; background-color: var(--accent-primary);"
                                                 onclick="saveChannelOverrides('{{ $channel->id }}')">
                                             Save Overrides
                                         </button>
@@ -397,7 +395,7 @@
                                  style="width: 40px; height: 40px; border-radius: 50%;">
                             <div class="member-info">
                                 <div style="font-weight: 600;">{{ $member->display_name }}</div>
-                                <div style="font-size: 14px; color: #71717a;">{{ '@' . ($member->username ?? 'No username') }}</div>
+                                <div style="font-size: 14px; color: var(--color-text-muted);">{{ '@' . ($member->username ?? 'No username') }}</div>
                                 <div style="margin-top: 4px;">
                                     @foreach($member->roles()->wherePivot('server_id', $server->id)->get() as $role)
                                         <span class="role-badge" style="background-color: {{ $role->color }}; color: white;">
@@ -405,10 +403,10 @@
                                         </span>
                                     @endforeach
                                     @if($member->pivot->is_muted)
-                                        <span class="role-badge" style="background-color: #dc2626; color: white;">Muted</span>
+                                        <span class="role-badge" style="background-color: var(--accent-danger); color: white;">Muted</span>
                                     @endif
                                     @if($member->pivot->is_banned)
-                                        <span class="role-badge" style="background-color: #991b1b; color: white;">Banned</span>
+                                        <span class="role-badge" style="background-color: var(--accent-danger-dark, #991b1b); color: white;">Banned</span>
                                     @endif
                                 </div>
                             </div>
@@ -473,13 +471,13 @@
 
                     <h4 style="margin-bottom: 16px;">Existing Roles</h4>
                     @foreach($server->roles->sortByDesc('position') as $role)
-                        <div style="padding: 16px; background-color: #0e0e10; border-radius: 8px; margin-bottom: 12px;">
+                        <div style="padding: 16px; background-color: var(--color-bg-primary); border-radius: 8px; margin-bottom: 12px;">
                             <div style="display: flex; align-items: center; justify-content: space-between;">
                                 <div>
                                     <span class="role-badge" style="background-color: {{ $role->color }}; color: white; font-size: 14px;">
                                         {{ $role->name }}
                                     </span>
-                                    <span style="margin-left: 12px; color: #71717a; font-size: 14px;">
+                                    <span style="margin-left: 12px; color: var(--color-text-muted); font-size: 14px;">
                                         {{ $role->getMemberCount() }} members
                                     </span>
                                 </div>
@@ -488,9 +486,7 @@
                                     @if(!in_array($role->name, ['Server Admin', 'Member']))
                                         <button type="button"
                                                 class="btn btn-sm"
-                                                style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background-color: #3f3f46; color: #efeff1; border: none; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;"
-                                                onmouseover="this.style.backgroundColor='#52525b'"
-                                                onmouseout="this.style.backgroundColor='#3f3f46'"
+                                                style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background-color: var(--color-surface-active); color: var(--color-text-primary); border: none; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;"
                                                 onclick="openPermissionsModalFromData({{ $role->id }})">
                                             <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
@@ -498,7 +494,7 @@
                                             Permissions
                                         </button>
                                     @else
-                                        <span style="font-size: 11px; color: #71717a; padding: 6px 12px; background-color: #26262c; border-radius: 6px;">
+                                        <span style="font-size: 11px; color: var(--color-text-muted); padding: 6px 12px; background-color: var(--color-border-secondary); border-radius: 6px;">
                                             Default Role
                                         </span>
                                     @endif
@@ -567,7 +563,7 @@
                                     </form>
                                     
                                     @foreach($role->getMembersForServer() as $user)
-                                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px; background-color: #18181b; border-radius: 4px; margin-bottom: 4px;">
+                                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px; background-color: var(--color-surface); border-radius: 4px; margin-bottom: 4px;">
                                             <span>{{ $user->display_name }}</span>
                                             @if($role->users()->wherePivot('server_id', $server->id)->where('users.id', $user->id)->exists())
                                                 {{-- Only show remove button for users with explicit role assignment --}}
@@ -578,7 +574,7 @@
                                                 </form>
                                             @else
                                                 {{-- Implicit members (no explicit role) - show badge instead of remove button --}}
-                                                <span style="font-size: 11px; color: #71717a; padding: 4px 8px; background-color: #26262c; border-radius: 4px;">
+                                                <span style="font-size: 11px; color: var(--color-text-muted); padding: 4px 8px; background-color: var(--color-border-secondary); border-radius: 4px;">
                                                     Implicit
                                                 </span>
                                             @endif
@@ -593,10 +589,10 @@
                 <!-- Tags Tab -->
                 <div id="tags" class="tab-content">
                     <h3 style="margin-bottom: 24px;">Server Tags</h3>
-                    <p style="color: #b3b3b5; margin-bottom: 24px; font-size: 14px;">Tags help users discover your server based on games, skill levels, regions, and other preferences.</p>
+                    <p style="color: var(--color-text-secondary); margin-bottom: 24px; font-size: 14px;">Tags help users discover your server based on games, skill levels, regions, and other preferences.</p>
                     
                     <!-- Add Tag Form -->
-                    <div style="background-color: #0e0e10; border-radius: 8px; padding: 20px; margin-bottom: 32px;">
+                    <div style="background-color: var(--color-bg-primary); border-radius: 8px; padding: 20px; margin-bottom: 32px;">
                         <h4 style="margin-bottom: 16px;">Add New Tag</h4>
                         
                         <form id="addTagForm" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; align-items: end;">
@@ -624,7 +620,7 @@
                         </form>
                         
                         <div id="tagSuggestions" style="margin-top: 16px; display: none;">
-                            <h5 style="margin-bottom: 12px; color: #efeff1;">Suggested Tags</h5>
+                            <h5 style="margin-bottom: 12px; color: var(--color-text-primary);">Suggested Tags</h5>
                             <div id="suggestedTagsList" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
                         </div>
                     </div>
@@ -637,7 +633,7 @@
                                 @php $typeTags = $server->tags->where('tag_type', $tagType); @endphp
                                 @if($typeTags->count() > 0)
                                     <div style="margin-bottom: 20px;">
-                                        <h5 style="color: #b3b3b5; font-size: 14px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">
+                                        <h5 style="color: var(--color-text-secondary); font-size: 14px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">
                                             {{ ucfirst(str_replace('_', ' ', $tagType)) }}
                                         </h5>
                                         <div style="display: flex; flex-wrap: wrap; gap: 8px;">
@@ -652,29 +648,29 @@
                                 @endif
                             @endforeach
                         @else
-                            <div style="text-align: center; padding: 40px; background-color: #0e0e10; border-radius: 8px; border: 2px dashed #3f3f46;">
-                                <p style="color: #71717a; margin-bottom: 16px;">No tags added yet</p>
-                                <p style="color: #b3b3b5; font-size: 14px;">Add tags to help users discover your server based on games, skill levels, and preferences.</p>
+                            <div style="text-align: center; padding: 40px; background-color: var(--color-bg-primary); border-radius: 8px; border: 2px dashed var(--color-border-primary);">
+                                <p style="color: var(--color-text-muted); margin-bottom: 16px;">No tags added yet</p>
+                                <p style="color: var(--color-text-secondary); font-size: 14px;">Add tags to help users discover your server based on games, skill levels, and preferences.</p>
                             </div>
                         @endif
                     </div>
 
                     <!-- Tag Analytics -->
                     @if($server->tags && $server->tags->count() > 0)
-                        <div style="background-color: #0e0e10; border-radius: 8px; padding: 20px; margin-top: 32px;">
+                        <div style="background-color: var(--color-bg-primary); border-radius: 8px; padding: 20px; margin-top: 32px;">
                             <h4 style="margin-bottom: 16px;">Tag Performance</h4>
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
                                 <div style="text-align: center;">
-                                    <div style="font-size: 24px; font-weight: 600; color: #667eea; margin-bottom: 4px;">{{ $server->tags->count() }}</div>
-                                    <div style="color: #b3b3b5; font-size: 14px;">Total Tags</div>
+                                    <div style="font-size: 24px; font-weight: 600; color: var(--accent-primary); margin-bottom: 4px;">{{ $server->tags->count() }}</div>
+                                    <div style="color: var(--color-text-secondary); font-size: 14px;">Total Tags</div>
                                 </div>
                                 <div style="text-align: center;">
-                                    <div style="font-size: 24px; font-weight: 600; color: #10b981; margin-bottom: 4px;">{{ $server->tags->where('tag_type', 'game')->count() }}</div>
-                                    <div style="color: #b3b3b5; font-size: 14px;">Game Tags</div>
+                                    <div style="font-size: 24px; font-weight: 600; color: var(--accent-success); margin-bottom: 4px;">{{ $server->tags->where('tag_type', 'game')->count() }}</div>
+                                    <div style="color: var(--color-text-secondary); font-size: 14px;">Game Tags</div>
                                 </div>
                                 <div style="text-align: center;">
-                                    <div style="font-size: 24px; font-weight: 600; color: #f59e0b; margin-bottom: 4px;">{{ $server->members->count() }}</div>
-                                    <div style="color: #b3b3b5; font-size: 14px;">Members</div>
+                                    <div style="font-size: 24px; font-weight: 600; color: var(--accent-warning); margin-bottom: 4px;">{{ $server->members->count() }}</div>
+                                    <div style="color: var(--color-text-secondary); font-size: 14px;">Members</div>
                                 </div>
                             </div>
                         </div>
@@ -684,10 +680,10 @@
                 <!-- Goals Tab -->
                 <div id="goals" class="tab-content">
                     <h3 style="margin-bottom: 24px;">Community Goals</h3>
-                    <p style="color: #b3b3b5; margin-bottom: 24px; font-size: 14px;">Create and manage community goals to engage your members and track achievements together.</p>
+                    <p style="color: var(--color-text-secondary); margin-bottom: 24px; font-size: 14px;">Create and manage community goals to engage your members and track achievements together.</p>
                     
                     <!-- Create Goal Form -->
-                    <div style="background-color: #0e0e10; border-radius: 8px; padding: 20px; margin-bottom: 32px;">
+                    <div style="background-color: var(--color-bg-primary); border-radius: 8px; padding: 20px; margin-bottom: 32px;">
                         <h4 style="margin-bottom: 16px;">Create New Goal</h4>
                         
                         <form id="createGoalForm" style="display: grid; gap: 16px;">
@@ -742,7 +738,7 @@
                                 <div class="form-group" style="margin: 0;">
                                     <label for="achievement_id">Steam Achievement</label>
                                     <input type="text" id="achievement_id" name="achievement_id" placeholder="e.g., WIN_BOMB_PLANT">
-                                    <small style="color: #71717a; font-size: 12px;">Steam achievement API name (will sync automatically)</small>
+                                    <small style="color: var(--color-text-muted); font-size: 12px;">Steam achievement API name (will sync automatically)</small>
                                 </div>
                             </div>
                             
@@ -758,33 +754,33 @@
                     <div id="activeGoals">
                         @if($server->goals && $server->goals->where('status', 'active')->count() > 0)
                             @foreach($server->goals->where('status', 'active') as $goal)
-                                <div class="goal-card" data-goal-id="{{ $goal->id }}" style="background-color: #0e0e10; border-radius: 8px; padding: 20px; margin-bottom: 16px; border-left: 4px solid #667eea;">
+                                <div class="goal-card" data-goal-id="{{ $goal->id }}" style="background-color: var(--color-bg-primary); border-radius: 8px; padding: 20px; margin-bottom: 16px; border-left: 4px solid var(--accent-primary);">
                                     <div style="display: flex; justify-content: between; align-items: flex-start; margin-bottom: 12px;">
                                         <div style="flex: 1;">
-                                            <h5 style="color: #efeff1; margin-bottom: 4px;">{{ $goal->title }}</h5>
-                                            <p style="color: #b3b3b5; font-size: 14px; margin-bottom: 8px;">{{ $goal->description }}</p>
+                                            <h5 style="color: var(--color-text-primary); margin-bottom: 4px;">{{ $goal->title }}</h5>
+                                            <p style="color: var(--color-text-secondary); font-size: 14px; margin-bottom: 8px;">{{ $goal->description }}</p>
                                             <div style="display: flex; gap: 12px; align-items: center;">
                                                 <span style="font-size: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2px 6px; border-radius: 3px; text-transform: uppercase; font-weight: 600;">
                                                     {{ ucfirst($goal->goal_type) }}
                                                 </span>
                                                 @if($goal->game_appid)
-                                                    <span style="font-size: 12px; background-color: #3f3f46; color: #b3b3b5; padding: 2px 6px; border-radius: 3px;">
+                                                    <span style="font-size: 12px; background-color: var(--color-surface-active); color: var(--color-text-secondary); padding: 2px 6px; border-radius: 3px;">
                                                         {{ $goal->game_name ?? 'Game' }}
                                                     </span>
                                                 @endif
                                                 @if($goal->deadline)
-                                                    <span style="font-size: 12px; color: #f59e0b;">
+                                                    <span style="font-size: 12px; color: var(--accent-warning);">
                                                         📅 Due {{ \Carbon\Carbon::parse($goal->deadline)->diffForHumans() }}
                                                     </span>
                                                 @endif
                                             </div>
                                         </div>
                                         <div style="position: relative;">
-                                            <button onclick="toggleGoalActions('{{ $goal->id }}')" style="background: none; border: none; color: #71717a; font-size: 18px; cursor: pointer; padding: 4px;">⋮</button>
-                                            <div class="goal-actions" id="goal-actions-{{ $goal->id }}" style="display: none; position: absolute; top: 100%; right: 0; background-color: #18181b; border: 1px solid #3f3f46; border-radius: 6px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); z-index: 100; min-width: 140px; margin-top: 4px;">
-                                                <button onclick="syncGoalProgress('{{ $goal->id }}')" style="display: block; width: 100%; padding: 10px 14px; background: none; border: none; color: #ffffff; text-align: left; cursor: pointer; font-size: 14px; border-radius: 6px 6px 0 0; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#3f3f46'" onmouseout="this.style.backgroundColor='transparent'">Sync Progress</button>
-                                                <button onclick="editGoal('{{ $goal->id }}')" style="display: block; width: 100%; padding: 10px 14px; background: none; border: none; color: #ffffff; text-align: left; cursor: pointer; font-size: 14px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#3f3f46'" onmouseout="this.style.backgroundColor='transparent'">Edit Goal</button>
-                                                <button onclick="deleteGoal('{{ $goal->id }}')" style="display: block; width: 100%; padding: 10px 14px; background: none; border: none; color: #f87171; text-align: left; cursor: pointer; font-size: 14px; border-radius: 0 0 6px 6px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#dc2626'; this.style.color='#ffffff'" onmouseout="this.style.backgroundColor='transparent'; this.style.color='#f87171'">Delete Goal</button>
+                                            <button onclick="toggleGoalActions('{{ $goal->id }}')" style="background: none; border: none; color: var(--color-text-muted); font-size: 18px; cursor: pointer; padding: 4px;">&#8942;</button>
+                                            <div class="goal-actions" id="goal-actions-{{ $goal->id }}" style="display: none; position: absolute; top: 100%; right: 0; background-color: var(--color-surface); border: 1px solid var(--color-border-primary); border-radius: 6px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); z-index: 100; min-width: 140px; margin-top: 4px;">
+                                                <button onclick="syncGoalProgress('{{ $goal->id }}')" class="goal-action-btn" style="display: block; width: 100%; padding: 10px 14px; background: none; border: none; color: var(--color-text-primary); text-align: left; cursor: pointer; font-size: 14px; border-radius: 6px 6px 0 0; transition: background-color 0.2s;">Sync Progress</button>
+                                                <button onclick="editGoal('{{ $goal->id }}')" class="goal-action-btn" style="display: block; width: 100%; padding: 10px 14px; background: none; border: none; color: var(--color-text-primary); text-align: left; cursor: pointer; font-size: 14px; transition: background-color 0.2s;">Edit Goal</button>
+                                                <button onclick="deleteGoal('{{ $goal->id }}')" class="goal-action-btn-danger" style="display: block; width: 100%; padding: 10px 14px; background: none; border: none; color: var(--accent-danger); text-align: left; cursor: pointer; font-size: 14px; border-radius: 0 0 6px 6px; transition: background-color 0.2s;">Delete Goal</button>
                                             </div>
                                         </div>
                                     </div>
@@ -792,13 +788,13 @@
                                     <!-- Progress Bar -->
                                     <div style="margin-bottom: 16px;">
                                         <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-                                            <span style="font-size: 14px; color: #b3b3b5;">Progress</span>
-                                            <span class="progress-text" style="font-size: 14px; color: #efeff1; font-weight: 600;" data-target="{{ $goal->target_value }}">
+                                            <span style="font-size: 14px; color: var(--color-text-secondary);">Progress</span>
+                                            <span class="progress-text" style="font-size: 14px; color: var(--color-text-primary); font-weight: 600;" data-target="{{ $goal->target_value }}">
                                                 {{ $goal->current_value ?? 0 }} / {{ $goal->target_value }}
                                                 ({{ $goal->target_value > 0 ? round(($goal->current_value ?? 0) / $goal->target_value * 100, 1) : 0 }}%)
                                             </span>
                                         </div>
-                                        <div style="width: 100%; height: 8px; background-color: #3f3f46; border-radius: 4px; overflow: hidden;">
+                                        <div style="width: 100%; height: 8px; background-color: var(--color-surface-active); border-radius: 4px; overflow: hidden;">
                                             <div class="progress-bar" style="height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); width: {{ $goal->target_value > 0 ? min(($goal->current_value ?? 0) / $goal->target_value * 100, 100) : 0 }}%; transition: width 0.8s ease;" 
                                                  aria-valuenow="{{ $goal->target_value > 0 ? round(($goal->current_value ?? 0) / $goal->target_value * 100, 1) : 0 }}" aria-valuemin="0" aria-valuemax="100"></div>
                                         </div>
@@ -807,33 +803,33 @@
                                     <!-- Participants -->
                                     <div style="display: flex; justify-content: space-between; align-items: center;">
                                         <div style="display: flex; align-items: center; gap: 8px;">
-                                            <span class="participant-count" style="font-size: 14px; color: #b3b3b5;">{{ $goal->participants->count() }} participants</span>
+                                            <span class="participant-count" style="font-size: 14px; color: var(--color-text-secondary);">{{ $goal->participants->count() }} participants</span>
                                             <div class="participants-list" style="display: flex; margin-left: 8px;">
                                                 @foreach($goal->participants->take(5) as $participant)
                                                     <img src="{{ $participant->user->profile->avatar_url }}" alt="{{ $participant->user->display_name }}" 
-                                                         style="width: 24px; height: 24px; border-radius: 50%; margin-left: -4px; border: 2px solid #18181b;"
+                                                         style="width: 24px; height: 24px; border-radius: 50%; margin-left: -4px; border: 2px solid var(--color-surface);"
                                                          title="{{ $participant->user->display_name }} - {{ $participant->contribution_percentage }}% contribution"
                                                          data-user-id="{{ $participant->user_id }}">
                                                 @endforeach
                                                 @if($goal->participants->count() > 5)
-                                                    <div style="width: 24px; height: 24px; border-radius: 50%; background-color: #3f3f46; margin-left: -4px; border: 2px solid #18181b; display: flex; align-items: center; justify-content: center; color: #b3b3b5; font-size: 10px; font-weight: 600;">
+                                                    <div style="width: 24px; height: 24px; border-radius: 50%; background-color: var(--color-surface-active); margin-left: -4px; border: 2px solid var(--color-surface); display: flex; align-items: center; justify-content: center; color: var(--color-text-secondary); font-size: 10px; font-weight: 600;">
                                                         +{{ $goal->participants->count() - 5 }}
                                                     </div>
                                                 @endif
                                             </div>
                                         </div>
                                         <div style="display: flex; gap: 8px;">
-                                            <button onclick="showGoalLeaderboard('{{ $goal->id }}')" class="btn btn-sm" style="background-color: #3f3f46; color: #efeff1; padding: 4px 8px; font-size: 12px;">Leaderboard</button>
-                                            <button onclick="showGoalDetails('{{ $goal->id }}')" class="btn btn-sm" style="background-color: #667eea; color: white; padding: 4px 8px; font-size: 12px;">View Details</button>
+                                            <button onclick="showGoalLeaderboard('{{ $goal->id }}')" class="btn btn-sm" style="background-color: var(--color-surface-active); color: var(--color-text-primary); padding: 4px 8px; font-size: 12px;">Leaderboard</button>
+                                            <button onclick="showGoalDetails('{{ $goal->id }}')" class="btn btn-sm" style="background-color: var(--accent-primary); color: white; padding: 4px 8px; font-size: 12px;">View Details</button>
                                         </div>
                                     </div>
                                 </div>
                             @endforeach
                         @else
-                            <div style="text-align: center; padding: 40px; background-color: #0e0e10; border-radius: 8px; border: 2px dashed #3f3f46;">
+                            <div style="text-align: center; padding: 40px; background-color: var(--color-bg-primary); border-radius: 8px; border: 2px dashed var(--color-border-primary);">
                                 <div style="font-size: 32px; margin-bottom: 16px;">🎯</div>
-                                <p style="color: #71717a; margin-bottom: 16px;">No goals created yet</p>
-                                <p style="color: #b3b3b5; font-size: 14px;">Create your first community goal to start engaging your members!</p>
+                                <p style="color: var(--color-text-muted); margin-bottom: 16px;">No goals created yet</p>
+                                <p style="color: var(--color-text-secondary); font-size: 14px;">Create your first community goal to start engaging your members!</p>
                             </div>
                         @endif
                     </div>
@@ -844,15 +840,15 @@
                             <h4 style="margin-bottom: 16px;">Completed Goals ({{ $server->goals->where('status', 'completed')->count() }})</h4>
                             <div style="max-height: 300px; overflow-y: auto;">
                                 @foreach($server->goals->where('status', 'completed')->take(5) as $goal)
-                                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background-color: #0e0e10; border-radius: 6px; margin-bottom: 8px; border-left: 4px solid #10b981;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background-color: var(--color-bg-primary); border-radius: 6px; margin-bottom: 8px; border-left: 4px solid var(--accent-success);">
                                         <div>
-                                            <div style="font-weight: 600; color: #efeff1; margin-bottom: 2px;">✅ {{ $goal->title }}</div>
-                                            <div style="font-size: 12px; color: #b3b3b5;">
+                                            <div style="font-weight: 600; color: var(--color-text-primary); margin-bottom: 2px;">✅ {{ $goal->title }}</div>
+                                            <div style="font-size: 12px; color: var(--color-text-secondary);">
                                                 Completed {{ $goal->completed_at ? \Carbon\Carbon::parse($goal->completed_at)->diffForHumans() : 'recently' }} • 
                                                 {{ $goal->participants->count() }} participants
                                             </div>
                                         </div>
-                                        <div style="text-align: right; color: #10b981; font-weight: 600;">
+                                        <div style="text-align: right; color: var(--accent-success); font-weight: 600;">
                                             {{ $goal->current_value }}/{{ $goal->target_value }}
                                         </div>
                                     </div>
@@ -862,24 +858,24 @@
                     @endif
 
                     <!-- Goal Analytics -->
-                    <div style="background-color: #0e0e10; border-radius: 8px; padding: 20px; margin-top: 32px;">
+                    <div style="background-color: var(--color-bg-primary); border-radius: 8px; padding: 20px; margin-top: 32px;">
                         <h4 style="margin-bottom: 16px;">Goal Analytics</h4>
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
                             <div style="text-align: center;">
-                                <div style="font-size: 24px; font-weight: 600; color: #667eea; margin-bottom: 4px;">{{ $server->goals->count() ?? 0 }}</div>
-                                <div style="color: #b3b3b5; font-size: 14px;">Total Goals</div>
+                                <div style="font-size: 24px; font-weight: 600; color: var(--accent-primary); margin-bottom: 4px;">{{ $server->goals->count() ?? 0 }}</div>
+                                <div style="color: var(--color-text-secondary); font-size: 14px;">Total Goals</div>
                             </div>
                             <div style="text-align: center;">
-                                <div style="font-size: 24px; font-weight: 600; color: #10b981; margin-bottom: 4px;">{{ $server->goals->where('status', 'completed')->count() ?? 0 }}</div>
-                                <div style="color: #b3b3b5; font-size: 14px;">Completed</div>
+                                <div style="font-size: 24px; font-weight: 600; color: var(--accent-success); margin-bottom: 4px;">{{ $server->goals->where('status', 'completed')->count() ?? 0 }}</div>
+                                <div style="color: var(--color-text-secondary); font-size: 14px;">Completed</div>
                             </div>
                             <div style="text-align: center;">
-                                <div style="font-size: 24px; font-weight: 600; color: #f59e0b; margin-bottom: 4px;">{{ $server->goals->where('status', 'active')->count() ?? 0 }}</div>
-                                <div style="color: #b3b3b5; font-size: 14px;">Active</div>
+                                <div style="font-size: 24px; font-weight: 600; color: var(--accent-warning); margin-bottom: 4px;">{{ $server->goals->where('status', 'active')->count() ?? 0 }}</div>
+                                <div style="color: var(--color-text-secondary); font-size: 14px;">Active</div>
                             </div>
                             <div style="text-align: center;">
-                                <div style="font-size: 24px; font-weight: 600; color: #ef4444; margin-bottom: 4px;">{{ $server->goals->sum('participants_count') ?? 0 }}</div>
-                                <div style="color: #b3b3b5; font-size: 14px;">Participations</div>
+                                <div style="font-size: 24px; font-weight: 600; color: var(--accent-danger); margin-bottom: 4px;">{{ $server->goals->sum('participants_count') ?? 0 }}</div>
+                                <div style="color: var(--color-text-secondary); font-size: 14px;">Participations</div>
                             </div>
                         </div>
                     </div>
@@ -888,13 +884,13 @@
                 <!-- Telegram Bot Tab -->
                 <div id="telegram" class="tab-content">
                     <h3 style="margin-bottom: 24px;">Telegram Bot Integration</h3>
-                    <p style="color: #b3b3b5; margin-bottom: 24px; font-size: 14px;">Connect your server to Telegram to receive goal notifications and updates in your Telegram group or channel.</p>
+                    <p style="color: var(--color-text-secondary); margin-bottom: 24px; font-size: 14px;">Connect your server to Telegram to receive goal notifications and updates in your Telegram group or channel.</p>
                     
                     <!-- Bot Status Card -->
-                    <div id="telegramStatusCard" style="background-color: #0e0e10; border-radius: 8px; padding: 20px; margin-bottom: 32px; position: relative;">
+                    <div id="telegramStatusCard" style="background-color: var(--color-bg-primary); border-radius: 8px; padding: 20px; margin-bottom: 32px; position: relative;">
                         <!-- Status Badge - Positioned absolutely in top-right -->
-                        <div id="statusIndicator" style="position: absolute; top: 16px; right: 16px; display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; background-color: #3f3f46; color: #efeff1;">
-                            <span id="statusDot" style="width: 8px; height: 8px; border-radius: 50%; background-color: #71717a; flex-shrink: 0;"></span>
+                        <div id="statusIndicator" style="position: absolute; top: 16px; right: 16px; display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; background-color: var(--color-surface-active); color: var(--color-text-primary);">
+                            <span id="statusDot" style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--color-text-muted); flex-shrink: 0;"></span>
                             <span id="statusText">Checking...</span>
                         </div>
 
@@ -903,20 +899,20 @@
                         <div id="telegramInfo" style="display: none;">
                             <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px;">
                                 <div>
-                                    <div style="font-size: 14px; color: #b3b3b5;">Chat ID</div>
-                                    <div style="font-weight: 600; color: #efeff1;" id="chatId">-</div>
+                                    <div style="font-size: 14px; color: var(--color-text-secondary);">Chat ID</div>
+                                    <div style="font-weight: 600; color: var(--color-text-primary);" id="chatId">-</div>
                                 </div>
                                 <div>
-                                    <div style="font-size: 14px; color: #b3b3b5;">Chat Name</div>
-                                    <div style="font-weight: 600; color: #efeff1;" id="chatName">-</div>
+                                    <div style="font-size: 14px; color: var(--color-text-secondary);">Chat Name</div>
+                                    <div style="font-weight: 600; color: var(--color-text-primary);" id="chatName">-</div>
                                 </div>
                                 <div>
-                                    <div style="font-size: 14px; color: #b3b3b5;">Linked</div>
-                                    <div style="font-weight: 600; color: #efeff1;" id="linkedAt">-</div>
+                                    <div style="font-size: 14px; color: var(--color-text-secondary);">Linked</div>
+                                    <div style="font-weight: 600; color: var(--color-text-primary);" id="linkedAt">-</div>
                                 </div>
                                 <div>
-                                    <div style="font-size: 14px; color: #b3b3b5;">Notifications</div>
-                                    <div style="font-weight: 600; color: #efeff1;" id="notificationsEnabled">-</div>
+                                    <div style="font-size: 14px; color: var(--color-text-secondary);">Notifications</div>
+                                    <div style="font-weight: 600; color: var(--color-text-primary);" id="notificationsEnabled">-</div>
                                 </div>
                             </div>
                             
@@ -927,14 +923,14 @@
                         </div>
                         
                         <div id="setupInstructions" style="display: none;">
-                            <div style="background-color: #18181b; border-radius: 6px; padding: 16px; border-left: 4px solid #667eea;">
-                                <h5 style="margin-bottom: 12px; color: #efeff1;">How to Connect</h5>
-                                <ol style="margin: 0; padding-left: 20px; color: #b3b3b5; font-size: 14px; line-height: 1.6;">
-                                    <li>Add <code style="background-color: #0e0e10; padding: 2px 6px; border-radius: 4px; color: #efeff1;">@YourBotName</code> to your Telegram group</li>
-                                    <li>Send the command: <code style="background-color: #0e0e10; padding: 2px 6px; border-radius: 4px; color: #efeff1;">/link {{ $server->invite_code }}</code></li>
+                            <div style="background-color: var(--color-surface); border-radius: 6px; padding: 16px; border-left: 4px solid var(--accent-primary);">
+                                <h5 style="margin-bottom: 12px; color: var(--color-text-primary);">How to Connect</h5>
+                                <ol style="margin: 0; padding-left: 20px; color: var(--color-text-secondary); font-size: 14px; line-height: 1.6;">
+                                    <li>Add <code style="background-color: var(--color-bg-primary); padding: 2px 6px; border-radius: 4px; color: var(--color-text-primary);">@YourBotName</code> to your Telegram group</li>
+                                    <li>Send the command: <code style="background-color: var(--color-bg-primary); padding: 2px 6px; border-radius: 4px; color: var(--color-text-primary);">/link {{ $server->invite_code }}</code></li>
                                     <li>The bot will automatically link and start sending notifications</li>
                                 </ol>
-                                <p style="margin-top: 12px; margin-bottom: 0; font-size: 13px; color: #71717a;">
+                                <p style="margin-top: 12px; margin-bottom: 0; font-size: 13px; color: var(--color-text-muted);">
                                     <strong>Note:</strong> Make sure the bot has permission to send messages in your group.
                                 </p>
                             </div>
@@ -942,151 +938,151 @@
                     </div>
 
                     <!-- Notification Settings -->
-                    <div style="background-color: #0e0e10; border-radius: 8px; padding: 20px; margin-bottom: 32px;">
+                    <div style="background-color: var(--color-bg-primary); border-radius: 8px; padding: 20px; margin-bottom: 32px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                             <h4 style="margin-bottom: 0;">Notification Settings</h4>
-                            <span id="saveIndicator" style="display: none; font-size: 12px; color: #10b981;">&#10003; Saved</span>
+                            <span id="saveIndicator" style="display: none; font-size: 12px; color: var(--accent-success);">&#10003; Saved</span>
                         </div>
-                        
+
                         <div id="notificationSettings" style="display: none;">
                             <div style="margin-bottom: 16px;">
                                 <label style="display: flex; align-items: center; cursor: pointer;">
                                     <input type="checkbox" id="notificationsToggle" onchange="updateNotificationSettings()" style="margin-right: 12px;">
-                                    <span style="font-weight: 600; color: #efeff1;">Enable Telegram Notifications</span>
+                                    <span style="font-weight: 600; color: var(--color-text-primary);">Enable Telegram Notifications</span>
                                 </label>
-                                <small style="color: #71717a; font-size: 12px; margin-left: 24px;">Turn off to disable all Telegram notifications for this server</small>
+                                <small style="color: var(--color-text-muted); font-size: 12px; margin-left: 24px;">Turn off to disable all Telegram notifications for this server</small>
                             </div>
-                            
+
                             <div id="notificationTypes" style="display: none; margin-left: 24px; margin-top: 16px;">
-                                <p style="font-size: 14px; font-weight: 600; color: #efeff1; margin-bottom: 12px;">Notification Types</p>
-                                
+                                <p style="font-size: 14px; font-weight: 600; color: var(--color-text-primary); margin-bottom: 12px;">Notification Types</p>
+
                                 <div style="display: grid; gap: 12px;">
                                     <label style="display: flex; align-items: center; cursor: pointer;">
                                         <input type="checkbox" id="goalCompleted" onchange="updateNotificationSettings()" style="margin-right: 12px;">
                                         <div>
-                                            <div style="font-weight: 600; color: #efeff1;">Goal Completed</div>
-                                            <div style="font-size: 12px; color: #71717a;">When a community goal is completed</div>
+                                            <div style="font-weight: 600; color: var(--color-text-primary);">Goal Completed</div>
+                                            <div style="font-size: 12px; color: var(--color-text-muted);">When a community goal is completed</div>
                                         </div>
                                     </label>
-                                    
+
                                     <label style="display: flex; align-items: center; cursor: pointer;">
                                         <input type="checkbox" id="goalProgress" onchange="updateNotificationSettings()" style="margin-right: 12px;">
                                         <div>
-                                            <div style="font-weight: 600; color: #efeff1;">Goal Progress</div>
-                                            <div style="font-size: 12px; color: #71717a;">Milestone progress updates (every 10%)</div>
+                                            <div style="font-weight: 600; color: var(--color-text-primary);">Goal Progress</div>
+                                            <div style="font-size: 12px; color: var(--color-text-muted);">Milestone progress updates (every 10%)</div>
                                         </div>
                                     </label>
-                                    
+
                                     <label style="display: flex; align-items: center; cursor: pointer;">
                                         <input type="checkbox" id="newGoal" onchange="updateNotificationSettings()" style="margin-right: 12px;">
                                         <div>
-                                            <div style="font-weight: 600; color: #efeff1;">New Goals</div>
-                                            <div style="font-size: 12px; color: #71717a;">When new community goals are created</div>
+                                            <div style="font-weight: 600; color: var(--color-text-primary);">New Goals</div>
+                                            <div style="font-size: 12px; color: var(--color-text-muted);">When new community goals are created</div>
                                         </div>
                                     </label>
-                                    
+
                                     <label style="display: flex; align-items: center; cursor: pointer;">
                                         <input type="checkbox" id="userJoined" onchange="updateNotificationSettings()" style="margin-right: 12px;">
                                         <div>
-                                            <div style="font-weight: 600; color: #efeff1;">Member Joined</div>
-                                            <div style="font-size: 12px; color: #71717a;">When members join goals</div>
+                                            <div style="font-weight: 600; color: var(--color-text-primary);">Member Joined</div>
+                                            <div style="font-size: 12px; color: var(--color-text-muted);">When members join goals</div>
                                         </div>
                                     </label>
-                                    
+
                                     <label style="display: flex; align-items: center; cursor: pointer;">
                                         <input type="checkbox" id="milestoneReached" onchange="updateNotificationSettings()" style="margin-right: 12px;">
                                         <div>
-                                            <div style="font-weight: 600; color: #efeff1;">Milestone Reached</div>
-                                            <div style="font-size: 12px; color: #71717a;">When goal milestones are achieved</div>
+                                            <div style="font-weight: 600; color: var(--color-text-primary);">Milestone Reached</div>
+                                            <div style="font-size: 12px; color: var(--color-text-muted);">When goal milestones are achieved</div>
                                         </div>
                                     </label>
                                 </div>
 
                                 <!-- Team Notifications Divider -->
-                                <div style="margin-top: 20px; margin-bottom: 16px; border-top: 1px solid #3f3f46; padding-top: 16px;">
-                                    <p style="font-size: 14px; font-weight: 600; color: #efeff1; margin-bottom: 12px;">Team Notifications</p>
+                                <div style="margin-top: 20px; margin-bottom: 16px; border-top: 1px solid var(--color-border-primary); padding-top: 16px;">
+                                    <p style="font-size: 14px; font-weight: 600; color: var(--color-text-primary); margin-bottom: 12px;">Team Notifications</p>
                                 </div>
 
                                 <div style="display: grid; gap: 12px;">
                                     <label style="display: flex; align-items: center; cursor: pointer;">
                                         <input type="checkbox" id="teamCreated" onchange="updateNotificationSettings()" style="margin-right: 12px;">
                                         <div>
-                                            <div style="font-weight: 600; color: #efeff1;">Team Created</div>
-                                            <div style="font-size: 12px; color: #71717a;">When new teams are created</div>
+                                            <div style="font-weight: 600; color: var(--color-text-primary);">Team Created</div>
+                                            <div style="font-size: 12px; color: var(--color-text-muted);">When new teams are created</div>
                                         </div>
                                     </label>
 
                                     <label style="display: flex; align-items: center; cursor: pointer;">
                                         <input type="checkbox" id="teamMemberJoined" onchange="updateNotificationSettings()" style="margin-right: 12px;">
                                         <div>
-                                            <div style="font-weight: 600; color: #efeff1;">Team Member Joined</div>
-                                            <div style="font-size: 12px; color: #71717a;">When members join teams</div>
+                                            <div style="font-weight: 600; color: var(--color-text-primary);">Team Member Joined</div>
+                                            <div style="font-size: 12px; color: var(--color-text-muted);">When members join teams</div>
                                         </div>
                                     </label>
 
                                     <label style="display: flex; align-items: center; cursor: pointer;">
                                         <input type="checkbox" id="teamMemberLeft" onchange="updateNotificationSettings()" style="margin-right: 12px;">
                                         <div>
-                                            <div style="font-weight: 600; color: #efeff1;">Team Member Left</div>
-                                            <div style="font-size: 12px; color: #71717a;">When members leave teams</div>
+                                            <div style="font-weight: 600; color: var(--color-text-primary);">Team Member Left</div>
+                                            <div style="font-size: 12px; color: var(--color-text-muted);">When members leave teams</div>
                                         </div>
                                     </label>
                                 </div>
                             </div>
                         </div>
 
-                        <div id="settingsDisabled" style="color: #71717a; font-style: italic;">
+                        <div id="settingsDisabled" style="color: var(--color-text-muted); font-style: italic;">
                             Connect to Telegram first to configure notification settings.
                         </div>
                     </div>
 
                     <!-- Bot Commands Help -->
-                    <div style="background-color: #0e0e10; border-radius: 8px; padding: 20px;">
+                    <div style="background-color: var(--color-bg-primary); border-radius: 8px; padding: 20px;">
                         <h4 style="margin-bottom: 16px;">Bot Commands</h4>
-                        <p style="color: #b3b3b5; margin-bottom: 16px; font-size: 14px;">Available commands for your Telegram bot:</p>
+                        <p style="color: var(--color-text-secondary); margin-bottom: 16px; font-size: 14px;">Available commands for your Telegram bot:</p>
 
                         <div style="display: grid; gap: 12px;">
-                            <div style="padding: 12px; background-color: #18181b; border-radius: 6px;">
-                                <code style="background-color: #0e0e10; padding: 4px 8px; border-radius: 4px; color: #10b981;">/start</code>
-                                <span style="color: #b3b3b5; margin-left: 8px;">Show welcome message and available commands</span>
+                            <div style="padding: 12px; background-color: var(--color-surface); border-radius: 6px;">
+                                <code style="background-color: var(--color-bg-primary); padding: 4px 8px; border-radius: 4px; color: var(--accent-success);">/start</code>
+                                <span style="color: var(--color-text-secondary); margin-left: 8px;">Show welcome message and available commands</span>
                             </div>
 
-                            <div style="padding: 12px; background-color: #18181b; border-radius: 6px;">
-                                <code style="background-color: #0e0e10; padding: 4px 8px; border-radius: 4px; color: #10b981;">/link {invite_code}</code>
-                                <span style="color: #b3b3b5; margin-left: 8px;">Link the bot to your server</span>
+                            <div style="padding: 12px; background-color: var(--color-surface); border-radius: 6px;">
+                                <code style="background-color: var(--color-bg-primary); padding: 4px 8px; border-radius: 4px; color: var(--accent-success);">/link {invite_code}</code>
+                                <span style="color: var(--color-text-secondary); margin-left: 8px;">Link the bot to your server</span>
                             </div>
 
-                            <div style="padding: 12px; background-color: #18181b; border-radius: 6px;">
-                                <code style="background-color: #0e0e10; padding: 4px 8px; border-radius: 4px; color: #10b981;">/goals</code>
-                                <span style="color: #b3b3b5; margin-left: 8px;">View all active community goals</span>
+                            <div style="padding: 12px; background-color: var(--color-surface); border-radius: 6px;">
+                                <code style="background-color: var(--color-bg-primary); padding: 4px 8px; border-radius: 4px; color: var(--accent-success);">/goals</code>
+                                <span style="color: var(--color-text-secondary); margin-left: 8px;">View all active community goals</span>
                             </div>
 
-                            <div style="padding: 12px; background-color: #18181b; border-radius: 6px;">
-                                <code style="background-color: #0e0e10; padding: 4px 8px; border-radius: 4px; color: #10b981;">/stats</code>
-                                <span style="color: #b3b3b5; margin-left: 8px;">View server goal statistics (total, completed, active)</span>
+                            <div style="padding: 12px; background-color: var(--color-surface); border-radius: 6px;">
+                                <code style="background-color: var(--color-bg-primary); padding: 4px 8px; border-radius: 4px; color: var(--accent-success);">/stats</code>
+                                <span style="color: var(--color-text-secondary); margin-left: 8px;">View server goal statistics (total, completed, active)</span>
                             </div>
 
-                            <div style="padding: 12px; background-color: #18181b; border-radius: 6px;">
-                                <code style="background-color: #0e0e10; padding: 4px 8px; border-radius: 4px; color: #10b981;">/leaderboard</code>
-                                <span style="color: #b3b3b5; margin-left: 8px;">Top 10 goal contributors with medals</span>
+                            <div style="padding: 12px; background-color: var(--color-surface); border-radius: 6px;">
+                                <code style="background-color: var(--color-bg-primary); padding: 4px 8px; border-radius: 4px; color: var(--accent-success);">/leaderboard</code>
+                                <span style="color: var(--color-text-secondary); margin-left: 8px;">Top 10 goal contributors with medals</span>
                             </div>
 
-                            <div style="padding: 12px; background-color: #18181b; border-radius: 6px;">
-                                <code style="background-color: #0e0e10; padding: 4px 8px; border-radius: 4px; color: #10b981;">/upcoming</code>
-                                <span style="color: #b3b3b5; margin-left: 8px;">Active goals sorted by deadline (urgent first)</span>
+                            <div style="padding: 12px; background-color: var(--color-surface); border-radius: 6px;">
+                                <code style="background-color: var(--color-bg-primary); padding: 4px 8px; border-radius: 4px; color: var(--accent-success);">/upcoming</code>
+                                <span style="color: var(--color-text-secondary); margin-left: 8px;">Active goals sorted by deadline (urgent first)</span>
                             </div>
 
-                            <div style="padding: 12px; background-color: #18181b; border-radius: 6px;">
-                                <code style="background-color: #0e0e10; padding: 4px 8px; border-radius: 4px; color: #10b981;">/help</code>
-                                <span style="color: #b3b3b5; margin-left: 8px;">Show detailed help and commands</span>
+                            <div style="padding: 12px; background-color: var(--color-surface); border-radius: 6px;">
+                                <code style="background-color: var(--color-bg-primary); padding: 4px 8px; border-radius: 4px; color: var(--accent-success);">/help</code>
+                                <span style="color: var(--color-text-secondary); margin-left: 8px;">Show detailed help and commands</span>
                             </div>
                         </div>
 
-                        <div style="background-color: #18181b; border-radius: 6px; padding: 16px; margin-top: 16px; border-left: 4px solid #f59e0b;">
-                            <p style="margin: 0; color: #b3b3b5; font-size: 14px;">
-                                <strong style="color: #efeff1;">Server Invite Code:</strong>
-                                <code style="background-color: #0e0e10; padding: 4px 8px; border-radius: 4px; color: #efeff1;">{{ $server->invite_code }}</code>
-                                <br><small style="color: #71717a;">Use this code with the /link command</small>
+                        <div style="background-color: var(--color-surface); border-radius: 6px; padding: 16px; margin-top: 16px; border-left: 4px solid var(--accent-warning);">
+                            <p style="margin: 0; color: var(--color-text-secondary); font-size: 14px;">
+                                <strong style="color: var(--color-text-primary);">Server Invite Code:</strong>
+                                <code style="background-color: var(--color-bg-primary); padding: 4px 8px; border-radius: 4px; color: var(--color-text-primary);">{{ $server->invite_code }}</code>
+                                <br><small style="color: var(--color-text-muted);">Use this code with the /link command</small>
                             </p>
                         </div>
                     </div>

@@ -14,7 +14,7 @@
     }
     
     .matchmaking-sidebar {
-        background-color: #18181b;
+        background-color: var(--color-surface);
         border-radius: 12px;
         padding: 24px;
         height: fit-content;
@@ -36,7 +36,7 @@
     }
     
     .filter-section h4 {
-        color: #efeff1;
+        color: var(--color-text-primary);
         font-size: 16px;
         font-weight: 600;
         margin-bottom: 12px;
@@ -49,7 +49,7 @@
     .filter-group label {
         display: block;
         font-size: 14px;
-        color: #b3b3b5;
+        color: var(--color-text-secondary);
         margin-bottom: 6px;
     }
     
@@ -57,18 +57,18 @@
     .filter-group input {
         width: 100%;
         padding: 8px 12px;
-        background-color: #0e0e10;
-        border: 1px solid #3f3f46;
+        background-color: var(--color-input-bg);
+        border: 1px solid var(--color-input-border);
         border-radius: 6px;
-        color: #efeff1;
+        color: var(--color-input-text);
         font-size: 14px;
     }
     
     .status-card {
-        background-color: #18181b;
+        background-color: var(--color-surface);
         border-radius: 12px;
         padding: 20px;
-        border: 1px solid #3f3f46;
+        border: 1px solid var(--color-border-primary);
     }
     
     .status-indicator {
@@ -127,10 +127,10 @@
     }
     
     .team-card {
-        background-color: #18181b;
+        background-color: var(--card-bg);
         border-radius: 12px;
         padding: 20px;
-        border: 1px solid #3f3f46;
+        border: 1px solid var(--card-border);
         transition: all 0.2s;
     }
     
@@ -149,13 +149,13 @@
     .team-name {
         font-size: 18px;
         font-weight: 600;
-        color: #efeff1;
+        color: var(--color-text-primary);
         margin-bottom: 4px;
     }
-    
+
     .team-game {
         font-size: 14px;
-        color: #b3b3b5;
+        color: var(--color-text-secondary);
     }
     
     .compatibility-score {
@@ -173,7 +173,7 @@
     
     .score-label {
         font-size: 12px;
-        color: #b3b3b5;
+        color: var(--color-text-secondary);
         text-transform: uppercase;
     }
     
@@ -190,17 +190,17 @@
         gap: 8px;
         flex: 1;
         padding: 12px;
-        background-color: #0e0e10;
+        background-color: var(--color-bg-primary);
         border-radius: 8px;
-        border: 1px solid #3f3f46;
+        border: 1px solid var(--color-border-primary);
     }
-    
+
     .member-slot.filled {
         border-color: #10b981;
     }
-    
+
     .member-slot.empty {
-        border: 2px dashed #3f3f46;
+        border: 2px dashed var(--color-border-primary);
     }
     
     .member-avatar {
@@ -214,17 +214,17 @@
         width: 32px;
         height: 32px;
         border-radius: 50%;
-        background-color: #3f3f46;
+        background-color: var(--color-surface-active);
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #71717a;
+        color: var(--color-text-muted);
         font-size: 18px;
     }
-    
+
     .member-name {
         font-size: 12px;
-        color: #b3b3b5;
+        color: var(--color-text-secondary);
         text-align: center;
     }
     
@@ -247,8 +247,8 @@
     
     .team-tag {
         font-size: 11px;
-        background-color: #3f3f46;
-        color: #b3b3b5;
+        background-color: var(--color-surface-active);
+        color: var(--color-text-secondary);
         padding: 4px 8px;
         border-radius: 4px;
         text-transform: uppercase;
@@ -260,18 +260,18 @@
     }
     
     .card {
-        background-color: #18181b;
+        background-color: var(--card-bg);
         border-radius: 12px;
         padding: 24px;
-        border: 1px solid #3f3f46;
+        border: 1px solid var(--card-border);
         position: relative;
         overflow: hidden;
         width: 100%;
         box-sizing: border-box;
     }
-    
+
     .card-header {
-        color: #efeff1;
+        color: var(--color-text-primary);
         font-size: 18px;
         font-weight: 600;
         margin: 0 0 20px 0;
@@ -279,12 +279,12 @@
         align-items: center;
         gap: 8px;
     }
-    
+
     .request-card {
-        background-color: #18181b;
+        background-color: var(--color-surface);
         border-radius: 12px;
         padding: 20px;
-        border: 1px solid #3f3f46;
+        border: 1px solid var(--color-border-primary);
         position: relative;
         width: 100%;
         box-sizing: border-box;
@@ -305,7 +305,7 @@
     .request-game {
         font-size: 16px;
         font-weight: 600;
-        color: #efeff1;
+        color: var(--color-text-primary);
         flex: 1;
         min-width: 0;
     }
@@ -325,13 +325,13 @@
     
     .request-detail-label {
         font-size: 12px;
-        color: #71717a;
+        color: var(--color-text-muted);
         text-transform: uppercase;
     }
-    
+
     .request-detail-value {
         font-size: 14px;
-        color: #efeff1;
+        color: var(--color-text-primary);
         font-weight: 500;
     }
     
@@ -343,13 +343,13 @@
     }
     
     .quick-action {
-        background-color: #18181b;
-        border: 1px solid #3f3f46;
+        background-color: var(--color-surface);
+        border: 1px solid var(--color-border-primary);
         border-radius: 8px;
         padding: 16px;
         text-align: center;
         text-decoration: none;
-        color: #efeff1;
+        color: var(--color-text-primary);
         transition: all 0.2s;
     }
     
@@ -371,7 +371,7 @@
     
     .quick-action-desc {
         font-size: 12px;
-        color: #b3b3b5;
+        color: var(--color-text-secondary);
     }
     
     @media (max-width: 768px) {
@@ -672,8 +672,8 @@
 
 <!-- Create Request Modal -->
 <div id="createRequestModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); z-index: 1000; align-items: center; justify-content: center;">
-    <div style="background-color: #18181b; border-radius: 12px; padding: 32px; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;">
-        <h3 style="margin-bottom: 24px; color: #efeff1;">Create Matchmaking Request</h3>
+    <div style="background-color: var(--color-surface); border-radius: 12px; padding: 32px; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;">
+        <h3 style="margin-bottom: 24px; color: var(--color-text-primary);">Create Matchmaking Request</h3>
         <form id="createRequestForm" action="{{ route('matchmaking.store') }}" method="POST">
             @csrf
             <div class="form-group">
@@ -698,21 +698,21 @@
             <div class="form-group">
                 <label>Your Skill Level</label>
                 <div id="skill_display_container">
-                    <div id="skill_display" style="color: #71717a; font-size: 14px; padding: 10px 0;">
+                    <div id="skill_display" style="color: var(--color-text-muted); font-size: 14px; padding: 10px 0;">
                         Select a game to see your skill level
                     </div>
                 </div>
                 <input type="hidden" id="skill_level" name="skill_level" value="unranked">
-                <small style="color: #71717a; font-size: 12px; margin-top: 4px; display: block;">
+                <small style="color: var(--color-text-muted); font-size: 12px; margin-top: 4px; display: block;">
                     Calculated automatically from your Steam stats
                 </small>
             </div>
             <div class="form-group">
                 <label for="preferred_roles">Preferred Roles</label>
                 <div id="role_selection_container">
-                    <p style="color: #71717a; font-size: 14px; padding: 10px 0; margin: 0;">Select a game to see available roles</p>
+                    <p style="color: var(--color-text-muted); font-size: 14px; padding: 10px 0; margin: 0;">Select a game to see available roles</p>
                 </div>
-                <small style="color: #b3b3b5;">Hold Ctrl/Cmd to select multiple roles</small>
+                <small style="color: var(--color-text-secondary);">Hold Ctrl/Cmd to select multiple roles</small>
             </div>
             <div class="form-group">
                 <label for="preferred_regions">Preferred Regions</label>
@@ -725,7 +725,7 @@
                     <option value="AFRICA">Africa</option>
                     <option value="MIDDLE_EAST">Middle East</option>
                 </select>
-                <small style="color: #b3b3b5;">Select your preferred gaming regions</small>
+                <small style="color: var(--color-text-secondary);">Select your preferred gaming regions</small>
             </div>
             <div class="form-group">
                 <label for="availability_hours">When Can You Play?</label>
@@ -736,7 +736,7 @@
                     <option value="night">Night (12AM-6AM)</option>
                     <option value="flexible">Flexible Schedule</option>
                 </select>
-                <small style="color: #b3b3b5;">Select your typical gaming hours</small>
+                <small style="color: var(--color-text-secondary);">Select your typical gaming hours</small>
             </div>
             <div class="form-group">
                 <label for="languages">Languages You Speak</label>
@@ -751,7 +751,7 @@
                     <option value="ja">Japanese</option>
                     <option value="ko">Korean</option>
                 </select>
-                <small style="color: #b3b3b5;">Select languages for team communication</small>
+                <small style="color: var(--color-text-secondary);">Select languages for team communication</small>
             </div>
             <div class="form-group">
                 <label for="message">Message (Optional)</label>
@@ -767,10 +767,10 @@
 
 <!-- Find Teams Results Modal -->
 <div id="findTeamsModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.8); z-index: 2000; align-items: center; justify-content: center;">
-    <div style="background-color: #18181b; border-radius: 12px; padding: 32px; max-width: 900px; width: 90%; max-height: 90vh; overflow-y: auto;">
+    <div style="background-color: var(--color-surface); border-radius: 12px; padding: 32px; max-width: 900px; width: 90%; max-height: 90vh; overflow-y: auto;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-            <h3 style="margin: 0; color: #efeff1;">🎯 Compatible Teams Found</h3>
-            <button onclick="hideFindTeamsModal()" style="background: none; border: none; color: #71717a; font-size: 24px; cursor: pointer; padding: 0; line-height: 1; transition: color 0.2s;" onmouseover="this.style.color='#efeff1'" onmouseout="this.style.color='#71717a'">×</button>
+            <h3 style="margin: 0; color: var(--color-text-primary);">🎯 Compatible Teams Found</h3>
+            <button onclick="hideFindTeamsModal()" style="background: none; border: none; color: var(--color-text-muted); font-size: 24px; cursor: pointer; padding: 0; line-height: 1; transition: color 0.2s;">×</button>
         </div>
 
         <div id="findTeamsResults" style="display: grid; gap: 16px;">
@@ -834,7 +834,7 @@ function updateRoleOptions(gameAppId) {
     const roles = GAME_ROLES[gameAppId];
 
     if (!roles) {
-        container.innerHTML = '<p style="color: #71717a; font-size: 14px; padding: 10px 0; margin: 0;">Select a game to see available roles</p>';
+        container.innerHTML = '<p style="color: var(--color-text-muted); font-size: 14px; padding: 10px 0; margin: 0;">Select a game to see available roles</p>';
         return;
     }
 

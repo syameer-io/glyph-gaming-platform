@@ -9,7 +9,7 @@
     <div class="container">
         <div style="margin-bottom: 32px;">
             <h1 style="margin-bottom: 8px;">🔍 Discover Gaming Communities</h1>
-            <p style="color: #b3b3b5; font-size: 16px;">Find your perfect gaming community based on your interests and preferences</p>
+            <p style="color: var(--color-text-secondary); font-size: 16px;">Find your perfect gaming community based on your interests and preferences</p>
         </div>
 
         <!-- Filter Controls -->
@@ -120,13 +120,13 @@
                                 @endif
                                 
                                 <div style="flex: 1;">
-                                    <h3 style="margin: 0 0 4px 0; color: #efeff1; font-weight: 600; font-size: 20px;">
+                                    <h3 style="margin: 0 0 4px 0; color: var(--color-text-primary); font-weight: 600; font-size: 20px;">
                                         <a href="{{ route('server.show', $server) }}" style="color: inherit; text-decoration: none;">
                                             {{ $server->name }}
                                         </a>
                                     </h3>
                                     @if($server->description)
-                                        <p style="margin: 0; color: #b3b3b5; font-size: 14px; line-height: 1.4;">{{ Str::limit($server->description, 120) }}</p>
+                                        <p style="margin: 0; color: var(--color-text-secondary); font-size: 14px; line-height: 1.4;">{{ Str::limit($server->description, 120) }}</p>
                                     @endif
                                 </div>
                             </div>
@@ -135,16 +135,16 @@
                         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 20px;">
                             <div>
                                 @if(isset($serverRecommendations[$server->id]) && !empty($serverRecommendations[$server->id]['reasons']))
-                                    <h4 style="margin: 0 0 8px 0; color: #efeff1; font-size: 14px; font-weight: 600;">Recommended because:</h4>
+                                    <h4 style="margin: 0 0 8px 0; color: var(--color-text-primary); font-size: 14px; font-weight: 600;">Recommended because:</h4>
                                     <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px;">
                                         @foreach(array_slice($serverRecommendations[$server->id]['reasons'], 0, 3) as $reason)
-                                            <span style="font-size: 12px; background-color: #0e0e10; color: #b3b3b5; padding: 4px 8px; border-radius: 4px; border: 1px solid #3f3f46;">{{ $reason }}</span>
+                                            <span style="font-size: 12px; background-color: var(--color-bg-primary); color: var(--color-text-secondary); padding: 4px 8px; border-radius: 4px; border: 1px solid var(--color-border-primary);">{{ $reason }}</span>
                                         @endforeach
                                     </div>
                                 @endif
 
                                 @if($server->tags && $server->tags->count() > 0)
-                                    <h4 style="margin: 0 0 8px 0; color: #efeff1; font-size: 14px; font-weight: 600;">Server Tags</h4>
+                                    <h4 style="margin: 0 0 8px 0; color: var(--color-text-primary); font-size: 14px; font-weight: 600;">Server Tags</h4>
                                     <div style="display: flex; flex-wrap: wrap; gap: 6px;">
                                         @foreach($server->tags->take(6) as $tag)
                                             <span style="font-size: 11px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 3px 8px; border-radius: 3px; text-transform: uppercase; font-weight: 600;">
@@ -152,31 +152,31 @@
                                             </span>
                                         @endforeach
                                         @if($server->tags->count() > 6)
-                                            <span style="font-size: 11px; color: #71717a;">+{{ $server->tags->count() - 6 }}</span>
+                                            <span style="font-size: 11px; color: var(--color-text-muted);">+{{ $server->tags->count() - 6 }}</span>
                                         @endif
                                     </div>
                                 @endif
                             </div>
 
-                            <div style="background-color: #0e0e10; border-radius: 8px; padding: 16px;">
-                                <h4 style="margin: 0 0 12px 0; color: #efeff1; font-size: 14px; font-weight: 600;">Server Info</h4>
+                            <div style="background-color: var(--color-bg-primary); border-radius: 8px; padding: 16px;">
+                                <h4 style="margin: 0 0 12px 0; color: var(--color-text-primary); font-size: 14px; font-weight: 600;">Server Info</h4>
                                 <div style="space-y: 8px;">
                                     <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                                        <span style="color: #b3b3b5; font-size: 13px;">Members</span>
-                                        <span style="color: #efeff1; font-weight: 600; font-size: 13px;">{{ $server->members()->count() }}</span>
+                                        <span style="color: var(--color-text-secondary); font-size: 13px;">Members</span>
+                                        <span style="color: var(--color-text-primary); font-weight: 600; font-size: 13px;">{{ $server->members()->count() }}</span>
                                     </div>
                                     <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                                        <span style="color: #b3b3b5; font-size: 13px;">Channels</span>
-                                        <span style="color: #efeff1; font-weight: 600; font-size: 13px;">{{ $server->channels()->count() }}</span>
+                                        <span style="color: var(--color-text-secondary); font-size: 13px;">Channels</span>
+                                        <span style="color: var(--color-text-primary); font-weight: 600; font-size: 13px;">{{ $server->channels()->count() }}</span>
                                     </div>
                                     <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                                        <span style="color: #b3b3b5; font-size: 13px;">Created</span>
-                                        <span style="color: #efeff1; font-weight: 600; font-size: 13px;">{{ $server->created_at->diffForHumans() }}</span>
+                                        <span style="color: var(--color-text-secondary); font-size: 13px;">Created</span>
+                                        <span style="color: var(--color-text-primary); font-weight: 600; font-size: 13px;">{{ $server->created_at->diffForHumans() }}</span>
                                     </div>
                                     @if($server->tags->where('tag_type', 'region')->first())
                                         <div style="display: flex; justify-content: space-between;">
-                                            <span style="color: #b3b3b5; font-size: 13px;">Region</span>
-                                            <span style="color: #efeff1; font-weight: 600; font-size: 13px;">{{ strtoupper($server->tags->where('tag_type', 'region')->first()->tag_value) }}</span>
+                                            <span style="color: var(--color-text-secondary); font-size: 13px;">Region</span>
+                                            <span style="color: var(--color-text-primary); font-weight: 600; font-size: 13px;">{{ strtoupper($server->tags->where('tag_type', 'region')->first()->tag_value) }}</span>
                                         </div>
                                     @endif
                                 </div>
@@ -204,9 +204,9 @@
                     </div>
                 @endif
             @else
-                <div style="text-align: center; padding: 80px 20px; background-color: #18181b; border-radius: 12px;">
-                    <h3 style="margin-bottom: 16px; color: #efeff1;">No servers found</h3>
-                    <p style="color: #b3b3b5; margin-bottom: 24px;">Try adjusting your filters or search terms to find gaming communities.</p>
+                <div style="text-align: center; padding: 80px 20px; background-color: var(--color-surface); border-radius: 12px;">
+                    <h3 style="margin-bottom: 16px; color: var(--color-text-primary);">No servers found</h3>
+                    <p style="color: var(--color-text-secondary); margin-bottom: 24px;">Try adjusting your filters or search terms to find gaming communities.</p>
                     <div style="display: flex; gap: 12px; justify-content: center;">
                         <a href="{{ route('server.create') }}" class="btn btn-primary">Create a Server</a>
                         <a href="{{ route('servers.discover') }}" class="btn btn-secondary">Clear Filters</a>

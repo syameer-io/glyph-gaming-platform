@@ -1,9 +1,9 @@
 {{-- Conversations Sidebar for Chat View --}}
-<div class="flex flex-col h-full bg-zinc-800">
+<div class="flex flex-col h-full" style="background-color: var(--color-surface);">
     {{-- Header with Back Link --}}
-    <div class="p-4 border-b border-zinc-700">
+    <div class="p-4" style="border-bottom: 1px solid var(--color-border-primary);">
         <a href="{{ route('dm.index') }}"
-           class="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors group">
+           class="flex items-center gap-2 transition-colors group" style="color: var(--color-text-muted);" onmouseover="this.style.color='var(--color-text-primary)'" onmouseout="this.style.color='var(--color-text-muted)'">
             <svg class="w-5 h-5 transform group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
             </svg>
@@ -32,25 +32,26 @@
             @endphp
 
             <a href="{{ route('dm.show', $conv) }}"
-               class="flex items-center gap-3 px-3 py-2.5 mx-2 my-0.5 rounded-md transition-all duration-150
-                      {{ $isActive ? 'bg-zinc-600/50' : 'hover:bg-zinc-700/50' }}
-                      {{ $hasUnread ? 'bg-indigo-500/10' : '' }}">
+               class="flex items-center gap-3 px-3 py-2.5 mx-2 my-0.5 rounded-md transition-all duration-150"
+               style="{{ $isActive ? 'background-color: var(--color-surface-active);' : '' }}{{ $hasUnread ? 'background-color: rgba(102, 126, 234, 0.1);' : '' }}"
+               onmouseover="if(!{{ $isActive ? 'true' : 'false' }}) this.style.backgroundColor='var(--color-bg-elevated)'"
+               onmouseout="if(!{{ $isActive ? 'true' : 'false' }}) this.style.backgroundColor='{{ $hasUnread ? 'rgba(102, 126, 234, 0.1)' : 'transparent' }}'">
                 {{-- Avatar with Status --}}
                 <div class="relative flex-shrink-0">
                     <img src="{{ $other->profile->avatar_url ?? '/images/default-avatar.png' }}"
                          alt="{{ $other->display_name }}"
                          class="w-10 h-10 rounded-full object-cover">
-                    <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-zinc-800
-                                 {{ $other->profile->status === 'online' ? 'bg-green-500' :
+                    <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full {{ $other->profile->status === 'online' ? 'bg-green-500' :
                                     ($other->profile->status === 'idle' ? 'bg-yellow-500' :
-                                    ($other->profile->status === 'dnd' ? 'bg-red-500' : 'bg-zinc-500')) }}">
+                                    ($other->profile->status === 'dnd' ? 'bg-red-500' : 'bg-zinc-500')) }}"
+                          style="border: 2px solid var(--color-surface);">
                     </span>
                 </div>
 
                 {{-- User Info --}}
                 <div class="flex-1 min-w-0">
                     <div class="flex items-center justify-between">
-                        <span class="font-medium text-white truncate {{ $hasUnread ? 'font-semibold' : '' }}">
+                        <span class="font-medium truncate {{ $hasUnread ? 'font-semibold' : '' }}" style="color: var(--color-text-primary);">
                             {{ $other->display_name }}
                         </span>
                         @if($hasUnread)
@@ -58,14 +59,14 @@
                         @endif
                     </div>
                     @if($conv->latestMessage)
-                        <p class="text-xs truncate {{ $hasUnread ? 'text-zinc-300' : 'text-zinc-500' }}">
+                        <p class="text-xs truncate" style="color: var({{ $hasUnread ? '--color-text-secondary' : '--color-text-muted' }});">
                             @if($conv->latestMessage->sender_id === auth()->id())
-                                <span class="text-zinc-400">You:</span>
+                                <span style="color: var(--color-text-muted);">You:</span>
                             @endif
                             {{ Str::limit($conv->latestMessage->content, 25) }}
                         </p>
                     @else
-                        <p class="text-xs text-zinc-500 italic">No messages yet</p>
+                        <p class="text-xs italic" style="color: var(--color-text-muted);">No messages yet</p>
                     @endif
                 </div>
             </a>
@@ -73,11 +74,11 @@
 
         @if($allConversations->isEmpty())
             <div class="flex flex-col items-center justify-center h-full p-4 text-center">
-                <svg class="w-12 h-12 text-zinc-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-12 h-12 mb-3" style="color: var(--color-text-faint);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                           d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
                 </svg>
-                <p class="text-zinc-500 text-sm">No conversations yet</p>
+                <p class="text-sm" style="color: var(--color-text-muted);">No conversations yet</p>
             </div>
         @endif
     </div>

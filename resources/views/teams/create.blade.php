@@ -10,10 +10,10 @@
     }
     
     .form-container {
-        background-color: #18181b;
+        background-color: var(--color-surface);
         border-radius: 12px;
         padding: 32px;
-        border: 1px solid #3f3f46;
+        border: 1px solid var(--color-border-primary);
     }
     
     .form-section {
@@ -26,20 +26,20 @@
     
     .section-header {
         margin-bottom: 20px;
-        border-bottom: 1px solid #3f3f46;
+        border-bottom: 1px solid var(--color-border-primary);
         padding-bottom: 16px;
     }
-    
+
     .section-title {
         font-size: 20px;
         font-weight: 600;
-        color: #efeff1;
+        color: var(--color-text-primary);
         margin-bottom: 4px;
     }
-    
+
     .section-description {
         font-size: 14px;
-        color: #b3b3b5;
+        color: var(--color-text-secondary);
     }
     
     .form-row {
@@ -62,39 +62,39 @@
         margin-bottom: 8px;
         font-size: 14px;
         font-weight: 500;
-        color: #efeff1;
+        color: var(--color-text-primary);
     }
-    
+
     .form-group .form-description {
         font-size: 12px;
-        color: #71717a;
+        color: var(--color-text-muted);
         margin-bottom: 8px;
     }
-    
+
     .form-group input,
     .form-group textarea,
     .form-group select {
         width: 100%;
         padding: 12px 16px;
-        background-color: #0e0e10;
-        border: 2px solid #3f3f46;
+        background-color: var(--color-bg-primary);
+        border: 2px solid var(--color-border-primary);
         border-radius: 8px;
-        color: #efeff1;
+        color: var(--color-text-primary);
         font-size: 16px;
         transition: all 0.2s;
     }
-    
+
     .form-group textarea {
         resize: vertical;
         min-height: 100px;
     }
-    
+
     .form-group input:focus,
     .form-group textarea:focus,
     .form-group select:focus {
         outline: none;
         border-color: #667eea;
-        background-color: #18181b;
+        background-color: var(--color-surface);
     }
     
     .checkbox-group {
@@ -111,24 +111,24 @@
     
     .checkbox-group label {
         margin: 0;
-        color: #b3b3b5;
+        color: var(--color-text-secondary);
         cursor: pointer;
     }
-    
+
     .role-selection {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
         gap: 12px;
         margin-top: 12px;
     }
-    
+
     .role-option {
         display: flex;
         align-items: center;
         gap: 8px;
         padding: 12px;
-        background-color: #0e0e10;
-        border: 2px solid #3f3f46;
+        background-color: var(--color-bg-primary);
+        border: 2px solid var(--color-border-primary);
         border-radius: 8px;
         cursor: pointer;
         transition: all 0.2s;
@@ -150,28 +150,28 @@
     
     .role-option label {
         margin: 0;
-        color: #efeff1;
+        color: var(--color-text-primary);
         font-size: 14px;
         cursor: pointer;
         flex: 1;
     }
-    
+
     .role-description {
         font-size: 12px;
-        color: #71717a;
+        color: var(--color-text-muted);
         margin-top: 4px;
     }
-    
+
     .member-slots {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 16px;
         margin-top: 16px;
     }
-    
+
     .member-slot {
-        background-color: #0e0e10;
-        border: 2px solid #3f3f46;
+        background-color: var(--color-bg-primary);
+        border: 2px solid var(--color-border-primary);
         border-radius: 8px;
         padding: 16px;
         text-align: center;
@@ -194,58 +194,58 @@
         width: 48px;
         height: 48px;
         border-radius: 50%;
-        background-color: #3f3f46;
+        background-color: var(--color-surface-active);
         margin: 0 auto 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #71717a;
+        color: var(--color-text-muted);
         font-size: 24px;
     }
-    
+
     .slot-name {
         font-weight: 600;
-        color: #efeff1;
+        color: var(--color-text-primary);
         margin-bottom: 4px;
     }
-    
+
     .slot-role {
         font-size: 12px;
-        color: #b3b3b5;
+        color: var(--color-text-secondary);
         text-transform: uppercase;
     }
-    
+
     .preview-section {
-        background-color: #0e0e10;
+        background-color: var(--color-bg-primary);
         border-radius: 8px;
         padding: 20px;
         margin-top: 24px;
     }
-    
+
     .preview-header {
         font-size: 16px;
         font-weight: 600;
-        color: #efeff1;
+        color: var(--color-text-primary);
         margin-bottom: 16px;
     }
-    
+
     .team-preview {
-        background-color: #18181b;
+        background-color: var(--color-surface);
         border-radius: 12px;
         padding: 20px;
-        border: 1px solid #3f3f46;
+        border: 1px solid var(--color-border-primary);
     }
-    
+
     .preview-team-name {
         font-size: 18px;
         font-weight: 600;
-        color: #efeff1;
+        color: var(--color-text-primary);
         margin-bottom: 8px;
     }
-    
+
     .preview-game {
         font-size: 14px;
-        color: #b3b3b5;
+        color: var(--color-text-secondary);
         margin-bottom: 12px;
     }
     
@@ -272,7 +272,7 @@
         justify-content: flex-end;
         margin-top: 32px;
         padding-top: 24px;
-        border-top: 1px solid #3f3f46;
+        border-top: 1px solid var(--color-border-primary);
     }
     
     .error-message {
@@ -288,7 +288,7 @@
         padding: 12px;
         margin-top: 8px;
         font-size: 14px;
-        color: #b3b3b5;
+        color: var(--color-text-secondary);
     }
     
     @keyframes slideInRight {
@@ -346,7 +346,7 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
                 <div>
                     <h1>🚀 Create New Team</h1>
-                    <p style="color: #b3b3b5; margin-top: 8px;">Form your gaming squad and start competing together</p>
+                    <p style="color: var(--color-text-secondary); margin-top: 8px;">Form your gaming squad and start competing together</p>
                 </div>
                 <a href="{{ route('teams.index') }}" class="btn btn-secondary">← Back to Teams</a>
             </div>
@@ -488,7 +488,7 @@
                             <label>Required Roles (Optional)</label>
                             <div class="form-description">Select roles you're looking for. Leave empty if you're flexible</div>
                             <div id="role_selection_container" class="role-selection" style="margin-top: 12px;">
-                                <p style="color: #71717a; margin: 0; padding: 8px 0;">Select a game to see available roles</p>
+                                <p style="color: var(--color-text-muted); margin: 0; padding: 8px 0;">Select a game to see available roles</p>
                             </div>
                         </div>
 
@@ -584,7 +584,7 @@
                             <div class="preview-tags" id="preview-tags">
                                 <!-- Tags will be generated here -->
                             </div>
-                            <div id="preview-description" style="color: #b3b3b5; font-size: 14px;">Team description will appear here...</div>
+                            <div id="preview-description" style="color: var(--color-text-secondary); font-size: 14px;">Team description will appear here...</div>
                         </div>
                     </div>
 
@@ -694,7 +694,7 @@ function updateRoleCheckboxes(gameAppId) {
     if (!container) return;
 
     if (!gameAppId || !gameInfo[gameAppId]) {
-        container.innerHTML = '<p style="color: #71717a; margin: 0; padding: 8px 0;">Select a game to see available roles</p>';
+        container.innerHTML = '<p style="color: var(--color-text-muted); margin: 0; padding: 8px 0;">Select a game to see available roles</p>';
         return;
     }
 

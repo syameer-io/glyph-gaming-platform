@@ -44,31 +44,31 @@
 
     .message-author {
         font-weight: 600;
-        color: #efeff1;
+        color: var(--color-text-primary);
     }
 
     .message-timestamp {
         font-size: 12px;
-        color: #71717a;
+        color: var(--color-text-muted);
     }
 
     .message-content {
-        color: #b3b3b5;
+        color: var(--color-text-secondary);
         line-height: 1.5;
         word-wrap: break-word;
     }
 
     .chat-input-container {
         padding: 16px;
-        background-color: #0e0e10;
+        background-color: var(--color-bg-primary);
     }
 
     .chat-input-wrapper {
         display: flex;
         align-items: flex-end;
         gap: 8px;
-        background-color: #18181b;
-        border: 1px solid #3f3f46;
+        background-color: var(--color-surface);
+        border: 1px solid var(--color-border-primary);
         border-radius: 8px;
         padding: 4px 4px 4px 8px;
         transition: border-color 0.15s;
@@ -82,7 +82,7 @@
         flex: 1;
         background: none;
         border: none;
-        color: #efeff1;
+        color: var(--color-text-primary);
         font-size: 16px;
         resize: none;
         font-family: inherit;
@@ -97,7 +97,7 @@
     }
 
     .chat-input::placeholder {
-        color: #71717a;
+        color: var(--color-text-muted);
     }
 
     .kebab-menu {
@@ -108,7 +108,7 @@
     .kebab-button {
         background: none;
         border: none;
-        color: #71717a;
+        color: var(--color-text-muted);
         font-size: 16px;
         cursor: pointer;
         padding: 8px;
@@ -117,16 +117,16 @@
     }
 
     .kebab-button:hover {
-        background-color: #3f3f46;
-        color: #ffffff;
+        background-color: var(--color-surface-active);
+        color: var(--color-text-primary);
     }
 
     .kebab-dropdown {
         position: absolute;
         top: 100%;
         right: 0;
-        background-color: #18181b;
-        border: 1px solid #3f3f46;
+        background-color: var(--color-surface);
+        border: 1px solid var(--color-border-primary);
         border-radius: 8px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         min-width: 120px;
@@ -144,7 +144,7 @@
         padding: 8px 12px;
         background: none;
         border: none;
-        color: #ffffff;
+        color: var(--color-text-primary);
         text-align: left;
         cursor: pointer;
         transition: background-color 0.2s;
@@ -152,7 +152,7 @@
     }
 
     .kebab-option:hover {
-        background-color: #3f3f46;
+        background-color: var(--color-surface-active);
     }
 
     .kebab-option:first-child {
@@ -175,8 +175,8 @@
     }
 
     .back-button:hover {
-        background-color: #3f3f46 !important;
-        color: #ffffff !important;
+        background-color: var(--color-surface-active) !important;
+        color: var(--color-text-primary) !important;
     }
 
     /* Voice Chat Styles */
@@ -186,7 +186,7 @@
     }
 
     .voice-channel-link:hover {
-        background-color: #3f3f46;
+        background-color: var(--color-surface-active);
         border-radius: 4px;
         padding: 4px 8px;
         margin-left: -8px;
@@ -317,7 +317,7 @@
     .emoji-btn {
         background: none;
         border: none;
-        color: #71717a;
+        color: var(--color-text-muted);
         padding: 8px;
         border-radius: 6px;
         cursor: pointer;
@@ -328,16 +328,16 @@
     }
 
     .emoji-btn:hover {
-        color: #efeff1;
-        background-color: #3f3f46;
+        color: var(--color-text-primary);
+        background-color: var(--color-surface-active);
     }
 
     .emoji-picker {
         position: absolute;
         bottom: calc(100% + 8px);
         left: 0;
-        background-color: #27272a;
-        border: 1px solid #3f3f46;
+        background-color: var(--color-bg-elevated);
+        border: 1px solid var(--color-border-primary);
         border-radius: 8px;
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
         padding: 12px;
@@ -370,7 +370,7 @@
     }
 
     .emoji-item:hover {
-        background-color: #3f3f46;
+        background-color: var(--color-surface-active);
     }
 
     .send-btn {
@@ -391,7 +391,7 @@
     }
 
     .send-btn:disabled {
-        background-color: #3f3f46;
+        background-color: var(--color-surface-active);
         cursor: not-allowed;
     }
 
@@ -424,9 +424,9 @@
 @section('content')
 <div style="display: flex; height: 100vh;">
     <!-- Server Sidebar -->
-    <div style="width: 240px; background-color: #18181b; display: flex; flex-direction: column;">
+    <div style="width: 240px; background-color: var(--color-surface); display: flex; flex-direction: column;">
         {{-- Phase 3: Server Dropdown Header --}}
-        <div class="server-header" style="padding: 12px 16px; border-bottom: 1px solid #3f3f46;">
+        <div class="server-header" style="padding: 12px 16px; border-bottom: 1px solid var(--color-border-primary);">
             <x-server-dropdown
                 :server="$server"
                 :isAdmin="auth()->user()->isServerAdmin($server->id)"
@@ -475,13 +475,13 @@
         </div>
 
         <!-- User Section -->
-        <div style="padding: 16px; border-top: 1px solid #3f3f46; background-color: #0e0e10;">
+        <div style="padding: 16px; border-top: 1px solid var(--color-border-primary); background-color: var(--color-bg-primary);">
             <div style="display: flex; align-items: center; gap: 12px;">
                 <img src="{{ auth()->user()->profile->avatar_url }}" alt="{{ auth()->user()->display_name }}"
                      style="width: 32px; height: 32px; border-radius: 50%;">
                 <div style="flex: 1;">
-                    <div style="font-size: 14px; font-weight: 600;">{{ auth()->user()->display_name }}</div>
-                    <div style="font-size: 12px; color: #71717a;">{{ auth()->user()->username }}</div>
+                    <div style="font-size: 14px; font-weight: 600; color: var(--color-text-primary);">{{ auth()->user()->display_name }}</div>
+                    <div style="font-size: 12px; color: var(--color-text-muted);">{{ auth()->user()->username }}</div>
                 </div>
             </div>
         </div>
@@ -489,7 +489,7 @@
 
     <!-- Chat Area -->
     <div
-        style="flex: 1; display: flex; flex-direction: column; background-color: #0e0e10;"
+        style="flex: 1; display: flex; flex-direction: column; background-color: var(--color-bg-primary);"
         x-data="{
             memberListVisible: localStorage.getItem('memberListVisible') !== 'false'
         }"
@@ -588,7 +588,7 @@
         x-transition:leave="transition ease-in duration-150"
         x-transition:leave-start="opacity-100 transform translate-x-0"
         x-transition:leave-end="opacity-0 transform translate-x-4"
-        style="width: 240px; background-color: #18181b; padding: 8px; overflow-y: auto;"
+        style="width: 240px; background-color: var(--color-surface); padding: 8px; overflow-y: auto;"
     >
         <div class="member-list-header">
             Members — {{ $server->members->count() }}
@@ -666,13 +666,13 @@
 <x-search-modal :server="$server" :channel="$channel" />
 
 <!-- Edit Message Modal -->
-<div id="edit-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.8); z-index: 2000; align-items: center; justify-content: center;">
-    <div style="background-color: #18181b; border-radius: 12px; padding: 24px; width: 90%; max-width: 500px; border: 1px solid #3f3f46;">
-        <h3 style="margin-bottom: 16px; color: #efeff1;">Edit Message</h3>
+<div id="edit-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--modal-overlay); z-index: 2000; align-items: center; justify-content: center;">
+    <div style="background-color: var(--modal-bg); border-radius: 12px; padding: 24px; width: 90%; max-width: 500px; border: 1px solid var(--modal-border);">
+        <h3 style="margin-bottom: 16px; color: var(--color-text-primary);">Edit Message</h3>
         <form id="edit-form" onsubmit="saveEdit(event)">
             <textarea
                 id="edit-content"
-                style="width: 100%; min-height: 80px; padding: 12px; background-color: #0e0e10; border: 1px solid #3f3f46; border-radius: 8px; color: #efeff1; font-size: 16px; resize: vertical; font-family: inherit;"
+                style="width: 100%; min-height: 80px; padding: 12px; background-color: var(--color-input-bg); border: 1px solid var(--color-input-border); border-radius: 8px; color: var(--color-input-text); font-size: 16px; resize: vertical; font-family: inherit;"
                 placeholder="Edit your message..."
                 maxlength="2000"
                 required></textarea>

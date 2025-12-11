@@ -7,7 +7,7 @@
     <div class="auth-box">
         <div class="logo">
             <h1 class="font-gristela text-5xl">Glyph</h1>
-            <p style="color: #b3b3b5; margin-top: 8px;">Create your account</p>
+            <p style="color: var(--color-text-secondary); margin-top: 8px;">Create your account</p>
         </div>
 
         @if ($errors->any())
@@ -51,7 +51,7 @@
                     </svg>
                     <input type="text" id="username" name="username" value="{{ old('username') }}" required placeholder="Choose a unique username">
                 </div>
-                <small style="color: #71717a; font-size: 12px; margin-top: 4px; display: block;">Letters, numbers and underscores only</small>
+                <small style="color: var(--color-text-muted); font-size: 12px; margin-top: 4px; display: block;">Letters, numbers and underscores only</small>
             </div>
 
             <div class="form-group">
@@ -105,7 +105,7 @@
             </div>
         </form>
 
-        <p class="text-center mt-4" style="color: #b3b3b5;">
+        <p class="text-center mt-4" style="color: var(--color-text-secondary);">
             Already have an account? <a href="{{ route('login') }}" class="link">Sign in</a>
         </p>
     </div>

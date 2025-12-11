@@ -48,9 +48,9 @@
                             @endphp
 
                             @if($friendship && $friendship->pivot->status === 'accepted')
-                                <span style="color: #10b981;">✓ Friends</span>
+                                <span style="color: var(--color-success, #10b981);">✓ Friends</span>
                             @elseif($friendship && $friendship->pivot->status === 'pending')
-                                <span style="color: #71717a;">Request Sent</span>
+                                <span style="color: var(--color-text-muted);">Request Sent</span>
                             @elseif($receivedRequest)
                                 <form method="POST" action="{{ route('friends.accept', $user->id) }}" style="display: inline;">
                                     @csrf
@@ -66,7 +66,7 @@
                         </div>
                     </div>
                 @empty
-                    <p style="color: #71717a; text-align: center; padding: 24px;">No users found matching "{{ $query }}"</p>
+                    <p style="color: var(--color-text-muted); text-align: center; padding: 24px;">No users found matching "{{ $query }}"</p>
                 @endforelse
             </div>
         @else

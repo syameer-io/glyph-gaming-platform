@@ -7,7 +7,7 @@
     <div class="auth-box">
         <div class="logo">
             <h1 class="font-gristela text-5xl">Glyph</h1>
-            <p style="color: #b3b3b5; margin-top: 8px;">Two-Factor Authentication</p>
+            <p style="color: var(--color-text-secondary); margin-top: 8px;">Two-Factor Authentication</p>
         </div>
 
         @if (session('success'))
@@ -30,7 +30,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
             </div>
-            <p style="color: #b3b3b5;">We've sent a verification code to your email address.<br>Please enter it below to continue.</p>
+            <p style="color: var(--color-text-secondary);">We've sent a verification code to your email address.<br>Please enter it below to continue.</p>
         </div>
 
         <form method="POST" action="{{ route('verify.otp') }}" x-data="otpForm()" @submit.prevent="submitForm" id="otp-form">
@@ -74,7 +74,7 @@
 
         <div class="text-center mt-4">
             <!-- Live Countdown Timer -->
-            <div x-data="countdownTimer()" style="color: #71717a; font-size: 14px; margin-bottom: 16px;">
+            <div x-data="countdownTimer()" style="color: var(--color-text-muted); font-size: 14px; margin-bottom: 16px;">
                 <span x-show="!isExpired">
                     Code expires in <span x-text="formattedTime" style="color: #667eea; font-weight: 600;"></span>
                 </span>

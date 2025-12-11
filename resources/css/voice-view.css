@@ -69,7 +69,7 @@ body:has(.voice-channel-page) .voice-panel {
    ================================ */
 .voice-view-sidebar {
     width: var(--voice-sidebar-width);
-    background-color: #18181b;
+    background-color: var(--color-surface, #18181b);
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
@@ -87,7 +87,7 @@ body:has(.voice-channel-page) .voice-panel {
     display: flex;
     align-items: center;
     padding: 0 16px;
-    border-bottom: 1px solid #3f3f46;
+    border-bottom: 1px solid var(--color-border-primary, #3f3f46);
     box-sizing: border-box;
     flex-shrink: 0;
 }
@@ -105,8 +105,8 @@ body:has(.voice-channel-page) .voice-panel {
     padding: 0 12px;
     display: flex;
     align-items: center;
-    border-top: 1px solid #3f3f46;
-    background-color: #0e0e10;
+    border-top: 1px solid var(--color-border-primary, #3f3f46);
+    background-color: var(--color-bg-primary, #0e0e10);
     box-sizing: border-box;
     flex-shrink: 0;
 }
@@ -131,7 +131,7 @@ body:has(.voice-channel-page) .voice-panel {
 .sidebar-user-name {
     font-size: 14px;
     font-weight: 600;
-    color: #f2f3f5;
+    color: var(--color-text-primary, #f2f3f5);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -139,7 +139,7 @@ body:has(.voice-channel-page) .voice-panel {
 
 .sidebar-user-username {
     font-size: 12px;
-    color: #71717a;
+    color: var(--color-text-muted, #71717a);
 }
 
 /* ================================
@@ -166,8 +166,8 @@ body:has(.voice-channel-page) .voice-panel {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background-color: #18181b;
-    border-bottom: 1px solid #3f3f46;
+    background-color: var(--color-surface, #18181b);
+    border-bottom: 1px solid var(--color-border-primary, #3f3f46);
     box-sizing: border-box;
     flex-shrink: 0;
     margin: 0;
@@ -187,7 +187,7 @@ body:has(.voice-channel-page) .voice-panel {
     align-items: center;
     justify-content: center;
     border-radius: 6px;
-    color: #b3b3b5;
+    color: var(--color-text-secondary, #b3b3b5);
     transition: all 0.15s ease;
     /* Button-specific resets */
     background: none;
@@ -221,21 +221,21 @@ body:has(.voice-channel-page) .voice-panel {
 .voice-header-icon {
     width: 20px;
     height: 20px;
-    color: #b3b3b5;
+    color: var(--color-text-secondary, #b3b3b5);
 }
 
 .voice-header-name {
     font-size: 16px;
     font-weight: 600;
-    color: #f2f3f5;
+    color: var(--color-text-primary, #f2f3f5);
     margin: 0;
 }
 
 .voice-header-users {
     font-size: 13px;
-    color: #71717a;
+    color: var(--color-text-muted, #71717a);
     padding-left: 12px;
-    border-left: 1px solid #3f3f46;
+    border-left: 1px solid var(--color-border-primary, #3f3f46);
 }
 
 .voice-header-right {
@@ -250,7 +250,7 @@ body:has(.voice-channel-page) .voice-panel {
     padding: 8px 14px;
     background-color: rgba(255, 255, 255, 0.06);
     border-radius: 6px;
-    color: #b3b3b5;
+    color: var(--color-text-secondary, #b3b3b5);
     font-size: 14px;
     font-weight: 500;
 }
@@ -275,7 +275,7 @@ body:has(.voice-channel-page) .voice-panel {
     background-color: rgba(255, 255, 255, 0.06);
     border: none;
     border-radius: 6px;
-    color: #b3b3b5;
+    color: var(--color-text-secondary, #b3b3b5);
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
@@ -406,7 +406,7 @@ body:has(.voice-channel-page) .voice-panel {
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #1e1e22;
+    background-color: var(--color-bg-tertiary, #1e1e22);
     border-radius: 50%;
     font-size: 12px;
 }
@@ -438,7 +438,7 @@ body:has(.voice-channel-page) .voice-panel {
 .user-name {
     font-size: 14px;
     font-weight: 600;
-    color: #f2f3f5;
+    color: var(--color-text-primary, #f2f3f5);
     text-align: center;
     max-width: 100%;
     white-space: nowrap;
@@ -448,7 +448,7 @@ body:has(.voice-channel-page) .voice-panel {
 
 .user-activity {
     font-size: 12px;
-    color: #71717a;
+    color: var(--color-text-muted, #71717a);
     margin-top: 4px;
     text-align: center;
 }
@@ -500,13 +500,13 @@ body:has(.voice-channel-page) .voice-panel {
 .empty-title {
     font-size: 24px;
     font-weight: 700;
-    color: #f2f3f5;
+    color: var(--color-text-primary, #f2f3f5);
     margin: 0 0 8px 0;
 }
 
 .empty-subtitle {
     font-size: 15px;
-    color: #b3b3b5;
+    color: var(--color-text-secondary, #b3b3b5);
     margin: 0 0 32px 0;
 }
 
@@ -567,8 +567,8 @@ body:has(.voice-channel-page) .voice-panel {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background-color: #18181b;
-    border-top: 1px solid #3f3f46;
+    background-color: var(--color-surface, #18181b);
+    border-top: 1px solid var(--color-border-primary, #3f3f46);
     box-sizing: border-box;
     flex-shrink: 0;
     margin: 0;
@@ -647,11 +647,11 @@ body:has(.voice-channel-page) .voice-panel {
     display: flex;
     align-items: center;
     gap: 6px;
-    color: #71717a;
+    color: var(--color-text-muted, #71717a);
     font-size: 13px;
     flex-shrink: 0;
     padding-left: 16px;
-    border-left: 1px solid #3f3f46;
+    border-left: 1px solid var(--color-border-primary, #3f3f46);
 }
 
 .timer-icon {
@@ -674,10 +674,10 @@ body:has(.voice-channel-page) .voice-panel {
     align-items: center;
     gap: 4px;
     padding: 10px 16px;
-    background-color: #313338;
+    background-color: var(--voice-button-bg);
     border: none;
     border-radius: 8px;
-    color: #f2f3f5;
+    color: var(--color-text-primary, #f2f3f5);
     cursor: pointer;
     transition: all 0.15s ease;
 }
@@ -690,11 +690,11 @@ body:has(.voice-channel-page) .voice-panel {
 .control-btn .btn-label {
     font-size: 11px;
     font-weight: 500;
-    color: #b3b3b5;
+    color: var(--color-text-secondary, #b3b3b5);
 }
 
 .control-btn:hover:not(:disabled) {
-    background-color: #404249;
+    background-color: var(--voice-button-hover);
     transform: translateY(-2px);
 }
 
@@ -782,7 +782,7 @@ body:has(.voice-channel-page) .voice-panel {
 
 .ping-text {
     font-size: 12px;
-    color: #71717a;
+    color: var(--color-text-muted, #71717a);
 }
 
 .disconnect-btn {
@@ -816,8 +816,8 @@ body:has(.voice-channel-page) .voice-panel {
    ================================ */
 .voice-text-chat-panel {
     width: 340px;
-    background-color: #18181b;
-    border-left: 1px solid #3f3f46;
+    background-color: var(--color-surface, #18181b);
+    border-left: 1px solid var(--color-border-primary, #3f3f46);
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
@@ -825,7 +825,7 @@ body:has(.voice-channel-page) .voice-panel {
 
 .text-chat-header {
     padding: 16px;
-    border-bottom: 1px solid #3f3f46;
+    border-bottom: 1px solid var(--color-border-primary, #3f3f46);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -834,7 +834,7 @@ body:has(.voice-channel-page) .voice-panel {
 .text-chat-header h3 {
     font-size: 14px;
     font-weight: 600;
-    color: #f2f3f5;
+    color: var(--color-text-primary, #f2f3f5);
     margin: 0;
 }
 
@@ -847,7 +847,7 @@ body:has(.voice-channel-page) .voice-panel {
     background: none;
     border: none;
     border-radius: 4px;
-    color: #71717a;
+    color: var(--color-text-muted, #71717a);
     cursor: pointer;
     transition: all 0.15s ease;
 }
@@ -874,13 +874,13 @@ body:has(.voice-channel-page) .voice-panel {
 }
 
 .no-messages p {
-    color: #71717a;
+    color: var(--color-text-muted, #71717a);
     font-size: 14px;
 }
 
 .text-chat-input {
     padding: 12px;
-    border-top: 1px solid #3f3f46;
+    border-top: 1px solid var(--color-border-primary, #3f3f46);
     display: flex;
     gap: 8px;
 }
@@ -888,15 +888,15 @@ body:has(.voice-channel-page) .voice-panel {
 .text-chat-input input {
     flex: 1;
     padding: 10px 14px;
-    background-color: #313338;
+    background-color: var(--color-surface);
     border: none;
     border-radius: 6px;
-    color: #f2f3f5;
+    color: var(--color-text-primary, #f2f3f5);
     font-size: 14px;
 }
 
 .text-chat-input input::placeholder {
-    color: #71717a;
+    color: var(--color-text-muted, #71717a);
 }
 
 .text-chat-input input:focus {
@@ -942,7 +942,7 @@ body:has(.voice-channel-page) .voice-panel {
 }
 
 .modal-content {
-    background-color: #1e1f22;
+    background-color: var(--modal-bg);
     border-radius: 12px;
     width: 100%;
     max-width: 480px;
@@ -954,7 +954,7 @@ body:has(.voice-channel-page) .voice-panel {
 
 .modal-header {
     padding: 20px;
-    border-bottom: 1px solid #3f3f46;
+    border-bottom: 1px solid var(--color-border-primary, #3f3f46);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -963,7 +963,7 @@ body:has(.voice-channel-page) .voice-panel {
 .modal-header h2 {
     font-size: 18px;
     font-weight: 600;
-    color: #f2f3f5;
+    color: var(--color-text-primary, #f2f3f5);
     margin: 0;
 }
 
@@ -976,7 +976,7 @@ body:has(.voice-channel-page) .voice-panel {
     background: none;
     border: none;
     border-radius: 6px;
-    color: #71717a;
+    color: var(--color-text-muted, #71717a);
     cursor: pointer;
     transition: all 0.15s ease;
 }
@@ -999,7 +999,7 @@ body:has(.voice-channel-page) .voice-panel {
 
 .modal-footer {
     padding: 16px 20px;
-    border-top: 1px solid #3f3f46;
+    border-top: 1px solid var(--color-border-primary, #3f3f46);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1013,7 +1013,7 @@ body:has(.voice-channel-page) .voice-panel {
     align-items: center;
     gap: 10px;
     padding: 12px 14px;
-    background-color: #313338;
+    background-color: var(--color-surface);
     border-radius: 8px;
     margin-bottom: 16px;
 }
@@ -1021,7 +1021,7 @@ body:has(.voice-channel-page) .voice-panel {
 .search-input-wrapper svg {
     width: 18px;
     height: 18px;
-    color: #71717a;
+    color: var(--color-text-muted, #71717a);
     flex-shrink: 0;
 }
 
@@ -1029,12 +1029,12 @@ body:has(.voice-channel-page) .voice-panel {
     flex: 1;
     background: none;
     border: none;
-    color: #f2f3f5;
+    color: var(--color-text-primary, #f2f3f5);
     font-size: 14px;
 }
 
 .friend-search-input::placeholder {
-    color: #71717a;
+    color: var(--color-text-muted, #71717a);
 }
 
 .friend-search-input:focus {
@@ -1082,13 +1082,13 @@ body:has(.voice-channel-page) .voice-panel {
     display: block;
     font-size: 14px;
     font-weight: 600;
-    color: #f2f3f5;
+    color: var(--color-text-primary, #f2f3f5);
 }
 
 .friend-status {
     display: block;
     font-size: 12px;
-    color: #71717a;
+    color: var(--color-text-muted, #71717a);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1098,7 +1098,7 @@ body:has(.voice-channel-page) .voice-panel {
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background-color: #71717a;
+    background-color: var(--color-text-muted, #71717a);
 }
 
 .friend-status-dot[data-status="online"] {
@@ -1125,7 +1125,7 @@ body:has(.voice-channel-page) .voice-panel {
 }
 
 .no-friends p {
-    color: #71717a;
+    color: var(--color-text-muted, #71717a);
     font-size: 14px;
     margin: 0;
 }
@@ -1136,9 +1136,9 @@ body:has(.voice-channel-page) .voice-panel {
     gap: 8px;
     padding: 10px 16px;
     background-color: transparent;
-    border: 1px solid #3f3f46;
+    border: 1px solid var(--color-border-primary, #3f3f46);
     border-radius: 6px;
-    color: #b3b3b5;
+    color: var(--color-text-secondary, #b3b3b5);
     font-size: 13px;
     cursor: pointer;
     transition: all 0.15s ease;
@@ -1189,7 +1189,7 @@ body:has(.voice-channel-page) .voice-panel {
     align-items: center;
     gap: 10px;
     padding: 12px 14px;
-    background-color: #313338;
+    background-color: var(--color-surface);
     border-radius: 8px;
     margin-bottom: 20px;
 }
@@ -1197,19 +1197,19 @@ body:has(.voice-channel-page) .voice-panel {
 .activity-search svg {
     width: 18px;
     height: 18px;
-    color: #71717a;
+    color: var(--color-text-muted, #71717a);
 }
 
 .activity-search input {
     flex: 1;
     background: none;
     border: none;
-    color: #f2f3f5;
+    color: var(--color-text-primary, #f2f3f5);
     font-size: 14px;
 }
 
 .activity-search input::placeholder {
-    color: #71717a;
+    color: var(--color-text-muted, #71717a);
 }
 
 .activity-search input:focus {
@@ -1223,7 +1223,7 @@ body:has(.voice-channel-page) .voice-panel {
 .activity-section-title {
     font-size: 12px;
     font-weight: 700;
-    color: #71717a;
+    color: var(--color-text-muted, #71717a);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin: 0 0 12px 0;
@@ -1240,14 +1240,14 @@ body:has(.voice-channel-page) .voice-panel {
     align-items: center;
     gap: 14px;
     padding: 14px;
-    background-color: #313338;
+    background-color: var(--color-surface);
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.15s ease;
 }
 
 .activity-card:hover {
-    background-color: #404249;
+    background-color: var(--color-surface-hover);
     transform: translateY(-2px);
 }
 
@@ -1276,14 +1276,14 @@ body:has(.voice-channel-page) .voice-panel {
     display: block;
     font-size: 14px;
     font-weight: 600;
-    color: #f2f3f5;
+    color: var(--color-text-primary, #f2f3f5);
     margin-bottom: 2px;
 }
 
 .activity-desc {
     display: block;
     font-size: 12px;
-    color: #71717a;
+    color: var(--color-text-muted, #71717a);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1296,8 +1296,8 @@ body:has(.voice-channel-page) .voice-panel {
     position: fixed;
     bottom: calc(var(--voice-control-height) + 16px);
     right: 150px;
-    background-color: #1e1f22;
-    border: 1px solid #3f3f46;
+    background-color: var(--color-bg-tertiary, #1e1f22);
+    border: 1px solid var(--color-border-primary, #3f3f46);
     border-radius: 8px;
     min-width: 220px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
@@ -1309,16 +1309,16 @@ body:has(.voice-channel-page) .voice-panel {
     align-items: center;
     justify-content: space-between;
     padding: 12px 14px;
-    border-bottom: 1px solid #3f3f46;
+    border-bottom: 1px solid var(--color-border-primary, #3f3f46);
     font-size: 13px;
     font-weight: 600;
-    color: #f2f3f5;
+    color: var(--color-text-primary, #f2f3f5);
 }
 
 .stats-popup .stats-header button {
     background: none;
     border: none;
-    color: #71717a;
+    color: var(--color-text-muted, #71717a);
     cursor: pointer;
     padding: 4px;
     border-radius: 4px;
@@ -1344,13 +1344,13 @@ body:has(.voice-channel-page) .voice-panel {
 
 .stats-popup .stat-label {
     font-size: 13px;
-    color: #b3b3b5;
+    color: var(--color-text-secondary, #b3b3b5);
 }
 
 .stats-popup .stat-value {
     font-size: 13px;
     font-weight: 600;
-    color: #f2f3f5;
+    color: var(--color-text-primary, #f2f3f5);
 }
 
 .stats-popup .quality-badge {

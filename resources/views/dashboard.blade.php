@@ -42,25 +42,25 @@
                 @if($user->steam_id && isset($recommendations) && $recommendations->isNotEmpty())
                 <div class="card" style="margin-bottom: 24px;">
                     <h3 class="card-header">🎮 Recommended Servers</h3>
-                    <p style="color: #b3b3b5; margin-bottom: 16px; font-size: 14px;">Based on your Steam gaming activity</p>
+                    <p style="color: var(--color-text-secondary); margin-bottom: 16px; font-size: 14px;">Based on your Steam gaming activity</p>
                     
                     @foreach($recommendations as $recommendation)
-                        <div style="padding: 16px; background-color: #0e0e10; border-radius: 8px; margin-bottom: 12px; border-left: 4px solid #667eea;">
+                        <div style="padding: 16px; background-color: var(--color-bg-primary); border-radius: 8px; margin-bottom: 12px; border-left: 4px solid #667eea;">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
                                 <div style="flex: 1;">
-                                    <h4 style="margin: 0; color: #efeff1; font-weight: 600;">
+                                    <h4 style="margin: 0; color: var(--color-text-primary); font-weight: 600;">
                                         <a href="{{ route('server.show', $recommendation['server']) }}" style="color: inherit; text-decoration: none;">
                                             {{ $recommendation['server']->name }}
                                         </a>
                                     </h4>
                                     @if($recommendation['server']->description)
-                                        <p style="margin: 4px 0; color: #b3b3b5; font-size: 14px;">{{ Str::limit($recommendation['server']->description, 100) }}</p>
+                                        <p style="margin: 4px 0; color: var(--color-text-secondary); font-size: 14px;">{{ Str::limit($recommendation['server']->description, 100) }}</p>
                                     @endif
                                 </div>
                                 <div style="display: flex; align-items: center; gap: 8px;">
                                     <div style="text-align: right;">
                                         <div style="font-weight: 600; color: #10b981;">{{ number_format($recommendation['score'], 1) }}% match</div>
-                                        <div style="font-size: 12px; color: #71717a;">{{ $recommendation['server']->members->count() }} members</div>
+                                        <div style="font-size: 12px; color: var(--color-text-muted);">{{ $recommendation['server']->members->count() }} members</div>
                                     </div>
                                 </div>
                             </div>
@@ -68,7 +68,7 @@
                             @if(!empty($recommendation['reasons']))
                                 <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;">
                                     @foreach(array_slice($recommendation['reasons'], 0, 3) as $reason)
-                                        <span style="font-size: 12px; background-color: #3f3f46; color: #b3b3b5; padding: 4px 8px; border-radius: 4px;">{{ $reason }}</span>
+                                        <span style="font-size: 12px; background-color: var(--color-surface-active); color: var(--color-text-secondary); padding: 4px 8px; border-radius: 4px;">{{ $reason }}</span>
                                     @endforeach
                                 </div>
                             @endif
@@ -79,7 +79,7 @@
                                         <span style="font-size: 11px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2px 6px; border-radius: 3px; text-transform: uppercase; font-weight: 600;">{{ $tag->tag_value }}</span>
                                     @endforeach
                                     @if($recommendation['server']->tags->count() > 4)
-                                        <span style="font-size: 11px; color: #71717a;">+{{ $recommendation['server']->tags->count() - 4 }} more</span>
+                                        <span style="font-size: 11px; color: var(--color-text-muted);">+{{ $recommendation['server']->tags->count() - 4 }} more</span>
                                     @endif
                                 </div>
                             @endif
@@ -107,34 +107,34 @@
                 @if(isset($user->teams) && $user->teams && $user->teams->count() > 0)
                 <div class="card" style="margin-bottom: 24px;">
                     <h3 class="card-header">👥 My Teams</h3>
-                    <p style="color: #b3b3b5; margin-bottom: 16px; font-size: 14px;">Your active team memberships</p>
+                    <p style="color: var(--color-text-secondary); margin-bottom: 16px; font-size: 14px;">Your active team memberships</p>
                     
                     @foreach($user->teams->take(3) as $team)
-                        <div style="padding: 16px; background-color: #0e0e10; border-radius: 8px; margin-bottom: 12px; border-left: 4px solid #667eea;">
+                        <div style="padding: 16px; background-color: var(--color-bg-primary); border-radius: 8px; margin-bottom: 12px; border-left: 4px solid #667eea;">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
                                 <div style="flex: 1;">
-                                    <h4 style="margin: 0; color: #efeff1; font-weight: 600;">
+                                    <h4 style="margin: 0; color: var(--color-text-primary); font-weight: 600;">
                                         <a href="{{ route('teams.show', $team) }}" style="color: inherit; text-decoration: none;">
                                             {{ $team->name }}
                                         </a>
                                     </h4>
-                                    <p style="margin: 4px 0; color: #b3b3b5; font-size: 14px;">{{ $team->game_name ?? 'Unknown Game' }}</p>
+                                    <p style="margin: 4px 0; color: var(--color-text-secondary); font-size: 14px;">{{ $team->game_name ?? 'Unknown Game' }}</p>
                                 </div>
                                 <div style="text-align: right;">
                                     <div style="font-weight: 600; color: #10b981;">{{ $team->activeMembers ? $team->activeMembers->count() : 0 }}/{{ $team->max_size ?? $team->max_members ?? 5 }}</div>
-                                    <div style="font-size: 12px; color: #71717a;">members</div>
+                                    <div style="font-size: 12px; color: var(--color-text-muted);">members</div>
                                 </div>
                             </div>
                             
                             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                                 @if($team->activeMembers)
                                     @foreach($team->activeMembers->take(4) as $member)
-                                        <img src="{{ $member->user->profile->avatar_url }}" alt="{{ $member->user->display_name }}" 
-                                             style="width: 24px; height: 24px; border-radius: 50%; border: 2px solid #18181b;"
+                                        <img src="{{ $member->user->profile->avatar_url }}" alt="{{ $member->user->display_name }}"
+                                             style="width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--color-border-secondary);"
                                              title="{{ $member->user->display_name }}">
                                     @endforeach
                                     @if($team->activeMembers->count() > 4)
-                                        <div style="width: 24px; height: 24px; border-radius: 50%; background-color: #3f3f46; border: 2px solid #18181b; display: flex; align-items: center; justify-content: center; color: #b3b3b5; font-size: 10px; font-weight: 600;">
+                                        <div style="width: 24px; height: 24px; border-radius: 50%; background-color: var(--color-surface-active); border: 2px solid var(--color-border-secondary); display: flex; align-items: center; justify-content: center; color: var(--color-text-secondary); font-size: 10px; font-weight: 600;">
                                             +{{ $team->activeMembers->count() - 4 }}
                                         </div>
                                     @endif
@@ -165,14 +165,14 @@
                 @if(isset($user->activeMatchmakingRequests) && $user->activeMatchmakingRequests && $user->activeMatchmakingRequests->count() > 0)
                 <div class="card" style="margin-bottom: 24px;">
                     <h3 class="card-header">🎯 Active Matchmaking</h3>
-                    <p style="color: #b3b3b5; margin-bottom: 16px; font-size: 14px;">Your current team search requests</p>
+                    <p style="color: var(--color-text-secondary); margin-bottom: 16px; font-size: 14px;">Your current team search requests</p>
                     
                     @foreach($user->activeMatchmakingRequests->take(2) as $request)
-                        <div style="padding: 16px; background-color: #0e0e10; border-radius: 8px; margin-bottom: 12px; border-left: 4px solid #f59e0b;">
+                        <div style="padding: 16px; background-color: var(--color-bg-primary); border-radius: 8px; margin-bottom: 12px; border-left: 4px solid #f59e0b;">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
                                 <div style="flex: 1;">
-                                    <h4 style="margin: 0; color: #efeff1; font-weight: 600;">{{ $request->game_name ?? 'Unknown Game' }}</h4>
-                                    <p style="margin: 4px 0; color: #b3b3b5; font-size: 14px;">
+                                    <h4 style="margin: 0; color: var(--color-text-primary); font-weight: 600;">{{ $request->game_name ?? 'Unknown Game' }}</h4>
+                                    <p style="margin: 4px 0; color: var(--color-text-secondary); font-size: 14px;">
                                         {{ ucfirst($request->skill_level ?? 'any') }} •
                                         @if($request->preferred_regions && count($request->preferred_regions) > 0)
                                             {{ ucfirst(str_replace('_', ' ', $request->preferred_regions[0])) }}
@@ -193,7 +193,7 @@
                                 </div>
                             </div>
                             
-                            <div style="font-size: 12px; color: #71717a; margin-bottom: 12px;">
+                            <div style="font-size: 12px; color: var(--color-text-muted); margin-bottom: 12px;">
                                 Created {{ $request->created_at->diffForHumans() }}
                             </div>
 
@@ -224,31 +224,31 @@
                     @if($activeGoals->count() > 0)
                     <div class="card" style="margin-bottom: 24px;">
                         <h3 class="card-header">🏆 Active Community Goals</h3>
-                        <p style="color: #b3b3b5; margin-bottom: 16px; font-size: 14px;">Goals from your servers</p>
+                        <p style="color: var(--color-text-secondary); margin-bottom: 16px; font-size: 14px;">Goals from your servers</p>
                         
                         @foreach($activeGoals->take(2) as $goal)
-                            <div style="padding: 16px; background-color: #0e0e10; border-radius: 8px; margin-bottom: 12px; border-left: 4px solid #10b981;">
+                            <div style="padding: 16px; background-color: var(--color-bg-primary); border-radius: 8px; margin-bottom: 12px; border-left: 4px solid #10b981;">
                                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
                                     <div style="flex: 1;">
-                                        <h4 style="margin: 0; color: #efeff1; font-weight: 600;">{{ $goal->title }}</h4>
-                                        <p style="margin: 4px 0; color: #b3b3b5; font-size: 14px;">{{ $goal->server->name ?? 'Server' }}</p>
+                                        <h4 style="margin: 0; color: var(--color-text-primary); font-weight: 600;">{{ $goal->title }}</h4>
+                                        <p style="margin: 4px 0; color: var(--color-text-secondary); font-size: 14px;">{{ $goal->server->name ?? 'Server' }}</p>
                                     </div>
                                     <div style="text-align: right;">
                                         <div style="font-weight: 600; color: #10b981;">{{ round(($goal->current_value ?? 0) / $goal->target_value * 100, 1) }}%</div>
-                                        <div style="font-size: 12px; color: #71717a;">progress</div>
+                                        <div style="font-size: 12px; color: var(--color-text-muted);">progress</div>
                                     </div>
                                 </div>
                                 
                                 <!-- Progress Bar -->
                                 <div style="margin-bottom: 12px;">
-                                    <div style="width: 100%; height: 6px; background-color: #3f3f46; border-radius: 3px; overflow: hidden;">
+                                    <div style="width: 100%; height: 6px; background-color: var(--color-surface-active); border-radius: 3px; overflow: hidden;">
                                         <div style="height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); width: {{ $goal->target_value > 0 ? min(($goal->current_value ?? 0) / $goal->target_value * 100, 100) : 0 }}%; transition: width 0.3s ease;"></div>
                                     </div>
                                 </div>
 
                                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <div style="font-size: 12px; color: #b3b3b5;">
-                                        {{ $goal->participants->count() ?? 0 }} participants • 
+                                    <div style="font-size: 12px; color: var(--color-text-secondary);">
+                                        {{ $goal->participants->count() ?? 0 }} participants •
                                         {{ $goal->current_value ?? 0 }}/{{ $goal->target_value }}
                                     </div>
                                     <a href="{{ route('server.show', $goal->server) }}#goals" class="btn btn-sm" style="background-color: #10b981; color: white; padding: 4px 8px; font-size: 11px;">View Goal</a>
@@ -266,24 +266,24 @@
                 <div class="card">
                     <h3 class="card-header">Recent Activity</h3>
                     @forelse($recentActivity as $activity)
-                        <div style="padding: 12px; background-color: #0e0e10; border-radius: 8px; margin-bottom: 8px;">
+                        <div style="padding: 12px; background-color: var(--color-bg-primary); border-radius: 8px; margin-bottom: 8px;">
                             @if($activity['type'] === 'message')
                                 <p><strong>{{ $activity['user'] }}</strong> posted in <span style="color: #a78bfa;">#{{ $activity['channel'] }}</span></p>
-                                <p style="font-size: 11px; color: #52525b;">in {{ $activity['server'] }}</p>
+                                <p style="font-size: 11px; color: var(--color-text-faint);">in {{ $activity['server'] }}</p>
                             @elseif($activity['type'] === 'join')
                                 <p><strong>{{ $activity['user'] }}</strong> joined <span style="color: #10b981;">{{ $activity['server'] }}</span></p>
                             @elseif($activity['type'] === 'team_join')
                                 <p><strong>{{ $activity['user'] }}</strong> joined team <span style="color: #f59e0b;">{{ $activity['server'] }}</span></p>
                                 @if($activity['channel'])
-                                    <p style="font-size: 11px; color: #52525b;">{{ $activity['channel'] }}</p>
+                                    <p style="font-size: 11px; color: var(--color-text-faint);">{{ $activity['channel'] }}</p>
                                 @endif
                             @elseif($activity['type'] === 'friend_accept')
                                 <p><strong>{{ $activity['user'] }}</strong> <span style="color: #ec4899;">accepted your friend request</span></p>
                             @endif
-                            <p style="font-size: 12px; color: #71717a; margin-top: 4px;">{{ $activity['time'] }}</p>
+                            <p style="font-size: 12px; color: var(--color-text-muted); margin-top: 4px;">{{ $activity['time'] }}</p>
                         </div>
                     @empty
-                        <p style="color: #71717a;">No recent activity</p>
+                        <p style="color: var(--color-text-muted);">No recent activity</p>
                     @endforelse
                 </div>
             </div>
@@ -306,7 +306,7 @@
                         </div>
                     </div>
                 @empty
-                    <div style="text-align: center; padding: 24px 16px; background-color: #0e0e10; border-radius: 8px; border: 2px dashed #27272a;">
+                    <div style="text-align: center; padding: 24px 16px; background-color: var(--color-bg-primary); border-radius: 8px; border: 2px dashed var(--color-bg-elevated);">
                         <div style="width: 48px; height: 48px; margin: 0 auto 12px; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="2">
                                 <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
@@ -315,13 +315,13 @@
                                 <line x1="22" y1="11" x2="16" y2="11"></line>
                             </svg>
                         </div>
-                        <p style="color: #b3b3b5; font-size: 14px; margin-bottom: 12px;">No friends online</p>
+                        <p style="color: var(--color-text-secondary); font-size: 14px; margin-bottom: 12px;">No friends online</p>
                         <a href="{{ route('friends.search') }}" style="color: #667eea; font-size: 13px; text-decoration: none;">Find friends</a>
                     </div>
                 @endforelse
 
                 @if($user->servers && $user->servers->isNotEmpty())
-                    <div style="height: 1px; background-color: #27272a; margin: 24px 0;"></div>
+                    <div style="height: 1px; background-color: var(--color-bg-elevated); margin: 24px 0;"></div>
                     <h3 style="margin-bottom: 16px;">Your Servers</h3>
                     @foreach($user->servers as $server)
                         <a href="{{ route('server.show', $server) }}" class="sidebar-link">
@@ -333,7 +333,7 @@
                                 @endif
                                 <div style="flex: 1; min-width: 0;">
                                     <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $server->name }}</div>
-                                    <div style="font-size: 11px; color: #71717a;">{{ $server->members->count() }} members</div>
+                                    <div style="font-size: 11px; color: var(--color-text-muted);">{{ $server->members->count() }} members</div>
                                 </div>
                             </div>
                         </a>

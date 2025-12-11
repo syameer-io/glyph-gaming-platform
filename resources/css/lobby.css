@@ -28,19 +28,19 @@
 
 /* Non-owned games - subtle gray styling */
 #game-selector option[data-owned="false"] {
-    color: #9ca3af; /* Gray for non-owned games */
+    color: var(--color-text-secondary, #9ca3af); /* Gray for non-owned games */
     font-weight: 400;
 }
 
 /* Default option styling */
 #game-selector option:first-child {
-    color: #71717a;
+    color: var(--color-text-muted, #71717a);
     font-style: italic;
 }
 
 /* Disabled options */
 #game-selector option:disabled {
-    color: #52525b;
+    color: var(--color-text-faint, #52525b);
     font-style: italic;
 }
 

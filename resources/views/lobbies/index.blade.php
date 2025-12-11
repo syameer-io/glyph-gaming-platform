@@ -11,7 +11,7 @@
     }
 
     .lobbies-sidebar {
-        background-color: #18181b;
+        background-color: var(--color-surface);
         border-radius: 12px;
         padding: 24px;
         height: fit-content;
@@ -33,7 +33,7 @@
     }
 
     .sidebar-header h3 {
-        color: #efeff1;
+        color: var(--color-text-primary);
         font-size: 16px;
         font-weight: 600;
         margin: 0;
@@ -49,8 +49,8 @@
     }
 
     .active-lobby-item {
-        background-color: #0e0e10;
-        border: 1px solid #3f3f46;
+        background-color: var(--color-bg-primary);
+        border: 1px solid var(--color-border-primary);
         border-radius: 8px;
         padding: 12px;
         margin-bottom: 12px;
@@ -69,14 +69,14 @@
     }
 
     .lobby-game-name {
-        color: #efeff1;
+        color: var(--color-text-primary);
         font-size: 14px;
         font-weight: 600;
         margin: 0;
     }
 
     .lobby-join-method {
-        color: #b3b3b5;
+        color: var(--color-text-secondary);
         font-size: 12px;
         margin: 4px 0 0 0;
     }
@@ -84,7 +84,7 @@
     .lobby-delete-btn {
         background: none;
         border: none;
-        color: #71717a;
+        color: var(--color-text-muted);
         cursor: pointer;
         padding: 4px;
         border-radius: 4px;
@@ -113,12 +113,12 @@
     }
 
     .lobby-join-info {
-        background-color: #18181b;
+        background-color: var(--color-bg-secondary);
         padding: 8px 10px;
         border-radius: 4px;
         font-family: 'Consolas', 'Monaco', monospace;
         font-size: 11px;
-        color: #b3b3b5;
+        color: var(--color-text-secondary);
         word-break: break-all;
         display: flex;
         justify-content: space-between;
@@ -129,7 +129,7 @@
     .lobby-copy-btn {
         background: none;
         border: none;
-        color: #71717a;
+        color: var(--color-text-muted);
         cursor: pointer;
         padding: 4px;
         border-radius: 4px;
@@ -144,7 +144,7 @@
     .empty-lobbies {
         text-align: center;
         padding: 24px;
-        color: #71717a;
+        color: var(--color-text-muted);
         font-size: 14px;
     }
 
@@ -171,21 +171,21 @@
     }
 
     .content-header h1 {
-        color: #efeff1;
+        color: var(--color-text-primary);
         font-size: 28px;
         font-weight: 700;
         margin: 0;
     }
 
     .creation-card {
-        background-color: #18181b;
+        background-color: var(--color-surface);
         border-radius: 12px;
         padding: 24px;
-        border: 1px solid #3f3f46;
+        border: 1px solid var(--color-border-primary);
     }
 
     .creation-card h2 {
-        color: #efeff1;
+        color: var(--color-text-primary);
         font-size: 20px;
         font-weight: 600;
         margin: 0 0 20px 0;
@@ -198,7 +198,7 @@
     .form-label {
         display: block;
         font-size: 14px;
-        color: #b3b3b5;
+        color: var(--color-text-secondary);
         margin-bottom: 8px;
         font-weight: 500;
     }
@@ -206,10 +206,10 @@
     .form-control {
         width: 100%;
         padding: 12px 16px;
-        background-color: #0e0e10;
-        border: 2px solid #3f3f46;
+        background-color: var(--color-input-bg);
+        border: 2px solid var(--color-input-border);
         border-radius: 8px;
-        color: #efeff1;
+        color: var(--color-input-text);
         font-size: 14px;
         transition: border-color 0.2s;
     }
@@ -226,7 +226,7 @@
 
     .form-help {
         font-size: 12px;
-        color: #71717a;
+        color: var(--color-text-muted);
         margin-top: 6px;
     }
 
@@ -262,23 +262,23 @@
     }
 
     .btn-secondary {
-        background-color: #3f3f46;
-        color: #efeff1;
+        background-color: var(--color-surface-active);
+        color: var(--color-text-primary);
     }
 
     .btn-secondary:hover {
-        background-color: #52525b;
+        background-color: var(--color-border-subtle);
     }
 
     .btn-ghost {
         background: transparent;
-        color: #b3b3b5;
-        border: 1px solid #3f3f46;
+        color: var(--color-text-secondary);
+        border: 1px solid var(--color-border-primary);
     }
 
     .btn-ghost:hover {
-        background-color: #3f3f46;
-        color: #efeff1;
+        background-color: var(--color-surface-active);
+        color: var(--color-text-primary);
     }
 
     .alert {
@@ -304,7 +304,7 @@
         display: inline-block;
         width: 16px;
         height: 16px;
-        border: 2px solid #3f3f46;
+        border: 2px solid var(--color-border-primary);
         border-radius: 50%;
         border-top-color: #667eea;
         animation: spin 1s ease-in-out infinite;
@@ -361,8 +361,8 @@
     }
 
     .step-item.pending .step-number {
-        background-color: #3f3f46;
-        color: #71717a;
+        background-color: var(--color-surface-active);
+        color: var(--color-text-muted);
     }
 
     .step-item.active .step-number {
@@ -382,11 +382,11 @@
     }
 
     .step-item.pending .step-label {
-        color: #71717a;
+        color: var(--color-text-muted);
     }
 
     .step-item.active .step-label {
-        color: #efeff1;
+        color: var(--color-text-primary);
     }
 
     .step-item.completed .step-label {
@@ -396,7 +396,7 @@
     .step-connector {
         width: 40px;
         height: 2px;
-        background-color: #3f3f46;
+        background-color: var(--color-surface-active);
         transition: background-color 0.3s ease;
     }
 
@@ -421,7 +421,7 @@
         border: 2px solid transparent;
         cursor: pointer;
         transition: all 0.2s ease;
-        background-color: #0e0e10;
+        background-color: var(--color-bg-primary);
     }
 
     .game-card:hover {
@@ -457,7 +457,7 @@
     }
 
     .game-card-name {
-        color: #efeff1;
+        color: var(--color-text-primary);
         font-size: 14px;
         font-weight: 600;
         line-height: 1.3;
@@ -500,8 +500,8 @@
     }
 
     .method-card {
-        background-color: #0e0e10;
-        border: 2px solid #3f3f46;
+        background-color: var(--color-bg-primary);
+        border: 2px solid var(--color-border-primary);
         border-radius: 12px;
         padding: 20px;
         cursor: pointer;
@@ -515,7 +515,7 @@
 
     .method-card:hover {
         border-color: #667eea;
-        background-color: #1f1f23;
+        background-color: var(--color-bg-tertiary);
         transform: translateY(-2px);
     }
 
@@ -536,13 +536,13 @@
     }
 
     .method-card-name {
-        color: #efeff1;
+        color: var(--color-text-primary);
         font-size: 14px;
         font-weight: 600;
     }
 
     .method-card-desc {
-        color: #71717a;
+        color: var(--color-text-muted);
         font-size: 12px;
         line-height: 1.4;
     }
@@ -567,14 +567,14 @@
     }
 
     .step-header h3 {
-        color: #efeff1;
+        color: var(--color-text-primary);
         font-size: 18px;
         font-weight: 600;
         margin: 0;
     }
 
     .step-subtitle {
-        color: #71717a;
+        color: var(--color-text-muted);
         font-size: 14px;
         margin: 0 0 16px 0;
     }
@@ -584,8 +584,8 @@
         align-items: center;
         gap: 6px;
         padding: 8px 14px;
-        background-color: #3f3f46;
-        color: #b3b3b5;
+        background-color: var(--color-surface-active);
+        color: var(--color-text-secondary);
         border: none;
         border-radius: 6px;
         font-size: 13px;
@@ -595,8 +595,8 @@
     }
 
     .back-button:hover {
-        background-color: #52525b;
-        color: #efeff1;
+        background-color: var(--color-border-subtle);
+        color: var(--color-text-primary);
     }
 
     .selected-summary {
@@ -604,7 +604,7 @@
         align-items: center;
         gap: 16px;
         padding: 16px;
-        background-color: #0e0e10;
+        background-color: var(--color-bg-primary);
         border-radius: 8px;
         margin-bottom: 20px;
     }
@@ -625,7 +625,7 @@
     }
 
     .selected-info h4 {
-        color: #efeff1;
+        color: var(--color-text-primary);
         font-size: 16px;
         font-weight: 600;
         margin: 0 0 4px 0;
