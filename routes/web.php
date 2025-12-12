@@ -22,12 +22,16 @@ use App\Http\Controllers\DirectMessageController;
 use App\Http\Controllers\VoiceChannelController;
 use App\Http\Controllers\LobbyPageController;
 
+// Landing page (for guests, redirect authenticated users to dashboard)
+Route::get('/', function () {
+    if (auth()->check()) {
+        return redirect()->route('dashboard');
+    }
+    return view('landing');
+})->name('landing');
+
 // Guest routes
 Route::middleware('guest')->group(function () {
-    Route::get('/', function () {
-        return redirect()->route('login');
-    });
-    
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
     
