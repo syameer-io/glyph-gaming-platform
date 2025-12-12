@@ -42,7 +42,10 @@
         $isMember = $team->activeMembers->contains('user_id', auth()->id());
     }
 
-    // Show "Request to Join" button logic
+    // Check if team is open for direct joining
+    $isOpenRecruitment = $team->recruitment_status === 'open';
+
+    // Show join/request button logic
     $showJoinButton = false;
     if (auth()->check() && !$isMember) {
         if ($context === 'matchmaking') {
@@ -109,33 +112,73 @@
                 {{ $team->game_name ?? 'Unknown Game' }}
             </div>
 
-            <!-- Status Badge -->
-            <div style="
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-                padding: 4px 8px;
-                border-radius: 4px;
-                font-size: 12px;
-                font-weight: 600;
-                text-transform: uppercase;
-                background-color: {{ $statusColor }}20;
-                color: {{ $statusColor }};
-            ">
+            <!-- Status Badges -->
+            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                {{-- Team Status Badge --}}
                 <div style="
-                    width: 6px;
-                    height: 6px;
-                    background-color: {{ $statusColor }};
-                    border-radius: 50%;
-                "></div>
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    font-size: 12px;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                    background-color: {{ $statusColor }}20;
+                    color: {{ $statusColor }};
+                ">
+                    <div style="
+                        width: 6px;
+                        height: 6px;
+                        background-color: {{ $statusColor }};
+                        border-radius: 50%;
+                    "></div>
+                    @if($team->status === 'recruiting')
+                        Recruiting
+                    @elseif($team->status === 'full')
+                        Full
+                    @elseif($team->status === 'active')
+                        Active
+                    @else
+                        {{ ucfirst($team->status) }}
+                    @endif
+                </div>
+
+                {{-- Recruitment Type Badge (Open/Closed) --}}
                 @if($team->status === 'recruiting')
-                    Recruiting
-                @elseif($team->status === 'full')
-                    Full
-                @elseif($team->status === 'active')
-                    Active
-                @else
-                    {{ ucfirst($team->status) }}
+                    @if($isOpenRecruitment)
+                        <div style="
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 4px;
+                            padding: 3px 6px;
+                            border-radius: 4px;
+                            font-size: 10px;
+                            font-weight: 600;
+                            text-transform: uppercase;
+                            background-color: rgba(16, 185, 129, 0.15);
+                            color: #10b981;
+                            border: 1px solid rgba(16, 185, 129, 0.3);
+                        " title="Anyone can join directly">
+                            Open
+                        </div>
+                    @else
+                        <div style="
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 4px;
+                            padding: 3px 6px;
+                            border-radius: 4px;
+                            font-size: 10px;
+                            font-weight: 600;
+                            text-transform: uppercase;
+                            background-color: rgba(245, 158, 11, 0.15);
+                            color: #f59e0b;
+                            border: 1px solid rgba(245, 158, 11, 0.3);
+                        " title="Requires approval to join">
+                            Closed
+                        </div>
+                    @endif
                 @endif
             </div>
         </div>
@@ -456,38 +499,75 @@
         </a>
 
         @if($showJoinButton)
-            <button
-                onclick="requestToJoin({{ $team->id }}, event)"
-                class="btn btn-primary btn-sm"
-                style="
-                    flex: 1;
-                    padding: 8px 16px;
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    color: white;
-                    border: none;
-                    border-radius: 6px;
-                    font-size: 14px;
-                    font-weight: 600;
-                    text-align: center;
-                    cursor: pointer;
-                    transition: all 0.2s ease;
-                "
-                onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.4)';"
-                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';"
-            >
-                <span class="btn-text">Request to Join</span>
-                <span class="loading-spinner" style="display: none;">
-                    <span style="
-                        display: inline-block;
-                        width: 14px;
-                        height: 14px;
-                        border: 2px solid rgba(255, 255, 255, 0.3);
-                        border-radius: 50%;
-                        border-top-color: white;
-                        animation: spin 0.8s linear infinite;
-                    "></span>
-                </span>
-            </button>
+            @if($isOpenRecruitment)
+                {{-- Open team: Green button for direct join --}}
+                <button
+                    onclick="joinTeamDirect({{ $team->id }}, event)"
+                    class="btn btn-success btn-sm"
+                    style="
+                        flex: 1;
+                        padding: 8px 16px;
+                        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                        color: white;
+                        border: none;
+                        border-radius: 6px;
+                        font-size: 14px;
+                        font-weight: 600;
+                        text-align: center;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                    "
+                    onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(16, 185, 129, 0.4)';"
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';"
+                >
+                    <span class="btn-text">Join Team</span>
+                    <span class="loading-spinner" style="display: none;">
+                        <span style="
+                            display: inline-block;
+                            width: 14px;
+                            height: 14px;
+                            border: 2px solid rgba(255, 255, 255, 0.3);
+                            border-radius: 50%;
+                            border-top-color: white;
+                            animation: spin 0.8s linear infinite;
+                        "></span>
+                    </span>
+                </button>
+            @else
+                {{-- Closed team: Purple button for request --}}
+                <button
+                    onclick="requestToJoin({{ $team->id }}, event)"
+                    class="btn btn-primary btn-sm"
+                    style="
+                        flex: 1;
+                        padding: 8px 16px;
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white;
+                        border: none;
+                        border-radius: 6px;
+                        font-size: 14px;
+                        font-weight: 600;
+                        text-align: center;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                    "
+                    onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.4)';"
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';"
+                >
+                    <span class="btn-text">Request to Join</span>
+                    <span class="loading-spinner" style="display: none;">
+                        <span style="
+                            display: inline-block;
+                            width: 14px;
+                            height: 14px;
+                            border: 2px solid rgba(255, 255, 255, 0.3);
+                            border-radius: 50%;
+                            border-top-color: white;
+                            animation: spin 0.8s linear infinite;
+                        "></span>
+                    </span>
+                </button>
+            @endif
         @elseif($isMember)
             <span style="
                 flex: 1;

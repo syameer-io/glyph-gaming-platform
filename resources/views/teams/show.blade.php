@@ -165,6 +165,7 @@
     
     .member-info {
         flex: 1;
+        min-width: 0;
     }
     
     .member-name {
@@ -198,6 +199,7 @@
     .member-actions {
         display: flex;
         gap: 8px;
+        flex-shrink: 0;
     }
     
     .skill-meter {
@@ -275,7 +277,185 @@
         gap: 12px;
         margin-bottom: 24px;
     }
-    
+
+    /* Pending Join Requests Styles */
+    .pending-requests-section {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
+        border: 1px solid rgba(102, 126, 234, 0.25);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 24px;
+    }
+
+    .pending-requests-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 16px;
+        font-weight: 600;
+        color: #efeff1;
+        font-size: 15px;
+    }
+
+    .pending-requests-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 8px;
+        color: white;
+    }
+
+    .pending-requests-count {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 700;
+        margin-left: auto;
+    }
+
+    .pending-requests-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .pending-request-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px;
+        background-color: rgba(24, 24, 27, 0.8);
+        border: 1px solid rgba(63, 63, 70, 0.5);
+        border-radius: 10px;
+        transition: all 0.2s ease;
+    }
+
+    .pending-request-card:hover {
+        background-color: rgba(24, 24, 27, 1);
+        border-color: rgba(102, 126, 234, 0.4);
+        transform: translateY(-1px);
+    }
+
+    .pending-request-user {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .pending-request-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid rgba(102, 126, 234, 0.3);
+        flex-shrink: 0;
+    }
+
+    .pending-request-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+    }
+
+    .pending-request-name {
+        font-weight: 600;
+        color: #efeff1;
+        font-size: 15px;
+    }
+
+    .pending-request-time {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: #a1a1aa;
+    }
+
+    .pending-request-time svg {
+        opacity: 0.7;
+    }
+
+    .pending-request-message {
+        display: flex;
+        align-items: flex-start;
+        gap: 6px;
+        margin-top: 6px;
+        padding: 8px 12px;
+        background-color: rgba(14, 14, 16, 0.6);
+        border-radius: 6px;
+        font-size: 13px;
+        color: #a1a1aa;
+        font-style: italic;
+        max-width: 300px;
+    }
+
+    .pending-request-message svg {
+        flex-shrink: 0;
+        margin-top: 2px;
+        opacity: 0.6;
+    }
+
+    .pending-request-message span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .pending-request-actions {
+        display: flex;
+        gap: 10px;
+        flex-shrink: 0;
+        margin-left: 16px;
+    }
+
+    .pending-request-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .pending-request-btn.approve {
+        background-color: rgba(34, 197, 94, 0.15);
+        color: #22c55e;
+        border: 2px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .pending-request-btn.approve:hover {
+        background-color: #22c55e;
+        color: white;
+        border-color: #22c55e;
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+    }
+
+    .pending-request-btn.reject {
+        background-color: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+        border: 2px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .pending-request-btn.reject:hover {
+        background-color: #ef4444;
+        color: white;
+        border-color: #ef4444;
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+    }
+
     .invite-section {
         background-color: #0e0e10;
         border-radius: 8px;
@@ -903,29 +1083,60 @@
 
                     {{-- Pending Join Requests Section (for team leaders) --}}
                     @if($isLeader && $pendingJoinRequests->count() > 0)
-                        <div class="invite-section" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); border: 1px solid rgba(102, 126, 234, 0.3);">
-                            <h4 style="margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
-                                <span>📬</span>
-                                <span>Pending Join Requests ({{ $pendingJoinRequests->count() }})</span>
-                            </h4>
-                            @foreach($pendingJoinRequests as $joinRequest)
-                                <div class="member-item" style="background-color: #18181b; margin-bottom: 12px;">
-                                    <img src="{{ $joinRequest->user->profile->avatar_url }}" alt="{{ $joinRequest->user->display_name }}" class="member-avatar">
-                                    <div class="member-info">
-                                        <div class="member-name">{{ $joinRequest->user->display_name }}</div>
-                                        <div class="member-status">Requested {{ $joinRequest->created_at->diffForHumans() }}</div>
-                                        @if($joinRequest->message)
-                                            <div style="margin-top: 8px; padding: 8px; background-color: #0e0e10; border-radius: 4px; font-size: 13px; color: #b3b3b5;">
-                                                <strong>Message:</strong> {{ $joinRequest->message }}
-                                            </div>
-                                        @endif
-                                    </div>
-                                    <div class="member-actions">
-                                        <button onclick="approveJoinRequest({{ $joinRequest->id }})" class="btn btn-primary btn-sm">Approve</button>
-                                        <button onclick="rejectJoinRequest({{ $joinRequest->id }})" class="btn btn-danger btn-sm">Reject</button>
-                                    </div>
+                        <div class="pending-requests-section">
+                            <div class="pending-requests-header">
+                                <div class="pending-requests-icon">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="9" cy="7" r="4"></circle>
+                                        <line x1="19" y1="8" x2="19" y2="14"></line>
+                                        <line x1="22" y1="11" x2="16" y2="11"></line>
+                                    </svg>
                                 </div>
-                            @endforeach
+                                <span>Pending Join Requests</span>
+                                <span class="pending-requests-count">{{ $pendingJoinRequests->count() }}</span>
+                            </div>
+
+                            <div class="pending-requests-list">
+                                @foreach($pendingJoinRequests as $joinRequest)
+                                    <div class="pending-request-card" id="join-request-{{ $joinRequest->id }}">
+                                        <div class="pending-request-user">
+                                            <img src="{{ $joinRequest->user->profile->avatar_url }}" alt="{{ $joinRequest->user->display_name }}" class="pending-request-avatar">
+                                            <div class="pending-request-info">
+                                                <div class="pending-request-name">{{ $joinRequest->user->display_name }}</div>
+                                                <div class="pending-request-time">
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <circle cx="12" cy="12" r="10"></circle>
+                                                        <polyline points="12 6 12 12 16 14"></polyline>
+                                                    </svg>
+                                                    Requested {{ $joinRequest->created_at->diffForHumans() }}
+                                                </div>
+                                                @if($joinRequest->message)
+                                                    <div class="pending-request-message">
+                                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                                        </svg>
+                                                        <span>"{{ $joinRequest->message }}"</span>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        <div class="pending-request-actions">
+                                            <button onclick="approveJoinRequest({{ $joinRequest->id }})" class="pending-request-btn approve" title="Approve Request">
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                                </svg>
+                                            </button>
+                                            <button onclick="rejectJoinRequest({{ $joinRequest->id }})" class="pending-request-btn reject" title="Reject Request">
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
                         </div>
                     @endif
 

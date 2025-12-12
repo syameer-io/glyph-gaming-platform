@@ -606,8 +606,76 @@ function sortTeams() {
     sortedTeams.forEach(team => container.appendChild(team));
 }
 
+// Direct join for OPEN teams
+function joinTeamDirect(teamId, event) {
+    // Get the button element
+    const button = event ? event.currentTarget : window.event.srcElement;
+    if (!button) {
+        console.error('joinTeamDirect: Could not find button element');
+        return;
+    }
+
+    const btnText = button.querySelector('.btn-text');
+    const spinner = button.querySelector('.loading-spinner');
+
+    // Show loading state
+    if (btnText) btnText.style.display = 'none';
+    if (spinner) spinner.style.display = 'inline-block';
+    button.disabled = true;
+
+    fetch(`{{ url('/teams') }}/${teamId}/join-direct`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update button to show success state
+            button.innerHTML = '<span style="color: #10b981;">✓ Joined!</span>';
+            button.style.background = 'rgba(16, 185, 129, 0.2)';
+            button.style.cursor = 'default';
+
+            // Show success toast
+            if (typeof Toast !== 'undefined') {
+                Toast.success(data.message || 'Successfully joined the team!');
+            }
+
+            // Reload after a moment to show the toast
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            // Show error and restore button
+            if (typeof Toast !== 'undefined') {
+                Toast.error(data.error || data.message || 'Error joining team');
+            } else {
+                alert(data.error || data.message || 'Error joining team');
+            }
+
+            if (btnText) btnText.style.display = 'inline';
+            if (spinner) spinner.style.display = 'none';
+            button.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+
+        if (typeof Toast !== 'undefined') {
+            Toast.error('An error occurred while joining the team. Please try again.');
+        } else {
+            alert('Error joining team');
+        }
+
+        if (btnText) btnText.style.display = 'inline';
+        if (spinner) spinner.style.display = 'none';
+        button.disabled = false;
+    });
+}
+
+// Request to join for CLOSED teams
 function requestToJoin(teamId, event) {
-    // Get the button element (use currentTarget to always get the button, not child elements)
+    // Get the button element
     const button = event ? event.currentTarget : window.event.srcElement;
     if (!button) {
         console.error('requestToJoin: Could not find button element');
@@ -622,25 +690,26 @@ function requestToJoin(teamId, event) {
     if (spinner) spinner.style.display = 'inline-block';
     button.disabled = true;
 
-    // Use direct join route (not matchmaking join)
-    fetch(`{{ url('/teams') }}/${teamId}/join-direct`, {
+    // Submit join request to the join-requests endpoint
+    fetch(`{{ url('/teams') }}/${teamId}/join-requests`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        }
+        },
+        body: JSON.stringify({ message: '' }) // Optional message
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Update button to show success state
-            button.innerHTML = '<span style="color: #10b981;">✓ Joined Team</span>';
-            button.classList.remove('btn-primary');
-            button.classList.add('btn-success');
+            // Update button to show pending state
+            button.innerHTML = '<span style="color: #f59e0b;">⏳ Request Sent</span>';
+            button.style.background = 'rgba(245, 158, 11, 0.2)';
+            button.style.cursor = 'default';
 
             // Show success toast
             if (typeof Toast !== 'undefined') {
-                Toast.success(data.message || 'Successfully joined the team!');
+                Toast.success(data.message || 'Join request sent! The team leader will review your request.');
             }
 
             // Reload after a moment to show the toast
@@ -648,9 +717,9 @@ function requestToJoin(teamId, event) {
         } else {
             // Show error and restore button
             if (typeof Toast !== 'undefined') {
-                Toast.error(data.error || data.message || 'Error requesting to join team');
+                Toast.error(data.error || data.message || 'Error sending join request');
             } else {
-                alert(data.error || data.message || 'Error requesting to join team');
+                alert(data.error || data.message || 'Error sending join request');
             }
 
             if (btnText) btnText.style.display = 'inline';
@@ -661,11 +730,10 @@ function requestToJoin(teamId, event) {
     .catch(error => {
         console.error('Error:', error);
 
-        // Show error toast or fallback to alert
         if (typeof Toast !== 'undefined') {
-            Toast.error('An error occurred while joining the team. Please try again.');
+            Toast.error('An error occurred while sending join request. Please try again.');
         } else {
-            alert('Error requesting to join team');
+            alert('Error sending join request');
         }
 
         if (btnText) btnText.style.display = 'inline';
