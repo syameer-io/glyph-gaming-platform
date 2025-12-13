@@ -454,50 +454,6 @@ class Team extends Model
     }
 
     /**
-     * Calculate role coverage percentage (0-100)
-     *
-     * Coverage = (unique filled required roles / total required roles) × 100
-     *
-     * Returns:
-     * - 0% if team has required_roles but none are filled
-     * - Falls back to game's ideal composition if no required_roles set
-     * - 0% if no required_roles and no game composition (unknown game)
-     */
-    public function calculateRoleCoverage(): float
-    {
-        // Use team's required_roles first, fallback to ideal composition
-        $requiredRoles = $this->required_roles ?? [];
-        if (empty($requiredRoles)) {
-            $requiredRoles = $this->getIdealGameComposition();
-        }
-
-        // If no required roles defined, return 0%
-        if (empty($requiredRoles)) {
-            return 0.0;
-        }
-
-        $members = $this->activeMembers()->get();
-
-        // If no members, no roles are filled
-        if ($members->count() < 1) {
-            return 0.0;
-        }
-
-        // Get members' assigned game roles (unique)
-        $filledRoles = $members->whereNotNull('game_role')
-                              ->pluck('game_role')
-                              ->unique()
-                              ->toArray();
-
-        $requiredCount = count($requiredRoles);
-        $filledCount = count(array_intersect($filledRoles, $requiredRoles));
-
-        $coverage = ($filledCount / $requiredCount) * 100;
-
-        return round(min(100.0, $coverage), 1);
-    }
-
-    /**
      * Get required roles that have been filled by at least one member
      *
      * @return array Array of role names that are both required and assigned
@@ -583,70 +539,6 @@ class Team extends Model
             'required_count' => count($requiredRoles),
             'assignments' => $assignments,
         ];
-    }
-
-    /**
-     * Calculate activity sync percentage (0-100)
-     * Uses Jaccard similarity on members' availability patterns
-     */
-    public function calculateActivitySync(): float
-    {
-        $members = $this->activeMembers()->with('user.playerGameRoles')->get();
-
-        if ($members->count() < 2) {
-            return 100.0; // Perfect sync with 0-1 members
-        }
-
-        // Collect member availability patterns
-        $memberSchedules = [];
-        foreach ($members as $member) {
-            $playerGameRole = $member->user->playerGameRoles
-                ->where('game_appid', $this->game_appid)
-                ->first();
-
-            if ($playerGameRole && !empty($playerGameRole->availability_pattern)) {
-                $memberSchedules[] = $this->expandTimeRanges($playerGameRole->availability_pattern);
-            }
-        }
-
-        if (empty($memberSchedules)) {
-            return 70.0; // Neutral when no data
-        }
-
-        // Calculate pairwise Jaccard similarity
-        $totalSimilarity = 0;
-        $pairCount = 0;
-
-        for ($i = 0; $i < count($memberSchedules); $i++) {
-            for ($j = $i + 1; $j < count($memberSchedules); $j++) {
-                $similarity = $this->calculateJaccardSimilarity(
-                    $memberSchedules[$i],
-                    $memberSchedules[$j]
-                );
-                $totalSimilarity += $similarity;
-                $pairCount++;
-            }
-        }
-
-        $averageSimilarity = $pairCount > 0 ? $totalSimilarity / $pairCount : 0.70;
-
-        return round($averageSimilarity * 100, 1);
-    }
-
-    /**
-     * Get role distribution for team balance
-     */
-    public function getRoleDistribution(): array
-    {
-        $members = $this->activeMembers()->get();
-        $distribution = [];
-
-        foreach ($members as $member) {
-            $role = $member->game_role ?? 'unassigned';
-            $distribution[$role] = ($distribution[$role] ?? 0) + 1;
-        }
-
-        return $distribution;
     }
 
     /**

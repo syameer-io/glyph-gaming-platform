@@ -274,8 +274,6 @@ class TeamController extends Controller
         // Get team statistics
         $stats = [
             'balance_score' => $team->calculateBalanceScore(),
-            'role_coverage' => $team->calculateRoleCoverage(),
-            'activity_sync' => $team->calculateActivitySync(),
             'average_skill' => $team->average_skill_score,
             'needed_roles' => $team->getNeededRoles(),
             'member_count' => $team->current_size,
@@ -934,28 +932,6 @@ class TeamController extends Controller
             'success' => true,
             'message' => 'Role cleared successfully',
             'data' => $result,
-        ]);
-    }
-
-    /**
-     * Get team statistics
-     */
-    public function stats(Team $team): JsonResponse
-    {
-        $stats = [
-            'balance_score' => $team->calculateBalanceScore(),
-            'average_skill' => $team->average_skill_score,
-            'skill_distribution' => $team->getSkillDistribution(),
-            'role_distribution' => $team->getRoleDistribution(),
-            'member_count' => $team->current_size,
-            'recruitment_status' => $team->status,
-            'needed_roles' => $team->getNeededRoles(),
-            'team_compatibility' => $team->getTeamCompatibility(),
-        ];
-
-        return response()->json([
-            'success' => true,
-            'stats' => $stats
         ]);
     }
 

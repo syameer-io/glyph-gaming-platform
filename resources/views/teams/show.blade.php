@@ -600,14 +600,6 @@
             align-items: stretch;
         }
         
-        /* Chart responsive design */
-        .performance-charts-grid {
-            grid-template-columns: 1fr !important;
-        }
-        
-        .performance-charts-grid .stat-card {
-            height: 300px !important;
-        }
     }
     
     /* Enhanced notification system */
@@ -1154,7 +1146,6 @@
                 <div class="sidebar-nav">
                     <a href="#overview" class="sidebar-link active" onclick="showTab('overview', this)">Overview</a>
                     <a href="#members" class="sidebar-link" onclick="showTab('members', this)">Members</a>
-                    <a href="#performance" class="sidebar-link" onclick="showTab('performance', this)">Performance</a>
                     <a href="#activity" class="sidebar-link" onclick="showTab('activity', this)">Activity</a>
                     @if($isLeader)
                         <a href="#settings" class="sidebar-link" onclick="showTab('settings', this)">Settings</a>
@@ -1489,81 +1480,6 @@
                             @endif
                         </div>
                     @endforeach
-                </div>
-
-                <!-- Performance Tab -->
-                <div id="performance" class="tab-content">
-                    <h3 style="margin-bottom: 24px;">Team Performance</h3>
-                    
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-value">{{ $stats['average_skill'] ?? 72 }}</div>
-                            <div class="stat-label">Average Skill Score</div>
-                            <div class="stat-description">Based on Steam achievements and playtime</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">{{ 1247 }}h</div>
-                            <div class="stat-label">Combined Playtime</div>
-                            <div class="stat-description">Total hours in {{ $team->gameName ?? 'game' }}</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">{{ 86 }}%</div>
-                            <div class="stat-label">Team Compatibility</div>
-                            <div class="stat-description">Overall team chemistry score</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">{{ 15 }}</div>
-                            <div class="stat-label">Days Active</div>
-                            <div class="stat-description">Since team formation</div>
-                        </div>
-                    </div>
-
-                    <!-- Visual Analytics Section -->
-                    <div style="margin-top: 32px;">
-                        <h4 style="margin-bottom: 24px;">Visual Analytics</h4>
-                        
-                        <!-- Charts Grid -->
-                        <div class="performance-charts-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px;">
-                            <!-- Skill Distribution Radar Chart -->
-                            <div class="stat-card" style="height: 350px;">
-                                <canvas id="skillDistributionChart"></canvas>
-                            </div>
-                            
-                            <!-- Role Balance Doughnut Chart -->
-                            <div class="stat-card" style="height: 350px;">
-                                <canvas id="roleBalanceChart"></canvas>
-                            </div>
-                        </div>
-                        
-                        <!-- Skill Progress and Compatibility Charts -->
-                        <div class="performance-charts-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px;">
-                            <!-- Skill Progress Line Chart -->
-                            <div class="stat-card" style="height: 300px;">
-                                <canvas id="skillProgressChart"></canvas>
-                            </div>
-                            
-                            <!-- Team Compatibility Bar Chart -->
-                            <div class="stat-card" style="height: 300px;">
-                                <canvas id="teamCompatibilityChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Individual Skill Breakdown -->
-                    <div style="margin-top: 32px;">
-                        <h4 style="margin-bottom: 20px;">Individual Performance</h4>
-                        @foreach($team->activeMembers as $member)
-                            <div style="margin-bottom: 20px;">
-                                <div class="skill-meter-label">
-                                    <span>{{ $member->user->display_name }}</span>
-                                    <span>{{ $member->individual_skill_score ?? rand(60, 95) }}/100</span>
-                                </div>
-                                <div class="skill-meter-bar">
-                                    <div class="skill-meter-fill" style="width: {{ $member->individual_skill_score ?? rand(60, 95) }}%"></div>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
                 </div>
 
                 <!-- Activity Tab -->
@@ -2549,384 +2465,30 @@ document.addEventListener('DOMContentLoaded', function() {
 // Initialize tab from URL hash
 document.addEventListener('DOMContentLoaded', function() {
     const hash = window.location.hash.substring(1);
-    const validTabs = ['overview', 'members', 'performance', 'activity'@if($isLeader), 'settings'@endif];
-    
+    const validTabs = ['overview', 'members', 'activity'@if($isLeader), 'settings'@endif];
+
     if (validTabs.includes(hash)) {
         const tabElement = document.querySelector(`a[href="#${hash}"]`);
         if (tabElement) {
             showTab(hash, tabElement);
         }
     }
-    
-    // Initialize skill charts when performance tab is viewed
-    initializeSkillCharts();
 });
 
-// Team skill charts initialization
-let teamSkillCharts = null;
-
-function initializeSkillCharts() {
-    // Only initialize charts when performance tab is active
-    const performanceTab = document.getElementById('performance');
-    if (!performanceTab.classList.contains('active')) {
-        return;
-    }
-    
-    // Prepare team data for charts
-    const teamData = {
-        members: [
-            @foreach($team->activeMembers as $member)
-            {
-                id: {{ $member->user->id }},
-                name: "{{ $member->user->display_name }}",
-                game_role: "{{ $member->game_role ?? 'unassigned' }}",
-                individual_skill_score: {{ $member->individual_skill_score ?? rand(60, 95) }},
-                skills: {
-                    aim: {{ rand(60, 95) }},
-                    game_sense: {{ rand(60, 95) }},
-                    communication: {{ rand(60, 95) }},
-                    strategy: {{ rand(60, 95) }},
-                    teamwork: {{ rand(60, 95) }},
-                    adaptability: {{ rand(60, 95) }}
-                }
-            },
-            @endforeach
-        ],
-        stats: {
-            skill_balance: {{ $stats['balance_score'] ?? 85 }},
-            role_coverage: {{ 75 }},
-            activity_sync: {{ 92 }},
-            team_compatibility: {{ 86 }},
-            skill_match: {{ 78 }},
-            schedule_sync: {{ 85 }},
-            communication: {{ 88 }},
-            play_style: {{ 82 }},
-            goals_alignment: {{ 90 }}
-        }
-    };
-    
-    // Initialize charts only if Chart.js is loaded
-    if (typeof Chart !== 'undefined') {
-        // Destroy existing charts before creating new ones
-        if (teamSkillCharts) {
-            teamSkillCharts.destroy();
-        }
-        
-        teamSkillCharts = createTeamSkillCharts(teamData);
-    } else {
-        console.warn('Chart.js not loaded, creating fallback charts');
-        createFallbackCharts(teamData);
-    }
-}
-
-function createTeamSkillCharts(teamData) {
-    const charts = {};
-    
-    // Skill Distribution Radar Chart
-    const skillCtx = document.getElementById('skillDistributionChart');
-    if (skillCtx) {
-        const members = teamData.members || [];
-        const skillLabels = ['Aim', 'Game Sense', 'Communication', 'Strategy', 'Teamwork', 'Adaptability'];
-        
-        const teamSkillData = skillLabels.map(skill => {
-            const average = members.reduce((sum, member) => {
-                return sum + (member.skills?.[skill.toLowerCase().replace(' ', '_')] || 75);
-            }, 0) / (members.length || 1);
-            return Math.round(average);
-        });
-
-        charts.skillDistribution = new Chart(skillCtx, {
-            type: 'radar',
-            data: {
-                labels: skillLabels,
-                datasets: [{
-                    label: 'Team Average',
-                    data: teamSkillData,
-                    borderColor: '#667eea',
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                    borderWidth: 3,
-                    pointBackgroundColor: '#667eea',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Team Skill Distribution',
-                        color: '#efeff1',
-                        font: { size: 16, weight: 'bold' }
-                    },
-                    legend: {
-                        labels: { color: '#b3b3b5' }
-                    }
-                },
-                scales: {
-                    r: {
-                        beginAtZero: true,
-                        max: 100,
-                        grid: { color: '#3f3f46' },
-                        angleLines: { color: '#3f3f46' },
-                        pointLabels: { color: '#b3b3b5', font: { size: 12 } },
-                        ticks: { 
-                            color: '#71717a',
-                            stepSize: 20,
-                            showLabelBackdrop: false
-                        }
-                    }
-                }
-            }
-        });
-    }
-    
-    // Role Balance Doughnut Chart
-    const roleCtx = document.getElementById('roleBalanceChart');
-    if (roleCtx) {
-        const members = teamData.members || [];
-        const roleCounts = {};
-        
-        members.forEach(member => {
-            const role = member.game_role || 'unassigned';
-            roleCounts[role] = (roleCounts[role] || 0) + 1;
-        });
-
-        const roleLabels = Object.keys(roleCounts);
-        const roleData = Object.values(roleCounts);
-        const roleColors = ['#667eea', '#10b981', '#f59e0b', '#ef4444', '#a855f7', '#06b6d4'];
-
-        charts.roleBalance = new Chart(roleCtx, {
-            type: 'doughnut',
-            data: {
-                labels: roleLabels.map(role => role.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')),
-                datasets: [{
-                    data: roleData,
-                    backgroundColor: roleColors.slice(0, roleLabels.length),
-                    borderColor: '#18181b',
-                    borderWidth: 2,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Role Distribution',
-                        color: '#efeff1',
-                        font: { size: 16, weight: 'bold' }
-                    },
-                    legend: {
-                        position: 'bottom',
-                        labels: { 
-                            color: '#b3b3b5',
-                            padding: 20,
-                            usePointStyle: true,
-                        }
-                    }
-                },
-                cutout: '60%',
-            }
-        });
-    }
-    
-    // Skill Progress Line Chart
-    const progressCtx = document.getElementById('skillProgressChart');
-    if (progressCtx) {
-        const members = teamData.members || [];
-        const days = 14;
-        const labels = Array.from({length: days}, (_, i) => {
-            const date = new Date();
-            date.setDate(date.getDate() - (days - 1 - i));
-            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        });
-
-        const progressDatasets = members.slice(0, 3).map((member, index) => {
-            const baseSkill = member.individual_skill_score || 75;
-            const progressData = [];
-            let currentSkill = Math.max(30, baseSkill - 10);
-            
-            for (let i = 0; i < days; i++) {
-                const change = (Math.random() - 0.2) * 4;
-                currentSkill = Math.max(30, Math.min(100, currentSkill + change));
-                progressData.push(Math.round(currentSkill));
-            }
-
-            const colors = ['#667eea', '#10b981', '#f59e0b', '#ef4444'];
-            return {
-                label: member.name,
-                data: progressData,
-                borderColor: colors[index],
-                backgroundColor: colors[index] + '20',
-                borderWidth: 2,
-                fill: false,
-                tension: 0.4,
-                pointRadius: 0,
-                pointHoverRadius: 6,
-            };
-        });
-
-        charts.skillProgress = new Chart(progressCtx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: progressDatasets
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Skill Progress (14 Days)',
-                        color: '#efeff1',
-                        font: { size: 16, weight: 'bold' }
-                    },
-                    legend: {
-                        labels: { color: '#b3b3b5' }
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: { color: '#3f3f46' },
-                        ticks: { color: '#71717a' }
-                    },
-                    y: {
-                        beginAtZero: false,
-                        min: 30,
-                        max: 100,
-                        grid: { color: '#3f3f46' },
-                        ticks: { 
-                            color: '#71717a',
-                            callback: function(value) {
-                                return value + '%';
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    }
-    
-    // Team Compatibility Bar Chart
-    const compatCtx = document.getElementById('teamCompatibilityChart');
-    if (compatCtx) {
-        const compatibilityCategories = ['Skill Match', 'Schedule', 'Communication', 'Play Style', 'Goals'];
-        const compatibilityData = [
-            teamData.stats.skill_match || 78,
-            teamData.stats.schedule_sync || 85,
-            teamData.stats.communication || 88,
-            teamData.stats.play_style || 82,
-            teamData.stats.goals_alignment || 90
-        ];
-
-        charts.teamCompatibility = new Chart(compatCtx, {
-            type: 'bar',
-            data: {
-                labels: compatibilityCategories,
-                datasets: [{
-                    label: 'Compatibility Score',
-                    data: compatibilityData,
-                    backgroundColor: compatibilityData.map(score => 
-                        score >= 85 ? 'rgba(16, 185, 129, 0.8)' : 
-                        score >= 70 ? 'rgba(245, 158, 11, 0.8)' : 
-                        'rgba(239, 68, 68, 0.8)'
-                    ),
-                    borderColor: '#667eea',
-                    borderWidth: 2,
-                    borderRadius: 6,
-                    borderSkipped: false,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Team Compatibility Analysis',
-                        color: '#efeff1',
-                        font: { size: 16, weight: 'bold' }
-                    },
-                    legend: { display: false }
-                },
-                scales: {
-                    x: {
-                        grid: { display: false },
-                        ticks: { color: '#b3b3b5', font: { size: 11 } }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        max: 100,
-                        grid: { color: '#3f3f46' },
-                        ticks: { 
-                            color: '#71717a',
-                            callback: function(value) {
-                                return value + '%';
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    }
-    
-    return {
-        charts: charts,
-        destroy: function() {
-            Object.values(this.charts).forEach(chart => {
-                if (chart) chart.destroy();
-            });
-        }
-    };
-}
-
-function createFallbackCharts(teamData) {
-    // Create simple visual indicators if Chart.js fails to load
-    const chartIds = ['skillDistributionChart', 'roleBalanceChart', 'skillProgressChart', 'teamCompatibilityChart'];
-    const chartTitles = ['📊 Skill Distribution', '🎯 Role Balance', '📈 Skill Progress', '🔗 Team Compatibility'];
-    
-    chartIds.forEach((chartId, index) => {
-        const chartElement = document.getElementById(chartId);
-        if (chartElement) {
-            chartElement.style.display = 'flex';
-            chartElement.style.alignItems = 'center';
-            chartElement.style.justifyContent = 'center';
-            chartElement.style.color = '#b3b3b5';
-            chartElement.innerHTML = `
-                <div style="text-align: center;">
-                    <div style="font-size: 48px; margin-bottom: 12px;">${chartTitles[index].split(' ')[0]}</div>
-                    <div>${chartTitles[index].substring(2)}</div>
-                    <div style="font-size: 12px; opacity: 0.7;">Chart.js not available</div>
-                </div>
-            `;
-        }
-    });
-}
-
-// Enhanced tab switching with chart initialization
+// Tab switching function
 function showTab(tabName, element) {
     document.querySelectorAll('.tab-content').forEach(tab => {
         tab.classList.remove('active');
     });
-    
+
     document.querySelectorAll('.sidebar-link').forEach(link => {
         link.classList.remove('active');
     });
-    
+
     document.getElementById(tabName).classList.add('active');
     element.classList.add('active');
-    
+
     window.location.hash = tabName;
-    
-    // Initialize charts when performance tab is shown
-    if (tabName === 'performance') {
-        setTimeout(() => {
-            initializeSkillCharts();
-        }, 100); // Small delay to ensure DOM is ready
-    }
 }
 
 // Enhanced notification system

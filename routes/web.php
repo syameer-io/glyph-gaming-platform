@@ -195,8 +195,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/{team}/join-requests/{joinRequest}/reject', [TeamJoinRequestController::class, 'reject'])->name('join.request.reject');
         Route::delete('/{team}/join-requests/{joinRequest}', [TeamJoinRequestController::class, 'cancel'])->name('join.request.cancel');
 
-        // Team statistics and matchmaking
-        Route::get('/{team}/stats', [TeamController::class, 'stats'])->name('stats');
+        // Team matchmaking
         Route::get('/matchmaking/{gameAppid}', [TeamController::class, 'forMatchmaking'])->name('for.matchmaking');
     });
 
