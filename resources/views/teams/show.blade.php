@@ -1185,12 +1185,12 @@
                                 <div class="balance-description">Even skill distribution</div>
                             </div>
                             <div class="balance-card">
-                                <div class="balance-score good">{{ 75 }}%</div>
+                                <div class="balance-score {{ ($stats['role_coverage'] ?? 50) >= 75 ? 'excellent' : (($stats['role_coverage'] ?? 50) >= 50 ? 'good' : 'poor') }}">{{ $stats['role_coverage'] ?? 50 }}%</div>
                                 <div class="balance-label">Role Coverage</div>
                                 <div class="balance-description">Strategic roles filled</div>
                             </div>
                             <div class="balance-card">
-                                <div class="balance-score excellent">{{ 92 }}%</div>
+                                <div class="balance-score {{ ($stats['activity_sync'] ?? 50) >= 80 ? 'excellent' : (($stats['activity_sync'] ?? 50) >= 60 ? 'good' : 'poor') }}">{{ $stats['activity_sync'] ?? 50 }}%</div>
                                 <div class="balance-label">Activity Sync</div>
                                 <div class="balance-description">Compatible schedules</div>
                             </div>
@@ -1362,7 +1362,6 @@
                                         <span class="member-role">{{ ucfirst(str_replace('_', ' ', $member->game_role)) }}</span>
                                     @endif
                                     <span class="member-status">
-                                        Skill: {{ ucfirst($member->individual_skill_score ?? 'Unknown') }} •
                                         Joined {{ $member->joined_at->diffForHumans() }}
                                     </span>
                                 </div>

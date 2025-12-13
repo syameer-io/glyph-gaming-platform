@@ -217,11 +217,12 @@ class TeamController extends Controller
      */
     public function show(Team $team): View
     {
-        // Eager load team members with their active lobbies to prevent N+1 queries (Phase 1: Lobby Integration)
+        // Eager load team members with their active lobbies and player game roles to prevent N+1 queries
         $team->load([
             'server',
             'creator',
             'activeMembers.user.activeLobbies', // Load lobbies for team members
+            'activeMembers.user.playerGameRoles', // Load player game roles for activity sync calculation
             'activeMembers' => function ($query) {
                 $query->orderBy('role', 'desc')->orderBy('joined_at', 'asc');
             }
@@ -269,6 +270,8 @@ class TeamController extends Controller
         // Get team statistics
         $stats = [
             'balance_score' => $team->calculateBalanceScore(),
+            'role_coverage' => $team->calculateRoleCoverage(),
+            'activity_sync' => $team->calculateActivitySync(),
             'average_skill' => $team->average_skill_score,
             'needed_roles' => $team->getNeededRoles(),
             'member_count' => $team->current_size,

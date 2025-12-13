@@ -391,8 +391,150 @@ class Team extends Model
         // Convert standard deviation to balance score (lower deviation = better balance)
         // Assuming max std dev of 30 for skill scores 0-100
         $balanceScore = max(0, 100 - ($standardDeviation / 30 * 100));
-        
+
         return round($balanceScore, 1);
+    }
+
+    /**
+     * Get ideal game composition based on game_appid
+     */
+    protected function getIdealGameComposition(): array
+    {
+        return match($this->game_appid) {
+            '730' => ['entry_fragger', 'awper', 'igl', 'lurker', 'support', 'anchor'], // CS2
+            '570' => ['carry', 'mid', 'offlaner', 'soft_support', 'hard_support'], // Dota 2
+            '230410' => ['dps', 'tank', 'support', 'crowd_control'], // Warframe
+            default => [],
+        };
+    }
+
+    /**
+     * Expand time range names to hour arrays
+     */
+    protected function expandTimeRanges(array $ranges): array
+    {
+        $hours = [];
+        $rangeMap = [
+            'early_morning' => [6, 7, 8],
+            'morning' => [9, 10, 11],
+            'afternoon' => [12, 13, 14, 15, 16],
+            'evening' => [17, 18, 19, 20, 21],
+            'night' => [22, 23, 0, 1, 2],
+            'late_night' => [0, 1, 2, 3, 4, 5],
+            'flexible' => range(0, 23),
+        ];
+
+        foreach ($ranges as $range) {
+            if (is_numeric($range)) {
+                $hours[] = (int)$range;
+            } elseif (isset($rangeMap[strtolower($range)])) {
+                $hours = array_merge($hours, $rangeMap[strtolower($range)]);
+            }
+        }
+
+        return array_unique($hours);
+    }
+
+    /**
+     * Calculate Jaccard similarity between two sets
+     */
+    protected function calculateJaccardSimilarity(array $set1, array $set2): float
+    {
+        if (empty($set1) && empty($set2)) {
+            return 1.0;
+        }
+        if (empty($set1) || empty($set2)) {
+            return 0.0;
+        }
+
+        $intersection = array_intersect($set1, $set2);
+        $union = array_unique(array_merge($set1, $set2));
+
+        return count($union) > 0 ? count($intersection) / count($union) : 0.0;
+    }
+
+    /**
+     * Calculate role coverage percentage (0-100)
+     * Game-specific for CS2, Dota 2, Warframe
+     */
+    public function calculateRoleCoverage(): float
+    {
+        $members = $this->activeMembers()->get();
+
+        if ($members->count() < 1) {
+            return 50.0;
+        }
+
+        // Use team's required_roles first, fallback to ideal composition
+        $requiredRoles = $this->required_roles ?? [];
+        if (empty($requiredRoles)) {
+            $requiredRoles = $this->getIdealGameComposition();
+        }
+
+        if (empty($requiredRoles)) {
+            return 50.0; // Unknown game
+        }
+
+        // Get members' assigned game roles
+        $filledRoles = $members->whereNotNull('game_role')
+                              ->pluck('game_role')
+                              ->unique()
+                              ->toArray();
+
+        $requiredCount = count($requiredRoles);
+        $filledCount = count(array_intersect($filledRoles, $requiredRoles));
+
+        $coverage = ($filledCount / $requiredCount) * 100;
+
+        return round(min(100.0, $coverage), 1);
+    }
+
+    /**
+     * Calculate activity sync percentage (0-100)
+     * Uses Jaccard similarity on members' availability patterns
+     */
+    public function calculateActivitySync(): float
+    {
+        $members = $this->activeMembers()->with('user.playerGameRoles')->get();
+
+        if ($members->count() < 2) {
+            return 100.0; // Perfect sync with 0-1 members
+        }
+
+        // Collect member availability patterns
+        $memberSchedules = [];
+        foreach ($members as $member) {
+            $playerGameRole = $member->user->playerGameRoles
+                ->where('game_appid', $this->game_appid)
+                ->first();
+
+            if ($playerGameRole && !empty($playerGameRole->availability_pattern)) {
+                $memberSchedules[] = $this->expandTimeRanges($playerGameRole->availability_pattern);
+            }
+        }
+
+        if (empty($memberSchedules)) {
+            return 70.0; // Neutral when no data
+        }
+
+        // Calculate pairwise Jaccard similarity
+        $totalSimilarity = 0;
+        $pairCount = 0;
+
+        for ($i = 0; $i < count($memberSchedules); $i++) {
+            for ($j = $i + 1; $j < count($memberSchedules); $j++) {
+                $similarity = $this->calculateJaccardSimilarity(
+                    $memberSchedules[$i],
+                    $memberSchedules[$j]
+                );
+                $totalSimilarity += $similarity;
+                $pairCount++;
+            }
+        }
+
+        $averageSimilarity = $pairCount > 0 ? $totalSimilarity / $pairCount : 0.70;
+
+        return round($averageSimilarity * 100, 1);
     }
 
     /**
