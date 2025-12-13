@@ -776,6 +776,191 @@
         justify-content: flex-end;
     }
 
+    /* Delete Team Modal Styles */
+    .delete-modal-content {
+        max-width: 540px;
+    }
+
+    .modal-icon-danger {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 64px;
+        height: 64px;
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.1) 100%);
+        border: 2px solid rgba(239, 68, 68, 0.3);
+        border-radius: 50%;
+        margin: 0 auto 20px;
+    }
+
+    .modal-icon-danger svg {
+        color: #ef4444;
+    }
+
+    .delete-warning-box {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(220, 38, 38, 0.05) 100%);
+        border: 1px solid rgba(239, 68, 68, 0.25);
+        border-radius: 10px;
+        padding: 16px 20px;
+        margin-bottom: 20px;
+    }
+
+    .delete-warning-title {
+        color: #ef4444;
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .delete-warning-text {
+        color: #a1a1aa;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    .delete-warning-text strong {
+        color: #efeff1;
+        font-weight: 600;
+    }
+
+    .delete-requirements {
+        background-color: rgba(14, 14, 16, 0.6);
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 20px;
+    }
+
+    .delete-requirements-title {
+        color: #b3b3b5;
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .delete-requirement-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 0;
+        color: #71717a;
+        font-size: 13px;
+    }
+
+    .delete-requirement-item .requirement-icon {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+        flex-shrink: 0;
+    }
+
+    .delete-requirement-item.met .requirement-icon {
+        background-color: rgba(16, 185, 129, 0.15);
+        color: #10b981;
+    }
+
+    .delete-requirement-item.met {
+        color: #10b981;
+    }
+
+    .delete-confirm-label {
+        color: #b3b3b5;
+        font-size: 14px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .delete-confirm-word {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 8px;
+        background-color: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+        border-radius: 4px;
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-weight: 700;
+        font-size: 13px;
+        letter-spacing: 1px;
+    }
+
+    .delete-confirm-input {
+        width: 100%;
+        padding: 12px 16px;
+        background-color: #0e0e10;
+        border: 2px solid #3f3f46;
+        border-radius: 8px;
+        color: #efeff1;
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-size: 16px;
+        letter-spacing: 2px;
+        text-align: center;
+        text-transform: uppercase;
+        transition: all 0.2s ease;
+    }
+
+    .delete-confirm-input:focus {
+        outline: none;
+        border-color: #ef4444;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+    }
+
+    .delete-confirm-input.valid {
+        border-color: #10b981;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+    }
+
+    .delete-confirm-input.invalid {
+        border-color: #ef4444;
+        animation: shake 0.4s ease-in-out;
+    }
+
+    .delete-input-error {
+        color: #ef4444;
+        font-size: 12px;
+        margin-top: 8px;
+        display: none;
+    }
+
+    .delete-input-error.visible {
+        display: block;
+    }
+
+    #deleteTeamBtn {
+        transition: all 0.2s ease;
+    }
+
+    #deleteTeamBtn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background: #71717a;
+        border-color: #71717a;
+    }
+
+    #deleteTeamBtn:disabled:hover {
+        background: #71717a;
+        transform: none;
+    }
+
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        20% { transform: translateX(-8px); }
+        40% { transform: translateX(8px); }
+        60% { transform: translateX(-6px); }
+        80% { transform: translateX(6px); }
+    }
+
     /* Lobby indicator animations */
     @keyframes pulse {
         0%, 100% {
@@ -1590,6 +1775,93 @@
         </div>
     </div>
     @endif
+
+    {{-- Delete Team Confirmation Modal --}}
+    @if($isLeader)
+    <div id="deleteTeamModal" class="modal-overlay" onclick="closeDeleteTeamModal(event)" role="dialog" aria-modal="true" aria-labelledby="deleteTeamModalTitle">
+        <div class="modal-content delete-modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header" style="justify-content: center; border-bottom: none; padding-bottom: 0;">
+                <div class="modal-icon-danger">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                </div>
+            </div>
+            <div style="text-align: center; margin-bottom: 24px;">
+                <h3 id="deleteTeamModalTitle" class="modal-title" style="margin-bottom: 8px;">Delete Team</h3>
+                <p style="color: #71717a; font-size: 14px; margin: 0;">This action is permanent and cannot be reversed</p>
+            </div>
+            <div class="modal-body" style="margin-bottom: 0;">
+                <div class="delete-warning-box">
+                    <div class="delete-warning-title">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        Warning: Irreversible Action
+                    </div>
+                    <div class="delete-warning-text">
+                        You are about to permanently delete <strong>{{ $team->name }}</strong>.
+                        All team data, member associations, and history will be lost forever.
+                    </div>
+                </div>
+
+                <div class="delete-requirements">
+                    <div class="delete-requirements-title">Requirements</div>
+                    <div class="delete-requirement-item {{ $team->activeMembers->count() <= 1 ? 'met' : '' }}" id="requirementNoMembers">
+                        <span class="requirement-icon">
+                            @if($team->activeMembers->count() <= 1)
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            @else
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            @endif
+                        </span>
+                        <span>
+                            @if($team->activeMembers->count() <= 1)
+                                No other active members in team
+                            @else
+                                Remove {{ $team->activeMembers->count() - 1 }} active member(s) before deleting
+                            @endif
+                        </span>
+                    </div>
+                    <div class="delete-requirement-item met">
+                        <span class="requirement-icon">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </span>
+                        <span>You are the team leader</span>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="delete-confirm-label">
+                        To confirm, type <span class="delete-confirm-word">DELETE</span> below:
+                    </label>
+                    <input type="text"
+                           id="deleteConfirmInput"
+                           class="delete-confirm-input"
+                           placeholder="Type DELETE to confirm"
+                           autocomplete="off"
+                           spellcheck="false">
+                    <div id="deleteInputError" class="delete-input-error">Please type DELETE exactly as shown to confirm</div>
+                </div>
+            </div>
+            <div class="modal-footer" style="margin-top: 24px;">
+                <button onclick="closeDeleteTeamModal()" class="btn btn-secondary">Cancel</button>
+                <button id="deleteTeamBtn" onclick="confirmDeleteTeam()" class="btn btn-danger" disabled>Delete Team</button>
+            </div>
+        </div>
+    </div>
+    @endif
 </main>
 
 <script>
@@ -1927,10 +2199,14 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Close modal on Escape key
+    // Close modals on Escape key
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             closeInviteModal();
+            // Close delete modal if function exists (leader only)
+            if (typeof closeDeleteTeamModal === 'function') {
+                closeDeleteTeamModal();
+            }
         }
     });
 });
@@ -2067,31 +2343,174 @@ function cancelJoinRequest(requestId) {
     }
 }
 
+// Delete Team Modal Functions
 function showDeleteConfirm() {
-    if (confirm('Are you sure you want to delete this team? This action cannot be undone.')) {
-        if (confirm('Type DELETE to confirm team deletion:')) {
-            fetch(`{{ route('teams.destroy', $team) }}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    window.location.href = '{{ route('teams.index') }}';
-                } else {
-                    alert(data.message || 'Error deleting team');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error deleting team');
-            });
+    const modal = document.getElementById('deleteTeamModal');
+    if (modal) {
+        modal.classList.add('active');
+        resetDeleteModal();
+        // Focus input after modal animation
+        setTimeout(() => {
+            const input = document.getElementById('deleteConfirmInput');
+            if (input) input.focus();
+        }, 150);
+    }
+}
+
+function closeDeleteTeamModal(event) {
+    // Close if clicking overlay or called explicitly
+    if (!event || event.target.id === 'deleteTeamModal') {
+        const modal = document.getElementById('deleteTeamModal');
+        if (modal) {
+            modal.classList.remove('active');
+            resetDeleteModal();
         }
     }
 }
+
+function resetDeleteModal() {
+    const input = document.getElementById('deleteConfirmInput');
+    const deleteBtn = document.getElementById('deleteTeamBtn');
+    const errorDiv = document.getElementById('deleteInputError');
+
+    if (input) {
+        input.value = '';
+        input.classList.remove('valid', 'invalid');
+    }
+    if (deleteBtn) {
+        deleteBtn.disabled = true;
+    }
+    if (errorDiv) {
+        errorDiv.classList.remove('visible');
+    }
+}
+
+function confirmDeleteTeam() {
+    const input = document.getElementById('deleteConfirmInput');
+    const deleteBtn = document.getElementById('deleteTeamBtn');
+
+    if (!input || input.value.toUpperCase() !== 'DELETE') {
+        input.classList.add('invalid');
+        setTimeout(() => input.classList.remove('invalid'), 400);
+        return;
+    }
+
+    // Disable button and show loading state
+    deleteBtn.disabled = true;
+    deleteBtn.textContent = 'Deleting...';
+
+    fetch(`{{ route('teams.destroy', $team) }}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => {
+        // Handle different status codes
+        if (response.status === 409) {
+            return response.json().then(data => {
+                throw { status: 409, message: data.message || 'Team has active members. Remove all members before deleting.' };
+            });
+        }
+        if (response.status === 403) {
+            return response.json().then(data => {
+                throw { status: 403, message: data.message || 'You do not have permission to delete this team.' };
+            });
+        }
+        if (!response.ok) {
+            return response.json().then(data => {
+                throw { status: response.status, message: data.message || 'An error occurred while deleting the team.' };
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showNotification('Team deleted successfully.', 'success');
+            setTimeout(() => {
+                window.location.href = '{{ route('teams.index') }}';
+            }, 1000);
+        } else {
+            throw { status: 500, message: data.message || 'Error deleting team.' };
+        }
+    })
+    .catch(error => {
+        console.error('Delete team error:', error);
+
+        // Handle specific error cases
+        if (error.status === 409) {
+            // Active members error - update the requirements UI
+            const requirementEl = document.getElementById('requirementNoMembers');
+            if (requirementEl) {
+                requirementEl.classList.remove('met');
+                requirementEl.innerHTML = `
+                    <span class="requirement-icon">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </span>
+                    <span>Remove all active members before deleting</span>
+                `;
+            }
+            showNotification(error.message, 'error');
+        } else if (error.status === 403) {
+            showNotification(error.message, 'error');
+            closeDeleteTeamModal();
+        } else {
+            showNotification(error.message || 'An unexpected error occurred. Please try again.', 'error');
+        }
+
+        // Reset button state
+        deleteBtn.disabled = false;
+        deleteBtn.textContent = 'Delete Team';
+    });
+}
+
+// Delete confirmation input validation
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteInput = document.getElementById('deleteConfirmInput');
+    const deleteBtn = document.getElementById('deleteTeamBtn');
+    const errorDiv = document.getElementById('deleteInputError');
+
+    if (deleteInput && deleteBtn) {
+        // Real-time validation as user types
+        deleteInput.addEventListener('input', function() {
+            const value = this.value.toUpperCase();
+            const isValid = value === 'DELETE';
+
+            // Update input styling
+            this.classList.remove('valid', 'invalid');
+            if (value.length > 0) {
+                this.classList.add(isValid ? 'valid' : '');
+            }
+
+            // Enable/disable delete button
+            deleteBtn.disabled = !isValid;
+
+            // Hide error when valid or empty
+            if (errorDiv) {
+                errorDiv.classList.toggle('visible', value.length > 0 && !isValid && value.length >= 6);
+            }
+        });
+
+        // Handle Enter key
+        deleteInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (this.value.toUpperCase() === 'DELETE') {
+                    confirmDeleteTeam();
+                } else {
+                    // Shake animation for invalid input
+                    this.classList.add('invalid');
+                    setTimeout(() => this.classList.remove('invalid'), 400);
+                    if (errorDiv) errorDiv.classList.add('visible');
+                }
+            }
+        });
+    }
+});
 @endif
 
 // Initialize tab from URL hash
