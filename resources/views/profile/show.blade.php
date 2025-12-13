@@ -145,12 +145,13 @@
                                                 </div>
                                             </div>
                                             <div class="game-preference-badges">
-                                                @if($preference->skill_level)
+                                                @if($preference->skill_level && $preference->skill_level !== 'unranked')
                                                     <span class="skill-badge skill-{{ $preference->skill_level }}">
-                                                        {{ ucfirst($preference->skill_level) }}
+                                                        {{ strtoupper($preference->skill_level) }}
                                                     </span>
+                                                @elseif($preference->skill_level === 'unranked')
+                                                    <span class="skill-badge skill-unranked">UNRANKED</span>
                                                 @endif
-                                                <span class="priority-badge">{{ ucfirst($preference->preference_level) }} priority</span>
                                             </div>
                                         </div>
 

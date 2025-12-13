@@ -50,27 +50,25 @@ class SkillCalculationService
     /**
      * Main entry point - calculate skill for a user/game combination
      *
+     * Now supports ALL Steam games (not just the 3 originally supported).
+     * For games with skill_metrics data, uses that data.
+     * For games without skill_metrics, falls back to UserGamingPreference playtime.
+     *
      * @param User $user The user to calculate skill for
      * @param string $gameAppId The Steam App ID of the game
      * @return array Contains skill_level, skill_score, and breakdown
      */
     public function calculateSkillForGame(User $user, string $gameAppId): array
     {
-        // Check if game is supported
-        if (!isset($this->supportedGames[(int)$gameAppId])) {
-            Log::info("SkillCalculation: Game {$gameAppId} not supported");
-            return $this->getUnrankedResult();
-        }
-
         // Get user's Steam data from profile
         $steamData = $user->profile->steam_data ?? [];
         $skillMetrics = $steamData['skill_metrics'] ?? [];
         $gameMetrics = $skillMetrics[$gameAppId] ?? null;
 
-        // No data for this game - user hasn't played enough
+        // No skill_metrics data - try to calculate from gaming preference playtime
         if (!$gameMetrics) {
-            Log::info("SkillCalculation: No game metrics for user {$user->id}, game {$gameAppId}");
-            return $this->getUnrankedResult();
+            Log::info("SkillCalculation: No skill_metrics for user {$user->id}, game {$gameAppId}, using preference data");
+            return $this->calculateFromPreference($user, $gameAppId);
         }
 
         $playtimeHours = $gameMetrics['playtime_hours'] ?? 0;
@@ -95,6 +93,44 @@ class SkillCalculationService
 
         // Use fallback formula for games without detailed stats
         Log::info("SkillCalculation: Using fallback method for user {$user->id}, game {$gameAppId}");
+        return $this->calculateFallbackSkill($playtimeHours, $achievementPct);
+    }
+
+    /**
+     * Calculate skill from UserGamingPreference when skill_metrics is unavailable
+     *
+     * This allows skill calculation for ALL Steam games, not just those with
+     * explicit skill_metrics data. Uses the fallback formula (playtime + achievements).
+     *
+     * @param User $user The user to calculate skill for
+     * @param string $gameAppId The Steam App ID of the game
+     * @return array Contains skill_level, skill_score, and breakdown
+     */
+    protected function calculateFromPreference(User $user, string $gameAppId): array
+    {
+        $preference = $user->gamingPreferences()
+            ->where('game_appid', $gameAppId)
+            ->first();
+
+        // No gaming preference record exists for this game
+        if (!$preference) {
+            Log::info("SkillCalculation: No preference data for user {$user->id}, game {$gameAppId}");
+            return $this->getUnrankedResult();
+        }
+
+        // playtime_forever is stored in minutes
+        $playtimeHours = $preference->playtime_forever / 60;
+
+        // Minimum playtime requirement (10 hours = 600 minutes)
+        if ($preference->playtime_forever < 600) {
+            Log::info("SkillCalculation: Insufficient playtime ({$playtimeHours}h) from preference for user {$user->id}, game {$gameAppId}");
+            return $this->getUnrankedResult();
+        }
+
+        // Achievement data may not be available for all games, default to 0
+        $achievementPct = 0;
+
+        Log::info("SkillCalculation: Using preference fallback for user {$user->id}, game {$gameAppId}, playtime={$playtimeHours}h");
         return $this->calculateFallbackSkill($playtimeHours, $achievementPct);
     }
 

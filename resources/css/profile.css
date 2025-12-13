@@ -315,10 +315,10 @@
     border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
-.priority-badge {
-    font-size: 11px;
-    color: var(--color-text-muted);
-    text-transform: capitalize;
+.skill-badge.skill-unranked {
+    background: rgba(156, 163, 175, 0.15);
+    color: #9ca3af;
+    border: 1px solid rgba(156, 163, 175, 0.3);
 }
 
 /* Activity Progress Bar */

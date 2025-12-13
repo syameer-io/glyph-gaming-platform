@@ -970,8 +970,11 @@ class User extends Authenticatable
 
     public function updateGamingPreferences($steamGames)
     {
+        $skillService = app(\App\Services\SkillCalculationService::class);
+
         foreach ($steamGames as $game) {
-            $this->gamingPreferences()->updateOrCreate(
+            // First create/update the preference record with playtime data
+            $preference = $this->gamingPreferences()->updateOrCreate(
                 [
                     'game_appid' => $game['appid'],
                 ],
@@ -984,6 +987,12 @@ class User extends Authenticatable
                         : null,
                 ]
             );
+
+            // Then calculate and update skill level based on playtime
+            $skillData = $skillService->calculateSkillForGame($this, (string)$game['appid']);
+            $preference->update([
+                'skill_level' => $skillData['skill_level'] ?? 'beginner',
+            ]);
         }
     }
 
