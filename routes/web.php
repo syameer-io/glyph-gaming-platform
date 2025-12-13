@@ -183,6 +183,11 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{team}/members/{user}', [TeamController::class, 'removeMember'])->name('members.remove');
         Route::put('/{team}/members/{user}/role', [TeamController::class, 'updateMemberRole'])->name('members.role.update');
 
+        // Game role assignment (Phase 7: Team Role Management)
+        Route::get('/{team}/members/{member}/available-roles', [TeamController::class, 'getAvailableRoles'])->name('members.available-roles');
+        Route::put('/{team}/members/{member}/game-role', [TeamController::class, 'assignMemberGameRole'])->name('members.game-role.assign');
+        Route::delete('/{team}/members/{member}/game-role', [TeamController::class, 'clearMemberGameRole'])->name('members.game-role.clear');
+
         // Team join request management (Phase 6)
         Route::post('/{team}/join-requests', [TeamJoinRequestController::class, 'store'])->name('join.request.store');
         Route::get('/{team}/join-requests', [TeamJoinRequestController::class, 'index'])->name('join.request.index');

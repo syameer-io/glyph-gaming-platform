@@ -7,6 +7,8 @@ use App\Models\TeamMember;
 use App\Models\User;
 use App\Models\Server;
 use App\Services\TeamService;
+use App\Services\TeamRoleService;
+use App\Http\Requests\AssignTeamRoleRequest;
 use App\Events\TeamCreated;
 use App\Events\TeamMemberJoined;
 use App\Events\TeamMemberLeft;
@@ -22,10 +24,12 @@ use Illuminate\Support\Facades\DB;
 class TeamController extends Controller
 {
     protected TeamService $teamService;
+    protected TeamRoleService $teamRoleService;
 
-    public function __construct(TeamService $teamService)
+    public function __construct(TeamService $teamService, TeamRoleService $teamRoleService)
     {
         $this->teamService = $teamService;
+        $this->teamRoleService = $teamRoleService;
     }
 
     /**
@@ -802,6 +806,134 @@ class TeamController extends Controller
             'success' => true,
             'message' => 'Member role updated successfully!',
             'member' => $member->fresh()
+        ]);
+    }
+
+    /**
+     * Get available roles for a team member assignment
+     *
+     * Returns role options with preferred/required indicators
+     *
+     * @param Team $team Route model binding
+     * @param TeamMember $member Route model binding
+     */
+    public function getAvailableRoles(Team $team, TeamMember $member): JsonResponse
+    {
+        $user = Auth::user();
+
+        // Verify the member belongs to this team
+        if ($member->team_id !== $team->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Member does not belong to this team.',
+            ], 404);
+        }
+
+        // Verify user is a member of the team
+        $userMembership = $team->members()
+            ->where('user_id', $user->id)
+            ->where('status', 'active')
+            ->first();
+
+        if (!$userMembership) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You are not a member of this team.',
+            ], 403);
+        }
+
+        // Get role options for this member
+        $roleOptions = $this->teamRoleService->getMemberRoleOptions($team, $member);
+
+        return response()->json([
+            'success' => true,
+            'data' => $roleOptions,
+        ]);
+    }
+
+    /**
+     * Assign a game role to a team member
+     *
+     * @param AssignTeamRoleRequest $request Form request with validation
+     * @param Team $team Route model binding
+     * @param TeamMember $member Route model binding
+     */
+    public function assignMemberGameRole(AssignTeamRoleRequest $request, Team $team, TeamMember $member): JsonResponse
+    {
+        $user = Auth::user();
+
+        // Verify the member belongs to this team
+        if ($member->team_id !== $team->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Member does not belong to this team.',
+            ], 404);
+        }
+
+        try {
+            $result = $this->teamRoleService->assignRoleToMember(
+                $team,
+                $member,
+                $request->input('role'),
+                $user
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Role assigned successfully',
+                'data' => $result,
+            ]);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'errors' => ['role' => [$e->getMessage()]],
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to assign role. Please try again.',
+            ], 500);
+        }
+    }
+
+    /**
+     * Clear a team member's game role assignment
+     *
+     * @param Team $team Route model binding
+     * @param TeamMember $member Route model binding
+     */
+    public function clearMemberGameRole(Team $team, TeamMember $member): JsonResponse
+    {
+        $user = Auth::user();
+
+        // Verify the member belongs to this team
+        if ($member->team_id !== $team->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Member does not belong to this team.',
+            ], 404);
+        }
+
+        // Check authorization (leader or co-leader)
+        $userMembership = $team->members()
+            ->where('user_id', $user->id)
+            ->where('status', 'active')
+            ->first();
+
+        if (!$userMembership || !$userMembership->canManageRoles()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You do not have permission to manage roles.',
+            ], 403);
+        }
+
+        $result = $this->teamRoleService->clearMemberRole($team, $member);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Role cleared successfully',
+            'data' => $result,
         ]);
     }
 

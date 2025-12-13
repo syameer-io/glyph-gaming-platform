@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\TeamMember;
 use App\Models\MatchmakingRequest;
 use App\Events\TeamMemberJoined;
+use App\Services\TeamRoleService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -246,17 +247,30 @@ class TeamService
         $skillScore = $this->getUserSkillScore($user, $team->game_appid);
         $skillLevel = $this->getSkillLevel($skillScore);
 
+        // 6a. Capture user's preferred roles at join time
+        $teamRoleService = new TeamRoleService();
+        $preferredRolesData = $teamRoleService->capturePreferredRolesAtJoin($team, $user);
+
+        // Prepare member_data with preferred roles snapshot
+        $memberDataJson = [
+            'preferred_roles' => $preferredRolesData['preferred_roles'],
+            'preferred_roles_source' => $preferredRolesData['source'],
+            'preferred_roles_captured_at' => $preferredRolesData['captured_at'] ?? now()->toIso8601String(),
+        ];
+
         $finalMemberData = array_merge([
             'role' => 'member',
             'game_role' => null,
             'skill_level' => $skillLevel,
             'individual_skill_score' => $skillScore,
             'status' => 'active',
+            'member_data' => $memberDataJson,
         ], $memberData);
 
         Log::info('TeamService::addMemberToTeam - Prepared member data', [
             'skill_score' => $skillScore,
             'skill_level' => $skillLevel,
+            'preferred_roles' => $preferredRolesData['preferred_roles'],
             'final_data' => $finalMemberData,
         ]);
 

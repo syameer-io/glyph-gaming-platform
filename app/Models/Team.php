@@ -455,27 +455,35 @@ class Team extends Model
 
     /**
      * Calculate role coverage percentage (0-100)
-     * Game-specific for CS2, Dota 2, Warframe
+     *
+     * Coverage = (unique filled required roles / total required roles) × 100
+     *
+     * Returns:
+     * - 0% if team has required_roles but none are filled
+     * - Falls back to game's ideal composition if no required_roles set
+     * - 0% if no required_roles and no game composition (unknown game)
      */
     public function calculateRoleCoverage(): float
     {
-        $members = $this->activeMembers()->get();
-
-        if ($members->count() < 1) {
-            return 50.0;
-        }
-
         // Use team's required_roles first, fallback to ideal composition
         $requiredRoles = $this->required_roles ?? [];
         if (empty($requiredRoles)) {
             $requiredRoles = $this->getIdealGameComposition();
         }
 
+        // If no required roles defined, return 0%
         if (empty($requiredRoles)) {
-            return 50.0; // Unknown game
+            return 0.0;
         }
 
-        // Get members' assigned game roles
+        $members = $this->activeMembers()->get();
+
+        // If no members, no roles are filled
+        if ($members->count() < 1) {
+            return 0.0;
+        }
+
+        // Get members' assigned game roles (unique)
         $filledRoles = $members->whereNotNull('game_role')
                               ->pluck('game_role')
                               ->unique()
@@ -487,6 +495,94 @@ class Team extends Model
         $coverage = ($filledCount / $requiredCount) * 100;
 
         return round(min(100.0, $coverage), 1);
+    }
+
+    /**
+     * Get required roles that have been filled by at least one member
+     *
+     * @return array Array of role names that are both required and assigned
+     */
+    public function getFilledRoles(): array
+    {
+        $requiredRoles = $this->required_roles ?? $this->getIdealGameComposition();
+
+        if (empty($requiredRoles)) {
+            return [];
+        }
+
+        $members = $this->activeMembers()->get();
+        $assignedRoles = $members->whereNotNull('game_role')
+                                 ->pluck('game_role')
+                                 ->unique()
+                                 ->toArray();
+
+        return array_values(array_intersect($requiredRoles, $assignedRoles));
+    }
+
+    /**
+     * Get required roles that have NOT been filled by any member
+     *
+     * @return array Array of role names that are required but not assigned
+     */
+    public function getUnfilledRoles(): array
+    {
+        $requiredRoles = $this->required_roles ?? $this->getIdealGameComposition();
+
+        if (empty($requiredRoles)) {
+            return [];
+        }
+
+        $members = $this->activeMembers()->get();
+        $assignedRoles = $members->whereNotNull('game_role')
+                                 ->pluck('game_role')
+                                 ->unique()
+                                 ->toArray();
+
+        return array_values(array_diff($requiredRoles, $assignedRoles));
+    }
+
+    /**
+     * Get detailed role coverage breakdown for UI display
+     *
+     * @return array Comprehensive role coverage details
+     */
+    public function getRoleCoverageDetails(): array
+    {
+        $requiredRoles = $this->required_roles ?? $this->getIdealGameComposition();
+        $members = $this->activeMembers()->with('user')->get();
+
+        $assignedRoles = $members->whereNotNull('game_role')
+                                 ->pluck('game_role')
+                                 ->unique()
+                                 ->toArray();
+
+        $filledRoles = array_values(array_intersect($requiredRoles, $assignedRoles));
+        $unfilledRoles = array_values(array_diff($requiredRoles, $assignedRoles));
+
+        // Build assignments list with member info
+        $assignments = [];
+        foreach ($members->whereNotNull('game_role') as $member) {
+            $assignments[] = [
+                'role' => $member->game_role,
+                'member_id' => $member->id,
+                'user_id' => $member->user_id,
+                'user_name' => $member->user->display_name ?? $member->user->name,
+                'is_preferred' => $member->isPreferredRole($member->game_role),
+                'is_required' => in_array($member->game_role, $requiredRoles),
+            ];
+        }
+
+        $coverage = empty($requiredRoles) ? 0 : (count($filledRoles) / count($requiredRoles)) * 100;
+
+        return [
+            'coverage_percent' => round($coverage, 1),
+            'required_roles' => $requiredRoles,
+            'filled_roles' => $filledRoles,
+            'unfilled_roles' => $unfilledRoles,
+            'filled_count' => count($filledRoles),
+            'required_count' => count($requiredRoles),
+            'assignments' => $assignments,
+        ];
     }
 
     /**

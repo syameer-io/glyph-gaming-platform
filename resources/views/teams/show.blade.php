@@ -1185,7 +1185,7 @@
                                 <div class="balance-description">Even skill distribution</div>
                             </div>
                             <div class="balance-card">
-                                <div class="balance-score {{ ($stats['role_coverage'] ?? 50) >= 75 ? 'excellent' : (($stats['role_coverage'] ?? 50) >= 50 ? 'good' : 'poor') }}">{{ $stats['role_coverage'] ?? 50 }}%</div>
+                                <div class="balance-score balance-score-role-coverage {{ ($stats['role_coverage'] ?? 0) >= 75 ? 'excellent' : (($stats['role_coverage'] ?? 0) >= 50 ? 'good' : 'poor') }}">{{ $stats['role_coverage'] ?? 0 }}%</div>
                                 <div class="balance-label">Role Coverage</div>
                                 <div class="balance-description">Strategic roles filled</div>
                             </div>
@@ -1195,6 +1195,21 @@
                                 <div class="balance-description">Compatible schedules</div>
                             </div>
                         </div>
+
+                        {{-- Unfilled Roles Indicator --}}
+                        @php
+                            $unfilledRoles = $team->getUnfilledRoles();
+                        @endphp
+                        @if(!empty($unfilledRoles))
+                            <div class="unfilled-roles-section" style="margin-top: 16px;">
+                                <div style="font-size: 12px; color: #8b8d93; margin-bottom: 8px;">Roles Needed:</div>
+                                <div class="unfilled-roles-list">
+                                    @foreach($unfilledRoles as $role)
+                                        <span class="unfilled-role-badge">{{ ucfirst(str_replace('_', ' ', $role)) }}</span>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
                     </div>
 
                     <!-- Recent Members -->
@@ -1346,7 +1361,7 @@
                     @endif
 
                     @foreach($team->activeMembers as $member)
-                        <div class="member-item {{ $member->role === 'leader' ? 'leader' : '' }}">
+                        <div class="member-item {{ $member->role === 'leader' ? 'leader' : '' }}" data-member-id="{{ $member->id }}">
                             <img src="{{ $member->user->profile->avatar_url }}" alt="{{ $member->user->display_name }}" class="member-avatar">
                             <div class="member-info">
                                 <div class="member-name">
@@ -1357,9 +1372,28 @@
                                         <span style="color: #f59e0b; font-size: 12px; margin-left: 8px;">⭐ Co-Leader</span>
                                     @endif
                                 </div>
-                                <div style="margin-bottom: 4px;">
-                                    @if($member->game_role)
-                                        <span class="member-role">{{ ucfirst(str_replace('_', ' ', $member->game_role)) }}</span>
+                                {{-- Game Role Assignment Row --}}
+                                <div style="margin-bottom: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                    @if($isLeader || ($userMembership && $userMembership->role === 'co_leader'))
+                                        {{-- Role Assignment Button (Leaders/Co-Leaders only) --}}
+                                        <button class="role-assign-btn {{ $member->game_role && $member->isPreferredRole($member->game_role) ? 'is-preferred' : '' }}"
+                                                onclick="TeamRoles.openDropdown({{ $member->id }}, this)"
+                                                title="Assign game role">
+                                            <span class="current-role">{{ $member->game_role ? $member->getGameRoleDisplayName($team->game_appid) : 'Assign Role' }}</span>
+                                            <span class="dropdown-arrow">&#9662;</span>
+                                        </button>
+                                        @if(!empty($member->preferred_roles))
+                                            <span style="font-size: 10px; color: #8b8d93;" title="Prefers: {{ implode(', ', array_map(fn($r) => ucfirst(str_replace('_', ' ', $r)), $member->preferred_roles)) }}">
+                                                &#9733; {{ count($member->preferred_roles) }} preferred
+                                            </span>
+                                        @endif
+                                    @else
+                                        {{-- Read-only role display for non-leaders --}}
+                                        @if($member->game_role)
+                                            <span class="member-game-role">{{ $member->getGameRoleDisplayName($team->game_appid) }}</span>
+                                        @else
+                                            <span style="font-size: 12px; color: #8b8d93;">No role assigned</span>
+                                        @endif
                                     @endif
                                     <span class="member-status">
                                         Joined {{ $member->joined_at->diffForHumans() }}
@@ -2936,5 +2970,15 @@ function showNotification(message, type = 'info') {
         }, 5000);
     }
 }
+
+// Initialize Team Role Assignment Module
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof TeamRoles !== 'undefined') {
+        TeamRoles.init({{ $team->id }});
+    }
+});
 </script>
+
+{{-- Team Role Assignment JavaScript --}}
+<script src="{{ asset('js/team-role-assignment.js') }}"></script>
 @endsection

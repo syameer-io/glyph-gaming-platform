@@ -74,6 +74,82 @@ class TeamMember extends Model
     }
 
     /**
+     * Check if member can manage roles (assign roles to team members)
+     */
+    public function canManageRoles(): bool
+    {
+        return $this->isLeader() || $this->isCoLeader();
+    }
+
+    /**
+     * Get preferred roles from member_data
+     * These are the roles the member indicated they can play when joining
+     */
+    public function getPreferredRolesAttribute(): array
+    {
+        $memberData = $this->member_data ?? [];
+        return $memberData['preferred_roles'] ?? [];
+    }
+
+    /**
+     * Check if a given role is in the member's preferred roles
+     */
+    public function isPreferredRole(string $role): bool
+    {
+        return in_array($role, $this->preferred_roles, true);
+    }
+
+    /**
+     * Assign a game role to this member
+     *
+     * @param string $role The game role to assign
+     * @param int $assignedBy User ID of the person assigning the role
+     */
+    public function assignRole(string $role, int $assignedBy): void
+    {
+        $memberData = $this->member_data ?? [];
+        $memberData['role_assigned_at'] = now()->toIso8601String();
+        $memberData['role_assigned_by'] = $assignedBy;
+
+        $this->update([
+            'game_role' => $role,
+            'member_data' => $memberData,
+        ]);
+    }
+
+    /**
+     * Clear the assigned game role
+     */
+    public function clearRole(): void
+    {
+        $memberData = $this->member_data ?? [];
+        unset($memberData['role_assigned_at']);
+        unset($memberData['role_assigned_by']);
+
+        $this->update([
+            'game_role' => null,
+            'member_data' => $memberData,
+        ]);
+    }
+
+    /**
+     * Get role assignment metadata
+     */
+    public function getRoleAssignmentInfo(): ?array
+    {
+        $memberData = $this->member_data ?? [];
+
+        if (!isset($memberData['role_assigned_at'])) {
+            return null;
+        }
+
+        return [
+            'assigned_at' => $memberData['role_assigned_at'],
+            'assigned_by' => $memberData['role_assigned_by'] ?? null,
+        ];
+    }
+
+    /**
      * Update last activity timestamp
      */
     public function updateActivity(): void
@@ -96,26 +172,41 @@ class TeamMember extends Model
     }
 
     /**
-     * Get game role display name
+     * Get game role display name using config/game_roles.php
+     *
+     * @param string|null $gameAppId Optional game ID for game-specific display names
      */
-    public function getGameRoleDisplayName(): string
+    public function getGameRoleDisplayName(?string $gameAppId = null): string
     {
         if (!$this->game_role) {
             return 'Unassigned';
         }
 
-        return match($this->game_role) {
-            'tank' => 'Tank',
-            'dps' => 'DPS',
-            'support' => 'Support',
-            'flex' => 'Flex',
-            'igl' => 'In-Game Leader',
-            'entry' => 'Entry Fragger',
-            'anchor' => 'Anchor',
-            'awper' => 'AWPer',
-            'rifler' => 'Rifler',
-            default => ucfirst($this->game_role)
-        };
+        // If game ID provided, try to get game-specific display name
+        if ($gameAppId) {
+            $gameConfig = config("game_roles.games.{$gameAppId}");
+            if ($gameConfig && isset($gameConfig['display_names'][$this->game_role])) {
+                return $gameConfig['display_names'][$this->game_role];
+            }
+        }
+
+        // Try to get display name from team's game if we have team loaded
+        if ($this->relationLoaded('team') && $this->team) {
+            $teamGameId = $this->team->game_appid;
+            $gameConfig = config("game_roles.games.{$teamGameId}");
+            if ($gameConfig && isset($gameConfig['display_names'][$this->game_role])) {
+                return $gameConfig['display_names'][$this->game_role];
+            }
+        }
+
+        // Fallback to generic display names
+        $genericNames = config('game_roles.generic.display_names', []);
+        if (isset($genericNames[$this->game_role])) {
+            return $genericNames[$this->game_role];
+        }
+
+        // Final fallback: humanize the role string
+        return ucfirst(str_replace('_', ' ', $this->game_role));
     }
 
     /**
