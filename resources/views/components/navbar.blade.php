@@ -3,6 +3,7 @@
 @php
     $user = auth()->user();
     $unreadDmCount = $user ? $user->getUnreadDmCount() : 0;
+    $pendingTeamInvitationsCount = $user ? $user->pending_team_invitations_count : 0;
 @endphp
 
 <nav class="navbar-new">
@@ -94,6 +95,9 @@
 
             {{-- User Menu --}}
             <div class="navbar-new-right">
+                {{-- Team Invitation Dropdown --}}
+                <x-team-invitation-dropdown />
+
                 <div class="navbar-dropdown">
                     <button type="button" class="navbar-user-trigger">
                         <img src="{{ $user->profile->avatar_url }}" alt="{{ $user->display_name }}" class="navbar-user-avatar">
@@ -189,6 +193,9 @@
                     <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                 </svg>
                 Teams
+                @if($pendingTeamInvitationsCount > 0)
+                    <span class="navbar-badge">{{ $pendingTeamInvitationsCount > 9 ? '9+' : $pendingTeamInvitationsCount }}</span>
+                @endif
             </a>
             <a href="{{ route('lobbies.index') }}" class="mobile-drawer-link {{ $activeSection === 'lobbies' ? 'active' : '' }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

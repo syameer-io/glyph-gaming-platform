@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\MatchmakingConfigurationController;
 use App\Http\Controllers\DirectMessageController;
 use App\Http\Controllers\VoiceChannelController;
 use App\Http\Controllers\LobbyPageController;
+use App\Http\Controllers\TeamInvitationController;
 
 // Landing page (for guests, redirect authenticated users to dashboard)
 Route::get('/', function () {
@@ -158,6 +159,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [MatchmakingController::class, 'index'])->name('index');
         Route::post('/', [MatchmakingController::class, 'store'])->name('store');
         Route::get('/skill-preview', [MatchmakingController::class, 'getSkillPreview'])->name('skill-preview');
+        Route::get('/players-looking', [MatchmakingController::class, 'getPlayersLookingForTeams'])->name('players.looking');
         Route::post('/find-teammates', [MatchmakingController::class, 'findTeammates'])->name('find.teammates');
         Route::post('/find-teams', [MatchmakingController::class, 'findCompatibleTeamsForRequest'])->name('find.teams');
         Route::post('/auto-match', [MatchmakingController::class, 'autoMatch'])->name('auto.match');
@@ -195,8 +197,20 @@ Route::middleware('auth')->group(function () {
         Route::post('/{team}/join-requests/{joinRequest}/reject', [TeamJoinRequestController::class, 'reject'])->name('join.request.reject');
         Route::delete('/{team}/join-requests/{joinRequest}', [TeamJoinRequestController::class, 'cancel'])->name('join.request.cancel');
 
+        // Team invitation management (Phase 3)
+        Route::post('/{team}/invitations', [TeamInvitationController::class, 'store'])->name('invitations.store');
+        Route::get('/{team}/invitations', [TeamInvitationController::class, 'index'])->name('invitations.index');
+        Route::delete('/{team}/invitations/{invitation}', [TeamInvitationController::class, 'cancel'])->name('invitations.cancel');
+
         // Team matchmaking
         Route::get('/matchmaking/{gameAppid}', [TeamController::class, 'forMatchmaking'])->name('for.matchmaking');
+    });
+
+    // User Team Invitation endpoints (for invitee responses)
+    Route::prefix('team-invitations')->name('team-invitations.')->group(function () {
+        Route::get('/', [TeamInvitationController::class, 'userInvitations'])->name('index');
+        Route::post('/{invitation}/accept', [TeamInvitationController::class, 'accept'])->name('accept');
+        Route::post('/{invitation}/decline', [TeamInvitationController::class, 'decline'])->name('decline');
     });
 
     // Game Lobbies - Dedicated page

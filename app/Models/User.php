@@ -828,8 +828,48 @@ class User extends Authenticatable
 
     public function canManageTeam(Team $team)
     {
-        return $this->isTeamLeader($team) || 
+        return $this->isTeamLeader($team) ||
                $this->teams()->where('team_id', $team->id)->wherePivot('role', 'co_leader')->exists();
+    }
+
+    /**
+     * Get invitations received by this user
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function teamInvitations(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(TeamInvitation::class, 'invitee_id');
+    }
+
+    /**
+     * Get pending team invitations for this user
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function pendingTeamInvitations(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(TeamInvitation::class, 'invitee_id')->active();
+    }
+
+    /**
+     * Get invitations sent by this user
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function sentTeamInvitations(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(TeamInvitation::class, 'inviter_id');
+    }
+
+    /**
+     * Get count of pending team invitations (for notification badge)
+     *
+     * @return int
+     */
+    public function getPendingTeamInvitationsCountAttribute(): int
+    {
+        return $this->pendingTeamInvitations()->count();
     }
 
     public function leaveTeam(Team $team)
@@ -957,6 +997,25 @@ class User extends Authenticatable
             'total_achievements' => $this->achievementLeaderboards()->sum('achievement_count'),
             'average_completion' => $this->achievementLeaderboards()->avg('completion_percentage'),
         ];
+    }
+
+    /**
+     * Get teams where user is leader (creator) or co-leader and team is recruiting
+     * Used for finding players through matchmaking
+     */
+    public function getRecruitingTeamsAsLeader()
+    {
+        return Team::where(function($query) {
+            $query->where('creator_id', $this->id)
+                  ->orWhereHas('members', function($q) {
+                      $q->where('user_id', $this->id)
+                        ->where('role', 'co_leader')
+                        ->where('status', 'active');
+                  });
+        })
+        ->recruiting()
+        ->with(['activeMembers.user.profile'])
+        ->get();
     }
 
     public function updateGamingPreferences($steamGames)

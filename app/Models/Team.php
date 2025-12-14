@@ -77,6 +77,35 @@ class Team extends Model
     }
 
     /**
+     * Get all invitations sent for this team
+     */
+    public function invitations(): HasMany
+    {
+        return $this->hasMany(TeamInvitation::class);
+    }
+
+    /**
+     * Get pending (active) invitations for this team
+     */
+    public function pendingInvitations(): HasMany
+    {
+        return $this->hasMany(TeamInvitation::class)->active();
+    }
+
+    /**
+     * Check if user has a pending invitation to this team
+     *
+     * @param User $user
+     * @return bool
+     */
+    public function hasPendingInvitationFor(User $user): bool
+    {
+        return $this->pendingInvitations()
+            ->where('invitee_id', $user->id)
+            ->exists();
+    }
+
+    /**
      * Helper accessor to get User models directly from active members
      */
     public function getMembersUsersAttribute()

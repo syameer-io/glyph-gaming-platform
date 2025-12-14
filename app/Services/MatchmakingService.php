@@ -35,10 +35,10 @@ class MatchmakingService
         $userSkillScore = $this->getUserSkillScore($user, $gameAppId);
 
         // Find active matchmaking requests for the same game
+        // Find all active matchmaking requests for the same game (request_type filter removed for bidirectional matching)
         $compatibleRequests = MatchmakingRequest::active()
             ->byGame($gameAppId)
             ->where('user_id', '!=', $user->id)
-            ->where('request_type', 'find_team')
             ->get();
 
         $matches = collect();
@@ -455,6 +455,82 @@ class MatchmakingService
         ]);
 
         return $sortedTeams;
+    }
+
+    /**
+     * Find players with active matchmaking requests for games
+     * that the team leader has recruiting teams for.
+     *
+     * This enables bidirectional matchmaking: team leaders can find and invite
+     * players who are actively looking for teams.
+     *
+     * @param User $user The team leader
+     * @return Collection Collection of matchmaking requests with compatibility data
+     */
+    public function findPlayersForTeamLeader(User $user): Collection
+    {
+        // Get leader's recruiting teams
+        $recruitingTeams = $user->getRecruitingTeamsAsLeader();
+
+        if ($recruitingTeams->isEmpty()) {
+            return collect();
+        }
+
+        // Get unique game IDs from leader's teams
+        $gameAppIds = $recruitingTeams->pluck('game_appid')->unique()->values()->all();
+
+        // Find active matchmaking requests for those games (exclude self)
+        $requests = MatchmakingRequest::active()
+            ->whereIn('game_appid', $gameAppIds)
+            ->where('user_id', '!=', $user->id)
+            ->with(['user.profile'])
+            ->get();
+
+        $results = collect();
+
+        foreach ($requests as $request) {
+            // Find matching teams for this request
+            $matchingTeams = $recruitingTeams->where('game_appid', $request->game_appid);
+
+            // Calculate best compatibility among leader's teams
+            $bestMatch = null;
+            $bestScore = 0;
+
+            foreach ($matchingTeams as $team) {
+                try {
+                    $compatibility = $this->calculateDetailedCompatibility($team, $request);
+                    if ($compatibility['total_score'] > $bestScore) {
+                        $bestScore = $compatibility['total_score'];
+                        $bestMatch = [
+                            'team' => $team,
+                            'compatibility' => $compatibility
+                        ];
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Error calculating compatibility for player', [
+                        'team_id' => $team->id,
+                        'request_id' => $request->id,
+                        'error' => $e->getMessage()
+                    ]);
+                    continue;
+                }
+            }
+
+            // Only include players with at least 40% compatibility
+            if ($bestMatch && $bestScore >= 40) {
+                $results->push([
+                    'request' => $request,
+                    'user' => $request->user,
+                    'best_team' => $bestMatch['team'],
+                    'all_matching_teams' => $matchingTeams->values(),
+                    'compatibility_score' => $bestScore,
+                    'breakdown' => $bestMatch['compatibility']['breakdown'] ?? [],
+                    'match_reasons' => $bestMatch['compatibility']['reasons'] ?? []
+                ]);
+            }
+        }
+
+        return $results->sortByDesc('compatibility_score')->values();
     }
 
     /**
@@ -1636,7 +1712,7 @@ class MatchmakingService
             ->byGame($request->game_appid)
             ->where('user_id', '!=', $request->user_id)
             ->whereNotIn('user_id', $excludeUserIds)
-            ->where('request_type', 'find_teammates')
+            // request_type filter removed for bidirectional matching
             ->with('user.profile', 'user.gamingPreferences')
             ->get();
 

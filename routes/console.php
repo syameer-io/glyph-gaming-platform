@@ -23,6 +23,13 @@ Schedule::call(function () {
     \Log::info('Scheduler is running at ' . now()->format('Y-m-d H:i:s'));
 })->everyMinute();
 
+// Expire old team invitations every hour
+Schedule::command('teams:expire-invitations')
+    ->hourly()
+    ->withoutOverlapping()
+    ->runInBackground()
+    ->appendOutputTo(storage_path('logs/team-invitations-expire.log'));
+
 // Clear expired Steam lobby links (older than 30 minutes)
 Schedule::call(function () {
     $expirationThreshold = Carbon::now()->subMinutes(Profile::LOBBY_EXPIRATION_MINUTES);

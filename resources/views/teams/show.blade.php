@@ -487,7 +487,214 @@
         border-radius: 6px;
         margin-bottom: 8px;
     }
-    
+
+    /* Pending Invitations Section Styles */
+    .pending-invitations-section {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.06) 0%, rgba(118, 75, 162, 0.06) 100%);
+        border: 1px solid rgba(102, 126, 234, 0.2);
+        border-radius: 10px;
+        padding: 16px;
+        margin-bottom: 24px;
+    }
+
+    .pending-invitations-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+    }
+
+    .pending-invitations-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 6px;
+        color: white;
+    }
+
+    .pending-invitations-header span {
+        font-weight: 600;
+        color: #efeff1;
+        font-size: 14px;
+    }
+
+    .pending-invitations-badge {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 700;
+        min-width: 20px;
+        text-align: center;
+    }
+
+    .pending-invitations-refresh {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        background: rgba(255, 255, 255, 0.05);
+        border: none;
+        border-radius: 6px;
+        color: #71717a;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .pending-invitations-refresh:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #efeff1;
+    }
+
+    .pending-invitations-refresh.spinning svg {
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .pending-invitations-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .pending-invitations-loading,
+    .pending-invitations-empty {
+        text-align: center;
+        padding: 20px;
+        color: #71717a;
+        font-size: 13px;
+    }
+
+    .pending-invitation-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 16px;
+        background-color: rgba(24, 24, 27, 0.9);
+        border: 1px solid rgba(63, 63, 70, 0.5);
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .pending-invitation-card:hover {
+        background-color: rgba(39, 39, 42, 0.9);
+        border-color: rgba(102, 126, 234, 0.3);
+    }
+
+    .pending-invitation-user {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .pending-invitation-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid rgba(102, 126, 234, 0.25);
+        flex-shrink: 0;
+    }
+
+    .pending-invitation-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+        flex: 1;
+    }
+
+    .pending-invitation-name {
+        font-weight: 600;
+        color: #efeff1;
+        font-size: 14px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .pending-invitation-meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .pending-invitation-role {
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        padding: 2px 6px;
+        border-radius: 4px;
+        background: rgba(102, 126, 234, 0.15);
+        color: #667eea;
+    }
+
+    .pending-invitation-role.role-co_leader {
+        background: rgba(245, 158, 11, 0.15);
+        color: #f59e0b;
+    }
+
+    .pending-invitation-time {
+        font-size: 11px;
+        color: #71717a;
+    }
+
+    .pending-invitation-message {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 12px;
+        color: #a1a1aa;
+        font-style: italic;
+        margin-top: 4px;
+    }
+
+    .pending-invitation-message svg {
+        flex-shrink: 0;
+        opacity: 0.6;
+    }
+
+    .pending-invitation-cancel {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        background-color: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        border: 2px solid rgba(239, 68, 68, 0.25);
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-left: 12px;
+        flex-shrink: 0;
+    }
+
+    .pending-invitation-cancel:hover {
+        background-color: #ef4444;
+        color: white;
+        border-color: #ef4444;
+        transform: scale(1.1);
+    }
+
+    .pending-invitation-cancel:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+
     .stats-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -1351,6 +1558,38 @@
                         </div>
                     @endif
 
+                    {{-- Pending Invitations Section (Leaders/Co-Leaders only) --}}
+                    @if($isLeader)
+                        <div class="pending-invitations-section" id="pendingInvitationsSection">
+                            <div class="pending-invitations-header">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div class="pending-invitations-icon">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                        </svg>
+                                    </div>
+                                    <span>Pending Invitations</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span class="pending-invitations-badge" id="pendingInvitationsCount">0</span>
+                                    <button type="button" class="pending-invitations-refresh" onclick="loadPendingInvitations()" title="Refresh invitations">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M23 4v6h-6"></path>
+                                            <path d="M1 20v-6h6"></path>
+                                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="pending-invitations-list" id="pendingInvitationsList">
+                                <div class="pending-invitations-loading">
+                                    <span>Loading invitations...</span>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
                     @foreach($team->activeMembers as $member)
                         <div class="member-item {{ $member->role === 'leader' ? 'leader' : '' }}" data-member-id="{{ $member->id }}">
                             <img src="{{ $member->user->profile->avatar_url }}" alt="{{ $member->user->display_name }}" class="member-avatar">
@@ -1716,10 +1955,17 @@
                         Co-Leaders can manage team members and settings
                     </div>
                 </div>
+                <div class="form-group">
+                    <label for="modal-invite-message">Message (Optional)</label>
+                    <textarea id="modal-invite-message" placeholder="Add a personal message..." maxlength="500" rows="3" style="resize: vertical; min-height: 60px;"></textarea>
+                    <div style="font-size: 12px; color: #71717a; margin-top: 6px;">
+                        <span id="modal-invite-message-count">0</span>/500 characters
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button onclick="closeInviteModal()" class="btn btn-secondary">Cancel</button>
-                <button id="modalSendInviteBtn" onclick="sendInviteFromModal()" class="btn btn-primary">Send Invite</button>
+                <button id="modalSendInviteBtn" onclick="sendInviteFromModal()" class="btn btn-primary">Send Invitation</button>
             </div>
         </div>
     </div>
@@ -2008,14 +2254,20 @@ function closeInviteModal(event) {
             document.getElementById('modal-invite-identifier').value = '';
             document.getElementById('modal-invite-role').value = 'member';
             document.getElementById('modal-invite-error').style.display = 'none';
+            // Clear message field and character counter
+            const messageField = document.getElementById('modal-invite-message');
+            const messageCount = document.getElementById('modal-invite-message-count');
+            if (messageField) messageField.value = '';
+            if (messageCount) messageCount.textContent = '0';
         }
     }
 }
 
-// Send invite from modal (enhanced with better error handling)
+// Send invite from modal (using new Team Invitation API)
 function sendInviteFromModal() {
     const identifier = document.getElementById('modal-invite-identifier').value.trim();
     const role = document.getElementById('modal-invite-role').value;
+    const message = document.getElementById('modal-invite-message')?.value?.trim() || '';
     const errorDiv = document.getElementById('modal-invite-error');
     const submitBtn = document.getElementById('modalSendInviteBtn');
 
@@ -2032,17 +2284,29 @@ function sendInviteFromModal() {
 
     // Basic email/username detection
     const isEmail = identifier.includes('@');
-    const payload = isEmail ? { email: identifier, role: role } : { username: identifier, role: role };
+    const payload = {
+        role: role,
+        message: message || null
+    };
+
+    // Add identifier as username or email
+    if (isEmail) {
+        payload.email = identifier;
+    } else {
+        payload.username = identifier;
+    }
 
     // Show loading state
     submitBtn.disabled = true;
     submitBtn.textContent = 'Sending...';
 
-    fetch(`{{ route('teams.members.add', $team) }}`, {
+    // Use new invitation endpoint
+    fetch(`/teams/{{ $team->id }}/invitations`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json'
         },
         body: JSON.stringify(payload)
     })
@@ -2056,11 +2320,14 @@ function sendInviteFromModal() {
     })
     .then(data => {
         if (data.success) {
-            showNotification(data.message || 'Member added successfully!', 'success');
+            showNotification(data.message || 'Invitation sent successfully!', 'success');
             closeInviteModal();
-            setTimeout(() => location.reload(), 1500);
+            // Refresh pending invitations if the section exists
+            if (typeof loadPendingInvitations === 'function') {
+                loadPendingInvitations();
+            }
         } else {
-            throw { error: data.error || 'Error adding member' };
+            throw { error: data.error || 'Error sending invitation' };
         }
     })
     .catch(error => {
@@ -2080,7 +2347,7 @@ function sendInviteFromModal() {
     })
     .finally(() => {
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Send Invite';
+        submitBtn.textContent = 'Send Invitation';
     });
 }
 
@@ -2158,7 +2425,164 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+
+    // Character counter for invite message textarea
+    const messageTextarea = document.getElementById('modal-invite-message');
+    const messageCounter = document.getElementById('modal-invite-message-count');
+    if (messageTextarea && messageCounter) {
+        messageTextarea.addEventListener('input', function() {
+            messageCounter.textContent = this.value.length;
+        });
+    }
+
+    // Load pending invitations if section exists (leaders only)
+    if (document.getElementById('pendingInvitationsSection')) {
+        loadPendingInvitations();
+    }
 });
+
+// Load pending invitations (for team leaders)
+async function loadPendingInvitations() {
+    const listEl = document.getElementById('pendingInvitationsList');
+    const countEl = document.getElementById('pendingInvitationsCount');
+    const refreshBtn = document.querySelector('.pending-invitations-refresh');
+
+    if (!listEl) return;
+
+    // Show loading state
+    if (refreshBtn) refreshBtn.classList.add('spinning');
+    listEl.innerHTML = '<div class="pending-invitations-loading"><span>Loading invitations...</span></div>';
+
+    try {
+        const response = await fetch('/teams/{{ $team->id }}/invitations', {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Update count
+            if (countEl) {
+                countEl.textContent = data.count || 0;
+            }
+
+            // Render invitations
+            if (data.invitations && data.invitations.length > 0) {
+                listEl.innerHTML = data.invitations.map(inv => createPendingInvitationHTML(inv)).join('');
+            } else {
+                listEl.innerHTML = '<div class="pending-invitations-empty">No pending invitations</div>';
+            }
+        } else {
+            listEl.innerHTML = '<div class="pending-invitations-empty">Failed to load invitations</div>';
+        }
+    } catch (error) {
+        console.error('Error loading pending invitations:', error);
+        listEl.innerHTML = '<div class="pending-invitations-empty">Error loading invitations</div>';
+    } finally {
+        if (refreshBtn) refreshBtn.classList.remove('spinning');
+    }
+}
+
+// Create HTML for a pending invitation card
+function createPendingInvitationHTML(invitation) {
+    const roleClass = invitation.role === 'co_leader' ? 'role-co_leader' : '';
+    const messageHtml = invitation.message
+        ? `<div class="pending-invitation-message">
+               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+               </svg>
+               <span>"${escapeHtmlInvite(invitation.message)}"</span>
+           </div>`
+        : '';
+
+    return `
+        <div class="pending-invitation-card" id="pending-invitation-${invitation.id}">
+            <div class="pending-invitation-user">
+                <img src="${invitation.invitee.avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(invitation.invitee.display_name)}"
+                     alt="${escapeHtmlInvite(invitation.invitee.display_name)}"
+                     class="pending-invitation-avatar">
+                <div class="pending-invitation-info">
+                    <div class="pending-invitation-name">${escapeHtmlInvite(invitation.invitee.display_name)}</div>
+                    <div class="pending-invitation-meta">
+                        <span class="pending-invitation-role ${roleClass}">${escapeHtmlInvite(invitation.role_display_name)}</span>
+                        <span class="pending-invitation-time">${escapeHtmlInvite(invitation.created_at_human)}</span>
+                    </div>
+                    ${messageHtml}
+                </div>
+            </div>
+            <button type="button" class="pending-invitation-cancel" onclick="cancelInvitation(${invitation.id})" title="Cancel invitation">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+    `;
+}
+
+// Helper to escape HTML for invitation content
+function escapeHtmlInvite(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Cancel a pending invitation
+async function cancelInvitation(invitationId) {
+    if (!confirm('Cancel this invitation?')) return;
+
+    const card = document.getElementById(`pending-invitation-${invitationId}`);
+    const cancelBtn = card?.querySelector('.pending-invitation-cancel');
+    if (cancelBtn) cancelBtn.disabled = true;
+
+    try {
+        const response = await fetch(`/teams/{{ $team->id }}/invitations/${invitationId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showNotification(data.message || 'Invitation cancelled', 'info');
+
+            // Remove the card with animation
+            if (card) {
+                card.style.opacity = '0';
+                card.style.transform = 'translateX(20px)';
+                card.style.transition = 'all 0.3s ease';
+                setTimeout(() => {
+                    card.remove();
+                    // Update count
+                    const countEl = document.getElementById('pendingInvitationsCount');
+                    if (countEl) {
+                        const currentCount = parseInt(countEl.textContent) || 0;
+                        countEl.textContent = Math.max(0, currentCount - 1);
+                    }
+                    // Check if list is empty
+                    const listEl = document.getElementById('pendingInvitationsList');
+                    if (listEl && listEl.querySelectorAll('.pending-invitation-card').length === 0) {
+                        listEl.innerHTML = '<div class="pending-invitations-empty">No pending invitations</div>';
+                    }
+                }, 300);
+            }
+        } else {
+            showNotification(data.error || 'Failed to cancel invitation', 'error');
+            if (cancelBtn) cancelBtn.disabled = false;
+        }
+    } catch (error) {
+        console.error('Error cancelling invitation:', error);
+        showNotification('Error cancelling invitation', 'error');
+        if (cancelBtn) cancelBtn.disabled = false;
+    }
+}
 
 function editMemberRole(userId, currentRole) {
     const newRole = prompt('Enter new role for this member:', currentRole || '');

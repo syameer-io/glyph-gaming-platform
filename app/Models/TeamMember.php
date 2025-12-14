@@ -164,7 +164,7 @@ class TeamMember extends Model
     {
         return match($this->role) {
             'leader' => 'Team Leader',
-            'co-leader' => 'Co-Leader',
+            'co_leader' => 'Co-Leader',
             'member' => 'Member',
             'reserve' => 'Reserve',
             default => 'Unknown'
