@@ -576,22 +576,6 @@
             <!-- Sidebar Filters -->
             <div class="matchmaking-sidebar">
                 <div class="filter-section">
-                    <h4>Quick Actions</h4>
-                    <div class="quick-actions">
-                        <a href="#" class="quick-action" onclick="showCreateRequestModal()">
-                            <span class="quick-action-icon">🔍</span>
-                            <div class="quick-action-title">Find Team</div>
-                            <div class="quick-action-desc">Search for existing teams</div>
-                        </a>
-                        <a href="#" class="quick-action" onclick="showCreateTeamModal()">
-                            <span class="quick-action-icon">👥</span>
-                            <div class="quick-action-title">Create Team</div>
-                            <div class="quick-action-desc">Form a new team</div>
-                        </a>
-                    </div>
-                </div>
-
-                <div class="filter-section">
                     <h4>Filters</h4>
                     <div class="filter-group">
                         <label for="game-filter">Game</label>
