@@ -36,9 +36,13 @@
                 <h3 class="card-header">Search Results</h3>
                 @forelse($users as $user)
                     <div class="user-card">
-                        <img src="{{ $user->profile->avatar_url }}" alt="{{ $user->display_name }}" class="user-card-avatar">
+                        <a href="{{ route('profile.show', $user->username) }}">
+                            <img src="{{ $user->profile->avatar_url }}" alt="{{ $user->display_name }}" class="user-card-avatar">
+                        </a>
                         <div class="user-card-info">
-                            <div class="user-card-name">{{ $user->display_name }}</div>
+                            <div class="user-card-name">
+                                <a href="{{ route('profile.show', $user->username) }}" class="link">{{ $user->display_name }}</a>
+                            </div>
                             <div class="user-card-username">{{ '@' . $user->username }}</div>
                         </div>
                         <div>

@@ -151,34 +151,38 @@
         position: relative;
     "></div>
 
-    {{-- Avatar Section --}}
+    {{-- Avatar Section (Clickable to view profile) --}}
     <div style="padding: 0 16px; position: relative; margin-top: -40px;">
-        <div style="
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            border: 6px solid #232428;
-            background-color: #232428;
-            overflow: hidden;
-            position: relative;
-        ">
-            <img
-                src="{{ $user->profile->avatar_url ?? asset('images/default-avatar.png') }}"
-                alt="{{ $user->display_name }}"
-                style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"
-            >
-            {{-- Status Indicator --}}
+        <a href="{{ route('profile.show', $user->username) }}" style="display: block; text-decoration: none;">
             <div style="
-                position: absolute;
-                bottom: 2px;
-                right: 2px;
-                width: 20px;
-                height: 20px;
+                width: 80px;
+                height: 80px;
                 border-radius: 50%;
-                border: 4px solid #232428;
-                background-color: {{ $statusColor }};
-            " title="{{ $statusLabel }}"></div>
-        </div>
+                border: 6px solid #232428;
+                background-color: #232428;
+                overflow: hidden;
+                position: relative;
+                cursor: pointer;
+                transition: opacity 0.15s ease;
+            " onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                <img
+                    src="{{ $user->profile->avatar_url ?? asset('images/default-avatar.png') }}"
+                    alt="{{ $user->display_name }}"
+                    style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"
+                >
+                {{-- Status Indicator --}}
+                <div style="
+                    position: absolute;
+                    bottom: 2px;
+                    right: 2px;
+                    width: 20px;
+                    height: 20px;
+                    border-radius: 50%;
+                    border: 4px solid #232428;
+                    background-color: {{ $statusColor }};
+                " title="{{ $statusLabel }}"></div>
+            </div>
+        </a>
     </div>
 
     {{-- Card Body --}}
@@ -188,14 +192,22 @@
         border-radius: 8px;
         padding: 12px;
     ">
-        {{-- Display Name & Username --}}
+        {{-- Display Name & Username (Name clickable to view profile) --}}
         <div style="margin-bottom: 12px;">
-            <div style="
-                font-size: 20px;
-                font-weight: 600;
-                color: #f2f3f5;
-                line-height: 1.2;
-            ">{{ $user->display_name }}</div>
+            <a
+                href="{{ route('profile.show', $user->username) }}"
+                style="
+                    font-size: 20px;
+                    font-weight: 600;
+                    color: #f2f3f5;
+                    line-height: 1.2;
+                    text-decoration: none;
+                    display: inline-block;
+                    transition: color 0.15s ease;
+                "
+                onmouseover="this.style.color='#00b0f4'; this.style.textDecoration='underline'"
+                onmouseout="this.style.color='#f2f3f5'; this.style.textDecoration='none'"
+            >{{ $user->display_name }}</a>
             <div style="
                 font-size: 14px;
                 color: #b5bac1;
@@ -433,8 +445,9 @@
                 </a>
             @endif
 
-            {{-- Friend Request / View Profile Button --}}
+            {{-- Friend Action Button --}}
             @if(!$isSelf && !$isFriend && !$hasPendingRequest)
+                {{-- Add Friend Button --}}
                 <button
                     x-ref="friendBtn"
                     @click.stop="sendFriendRequest()"
@@ -464,6 +477,7 @@
                     <span x-text="sendingFriendRequest ? 'Sending...' : 'Add Friend'"></span>
                 </button>
             @elseif($hasPendingRequest)
+                {{-- Request Sent (disabled) --}}
                 <button
                     disabled
                     style="
