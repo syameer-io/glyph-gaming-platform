@@ -7,7 +7,18 @@
 
 <main>
     <div class="container">
-        <h1 style="margin-bottom: 32px;">Friends</h1>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
+            <h1 style="margin: 0;">Friends</h1>
+            <a href="{{ route('friends.search') }}" class="btn btn-primary" style="display: inline-flex; align-items: center;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <line x1="19" y1="8" x2="19" y2="14"></line>
+                    <line x1="22" y1="11" x2="16" y2="11"></line>
+                </svg>
+                Add Friend
+            </a>
+        </div>
 
         @if (session('success'))
             <div class="alert alert-success">
