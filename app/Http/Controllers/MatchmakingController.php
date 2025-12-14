@@ -9,6 +9,7 @@ use App\Models\MatchmakingRequest;
 use App\Services\MatchmakingService;
 use App\Services\TeamService;
 use App\Events\MatchmakingRequestCreated;
+use App\Events\MatchmakingRequestCancelled;
 use App\Events\MatchFound;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -147,6 +148,65 @@ class MatchmakingController extends Controller
     }
 
     /**
+     * Get players looking for teams (for team leaders)
+     *
+     * Returns players with active matchmaking requests for games
+     * that match the current user's recruiting teams.
+     */
+    public function getPlayersLookingForTeams(): JsonResponse
+    {
+        $user = Auth::user();
+
+        try {
+            $players = $this->matchmakingService->findPlayersForTeamLeader($user);
+
+            return response()->json([
+                'success' => true,
+                'players' => $players->map(function($item) {
+                    return [
+                        'request_id' => $item['request']->id,
+                        'user_id' => $item['user']->id,
+                        'username' => $item['user']->username,
+                        'display_name' => $item['user']->name,
+                        'avatar' => $item['user']->profile->avatar_url ?? null,
+                        'game_appid' => $item['request']->game_appid,
+                        'game_name' => $item['request']->game_name,
+                        'skill_level' => $item['request']->skill_level,
+                        'skill_score' => $item['request']->skill_score,
+                        'preferred_roles' => $item['request']->preferred_roles ?? [],
+                        'preferred_regions' => $item['request']->preferred_regions ?? [],
+                        'availability_hours' => $item['request']->availability_hours ?? [],
+                        'languages' => $item['request']->languages ?? [],
+                        'compatibility_score' => $item['compatibility_score'],
+                        'match_reasons' => $item['match_reasons'],
+                        'best_team' => [
+                            'id' => $item['best_team']->id,
+                            'name' => $item['best_team']->name,
+                        ],
+                        'all_matching_teams' => $item['all_matching_teams']->map(fn($t) => [
+                            'id' => $t->id,
+                            'name' => $t->name,
+                            'member_count' => $t->activeMembers->count(),
+                            'max_size' => $t->max_size,
+                        ]),
+                        'created_at' => $item['request']->created_at->diffForHumans(),
+                    ];
+                })
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error fetching players for team leader', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to load players'
+            ], 500);
+        }
+    }
+
+    /**
      * Store a new matchmaking request
      */
     public function store(Request $request): JsonResponse
@@ -155,7 +215,7 @@ class MatchmakingController extends Controller
             $validator = Validator::make($request->all(), [
                 'game_appid' => 'required|string',
                 'game_name' => 'required|string|max:255',
-                'request_type' => 'required|in:find_teammates,find_team,substitute',
+                'request_type' => 'nullable|string|in:find_teammates,find_team,substitute', // Optional - bidirectional matching
                 'preferred_roles' => 'array',
                 'preferred_roles.*' => 'string|max:50',
                 'message' => 'nullable|string|max:500',
@@ -193,7 +253,7 @@ class MatchmakingController extends Controller
                 'user_id' => $user->id,
                 'game_appid' => $request->game_appid,
                 'game_name' => $request->game_name,
-                'request_type' => $request->request_type,
+                'request_type' => $request->request_type ?? null, // Nullable for bidirectional matching
                 'preferred_roles' => $request->preferred_roles ?? [],
                 'skill_level' => $skillData['skill_level'],
                 'skill_score' => $skillData['skill_score'] ?? 50,
@@ -504,6 +564,9 @@ class MatchmakingController extends Controller
         }
 
         $request->update(['status' => 'cancelled']);
+
+        // Broadcast the cancellation event for real-time updates
+        event(new MatchmakingRequestCancelled($request));
 
         return response()->json([
             'success' => true,

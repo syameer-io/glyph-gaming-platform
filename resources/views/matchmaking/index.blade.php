@@ -702,10 +702,6 @@
                                             <span class="request-detail-value">{{ ucfirst($request->skill_level ?? 'any') }}</span>
                                         </div>
                                         <div class="request-detail">
-                                            <span class="request-detail-label">Type</span>
-                                            <span class="request-detail-value">{{ ucfirst($request->request_type ? str_replace('_', ' ', $request->request_type) : 'find team') }}</span>
-                                        </div>
-                                        <div class="request-detail">
                                             <span class="request-detail-label">Role</span>
                                             <span class="request-detail-value">
                                                 @if($request->preferred_roles && count($request->preferred_roles) > 0)
@@ -788,6 +784,34 @@
                     </div>
 
                 @endif
+
+                <!-- Players Looking for Teams (Team Leaders Only) -->
+                @php
+                    $recruitingTeams = auth()->user()->getRecruitingTeamsAsLeader();
+                @endphp
+
+                @if($recruitingTeams->isNotEmpty())
+                <div class="card" id="players-looking-section" style="margin-top: 24px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3 class="card-header" style="margin: 0;">
+                            <span style="margin-right: 8px;">&#128101;</span> Players Looking for Teams
+                        </h3>
+                        <span class="live-badge" style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                            <span style="display: inline-block; width: 8px; height: 8px; background: #10b981; border-radius: 50%; margin-right: 6px; animation: pulse 2s infinite;"></span>
+                            LIVE
+                        </span>
+                    </div>
+                    <p style="color: var(--color-text-muted); margin-bottom: 16px; font-size: 14px;">
+                        Players with active matchmaking requests for your team's game. Invite them directly!
+                    </p>
+                    <div id="players-looking-content">
+                        <div style="text-align: center; padding: 40px; color: var(--color-text-muted);">
+                            <div class="loading-spinner" style="margin-bottom: 12px; width: 32px; height: 32px; border: 3px solid rgba(139, 92, 246, 0.2); border-top-color: #8b5cf6; border-radius: 50%; animation: spin 1s linear infinite; margin-left: auto; margin-right: auto;"></div>
+                            <p>Loading players...</p>
+                        </div>
+                    </div>
+                </div>
+                @endif
             </div>
         </div>
     </div>
@@ -810,15 +834,6 @@
                     <option value="493520" data-name="GTFO">GTFO</option>
                 </select>
                 <input type="hidden" id="game_name" name="game_name" value="">
-            </div>
-            <div class="form-group">
-                <label for="request_type">Request Type *</label>
-                <select id="request_type" name="request_type" required>
-                    <option value="">Select request type...</option>
-                    <option value="find_team">Find Team to Join</option>
-                    <option value="find_teammates">Find Teammates</option>
-                    <option value="substitute">Substitute Player</option>
-                </select>
             </div>
             <div class="form-group">
                 <label>Your Skill Level</label>
@@ -900,6 +915,40 @@
 
         <div id="findTeamsResults" style="display: grid; gap: 16px;">
             <!-- Results will be populated here -->
+        </div>
+    </div>
+</div>
+
+<!-- Invite Player Modal -->
+<div id="invitePlayerModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); z-index: 2000; align-items: center; justify-content: center;">
+    <div style="background-color: var(--color-surface); border-radius: 12px; padding: 32px; max-width: 400px; width: 90%;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h3 style="margin: 0; color: var(--color-text-primary);">Invite Player to Team</h3>
+            <button onclick="closeInviteModal()" style="background: none; border: none; color: var(--color-text-muted); font-size: 24px; cursor: pointer; padding: 0; line-height: 1;">&times;</button>
+        </div>
+        <div id="invitePlayerInfo" style="margin-bottom: 20px;"></div>
+
+        <div class="form-group" id="teamSelectGroup" style="display: none; margin-bottom: 16px;">
+            <label for="inviteTeamSelect" style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--color-text-primary);">Select Team</label>
+            <select id="inviteTeamSelect" style="width: 100%; padding: 10px 12px; background-color: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: 8px; color: var(--color-text-primary); font-size: 14px;"></select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 16px;">
+            <label for="inviteRole" style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--color-text-primary);">Role in Team</label>
+            <select id="inviteRole" style="width: 100%; padding: 10px 12px; background-color: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: 8px; color: var(--color-text-primary); font-size: 14px;">
+                <option value="member">Member</option>
+                <option value="co_leader">Co-Leader</option>
+            </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 20px;">
+            <label for="inviteMessage" style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--color-text-primary);">Message (Optional)</label>
+            <textarea id="inviteMessage" rows="2" style="width: 100%; padding: 10px 12px; background-color: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: 8px; color: var(--color-text-primary); font-size: 14px; resize: vertical;" placeholder="Found you through matchmaking! Would you like to join?"></textarea>
+        </div>
+
+        <div style="display: flex; gap: 12px;">
+            <button onclick="closeInviteModal()" class="btn btn-secondary" style="flex: 1;">Cancel</button>
+            <button id="sendInviteBtn" onclick="sendPlayerInvite()" class="btn btn-primary" style="flex: 1;">Send Invitation</button>
         </div>
     </div>
 </div>
@@ -1536,5 +1585,217 @@ function toggleWhyThisTeam(teamId) {
         icon.textContent = '▼';
     }
 }
+
+// ===============================
+// Players Looking for Teams Section
+// ===============================
+let currentInvitePlayer = null;
+
+// Load players looking for teams on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadPlayersLooking();
+});
+
+// Expose loadPlayersLooking to window for real-time updates from LiveMatchmakingManager
+window.loadPlayersLooking = loadPlayersLooking;
+
+function loadPlayersLooking() {
+    const container = document.getElementById('players-looking-content');
+    if (!container) return;
+
+    fetch('/matchmaking/players-looking', {
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.players && data.players.length > 0) {
+            renderPlayersLooking(data.players);
+        } else {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: var(--color-text-muted);">
+                    <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">👥</div>
+                    <p style="font-size: 16px; margin-bottom: 8px;">No players currently looking for teams</p>
+                    <p style="font-size: 14px; color: #71717a;">Check back later for new matchmaking requests</p>
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        console.error('Error loading players:', error);
+        container.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: var(--color-text-muted);">
+                <p>Failed to load players. <a href="javascript:loadPlayersLooking()" style="color: #8b5cf6;">Retry</a></p>
+            </div>
+        `;
+    });
+}
+
+function renderPlayersLooking(players) {
+    const container = document.getElementById('players-looking-content');
+    container.innerHTML = players.map(player => createPlayerCard(player)).join('');
+}
+
+function createPlayerCard(player) {
+    const scoreColor = player.compatibility_score >= 80 ? '#10b981' :
+                       player.compatibility_score >= 60 ? '#f59e0b' : '#ef4444';
+
+    const rolesHtml = (player.preferred_roles || []).slice(0, 3)
+        .map(r => `<span style="background-color: rgba(139, 92, 246, 0.2); color: #a78bfa; padding: 2px 8px; border-radius: 4px; font-size: 11px; text-transform: capitalize;">${r.replace(/_/g, ' ')}</span>`).join(' ');
+
+    const regionsHtml = (player.preferred_regions || []).slice(0, 2)
+        .map(r => `<span style="background-color: rgba(59, 130, 246, 0.2); color: #60a5fa; padding: 2px 6px; border-radius: 4px; font-size: 10px;">${r}</span>`).join(' ');
+
+    const avatar = player.avatar || '/images/default-avatar.png';
+
+    // Escape player data for onclick
+    const playerDataStr = JSON.stringify(player).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+    return `
+        <div class="player-card" style="background: var(--color-bg-secondary); border-radius: 12px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--color-border); transition: border-color 0.2s;" onmouseover="this.style.borderColor='#8b5cf6'" onmouseout="this.style.borderColor='var(--color-border)'">
+            <div style="display: flex; align-items: center; gap: 16px; flex: 1;">
+                <img src="${avatar}"
+                     style="width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 2px solid ${scoreColor};"
+                     alt="${player.username}"
+                     onerror="this.src='/images/default-avatar.png'">
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; color: var(--color-text-primary); font-size: 16px; margin-bottom: 2px;">
+                        ${player.display_name || player.username}
+                    </div>
+                    <div style="font-size: 13px; color: var(--color-text-muted); margin-bottom: 6px;">
+                        ${player.game_name}
+                        <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-left: 8px;">
+                            ${player.skill_level || 'Unranked'}
+                        </span>
+                    </div>
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+                        ${rolesHtml}
+                        ${regionsHtml}
+                    </div>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <div style="text-align: center;">
+                    <div style="font-size: 28px; font-weight: 700; color: ${scoreColor}; line-height: 1;">
+                        ${Math.round(player.compatibility_score)}%
+                    </div>
+                    <div style="font-size: 10px; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Match</div>
+                </div>
+                <button class="btn btn-primary" style="padding: 10px 20px; font-weight: 600;"
+                        onclick='openInviteModal(${playerDataStr})'>
+                    Invite
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function openInviteModal(player) {
+    // Handle if player is passed as string (from onclick)
+    if (typeof player === 'string') {
+        try {
+            player = JSON.parse(player);
+        } catch (e) {
+            console.error('Error parsing player data:', e);
+            return;
+        }
+    }
+
+    currentInvitePlayer = player;
+
+    const avatar = player.avatar || '/images/default-avatar.png';
+    document.getElementById('invitePlayerInfo').innerHTML = `
+        <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--color-bg-secondary); border-radius: 8px;">
+            <img src="${avatar}"
+                 style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover;"
+                 onerror="this.src='/images/default-avatar.png'">
+            <div>
+                <div style="font-weight: 600; font-size: 16px; color: var(--color-text-primary);">${player.display_name || player.username}</div>
+                <div style="font-size: 13px; color: var(--color-text-muted);">${player.game_name} - ${player.skill_level || 'Unranked'}</div>
+            </div>
+        </div>
+    `;
+
+    // Team selection
+    const teamSelectGroup = document.getElementById('teamSelectGroup');
+    const teamSelect = document.getElementById('inviteTeamSelect');
+
+    if (player.all_matching_teams && player.all_matching_teams.length > 1) {
+        teamSelectGroup.style.display = 'block';
+        teamSelect.innerHTML = player.all_matching_teams.map(t =>
+            `<option value="${t.id}">${t.name} (${t.member_count}/${t.max_size})</option>`
+        ).join('');
+    } else {
+        teamSelectGroup.style.display = 'none';
+        const team = player.best_team || (player.all_matching_teams && player.all_matching_teams[0]);
+        if (team) {
+            teamSelect.innerHTML = `<option value="${team.id}">${team.name}</option>`;
+        }
+    }
+
+    document.getElementById('invitePlayerModal').style.display = 'flex';
+}
+
+function closeInviteModal() {
+    document.getElementById('invitePlayerModal').style.display = 'none';
+    currentInvitePlayer = null;
+    document.getElementById('inviteMessage').value = '';
+    document.getElementById('inviteRole').value = 'member';
+}
+
+function sendPlayerInvite() {
+    if (!currentInvitePlayer) return;
+
+    const teamId = document.getElementById('inviteTeamSelect').value;
+    const role = document.getElementById('inviteRole').value;
+    const message = document.getElementById('inviteMessage').value;
+
+    const btn = document.getElementById('sendInviteBtn');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+
+    fetch(`/teams/${teamId}/invitations`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({
+            user_id: currentInvitePlayer.user_id,
+            role: role,
+            message: message || 'Found you through matchmaking! Would you like to join our team?'
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Invitation sent successfully!');
+            closeInviteModal();
+            // Refresh players list to update UI
+            loadPlayersLooking();
+        } else {
+            alert(data.message || 'Failed to send invitation');
+        }
+    })
+    .catch(error => {
+        console.error('Error sending invitation:', error);
+        alert('Failed to send invitation. Please try again.');
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.textContent = originalText;
+    });
+}
+
+// Close invite modal when clicking background
+document.getElementById('invitePlayerModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeInviteModal();
+    }
+});
 </script>
 @endsection

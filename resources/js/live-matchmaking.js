@@ -187,7 +187,13 @@ class LiveMatchmakingManager {
                 .listen('.matchmaking.request.updated', (e) => this.handleRequestUpdated(e))
                 .listen('.matchmaking.match.found', (e) => this.handleMatchFound(e));
 
-            console.log('[LiveMatchmaking] ✅ Event listeners registered');
+            // Listen for global matchmaking events (all users' requests)
+            // This enables real-time updates to the "Players Looking for Teams" section
+            window.Echo.private('matchmaking.global')
+                .listen('.matchmaking.request.created', (e) => this.handleGlobalRequestCreated(e))
+                .listen('.matchmaking.request.cancelled', (e) => this.handleGlobalRequestCancelled(e));
+
+            console.log('[LiveMatchmaking] ✅ Event listeners registered (including matchmaking.global)');
         } catch (error) {
             console.error('[LiveMatchmaking] ❌ Failed to setup event listeners:', error);
         }
@@ -686,9 +692,56 @@ class LiveMatchmakingManager {
 
     handleMatchFound(event) {
         const { team, compatibility_score } = event;
-        
+
         // Show notification
         this.showMatchNotification(team, compatibility_score);
+    }
+
+    /**
+     * Handle global matchmaking request created event
+     * This triggers when ANY user creates a matchmaking request
+     * Updates the "Players Looking for Teams" section in real-time
+     */
+    handleGlobalRequestCreated(event) {
+        const request = event.request;
+        console.log('[LiveMatchmaking] 🌐 Global request created:', request);
+
+        // Skip if this is from the current user (already handled by user-specific event)
+        if (request?.user?.id === this.userId) {
+            console.log('[LiveMatchmaking] Skipping own request (handled by user channel)');
+            return;
+        }
+
+        // Refresh the "Players Looking for Teams" section
+        this.refreshPlayersLooking();
+
+        // Also refresh recommendations as there's a new player looking
+        this.refreshRecommendations();
+    }
+
+    /**
+     * Handle global matchmaking request cancelled event
+     * Updates the "Players Looking for Teams" section when someone cancels their request
+     */
+    handleGlobalRequestCancelled(event) {
+        console.log('[LiveMatchmaking] 🌐 Global request cancelled:', event);
+
+        // Refresh the "Players Looking for Teams" section
+        this.refreshPlayersLooking();
+    }
+
+    /**
+     * Refresh the "Players Looking for Teams" section
+     * Calls the loadPlayersLooking function if it exists in the global scope
+     */
+    refreshPlayersLooking() {
+        // Check if the loadPlayersLooking function exists (defined in blade template)
+        if (typeof window.loadPlayersLooking === 'function') {
+            console.log('[LiveMatchmaking] 🔄 Refreshing players looking for teams...');
+            window.loadPlayersLooking();
+        } else {
+            console.log('[LiveMatchmaking] loadPlayersLooking function not found');
+        }
     }
 
     isTeamPotentiallyCompatible(team, request) {

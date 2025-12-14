@@ -122,6 +122,42 @@ Broadcast::channel('teams.global', function ($user) {
     return $user !== null;
 });
 
+/**
+ * Global matchmaking channel - For real-time matchmaking request updates
+ * Channel format: matchmaking.global
+ *
+ * Used by: Live matchmaking page (Players Looking for Teams section)
+ * Events: matchmaking.request.created, matchmaking.request.cancelled
+ * Authorization: Any authenticated user can subscribe
+ */
+Broadcast::channel('matchmaking.global', function ($user) {
+    Log::info('[Broadcasting] Matchmaking global channel auth attempt', [
+        'user_id' => $user->id ?? 'NULL',
+    ]);
+
+    // Any authenticated user can listen to global matchmaking events
+    return $user !== null;
+});
+
+/**
+ * Team private channel - For team-specific notifications (invitations, member updates)
+ * Channel format: team.{teamId}
+ *
+ * Used by: Team invitation events, member join/leave notifications
+ * Authorization: Only team members and team creator can subscribe
+ */
+Broadcast::channel('team.{teamId}', function ($user, $teamId) {
+    // Check if user is a member of the team
+    return $user->teams()
+        ->where('teams.id', $teamId)
+        ->wherePivot('status', 'active')
+        ->exists()
+        // Also allow team creator
+        || \App\Models\Team::where('id', $teamId)
+            ->where('creator_id', $user->id)
+            ->exists();
+});
+
 // ===== GAMING STATUS CHANNELS =====
 
 /**
