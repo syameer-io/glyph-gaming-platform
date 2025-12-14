@@ -608,24 +608,15 @@ class User extends Authenticatable
      * Get game name by Steam App ID
      * Maps common Steam App IDs to their display names
      *
+     * Uses the centralized GAME_NAMES constant from GameLobby model
+     * to ensure consistency across the application.
+     *
      * @param int $gameId Steam App ID
      * @return string Game display name
      */
     private function getGameNameById(int $gameId): string
     {
-        // Map of common Steam App IDs to game names
-        $gameNames = [
-            730 => 'Counter-Strike 2',
-            570 => 'Dota 2',
-            230410 => 'Warframe',
-            1172470 => 'Apex Legends',
-            252490 => 'Rust',
-            578080 => 'PUBG: BATTLEGROUNDS',
-            359550 => 'Rainbow Six Siege',
-            1097150 => 'Fall Guys',
-        ];
-
-        return $gameNames[$gameId] ?? "Game #{$gameId}";
+        return GameLobby::getGameNameById($gameId);
     }
 
     public function gamingSessions()

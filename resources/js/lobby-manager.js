@@ -289,8 +289,8 @@ window.lobbyManager = function(userId, isOwnProfile) {
             // Map common game IDs to emojis
             const gameIcons = {
                 730: '🔫', // CS2
-                570: '⚔️', // Dota 2
-                230410: '🤖', // Warframe
+                548430: '⛏️', // Deep Rock Galactic
+                493520: '💀', // GTFO
                 // Add more as needed
             };
             return gameIcons[gameId] || '🎮';

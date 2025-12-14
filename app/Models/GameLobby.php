@@ -231,8 +231,8 @@ class GameLobby extends Model
      */
     public const GAME_NAMES = [
         730 => 'Counter-Strike 2',
-        570 => 'Dota 2',
-        230410 => 'Warframe',
+        548430 => 'Deep Rock Galactic',
+        493520 => 'GTFO',
         1172470 => 'Apex Legends',
         252490 => 'Rust',
         578080 => 'PUBG: BATTLEGROUNDS',

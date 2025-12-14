@@ -63,14 +63,6 @@
                 </select>
             </div>
 
-            {{-- Warframe Warning (Steam version required) --}}
-            <div x-show="selectedGame == 230410" x-cloak style="margin-bottom: 16px;">
-                <x-lobby-warning
-                    type="warning"
-                    message="<strong>Steam version required.</strong> In-game invites are preferred by the Warframe community."
-                />
-            </div>
-
             {{-- Dynamic Form Fields --}}
             <div x-show="selectedJoinMethod" x-cloak>
                 {{-- Steam Lobby Link --}}

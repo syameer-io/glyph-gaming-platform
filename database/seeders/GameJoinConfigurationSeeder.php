@@ -19,6 +19,14 @@ class GameJoinConfigurationSeeder extends Seeder
      */
     public function run(): void
     {
+        // Remove deprecated game configurations (Dota 2, Warframe)
+        // These were replaced with Deep Rock Galactic and GTFO
+        $deprecatedGameIds = [570, 230410]; // Dota 2 and Warframe
+        $deleted = GameJoinConfiguration::whereIn('game_id', $deprecatedGameIds)->delete();
+        if ($deleted > 0) {
+            $this->command->info("Removed {$deleted} deprecated game configuration(s) (Dota 2, Warframe)");
+        }
+
         $configurations = [
             // ============================================================
             // WEEK 1: CS2 (Counter-Strike 2)
@@ -53,67 +61,68 @@ class GameJoinConfigurationSeeder extends Seeder
             ],
 
             // ============================================================
-            // WEEK 1: Dota 2
+            // Deep Rock Galactic
             // ============================================================
             [
-                'game_id' => 570, // Dota 2 App ID
+                'game_id' => 548430, // Deep Rock Galactic App ID
                 'join_method' => 'steam_lobby',
                 'display_name' => 'Steam Lobby Link',
                 'icon' => 'steam',
                 'priority' => 10,
-                'validation_pattern' => '^steam:\/\/joinlobby\/570\/\d+\/\d+$',
+                'validation_pattern' => '^steam:\/\/joinlobby\/548430\/\d+\/\d+$',
                 'requires_manual_setup' => false,
-                'steam_app_id' => 570,
+                'steam_app_id' => 548430,
                 'default_port' => null,
                 'expiration_minutes' => 30,
                 'instructions_how_to_create' =>
-                    "1. Create a lobby in Dota 2\n" .
+                    "1. Launch Deep Rock Galactic and create a mission lobby\n" .
                     "2. Press Shift+Tab to open Steam overlay\n" .
-                    "3. Right-click on your name in the friends list\n" .
-                    "4. Select 'Invite to Lobby' or 'Copy Lobby Link'\n" .
-                    "5. Paste the link here",
+                    "3. Click on your name in the friends list\n" .
+                    "4. Right-click on 'Join Game' button\n" .
+                    "5. Select 'Copy Link Address'\n" .
+                    "6. Paste the link here\n\n" .
+                    "**Rock and Stone!** Your fellow miners can now join your expedition.",
                 'instructions_how_to_join' =>
                     "1. Click the 'Join Lobby' button below\n" .
-                    "2. Steam will automatically open Dota 2 and join the lobby\n\n" .
+                    "2. Steam will automatically launch Deep Rock Galactic and join the lobby\n\n" .
                     "**Alternative:**\n" .
                     "1. Copy the lobby link\n" .
                     "2. Paste it in your browser address bar\n" .
-                    "3. Press Enter - Steam will launch Dota 2",
+                    "3. Press Enter - Steam will launch the game and connect you\n\n" .
+                    "**For Karl!**",
                 'is_enabled' => true,
             ],
 
             // ============================================================
-            // WEEK 3: Warframe
+            // GTFO
             // ============================================================
             [
-                'game_id' => 230410, // Warframe App ID
+                'game_id' => 493520, // GTFO App ID
                 'join_method' => 'steam_lobby',
                 'display_name' => 'Steam Lobby Link',
                 'icon' => 'steam',
                 'priority' => 10,
-                'validation_pattern' => '^steam:\/\/joinlobby\/230410\/\d+\/\d+$',
+                'validation_pattern' => '^steam:\/\/joinlobby\/493520\/\d+\/\d+$',
                 'requires_manual_setup' => false,
-                'steam_app_id' => 230410,
+                'steam_app_id' => 493520,
                 'default_port' => null,
                 'expiration_minutes' => 30,
                 'instructions_how_to_create' =>
-                    "**Important:** You must be using the **Steam version** of Warframe for lobby links to work.\n\n" .
-                    "1. Create a squad/lobby in Warframe\n" .
+                    "1. Launch GTFO and create a lobby from the Rundown menu\n" .
                     "2. Press Shift+Tab to open Steam overlay\n" .
-                    "3. Right-click on your name in the friends list\n" .
-                    "4. Select 'Copy Lobby Link'\n" .
-                    "5. Paste the link here\n\n" .
-                    "**Note:** Most Warframe players prefer using in-game invites through the squad menu. " .
-                    "Steam lobby links work but are less commonly used in the community.",
+                    "3. Click on your name in the friends list\n" .
+                    "4. Right-click on 'Join Game' button\n" .
+                    "5. Select 'Copy Link Address'\n" .
+                    "6. Paste the link here\n\n" .
+                    "**Tip:** Make sure your lobby slots are not locked before sharing.",
                 'instructions_how_to_join' =>
-                    "**Steam Version Required:** You must have Warframe installed through Steam to use lobby links.\n\n" .
                     "1. Click the 'Join Lobby' button below\n" .
-                    "2. Steam will automatically launch Warframe and join the squad\n\n" .
-                    "**Alternative Method:**\n" .
+                    "2. Steam will automatically launch GTFO and join the lobby\n\n" .
+                    "**Alternative:**\n" .
                     "1. Copy the lobby link\n" .
-                    "2. Paste it in your browser or Steam chat\n" .
-                    "3. Click the link to launch Warframe\n\n" .
-                    "**Preferred Method:** Ask the host to send you an in-game invite through Warframe's squad menu for better reliability.",
+                    "2. Paste it in your browser address bar\n" .
+                    "3. Press Enter - Steam will launch GTFO and connect you\n\n" .
+                    "**Note:** All players should be on the same game version to avoid connection issues.",
                 'is_enabled' => true,
             ],
         ];
@@ -130,10 +139,10 @@ class GameJoinConfigurationSeeder extends Seeder
 
         $this->command->info('Game join configurations seeded successfully!');
         $this->command->info('Seeded ' . count($configurations) . ' configuration(s)');
-        $this->command->info('- CS2: steam_lobby ONLY (per implementation guide Week 1)');
-        $this->command->info('- Dota 2: steam_lobby ONLY');
-        $this->command->info('- Warframe: steam_lobby ONLY');
+        $this->command->info('- CS2: steam_lobby (confirmed working)');
+        $this->command->info('- Deep Rock Galactic: steam_lobby (confirmed working)');
+        $this->command->info('- GTFO: steam_lobby (confirmed working)');
         $this->command->info('');
-        $this->command->info('Note: server_address method is for Minecraft (Week 5, not yet implemented)');
+        $this->command->info('All games support native steam://joinlobby protocol.');
     }
 }
