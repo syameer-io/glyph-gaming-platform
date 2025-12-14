@@ -115,7 +115,7 @@ class TeamController extends Controller
             'communication_required' => 'nullable|boolean',
             'competitive_focus' => 'nullable|boolean',
             'required_roles' => 'nullable|array',
-            'required_roles.*' => 'string|in:entry_fragger,support,awper,igl,lurker,anchor,carry,mid,offlaner,soft_support,hard_support,dps,tank,crowd_control,jungler,healer,scout,assault,recon',
+            'required_roles.*' => 'string|in:' . implode(',', config('game_roles.all_roles')),
             'activity_times' => 'nullable|array',
             'activity_times.*' => 'string|in:morning,afternoon,evening,night,flexible',
             'languages' => 'nullable|array',
@@ -321,7 +321,7 @@ class TeamController extends Controller
             'recruitment_status' => 'nullable|in:open,closed',
             'recruitment_message' => 'nullable|string|max:500',
             'required_roles' => 'nullable|array',
-            'required_roles.*' => 'string|in:entry_fragger,support,awper,igl,lurker,anchor,carry,mid,offlaner,soft_support,hard_support,dps,tank,crowd_control,jungler,healer,scout,assault,recon',
+            'required_roles.*' => 'string|in:' . implode(',', config('game_roles.all_roles')),
             'activity_times' => 'nullable|array',
             'activity_times.*' => 'string|in:morning,afternoon,evening,night,flexible',
             'languages' => 'nullable|array',
@@ -1028,6 +1028,8 @@ class TeamController extends Controller
             '359550' => 5,   // Rainbow Six Siege (5v5 ranked)
             '1446780' => 4,  // Fall Guys (4-player Squad Show)
             '230410' => 4,   // Warframe (4-player squads)
+            '548430' => 4,   // Deep Rock Galactic (4-player co-op)
+            '493520' => 4,   // GTFO (4-player expedition)
         ];
 
         return $recommendedSizes[$gameAppId] ?? 5; // Default to 5 if unknown

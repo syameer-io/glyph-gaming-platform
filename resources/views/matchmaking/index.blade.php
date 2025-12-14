@@ -456,6 +456,8 @@
                             <option value="730">Counter-Strike 2</option>
                             <option value="570">Dota 2</option>
                             <option value="230410">Warframe</option>
+                            <option value="548430">Deep Rock Galactic</option>
+                            <option value="493520">GTFO</option>
                             <option value="1172470">Apex Legends</option>
                             <option value="252490">Rust</option>
                             <option value="578080">PUBG</option>
@@ -683,6 +685,8 @@
                     <option value="730" data-name="Counter-Strike 2">Counter-Strike 2</option>
                     <option value="570" data-name="Dota 2">Dota 2</option>
                     <option value="230410" data-name="Warframe">Warframe</option>
+                    <option value="548430" data-name="Deep Rock Galactic">Deep Rock Galactic</option>
+                    <option value="493520" data-name="GTFO">GTFO</option>
                 </select>
                 <input type="hidden" id="game_name" name="game_name" value="">
             </div>
@@ -823,6 +827,18 @@ const GAME_ROLES = {
         { value: 'tank', label: 'Tank' },
         { value: 'support', label: 'Support' },
         { value: 'crowd_control', label: 'Crowd Control' }
+    ],
+    '548430': [ // Deep Rock Galactic
+        { value: 'scout', label: 'Scout' },
+        { value: 'driller', label: 'Driller' },
+        { value: 'engineer', label: 'Engineer' },
+        { value: 'gunner', label: 'Gunner' }
+    ],
+    '493520': [ // GTFO
+        { value: 'scout', label: 'Scout' },
+        { value: 'cqc', label: 'CQC (Close Quarters)' },
+        { value: 'sniper', label: 'Sniper' },
+        { value: 'support', label: 'Support' }
     ]
 };
 

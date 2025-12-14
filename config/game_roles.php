@@ -222,6 +222,52 @@ return [
                 'tactician' => 'Strategic play caller',
             ],
         ],
+
+        // Deep Rock Galactic
+        '548430' => [
+            'name' => 'Deep Rock Galactic',
+            'roles' => [
+                'scout',
+                'driller',
+                'engineer',
+                'gunner',
+            ],
+            'display_names' => [
+                'scout' => 'Scout',
+                'driller' => 'Driller',
+                'engineer' => 'Engineer',
+                'gunner' => 'Gunner',
+            ],
+            'descriptions' => [
+                'scout' => 'Mobile class with grappling hook and flare gun for exploration',
+                'driller' => 'Terrain manipulation specialist with drilling equipment',
+                'engineer' => 'Defensive specialist with platforms and turrets',
+                'gunner' => 'Heavy firepower class with shields and ziplines',
+            ],
+        ],
+
+        // GTFO
+        '493520' => [
+            'name' => 'GTFO',
+            'roles' => [
+                'scout',
+                'cqc',
+                'sniper',
+                'support',
+            ],
+            'display_names' => [
+                'scout' => 'Scout',
+                'cqc' => 'CQC (Close Quarters)',
+                'sniper' => 'Sniper',
+                'support' => 'Support',
+            ],
+            'descriptions' => [
+                'scout' => 'Reconnaissance and stealth specialist',
+                'cqc' => 'Front-line combat specialist for close encounters',
+                'sniper' => 'Long-range precision shooter',
+                'support' => 'Team resource management and backup',
+            ],
+        ],
     ],
 
     // Generic roles for unsupported games
@@ -282,5 +328,9 @@ return [
         'runner',
         'tactician',
         'healer',
+        'driller',   // Deep Rock Galactic
+        'engineer',  // Deep Rock Galactic
+        'gunner',    // Deep Rock Galactic
+        'cqc',       // GTFO
     ],
 ];

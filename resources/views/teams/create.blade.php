@@ -384,6 +384,8 @@
                                     <option value="730" {{ old('game_appid') == '730' ? 'selected' : '' }}>Counter-Strike 2</option>
                                     <option value="570" {{ old('game_appid') == '570' ? 'selected' : '' }}>Dota 2</option>
                                     <option value="230410" {{ old('game_appid') == '230410' ? 'selected' : '' }}>Warframe</option>
+                                    <option value="548430" {{ old('game_appid') == '548430' ? 'selected' : '' }}>Deep Rock Galactic</option>
+                                    <option value="493520" {{ old('game_appid') == '493520' ? 'selected' : '' }}>GTFO</option>
                                 </select>
                                 <input type="hidden" id="game_name" name="game_name" value="{{ old('game_name') }}">
                                 <div id="game-info" class="game-info" style="display: none;"></div>
@@ -637,6 +639,30 @@ const gameInfo = {
             { value: 'tank', label: 'Tank' },
             { value: 'support', label: 'Support' },
             { value: 'crowd_control', label: 'Crowd Control' }
+        ]
+    },
+    '548430': {
+        name: 'Deep Rock Galactic',
+        description: 'Co-op mining FPS with specialized dwarf classes for team missions.',
+        recommendedSize: 4,
+        sizeLabel: '4 Players (Full Squad)',
+        roles: [
+            { value: 'scout', label: 'Scout' },
+            { value: 'driller', label: 'Driller' },
+            { value: 'engineer', label: 'Engineer' },
+            { value: 'gunner', label: 'Gunner' }
+        ]
+    },
+    '493520': {
+        name: 'GTFO',
+        description: 'Hardcore co-op survival horror shooter requiring tactical coordination.',
+        recommendedSize: 4,
+        sizeLabel: '4 Players (Expedition Team)',
+        roles: [
+            { value: 'scout', label: 'Scout' },
+            { value: 'cqc', label: 'CQC (Close Quarters)' },
+            { value: 'sniper', label: 'Sniper' },
+            { value: 'support', label: 'Support' }
         ]
     }
 };

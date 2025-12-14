@@ -1692,6 +1692,8 @@ class MatchmakingService
             '578080' => 'PUBG',
             '359550' => 'Rainbow Six Siege',
             '433850' => 'Fall Guys',
+            '548430' => 'Deep Rock Galactic',
+            '493520' => 'GTFO',
         ];
 
         return $gameNames[$gameAppId] ?? 'Unknown Game';

@@ -96,13 +96,15 @@ class Team extends Model
         // Map game AppID to game name
         $gameNames = [
             '730' => 'CS2',
-            '570' => 'Dota 2', 
+            '570' => 'Dota 2',
             '230410' => 'Warframe',
             '1172470' => 'Apex Legends',
             '252490' => 'Rust',
             '578080' => 'PUBG',
             '359550' => 'Rainbow Six Siege',
             '433850' => 'Fall Guys',
+            '548430' => 'Deep Rock Galactic',
+            '493520' => 'GTFO',
         ];
 
         return $gameNames[$this->game_appid] ?? 'Unknown Game';
@@ -404,6 +406,8 @@ class Team extends Model
             '730' => ['entry_fragger', 'awper', 'igl', 'lurker', 'support', 'anchor'], // CS2
             '570' => ['carry', 'mid', 'offlaner', 'soft_support', 'hard_support'], // Dota 2
             '230410' => ['dps', 'tank', 'support', 'crowd_control'], // Warframe
+            '548430' => ['scout', 'driller', 'engineer', 'gunner'], // Deep Rock Galactic
+            '493520' => ['scout', 'cqc', 'sniper', 'support'], // GTFO
             default => [],
         };
     }
