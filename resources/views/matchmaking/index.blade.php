@@ -125,7 +125,151 @@
         0%, 100% { opacity: 1; }
         50% { opacity: 0.5; }
     }
-    
+
+    /* Recommendation card fade-in + slide-up animation */
+    @keyframes fadeSlideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Skeleton loader shimmer animation */
+    @keyframes shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+
+    /* Staggered animation for recommendation cards */
+    .recommendation-card {
+        animation: fadeSlideUp 0.4s ease forwards;
+        opacity: 0;
+    }
+
+    .recommendation-card:nth-child(1) { animation-delay: 0.1s; }
+    .recommendation-card:nth-child(2) { animation-delay: 0.2s; }
+    .recommendation-card:nth-child(3) { animation-delay: 0.3s; }
+    .recommendation-card:nth-child(4) { animation-delay: 0.4s; }
+    .recommendation-card:nth-child(5) { animation-delay: 0.5s; }
+
+    /* Skeleton loader cards */
+    .skeleton-card {
+        background: linear-gradient(135deg, #18181b 0%, #27272a 100%);
+        border-radius: 8px;
+        padding: 16px;
+        border: 1px solid #3f3f46;
+        min-height: 280px;
+    }
+
+    .skeleton-element {
+        background: linear-gradient(90deg, #27272a 25%, #3f3f46 50%, #27272a 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+        border-radius: 4px;
+    }
+
+    .skeleton-header {
+        height: 24px;
+        width: 60%;
+        margin-bottom: 8px;
+    }
+
+    .skeleton-subheader {
+        height: 16px;
+        width: 40%;
+        margin-bottom: 16px;
+    }
+
+    .skeleton-score {
+        height: 40px;
+        width: 60px;
+        margin-left: auto;
+        border-radius: 8px;
+    }
+
+    .skeleton-breakdown {
+        height: 60px;
+        width: 100%;
+        margin-bottom: 16px;
+        border-radius: 8px;
+    }
+
+    .skeleton-tags {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+
+    .skeleton-tag {
+        height: 24px;
+        width: 70px;
+        border-radius: 4px;
+    }
+
+    .skeleton-avatars {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 16px;
+    }
+
+    .skeleton-avatar {
+        height: 28px;
+        width: 28px;
+        border-radius: 50%;
+    }
+
+    .skeleton-buttons {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+    }
+
+    .skeleton-button {
+        height: 36px;
+        width: 100px;
+        border-radius: 6px;
+    }
+
+    /* Empty state styling */
+    .empty-recommendations {
+        text-align: center;
+        padding: 48px 24px;
+        background: linear-gradient(135deg, #18181b 0%, #27272a 100%);
+        border-radius: 12px;
+        border: 1px dashed #3f3f46;
+    }
+
+    .empty-recommendations .empty-icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+        opacity: 0.6;
+    }
+
+    .empty-recommendations p {
+        color: #b3b3b5;
+        margin-bottom: 8px;
+    }
+
+    .empty-recommendations p:first-of-type {
+        font-size: 16px;
+        font-weight: 500;
+        color: #efeff1;
+    }
+
+    .empty-recommendations .text-muted {
+        font-size: 14px;
+        color: #71717a;
+    }
+
+    /* Live badge pulse on update */
+    .live-indicator.updating::before {
+        animation: pulse 0.5s infinite;
+    }
+
     .team-card {
         background-color: var(--card-bg);
         border-radius: 12px;
@@ -525,7 +669,7 @@
 
             <!-- Main Content -->
             <div class="matchmaking-content">
-                @if($teams->isEmpty() && $matchmakingRequests->isEmpty())
+                @if($matchmakingRequests->isEmpty())
                 <!-- Empty State -->
                 <div class="empty-state">
                     <div style="font-size: 48px; margin-bottom: 16px;">🎮</div>
@@ -643,29 +787,6 @@
                         </div>
                     </div>
 
-                    <!-- Available Teams -->
-                    <div class="card">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                            <h3 class="card-header" style="margin: 0;">👥 Available Teams</h3>
-                            <div style="color: #b3b3b5; font-size: 14px;">{{ $teams->count() }} teams recruiting</div>
-                        </div>
-                        <div id="teams-grid" style="display: grid; gap: 20px;">
-                            @foreach($teams as $team)
-                                <div data-team-id="{{ $team->id }}"
-                                     data-server-id="{{ $team->server_id }}"
-                                     data-game="{{ $team->game_appid }}"
-                                     data-skill="{{ $team->skill_level }}"
-                                     data-region="{{ $team->preferred_region }}"
-                                     data-activity="{{ $team->activity_time }}"
-                                     data-status="{{ $team->status }}">
-                                    <x-team-card
-                                        :team="$team"
-                                        context="browse"
-                                    />
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
                 @endif
             </div>
         </div>

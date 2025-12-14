@@ -141,6 +141,7 @@ class MatchmakingApiController extends Controller
                     'current_size' => $team->current_size,
                     'max_size' => $team->max_size,
                     'status' => $team->status,
+                    'recruitment_status' => $team->recruitment_status ?? 'closed',
                     'compatibility_score' => $compatibility['total_score'],
                     'compatibility_breakdown' => $compatibility['breakdown'] ?? [],
                     'match_reasons' => $compatibility['reasons'],

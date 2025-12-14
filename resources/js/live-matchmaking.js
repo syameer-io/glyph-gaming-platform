@@ -196,6 +196,9 @@ class LiveMatchmakingManager {
     loadActiveRequests() {
         console.log('[LiveMatchmaking] Loading active requests...');
 
+        // Show skeleton loaders while loading
+        this.showSkeletonLoaders();
+
         // Load user's active matchmaking requests
         fetch('/api/matchmaking/active-requests', {
             headers: {
@@ -294,6 +297,9 @@ class LiveMatchmakingManager {
         const container = document.getElementById('live-recommendations-content');
         if (!container) return;
 
+        // Hide skeleton loaders (updating indicator)
+        this.hideSkeletonLoaders();
+
         // Check if server-rendered content already exists (team-card components from Blade)
         const hasServerRenderedContent = container.querySelector('.team-card') !== null;
 
@@ -338,15 +344,72 @@ class LiveMatchmakingManager {
 
     getEmptyRecommendationsHTML() {
         return `
-            <div style="text-align: center; padding: 40px; color: #b3b3b5;">
-                <div style="font-size: 24px; margin-bottom: 12px;">🎯</div>
-                <p>No compatible teams found</p>
-                <p style="font-size: 14px; margin-top: 8px;">Try adjusting your criteria or check back later for new teams</p>
+            <div class="empty-recommendations">
+                <div class="empty-icon">🎯</div>
+                <p>No matching teams found yet</p>
+                <p class="text-muted">We're actively searching for compatible teams. Check back soon or adjust your preferences.</p>
                 <button onclick="showCreateRequestModal()" class="btn btn-primary" style="margin-top: 16px;">
-                    Find Teammates
+                    Update Preferences
                 </button>
             </div>
         `;
+    }
+
+    getSkeletonLoadersHTML(count = 3) {
+        const skeletons = [];
+        for (let i = 0; i < count; i++) {
+            skeletons.push(`
+                <div class="skeleton-card" style="animation-delay: ${i * 0.1}s;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+                        <div>
+                            <div class="skeleton-element skeleton-header"></div>
+                            <div class="skeleton-element skeleton-subheader"></div>
+                        </div>
+                        <div class="skeleton-element skeleton-score"></div>
+                    </div>
+                    <div class="skeleton-element skeleton-breakdown"></div>
+                    <div class="skeleton-tags">
+                        <div class="skeleton-element skeleton-tag"></div>
+                        <div class="skeleton-element skeleton-tag"></div>
+                        <div class="skeleton-element skeleton-tag"></div>
+                    </div>
+                    <div class="skeleton-avatars">
+                        <div class="skeleton-element skeleton-avatar"></div>
+                        <div class="skeleton-element skeleton-avatar"></div>
+                        <div class="skeleton-element skeleton-avatar"></div>
+                    </div>
+                    <div class="skeleton-buttons">
+                        <div class="skeleton-element skeleton-button"></div>
+                        <div class="skeleton-element skeleton-button"></div>
+                    </div>
+                </div>
+            `);
+        }
+        return `<div style="display: grid; gap: 16px;">${skeletons.join('')}</div>`;
+    }
+
+    showSkeletonLoaders() {
+        const container = document.getElementById('live-recommendations-content');
+        if (!container) return;
+
+        // Don't show skeletons if we already have content
+        if (container.querySelector('.recommendation-card')) return;
+
+        container.innerHTML = this.getSkeletonLoadersHTML(3);
+
+        // Add updating class to live indicator
+        const liveIndicator = document.querySelector('.live-indicator');
+        if (liveIndicator) {
+            liveIndicator.classList.add('updating');
+        }
+    }
+
+    hideSkeletonLoaders() {
+        // Remove updating class from live indicator
+        const liveIndicator = document.querySelector('.live-indicator');
+        if (liveIndicator) {
+            liveIndicator.classList.remove('updating');
+        }
     }
 
     getRecommendationsHTML(recommendations) {
@@ -487,9 +550,33 @@ class LiveMatchmakingManager {
                     <button onclick="LiveMatchmaking.viewTeam(${team.id})" class="btn btn-secondary btn-sm">
                         View Team
                     </button>
-                    <button onclick="LiveMatchmaking.requestToJoin(${team.id})" class="btn btn-primary btn-sm">
-                        Request to Join
-                    </button>
+                    ${team.recruitment_status === 'open' ? `
+                        <button onclick="LiveMatchmaking.joinTeamDirect(${team.id})" class="btn btn-sm" style="
+                            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                            color: white;
+                            border: none;
+                            padding: 8px 16px;
+                            border-radius: 6px;
+                            font-weight: 500;
+                            cursor: pointer;
+                            transition: all 0.2s ease;
+                        ">
+                            Join Team
+                        </button>
+                    ` : `
+                        <button onclick="LiveMatchmaking.requestToJoin(${team.id})" class="btn btn-primary btn-sm" style="
+                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            color: white;
+                            border: none;
+                            padding: 8px 16px;
+                            border-radius: 6px;
+                            font-weight: 500;
+                            cursor: pointer;
+                            transition: all 0.2s ease;
+                        ">
+                            Request to Join
+                        </button>
+                    `}
                 </div>
             </div>
         `;
@@ -702,6 +789,50 @@ class LiveMatchmakingManager {
         .catch(error => {
             console.error('[LiveMatchmaking] ❌ Error sending join request:', error);
             this.showUserNotification('error', error.message || 'Failed to send join request. Please try again.');
+        });
+    }
+
+    joinTeamDirect(teamId) {
+        if (!teamId) {
+            console.error('[LiveMatchmaking] Invalid team ID');
+            this.showUserNotification('error', 'Invalid team selection');
+            return;
+        }
+
+        console.log(`[LiveMatchmaking] Joining team ${teamId} directly...`);
+
+        // Direct join for open recruitment teams
+        fetch(`/teams/${teamId}/join-direct`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': window.Laravel?.csrfToken || document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(errorData => {
+                    throw new Error(errorData.message || errorData.error || `HTTP ${response.status}`);
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                console.log('[LiveMatchmaking] ✅ Successfully joined team!');
+                this.showUserNotification('success', 'Successfully joined the team!');
+
+                // Reload page after 2 seconds to show updated state
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            } else {
+                throw new Error(data.message || data.error || 'Failed to join team');
+            }
+        })
+        .catch(error => {
+            console.error('[LiveMatchmaking] ❌ Error joining team:', error);
+            this.showUserNotification('error', error.message || 'Failed to join team. Please try again.');
         });
     }
 

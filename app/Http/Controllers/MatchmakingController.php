@@ -44,14 +44,6 @@ class MatchmakingController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // Get available teams for matchmaking (recruiting teams)
-        $availableTeams = Team::where('status', 'recruiting')
-            ->where('current_size', '<', DB::raw('max_size'))
-            ->with(['server', 'creator', 'activeMembers.user'])
-            ->orderBy('created_at', 'desc')
-            ->take(20)
-            ->get();
-
         // Get recent matchmaking activity
         $recentMatches = Team::whereHas('members', function ($query) use ($user) {
                 $query->where('user_id', $user->id);
@@ -148,10 +140,9 @@ class MatchmakingController extends Controller
 
         return view('matchmaking.index', [
             'matchmakingRequests' => $activeRequests,
-            'teams' => $availableTeams,
             'recentMatches' => $recentMatches,
             'suggestions' => $suggestions,
-            'recommendations' => $recommendations // New: team recommendations with compatibility scores
+            'recommendations' => $recommendations // Team recommendations with compatibility scores
         ]);
     }
 
