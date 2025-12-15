@@ -80,6 +80,33 @@
                             @endif
                         </div>
                         @if($user->steam_id)
+                            {{-- Steam Data Status Indicator --}}
+                            <div class="profile-steam-status" id="steam-status">
+                                @if($steamRefreshTriggered ?? false)
+                                    <div class="steam-refreshing">
+                                        <svg class="animate-spin" width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span>Updating Steam data...</span>
+                                    </div>
+                                @else
+                                    <div class="steam-last-updated">
+                                        <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                                        </svg>
+                                        @php
+                                            $lastUpdated = $user->getSteamDataLastUpdated();
+                                        @endphp
+                                        <span>
+                                            @if($lastUpdated)
+                                                Updated {{ $lastUpdated->diffForHumans() }}
+                                            @else
+                                                Never synced
+                                            @endif
+                                        </span>
+                                    </div>
+                                @endif
+                            </div>
                             <div class="profile-steam-note">
                                 <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
@@ -541,7 +568,53 @@ style.textContent = `
         0%, 100% { opacity: 1; }
         50% { opacity: 0.5; }
     }
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
 `;
 document.head.appendChild(style);
+
+// Poll for Steam refresh completion when auto-refresh was triggered
+@if($steamRefreshTriggered ?? false)
+(function() {
+    let pollCount = 0;
+    const maxPolls = 30; // 30 seconds max
+    const initialLastUpdated = @json($user->getSteamDataLastUpdated()?->toIso8601String());
+
+    const pollInterval = setInterval(async () => {
+        pollCount++;
+
+        if (pollCount >= maxPolls) {
+            clearInterval(pollInterval);
+            document.getElementById('steam-status').innerHTML = `
+                <div class="steam-last-updated">
+                    <span style="color: #f59e0b;">Refresh may still be in progress. Reload page to check.</span>
+                </div>
+            `;
+            return;
+        }
+
+        try {
+            const response = await fetch('{{ route("api.steam.status") }}', {
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            });
+
+            const data = await response.json();
+
+            // Check if data was updated (compare timestamps)
+            if (data.last_updated && data.last_updated !== initialLastUpdated) {
+                clearInterval(pollInterval);
+                showToast('Steam data refreshed successfully!', 'success');
+                setTimeout(() => location.reload(), 1500);
+            }
+        } catch (e) {
+            console.error('Steam status poll error:', e);
+        }
+    }, 1000);
+})();
+@endif
 </script>
 @endsection
