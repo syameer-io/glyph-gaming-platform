@@ -97,7 +97,16 @@ class User extends Authenticatable
     {
         // Priority 1: Steam "Currently Playing" status
         if ($this->profile && $this->profile->current_game) {
-            return 'Playing ' . $this->profile->current_game;
+            $currentGame = $this->profile->current_game;
+
+            // Handle array format (from SteamApiService)
+            if (is_array($currentGame)) {
+                $gameName = $currentGame['name'] ?? $currentGame['gamename'] ?? 'Unknown Game';
+                return 'Playing ' . $gameName;
+            }
+
+            // Handle string format (legacy/fallback)
+            return 'Playing ' . $currentGame;
         }
 
         // Priority 2: Custom status (if not expired)
