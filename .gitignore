@@ -30,8 +30,13 @@ Thumbs.db
 phase3-logs.md
 .claude
 
-# Documentation and planning files (exclude all markdown files)
+# Documentation and planning files (exclude most markdown files)
 *.md
+
+# But track important documentation
+!CLAUDE.md
+!README.md
+!docs/digitalocean-deployment/*.md
 
 # Storage framework files (keep structure)
 storage/framework/cache/*
