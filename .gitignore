@@ -47,3 +47,7 @@ storage/framework/views/*
 !storage/framework/views/.gitkeep
 storage/logs/*
 !storage/logs/.gitkeep
+
+# Laragon and Windows artifacts
+laragonetcsslcacert.pem
+nul
