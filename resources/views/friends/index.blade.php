@@ -45,9 +45,13 @@
                         </div>
                         <div class="user-card-username">{{ '@' . $friend->username }}</div>
                         @if($friend->profile->current_game)
-                            <div style="font-size: 12px; color: var(--color-success, #10b981); margin-top: 4px;">
-                                Playing {{ $friend->profile->current_game['name'] }}
-                            </div>
+                            <x-gaming-status-badge
+                                :user="$friend"
+                                variant="compact"
+                                :show-details="false"
+                                :show-indicator="true"
+                                class="mt-1"
+                            />
                         @endif
                         {{-- Lobby Join Button --}}
                         <div style="margin-top: 8px;">

@@ -8,6 +8,7 @@
 @import './voice-sidebar.css';
 @import './profile.css';
 @import './navbar.css';
+@import './gaming-status.css';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';

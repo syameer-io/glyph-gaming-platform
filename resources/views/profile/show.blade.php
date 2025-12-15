@@ -21,15 +21,12 @@
                         <span style="color: white;">Offline</span>
                     @endif
                     @if($privacyContext['canSeeGamingActivity'] && $user->profile->current_game)
-                        <span style="margin-left: 16px; color: #10b981;" data-gaming-status>
-                            Playing {{ $user->profile->current_game['name'] }}
-                            @if(isset($user->profile->current_game['server_name']))
-                                <br><span style="font-size: 12px; color: var(--color-text-muted);">{{ $user->profile->current_game['server_name'] }}</span>
-                            @endif
-                            @if(isset($user->profile->current_game['map']))
-                                <span style="font-size: 12px; color: var(--color-text-muted);"> - {{ $user->profile->current_game['map'] }}</span>
-                            @endif
-                        </span>
+                        <x-gaming-status-badge
+                            :user="$user"
+                            variant="full"
+                            :show-details="true"
+                            :show-indicator="true"
+                        />
                     @endif
                 </div>
             </div>

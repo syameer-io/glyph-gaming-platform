@@ -238,6 +238,56 @@
             </div>
         @endif
 
+        {{-- Gaming Status Section (when playing but no active lobby) --}}
+        @if($canSeeActivity && $user->profile->current_game && $activeLobbies->isEmpty())
+            @php
+                $currentGame = $user->profile->current_game;
+                $gameName = $currentGame['name'] ?? 'Unknown Game';
+                $gameAppId = $currentGame['appid'] ?? null;
+                $capsuleUrl = $gameAppId
+                    ? "https://cdn.cloudflare.steamstatic.com/steam/apps/{$gameAppId}/capsule_184x69.jpg"
+                    : null;
+                $serverName = $currentGame['server_name'] ?? null;
+                $mapName = $currentGame['map'] ?? null;
+            @endphp
+            <div class="member-card-gaming" @if($capsuleUrl) style="--game-capsule-url: url('{{ $capsuleUrl }}')" @endif>
+                <div class="member-card-gaming-header">Playing</div>
+                <div class="member-card-gaming-content">
+                    @if($gameAppId)
+                        <img
+                            src="{{ $capsuleUrl }}"
+                            alt="{{ $gameName }}"
+                            class="member-card-gaming-icon"
+                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                        >
+                        <div class="gaming-status-icon-fallback gaming-status-icon-fallback--md" style="display: none;">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    @else
+                        <div class="gaming-status-icon-fallback gaming-status-icon-fallback--md">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    @endif
+                    <div class="member-card-gaming-info">
+                        <div class="member-card-gaming-name">{{ $gameName }}</div>
+                        @if($serverName || $mapName)
+                            <div class="member-card-gaming-status">
+                                @if($serverName){{ $serverName }}@endif
+                                @if($serverName && $mapName) &bull; @endif
+                                @if($mapName){{ $mapName }}@endif
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        @endif
+
         {{-- Active Lobby Section --}}
         @if($activeLobbies->isNotEmpty())
             <div style="

@@ -299,9 +299,13 @@
                                 {{ $friend->display_name }}
                             </div>
                             @if($friend->profile->current_game)
-                                <div style="font-size: 12px; color: #10b981;">
-                                    Playing {{ $friend->profile->current_game['name'] }}
-                                </div>
+                                <x-gaming-status-badge
+                                    :user="$friend"
+                                    variant="compact"
+                                    :show-details="false"
+                                    :show-indicator="true"
+                                    class="mt-1"
+                                />
                             @endif
                         </div>
                     </div>

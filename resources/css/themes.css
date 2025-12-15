@@ -170,6 +170,18 @@
     --member-activity-playing: #43b581;
 
     /* =========================================================================
+       Gaming Status Badge Colors
+       ========================================================================= */
+    --gaming-status-bg: linear-gradient(135deg, rgba(35, 165, 89, 0.12) 0%, rgba(16, 185, 129, 0.06) 100%);
+    --gaming-status-bg-hover: linear-gradient(135deg, rgba(35, 165, 89, 0.18) 0%, rgba(16, 185, 129, 0.1) 100%);
+    --gaming-status-border: rgba(35, 165, 89, 0.25);
+    --gaming-status-border-hover: rgba(35, 165, 89, 0.4);
+    --gaming-status-glow: rgba(35, 165, 89, 0.2);
+    --gaming-status-text: #10b981;
+    --gaming-status-text-secondary: #34d399;
+    --gaming-status-accent: #23a559;
+
+    /* =========================================================================
        Badge Colors
        ========================================================================= */
     --badge-voice: #43b581;
@@ -421,6 +433,18 @@
     --member-username-offline: #737373;
     --member-activity: #4a4a4a;
     --member-activity-playing: #16a34a;
+
+    /* =========================================================================
+       Gaming Status Badge Colors
+       ========================================================================= */
+    --gaming-status-bg: linear-gradient(135deg, rgba(22, 163, 74, 0.08) 0%, rgba(16, 185, 129, 0.04) 100%);
+    --gaming-status-bg-hover: linear-gradient(135deg, rgba(22, 163, 74, 0.12) 0%, rgba(16, 185, 129, 0.08) 100%);
+    --gaming-status-border: rgba(22, 163, 74, 0.2);
+    --gaming-status-border-hover: rgba(22, 163, 74, 0.35);
+    --gaming-status-glow: rgba(22, 163, 74, 0.15);
+    --gaming-status-text: #059669;
+    --gaming-status-text-secondary: #10b981;
+    --gaming-status-accent: #16a34a;
 
     /* =========================================================================
        Badge Colors

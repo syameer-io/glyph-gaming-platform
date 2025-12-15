@@ -121,7 +121,16 @@
         </div>
 
         {{-- Activity --}}
-        @if($activity)
+        @if($isPlaying && $member->profile->current_game)
+            {{-- Gaming status with icon badge --}}
+            <x-gaming-status-badge
+                :user="$member"
+                variant="inline"
+                :show-details="false"
+                :show-indicator="false"
+            />
+        @elseif($activity)
+            {{-- Custom status or fallback activity --}}
             <div class="member-activity {{ $isPlaying ? 'member-activity--playing' : 'member-activity--custom' }}">
                 @if($customStatus && $customStatus['emoji'])
                     <span class="member-activity-emoji">{{ $customStatus['emoji'] }}</span>
