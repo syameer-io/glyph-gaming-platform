@@ -958,6 +958,49 @@ class User extends Authenticatable
         };
     }
 
+    // =========================================================================
+    // Steam Data Refresh Methods
+    // =========================================================================
+
+    /**
+     * Check if Steam data is stale (older than threshold).
+     * Used to determine if automatic refresh should be triggered.
+     *
+     * @param int $thresholdMinutes Default 5 minutes (matches cache TTL)
+     * @return bool True if data is stale or doesn't exist
+     */
+    public function isSteamDataStale(int $thresholdMinutes = 5): bool
+    {
+        if (!$this->steam_id || !$this->profile) {
+            return false; // No Steam ID = not applicable
+        }
+
+        $steamData = $this->profile->steam_data;
+
+        if (!$steamData || !isset($steamData['last_updated'])) {
+            return true; // No data = stale
+        }
+
+        $lastUpdated = \Carbon\Carbon::parse($steamData['last_updated']);
+        return $lastUpdated->diffInMinutes(now()) >= $thresholdMinutes;
+    }
+
+    /**
+     * Get the timestamp when Steam data was last updated.
+     *
+     * @return \Carbon\Carbon|null
+     */
+    public function getSteamDataLastUpdated(): ?\Carbon\Carbon
+    {
+        $steamData = $this->profile->steam_data ?? [];
+
+        if (!isset($steamData['last_updated'])) {
+            return null;
+        }
+
+        return \Carbon\Carbon::parse($steamData['last_updated']);
+    }
+
     // Phase 3: Matchmaking Helper Methods
     public function createMatchmakingRequest($gameAppId, $requestType, $preferences = [])
     {

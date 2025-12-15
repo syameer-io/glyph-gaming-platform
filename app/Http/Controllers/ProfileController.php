@@ -23,6 +23,14 @@ class ProfileController extends Controller
 
         $currentUser = Auth::user();
         $isOwnProfile = $currentUser && $currentUser->id === $user->id;
+
+        // Auto-refresh Steam data for own profile if stale (async, non-blocking)
+        $steamRefreshTriggered = false;
+        if ($isOwnProfile && $user->steam_id && $user->isSteamDataStale()) {
+            \App\Jobs\RefreshSteamDataJob::dispatch($user->id, 'profile_view');
+            $steamRefreshTriggered = true;
+        }
+
         $isFriend = false;
         $friendRequestPending = false;
         $friendRequestReceived = false;
@@ -72,7 +80,7 @@ class ProfileController extends Controller
 
         // Note: Lobby creation moved to /lobbies page, combinedGames no longer needed here
 
-        return view('profile.show', compact('user', 'isFriend', 'friendRequestPending', 'friendRequestReceived', 'privacyContext'));
+        return view('profile.show', compact('user', 'isFriend', 'friendRequestPending', 'friendRequestReceived', 'privacyContext', 'steamRefreshTriggered'));
     }
 
     public function edit()

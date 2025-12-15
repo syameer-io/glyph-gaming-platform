@@ -73,6 +73,22 @@ Route::middleware('auth')->group(function () {
     Route::post('/profile/lobby-link/clear', [ProfileController::class, 'clearLobbyLink'])
         ->name('profile.lobby-link.clear');
 
+    // Steam data status check (for polling refresh completion)
+    Route::get('/api/steam/status', function () {
+        $user = auth()->user();
+
+        if (!$user || !$user->steam_id) {
+            return response()->json(['last_updated' => null, 'is_stale' => false]);
+        }
+
+        $steamData = $user->profile->steam_data ?? [];
+
+        return response()->json([
+            'last_updated' => $steamData['last_updated'] ?? null,
+            'is_stale' => $user->isSteamDataStale(),
+        ]);
+    })->name('api.steam.status');
+
     // Friend routes
     Route::get('/friends', [FriendController::class, 'index'])->name('friends.index');
     Route::get('/friends/search', [FriendController::class, 'search'])->name('friends.search');

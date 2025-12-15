@@ -144,6 +144,11 @@ class AuthController extends Controller
         Auth::login($user, true);
         session()->forget('otp_user_id');
 
+        // Dispatch Steam refresh job if user has Steam linked and data is stale
+        if ($user->steam_id && $user->isSteamDataStale()) {
+            \App\Jobs\RefreshSteamDataJob::dispatch($user->id, 'login');
+        }
+
         return redirect()->route('dashboard');
     }
 
