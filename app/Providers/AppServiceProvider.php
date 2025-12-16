@@ -14,6 +14,8 @@ use App\Policies\ConversationPolicy;
 use App\Policies\DirectMessagePolicy;
 use App\Services\LobbyStatusService;
 use App\Observers\GameLobbyObserver;
+use App\Mail\Transport\SendGridTransport;
+use Illuminate\Support\Facades\Mail;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -35,5 +37,18 @@ class AppServiceProvider extends ServiceProvider
 
         // Register GameLobbyObserver to handle cache invalidation automatically
         GameLobby::observe(GameLobbyObserver::class);
+
+        // Register SendGrid mail transport for HTTP API
+        Mail::extend('sendgrid', function (array $config) {
+            $apiKey = $config['api_key'] ?? config('services.sendgrid.api_key');
+
+            if (empty($apiKey)) {
+                throw new \InvalidArgumentException(
+                    'SendGrid API key is not configured. Set SENDGRID_API_KEY in .env'
+                );
+            }
+
+            return new SendGridTransport($apiKey);
+        });
     }
 }

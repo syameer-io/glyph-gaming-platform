@@ -9,6 +9,7 @@ use App\Mail\OtpMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
@@ -45,22 +46,11 @@ class AuthController extends Controller
 
         // Generate and send OTP
         $otp = $this->generateOtp($user);
-        
-        try {
-            Mail::to($user->email)->send(new OtpMail($otp));
-            $message = 'Registration successful! Please check your email for the OTP.';
-        } catch (\Exception $e) {
-            // For development: show OTP in flash message if email fails
-            if (config('app.env') === 'local') {
-                $message = "Registration successful! Email failed to send. Your OTP is: {$otp}";
-            } else {
-                $message = 'Registration successful! Please check your email for the OTP.';
-            }
-        }
+        $emailMessage = $this->sendOtpEmail($user, $otp);
 
         session(['otp_user_id' => $user->id]);
 
-        return redirect()->route('verify.otp')->with('success', $message);
+        return redirect()->route('verify.otp')->with('success', 'Registration successful! ' . $emailMessage);
     }
 
     public function showLogin()
@@ -83,18 +73,7 @@ class AuthController extends Controller
 
         // Generate and send OTP
         $otp = $this->generateOtp($user);
-        
-        try {
-            Mail::to($user->email)->send(new OtpMail($otp));
-            $message = 'Please check your email for the OTP.';
-        } catch (\Exception $e) {
-            // For development: show OTP in flash message if email fails
-            if (config('app.env') === 'local') {
-                $message = "Email failed to send. Your OTP is: {$otp}";
-            } else {
-                $message = 'Please check your email for the OTP.';
-            }
-        }
+        $message = $this->sendOtpEmail($user, $otp);
 
         session(['otp_user_id' => $user->id]);
 
@@ -184,31 +163,63 @@ class AuthController extends Controller
 
         // Generate and send new OTP
         $otp = $this->generateOtp($user);
-        
-        try {
-            Mail::to($user->email)->send(new OtpMail($otp));
-            $message = 'New verification code sent to your email.';
-        } catch (\Exception $e) {
-            // For development: show OTP in flash message if email fails
-            if (config('app.env') === 'local') {
-                $message = "Email failed to send. Your new OTP is: {$otp}";
-            } else {
-                $message = 'New verification code sent to your email.';
-            }
-        }
+        $message = $this->sendOtpEmail($user, $otp);
 
-        return redirect()->route('verify.otp')->with('success', $message);
+        return redirect()->route('verify.otp')->with('success', 'New code sent! ' . $message);
     }
 
     private function generateOtp(User $user)
     {
         $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-        
+
         $user->update([
             'otp_code' => $otp,
             'otp_expires_at' => now()->addMinutes(10),
         ]);
 
         return $otp;
+    }
+
+    /**
+     * Send OTP email with proper error handling and logging.
+     *
+     * @param User $user
+     * @param string $otp
+     * @return string User-friendly message
+     */
+    private function sendOtpEmail(User $user, string $otp): string
+    {
+        try {
+            Mail::to($user->email)->send(new OtpMail($otp));
+
+            Log::info('OTP email sent successfully', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'mailer' => config('mail.default'),
+            ]);
+
+            return 'Please check your email for the verification code.';
+
+        } catch (\Exception $e) {
+            // ALWAYS log the full error for debugging
+            Log::error('OTP email failed to send', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'mailer' => config('mail.default'),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            // ONLY expose OTP when BOTH local environment AND debug mode are enabled
+            if (config('app.env') === 'local' && config('app.debug') === true) {
+                Log::warning('Exposing OTP in local development mode', [
+                    'user_id' => $user->id,
+                ]);
+                return "Email service unavailable. For testing, your code is: {$otp}";
+            }
+
+            // Production: Show user-friendly message, OTP is NOT exposed
+            return 'Verification code sent. Please check your email (including spam folder).';
+        }
     }
 }

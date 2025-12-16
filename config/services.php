@@ -51,4 +51,8 @@ return [
         'token_expiry' => env('AGORA_TOKEN_EXPIRY', 3600),
     ],
 
+    'sendgrid' => [
+        'api_key' => env('SENDGRID_API_KEY'),
+    ],
+
 ];
