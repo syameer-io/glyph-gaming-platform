@@ -1,0 +1,51 @@
+{
+  "__commonjsHelpers-Cpj98o6Y.js": {
+    "file": "assets/_commonjsHelpers-Cpj98o6Y.js",
+    "name": "_commonjsHelpers"
+  },
+  "resources/css/app.css": {
+    "file": "assets/app-If1akMdC.css",
+    "src": "resources/css/app.css",
+    "isEntry": true
+  },
+  "resources/css/voice-panel.css": {
+    "file": "assets/voice-panel-CLPA8GL9.css",
+    "src": "resources/css/voice-panel.css",
+    "isEntry": true
+  },
+  "resources/css/voice-view.css": {
+    "file": "assets/voice-view-C4nZBX9J.css",
+    "src": "resources/css/voice-view.css",
+    "isEntry": true
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-Bk8Tq75P.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true,
+    "imports": [
+      "__commonjsHelpers-Cpj98o6Y.js"
+    ]
+  },
+  "resources/js/lobby-page.js": {
+    "file": "assets/lobby-page-jIxvIr0u.js",
+    "name": "lobby-page",
+    "src": "resources/js/lobby-page.js",
+    "isEntry": true
+  },
+  "resources/js/voice-chat.js": {
+    "file": "assets/voice-chat-CbMOwq0d.js",
+    "name": "voice-chat",
+    "src": "resources/js/voice-chat.js",
+    "isEntry": true,
+    "imports": [
+      "__commonjsHelpers-Cpj98o6Y.js"
+    ]
+  },
+  "resources/js/voice-view.js": {
+    "file": "assets/voice-view-C-GZwIia.js",
+    "name": "voice-view",
+    "src": "resources/js/voice-view.js",
+    "isEntry": true
+  }
+}
