@@ -90,7 +90,7 @@ class TeamInvitationService
         DB::beginTransaction();
 
         try {
-            $expiryDays = config('teams.invitation_expiry_days', 7);
+            $expiryDays = (int) config('teams.invitation_expiry_days', 7);
 
             $invitation = TeamInvitation::create([
                 'team_id' => $team->id,

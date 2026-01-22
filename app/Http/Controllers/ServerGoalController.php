@@ -306,7 +306,7 @@ class ServerGoalController extends Controller
             return response()->json(['error' => 'You are not participating in this goal'], 404);
         }
 
-        $participant->update(['participation_status' => 'left']);
+        $participant->update(['participation_status' => 'dropped']);
         $goal->decrement('participant_count');
 
         return response()->json([

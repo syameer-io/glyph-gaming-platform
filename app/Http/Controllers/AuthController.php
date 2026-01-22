@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Password;
+use App\Mail\PasswordResetMail;
 
 class AuthController extends Controller
 {
@@ -220,6 +222,144 @@ class AuthController extends Controller
 
             // Production: Show user-friendly message, OTP is NOT exposed
             return 'Verification code sent. Please check your email (including spam folder).';
+        }
+    }
+
+    /**
+     * Show the forgot password form.
+     */
+    public function showForgotPassword()
+    {
+        return view('auth.forgot-password');
+    }
+
+    /**
+     * Send a password reset link to the given email.
+     */
+    public function sendResetLink(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        // Always return success message to prevent email enumeration
+        $successMessage = 'If an account exists with that email, you will receive a password reset link shortly.';
+
+        if (!$user) {
+            Log::info('Password reset requested for non-existent email', [
+                'email' => $request->email,
+            ]);
+            return back()->with('success', $successMessage);
+        }
+
+        // Generate reset token using Laravel's Password facade
+        $token = Password::createToken($user);
+        $resetUrl = route('password.reset', ['token' => $token, 'email' => $user->email]);
+
+        // Send the reset email
+        $this->sendPasswordResetEmail($user, $resetUrl);
+
+        Log::info('Password reset link sent', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+        ]);
+
+        return back()->with('success', $successMessage);
+    }
+
+    /**
+     * Show the password reset form.
+     */
+    public function showResetPassword(Request $request, string $token)
+    {
+        return view('auth.reset-password', [
+            'token' => $token,
+            'email' => $request->query('email', ''),
+        ]);
+    }
+
+    /**
+     * Reset the user's password.
+     */
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token' => 'required',
+            'email' => 'required|email',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function (User $user, string $password) {
+                $user->update([
+                    'password' => Hash::make($password),
+                ]);
+
+                Log::info('Password reset successful', [
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                ]);
+            }
+        );
+
+        if ($status === Password::PASSWORD_RESET) {
+            return redirect()->route('login')->with('success', 'Your password has been reset. Please login with your new password.');
+        }
+
+        // Map Laravel's status to user-friendly messages
+        $errorMessages = [
+            Password::INVALID_TOKEN => 'This password reset link is invalid or has expired.',
+            Password::INVALID_USER => 'We could not find a user with that email address.',
+            Password::THROTTLED => 'Please wait before retrying.',
+        ];
+
+        return back()->withErrors([
+            'email' => $errorMessages[$status] ?? 'Unable to reset password. Please try again.',
+        ])->withInput(['email' => $request->email]);
+    }
+
+    /**
+     * Send password reset email with proper error handling and logging.
+     *
+     * @param User $user
+     * @param string $resetUrl
+     * @return string User-friendly message
+     */
+    private function sendPasswordResetEmail(User $user, string $resetUrl): string
+    {
+        try {
+            Mail::to($user->email)->send(new PasswordResetMail($resetUrl, 60));
+
+            Log::info('Password reset email sent successfully', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'mailer' => config('mail.default'),
+            ]);
+
+            return 'Password reset link sent to your email.';
+
+        } catch (\Exception $e) {
+            Log::error('Password reset email failed to send', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'mailer' => config('mail.default'),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            // In local development with debug mode, expose the reset URL for testing
+            if (config('app.env') === 'local' && config('app.debug') === true) {
+                Log::warning('Exposing password reset URL in local development mode', [
+                    'user_id' => $user->id,
+                    'reset_url' => $resetUrl,
+                ]);
+                session()->flash('debug_reset_url', $resetUrl);
+            }
+
+            return 'Email service encountered an issue, but your reset link was generated.';
         }
     }
 }

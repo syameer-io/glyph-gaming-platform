@@ -15,30 +15,42 @@ use Illuminate\Support\Collection;
 
 class TelegramBotService
 {
-    protected ?BotApi $bot;
-    protected string $botToken;
-    
+    protected ?BotApi $bot = null;
+    protected ?string $botToken = null;
+    protected bool $isAvailable = false;
+
     public function __construct()
     {
-        $this->botToken = config('services.telegram.bot_token');
-        
-        if (!$this->botToken) {
-            throw new \Exception('Telegram bot token not configured');
+        $token = config('services.telegram.bot_token');
+
+        // Gracefully handle missing token - don't crash the app
+        if (empty($token)) {
+            Log::debug('Telegram bot token not configured - service disabled');
+            return;
         }
-        
+
+        $this->botToken = $token;
+
         // Check if cURL is available before initializing the bot
         if (!function_exists('curl_init')) {
             Log::warning('cURL extension is not available. Telegram bot functionality will be disabled.');
-            $this->bot = null;
             return;
         }
-        
+
         try {
             $this->bot = new BotApi($this->botToken);
+            $this->isAvailable = true;
         } catch (\Error $e) {
             Log::error('Failed to initialize Telegram bot: ' . $e->getMessage());
-            $this->bot = null;
         }
+    }
+
+    /**
+     * Check if the Telegram bot service is available
+     */
+    public function isAvailable(): bool
+    {
+        return $this->isAvailable && $this->bot !== null;
     }
 
     /**
@@ -46,12 +58,8 @@ class TelegramBotService
      */
     public function sendMessage(string $chatId, string $message, array $options = []): bool
     {
-        // If bot is not available (cURL issue), silently fail
-        if (!$this->bot) {
-            Log::warning('Telegram bot not available (cURL issue) - message not sent', [
-                'chat_id' => $chatId,
-                'message_length' => strlen($message)
-            ]);
+        // If bot is not available, silently fail
+        if (!$this->isAvailable()) {
             return false;
         }
         
@@ -320,6 +328,10 @@ class TelegramBotService
      */
     protected function processCallbackQuery(array $callbackQuery): void
     {
+        if (!$this->isAvailable()) {
+            return;
+        }
+
         $callbackId = $callbackQuery['id'];
         $data = $callbackQuery['data'] ?? '';
         $chatId = $callbackQuery['message']['chat']['id'] ?? null;
@@ -511,10 +523,11 @@ class TelegramBotService
         }
 
         // Get chat title from Telegram API if available
+        // Note: getChat() returns a TelegramBot\Api\Types\Chat object, not an array
         $chatTitle = null;
         try {
             $chatInfo = $this->bot->getChat($chatId);
-            $chatTitle = $chatInfo['title'] ?? $chatInfo['first_name'] ?? 'Telegram Group';
+            $chatTitle = $chatInfo->getTitle() ?? $chatInfo->getFirstName() ?? 'Telegram Group';
         } catch (\Exception $e) {
             Log::warning('Could not get chat info', ['chat_id' => $chatId, 'error' => $e->getMessage()]);
             $chatTitle = 'Telegram Group';
@@ -781,8 +794,7 @@ class TelegramBotService
      */
     public function setMyCommands(): bool
     {
-        if (!$this->bot) {
-            Log::warning('Telegram bot not available (cURL issue) - commands not registered');
+        if (!$this->isAvailable() || !$this->botToken) {
             return false;
         }
 
@@ -1171,8 +1183,7 @@ class TelegramBotService
      */
     public function setWebhook(string $url): bool
     {
-        if (!$this->bot) {
-            Log::warning('Telegram bot not available (cURL issue) - webhook not set');
+        if (!$this->isAvailable()) {
             return false;
         }
         
@@ -1195,8 +1206,7 @@ class TelegramBotService
      */
     public function removeWebhook(): bool
     {
-        if (!$this->bot) {
-            Log::warning('Telegram bot not available (cURL issue) - webhook not removed');
+        if (!$this->isAvailable()) {
             return false;
         }
         
@@ -1218,8 +1228,7 @@ class TelegramBotService
      */
     public function getBotInfo(): ?array
     {
-        if (!$this->bot) {
-            Log::warning('Telegram bot not available (cURL issue) - bot info not available');
+        if (!$this->isAvailable()) {
             return null;
         }
         

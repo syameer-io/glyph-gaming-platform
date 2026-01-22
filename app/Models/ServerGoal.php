@@ -103,8 +103,8 @@ class ServerGoal extends Model
             return false;
         }
 
-        // Check if user is already participating
-        if ($this->participants()->where('user_id', $user->id)->exists()) {
+        // Check if user is already actively participating (allows rejoining after dropping)
+        if ($this->participants()->where('user_id', $user->id)->where('participation_status', 'active')->exists()) {
             return false;
         }
 
@@ -126,14 +126,26 @@ class ServerGoal extends Model
             return false;
         }
 
-        $this->participants()->create([
-            'user_id' => $user->id,
-            'individual_progress' => 0,
-            'contribution_percentage' => 0,
-            'participation_status' => 'active',
-            'joined_at' => now(),
-            'last_activity_at' => now(),
-        ]);
+        // Check if user has a previous (dropped) participation record
+        $existingParticipant = $this->participants()->where('user_id', $user->id)->first();
+
+        if ($existingParticipant) {
+            // Reactivate the existing record
+            $existingParticipant->update([
+                'participation_status' => 'active',
+                'last_activity_at' => now(),
+            ]);
+        } else {
+            // Create new participant record
+            $this->participants()->create([
+                'user_id' => $user->id,
+                'individual_progress' => 0,
+                'contribution_percentage' => 0,
+                'participation_status' => 'active',
+                'joined_at' => now(),
+                'last_activity_at' => now(),
+            ]);
+        }
 
         $this->increment('participant_count');
         return true;
@@ -176,7 +188,7 @@ class ServerGoal extends Model
 
         // Broadcast completion event if just completed
         if ($this->status === 'completed' && $previousStatus !== 'completed') {
-            $topContributors = $this->getTopContributors(3);
+            $topContributors = $this->getTopContributors(3)->toArray();
             event(new \App\Events\GoalCompleted($this, $topContributors));
         }
 

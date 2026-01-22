@@ -2351,7 +2351,7 @@ function sendInviteFromModal() {
     });
 }
 
-// Inline form invite function (for backwards compatibility)
+// Inline form invite function - uses invitation endpoint (same as modal)
 function sendInvite() {
     const username = document.getElementById('invite-username')?.value?.trim();
     const role = document.getElementById('invite-role')?.value || 'member';
@@ -2365,11 +2365,12 @@ function sendInvite() {
     const isEmail = username.includes('@');
     const payload = isEmail ? { email: username, role: role } : { username: username, role: role };
 
-    fetch(`{{ route('teams.members.add', $team) }}`, {
+    fetch(`/teams/{{ $team->id }}/invitations`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json'
         },
         body: JSON.stringify(payload)
     })
@@ -2383,11 +2384,14 @@ function sendInvite() {
     })
     .then(data => {
         if (data.success) {
-            showNotification(data.message || 'Member added successfully!', 'success');
+            showNotification(data.message || 'Invitation sent successfully!', 'success');
             document.getElementById('invite-username').value = '';
-            setTimeout(() => location.reload(), 1500);
+            // Refresh pending invitations list instead of reloading page
+            if (typeof loadPendingInvitations === 'function') {
+                loadPendingInvitations();
+            }
         } else {
-            throw { error: data.error || 'Error adding member' };
+            throw { error: data.error || 'Error sending invitation' };
         }
     })
     .catch(error => {

@@ -56,7 +56,9 @@ class TelegramController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
 
-            return response()->json(['error' => 'Internal server error'], 500);
+            // Return 200 OK even on errors to prevent Telegram from retrying
+            // The error is logged but not exposed to Telegram
+            return response()->json(['status' => 'ok']);
         }
     }
 

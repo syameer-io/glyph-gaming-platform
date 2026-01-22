@@ -48,6 +48,9 @@
                         </svg>
                     </button>
                 </div>
+                <div style="text-align: right; margin-top: 8px;">
+                    <a href="{{ route('password.request') }}" class="link" style="font-size: 14px;">Forgot your password?</a>
+                </div>
             </div>
 
             <div class="form-group">

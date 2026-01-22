@@ -93,16 +93,31 @@ class ServerGoalService
 
         $skillScore = $this->getUserSkillScore($user, $goal->game_appid);
 
-        GoalParticipant::create([
-            'goal_id' => $goal->id,
-            'user_id' => $user->id,
-            'individual_progress' => 0,
-            'participation_status' => 'active',
-            'joined_at' => now(),
-            'last_activity_at' => now(),
-            'skill_score_at_start' => $skillScore,
-            'current_skill_score' => $skillScore,
-        ]);
+        // Check if user has a previous (dropped) participation record
+        $existingParticipant = GoalParticipant::where('goal_id', $goal->id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if ($existingParticipant) {
+            // Reactivate the existing record
+            $existingParticipant->update([
+                'participation_status' => 'active',
+                'last_activity_at' => now(),
+                'current_skill_score' => $skillScore,
+            ]);
+        } else {
+            // Create new participant record
+            GoalParticipant::create([
+                'goal_id' => $goal->id,
+                'user_id' => $user->id,
+                'individual_progress' => 0,
+                'participation_status' => 'active',
+                'joined_at' => now(),
+                'last_activity_at' => now(),
+                'skill_score_at_start' => $skillScore,
+                'current_skill_score' => $skillScore,
+            ]);
+        }
 
         $goal->increment('participant_count');
         return true;

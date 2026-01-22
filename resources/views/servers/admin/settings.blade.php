@@ -926,7 +926,7 @@
                             <div style="background-color: var(--color-surface); border-radius: 6px; padding: 16px; border-left: 4px solid var(--accent-primary);">
                                 <h5 style="margin-bottom: 12px; color: var(--color-text-primary);">How to Connect</h5>
                                 <ol style="margin: 0; padding-left: 20px; color: var(--color-text-secondary); font-size: 14px; line-height: 1.6;">
-                                    <li>Add <code style="background-color: var(--color-bg-primary); padding: 2px 6px; border-radius: 4px; color: var(--color-text-primary);">@YourBotName</code> to your Telegram group</li>
+                                    <li>Add <code style="background-color: var(--color-bg-primary); padding: 2px 6px; border-radius: 4px; color: var(--color-text-primary);">@@PlayGlyphBot</code> to your Telegram group</li>
                                     <li>Send the command: <code style="background-color: var(--color-bg-primary); padding: 2px 6px; border-radius: 4px; color: var(--color-text-primary);">/link {{ $server->invite_code }}</code></li>
                                     <li>The bot will automatically link and start sending notifications</li>
                                 </ol>
@@ -1604,26 +1604,55 @@ document.addEventListener('click', function(event) {
 
 // Telegram Bot Functions
 function loadTelegramStatus() {
+    // Show loading state
+    showTelegramStatus('Checking...', '#71717a');
+
+    // Create abort controller for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
     fetch('{{ route("server.telegram.status", $server) }}', {
         method: 'GET',
         headers: {
             'Accept': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        }
+        },
+        signal: controller.signal
     })
-    .then(response => response.json())
+    .then(response => {
+        clearTimeout(timeoutId);
+        if (!response.ok) {
+            throw new Error('Server returned ' + response.status);
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             updateTelegramUI(data.status);
         } else {
             console.error('Error loading Telegram status:', data);
             showTelegramStatus('Error', '#dc2626');
+            showTelegramSetupInstructions();
         }
     })
     .catch(error => {
+        clearTimeout(timeoutId);
         console.error('Error loading Telegram status:', error);
-        showTelegramStatus('Error', '#dc2626');
+        if (error.name === 'AbortError') {
+            showTelegramStatus('Timeout', '#dc2626');
+        } else {
+            showTelegramStatus('Error', '#dc2626');
+        }
+        showTelegramSetupInstructions();
     });
+}
+
+// Helper function to show setup instructions on error
+function showTelegramSetupInstructions() {
+    document.getElementById('telegramInfo').style.display = 'none';
+    document.getElementById('setupInstructions').style.display = 'block';
+    document.getElementById('notificationSettings').style.display = 'none';
+    document.getElementById('settingsDisabled').style.display = 'block';
 }
 
 function updateTelegramUI(status) {

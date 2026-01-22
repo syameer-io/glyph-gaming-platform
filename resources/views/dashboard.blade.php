@@ -29,12 +29,13 @@
                         <a href="{{ route('matchmaking.index') }}" class="btn btn-primary" style="padding: 10px 16px; font-size: 14px;">🎯 Find Teammates</a>
                         <a href="{{ route('teams.index') }}" class="btn btn-primary" style="padding: 10px 16px; font-size: 14px;">👥 Browse Teams</a>
                         <a href="{{ route('servers.discover') }}" class="btn btn-primary" style="padding: 10px 16px; font-size: 14px;">🔍 Discover Servers</a>
-                        <a href="{{ route('teams.create') }}" class="btn btn-secondary" style="padding: 10px 16px; font-size: 14px;">Create Team</a>
-                        <a href="{{ route('server.create') }}" class="btn btn-secondary" style="padding: 10px 16px; font-size: 14px;">Create Server</a>
+                        <a href="{{ route('teams.create') }}" class="btn btn-primary" style="padding: 10px 16px; font-size: 14px;">➕ Create Team</a>
+                        <a href="{{ route('server.create') }}" class="btn btn-primary" style="padding: 10px 16px; font-size: 14px;">🚀 Create Server</a>
+                        <a href="{{ route('server.join') }}" class="btn btn-primary" style="padding: 10px 16px; font-size: 14px;">🎫 Join Server</a>
                         @if(!$user->steam_id)
-                            <a href="{{ route('steam.link') }}" class="btn btn-secondary" style="padding: 10px 16px; font-size: 14px;">Link Steam</a>
+                            <a href="{{ route('steam.link') }}" class="btn btn-primary" style="padding: 10px 16px; font-size: 14px;">🔗 Link Steam</a>
                         @else
-                            <a href="{{ route('profile.show', $user->username) }}" class="btn btn-secondary" style="padding: 10px 16px; font-size: 14px;">View Profile</a>
+                            <a href="{{ route('profile.show', $user->username) }}" class="btn btn-primary" style="padding: 10px 16px; font-size: 14px;">👤 View Profile</a>
                         @endif
                     </div>
                 </div>
