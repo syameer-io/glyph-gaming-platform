@@ -582,13 +582,8 @@
                         <select id="game-filter" onchange="filterTeams()">
                             <option value="">All Games</option>
                             <option value="730">Counter-Strike 2</option>
-                            <option value="570">Dota 2</option>
-                            <option value="230410">Warframe</option>
                             <option value="548430">Deep Rock Galactic</option>
                             <option value="493520">GTFO</option>
-                            <option value="1172470">Apex Legends</option>
-                            <option value="252490">Rust</option>
-                            <option value="578080">PUBG</option>
                         </select>
                     </div>
                     <div class="filter-group">
@@ -812,8 +807,6 @@
                 <select id="game_appid" name="game_appid" required onchange="updateGameName(); loadSkillPreview(this.value); updateRoleOptions(this.value);">
                     <option value="">Select a game...</option>
                     <option value="730" data-name="Counter-Strike 2">Counter-Strike 2</option>
-                    <option value="570" data-name="Dota 2">Dota 2</option>
-                    <option value="230410" data-name="Warframe">Warframe</option>
                     <option value="548430" data-name="Deep Rock Galactic">Deep Rock Galactic</option>
                     <option value="493520" data-name="GTFO">GTFO</option>
                 </select>
@@ -968,19 +961,6 @@ const GAME_ROLES = {
         { value: 'lurker', label: 'Lurker' },
         { value: 'support', label: 'Support' },
         { value: 'anchor', label: 'Anchor' }
-    ],
-    '570': [ // Dota 2
-        { value: 'carry', label: 'Carry (Pos 1)' },
-        { value: 'mid', label: 'Mid (Pos 2)' },
-        { value: 'offlaner', label: 'Offlaner (Pos 3)' },
-        { value: 'soft_support', label: 'Soft Support (Pos 4)' },
-        { value: 'hard_support', label: 'Hard Support (Pos 5)' }
-    ],
-    '230410': [ // Warframe
-        { value: 'dps', label: 'DPS' },
-        { value: 'tank', label: 'Tank' },
-        { value: 'support', label: 'Support' },
-        { value: 'crowd_control', label: 'Crowd Control' }
     ],
     '548430': [ // Deep Rock Galactic
         { value: 'scout', label: 'Scout' },

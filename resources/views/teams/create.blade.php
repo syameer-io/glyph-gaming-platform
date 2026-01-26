@@ -382,8 +382,6 @@
                                 <select id="game_appid" name="game_appid" required onchange="updateGameInfo(); updatePreview()">
                                     <option value="">Select a game...</option>
                                     <option value="730" {{ old('game_appid') == '730' ? 'selected' : '' }}>Counter-Strike 2</option>
-                                    <option value="570" {{ old('game_appid') == '570' ? 'selected' : '' }}>Dota 2</option>
-                                    <option value="230410" {{ old('game_appid') == '230410' ? 'selected' : '' }}>Warframe</option>
                                     <option value="548430" {{ old('game_appid') == '548430' ? 'selected' : '' }}>Deep Rock Galactic</option>
                                     <option value="493520" {{ old('game_appid') == '493520' ? 'selected' : '' }}>GTFO</option>
                                 </select>
@@ -614,31 +612,6 @@ const gameInfo = {
             { value: 'lurker', label: 'Lurker' },
             { value: 'support', label: 'Support' },
             { value: 'anchor', label: 'Anchor' }
-        ]
-    },
-    '570': {
-        name: 'Dota 2',
-        description: 'MOBA with complex mechanics, requiring strategic thinking and role coordination.',
-        recommendedSize: 5,
-        sizeLabel: '5 Players (Standard MOBA)',
-        roles: [
-            { value: 'carry', label: 'Carry (Pos 1)' },
-            { value: 'mid', label: 'Mid (Pos 2)' },
-            { value: 'offlaner', label: 'Offlaner (Pos 3)' },
-            { value: 'soft_support', label: 'Soft Support (Pos 4)' },
-            { value: 'hard_support', label: 'Hard Support (Pos 5)' }
-        ]
-    },
-    '230410': {
-        name: 'Warframe',
-        description: 'Co-op action game with diverse Warframes and role specializations.',
-        recommendedSize: 4,
-        sizeLabel: '4 Players (Full Squad)',
-        roles: [
-            { value: 'dps', label: 'DPS' },
-            { value: 'tank', label: 'Tank' },
-            { value: 'support', label: 'Support' },
-            { value: 'crowd_control', label: 'Crowd Control' }
         ]
     },
     '548430': {

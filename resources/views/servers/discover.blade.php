@@ -28,15 +28,8 @@
                         <select id="game" name="game">
                             <option value="">All Games</option>
                             <option value="cs2" {{ request('game') === 'cs2' ? 'selected' : '' }}>Counter-Strike 2</option>
-                            <option value="dota2" {{ request('game') === 'dota2' ? 'selected' : '' }}>Dota 2</option>
-                            <option value="warframe" {{ request('game') === 'warframe' ? 'selected' : '' }}>Warframe</option>
-                            <option value="apex_legends" {{ request('game') === 'apex_legends' ? 'selected' : '' }}>Apex Legends</option>
-                            <option value="rust" {{ request('game') === 'rust' ? 'selected' : '' }}>Rust</option>
-                            <option value="pubg" {{ request('game') === 'pubg' ? 'selected' : '' }}>PUBG</option>
-                            <option value="rainbow_six_siege" {{ request('game') === 'rainbow_six_siege' ? 'selected' : '' }}>Rainbow Six Siege</option>
-                            <option value="fall_guys" {{ request('game') === 'fall_guys' ? 'selected' : '' }}>Fall Guys</option>
-                            <option value="valorant" {{ request('game') === 'valorant' ? 'selected' : '' }}>Valorant</option>
-                            <option value="overwatch" {{ request('game') === 'overwatch' ? 'selected' : '' }}>Overwatch</option>
+                            <option value="deep_rock_galactic" {{ request('game') === 'deep_rock_galactic' ? 'selected' : '' }}>Deep Rock Galactic</option>
+                            <option value="gtfo" {{ request('game') === 'gtfo' ? 'selected' : '' }}>GTFO</option>
                         </select>
                     </div>
                     

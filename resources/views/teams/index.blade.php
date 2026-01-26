@@ -408,13 +408,8 @@
                         <select id="game-filter" onchange="filterTeams()">
                             <option value="">All Games</option>
                             <option value="730">Counter-Strike 2</option>
-                            <option value="570">Dota 2</option>
-                            <option value="230410">Warframe</option>
-                            <option value="1172470">Apex Legends</option>
-                            <option value="252490">Rust</option>
-                            <option value="578080">PUBG</option>
-                            <option value="359550">Rainbow Six Siege</option>
-                            <option value="433850">Fall Guys</option>
+                            <option value="548430">Deep Rock Galactic</option>
+                            <option value="493520">GTFO</option>
                         </select>
                     </div>
                 </div>

@@ -235,7 +235,7 @@
                                         <p style="margin: 4px 0; color: var(--color-text-secondary); font-size: 14px;">{{ $goal->server->name ?? 'Server' }}</p>
                                     </div>
                                     <div style="text-align: right;">
-                                        <div style="font-weight: 600; color: #10b981;">{{ round(($goal->current_value ?? 0) / $goal->target_value * 100, 1) }}%</div>
+                                        <div style="font-weight: 600; color: #10b981;">{{ round(($goal->current_progress ?? 0) / $goal->target_value * 100, 1) }}%</div>
                                         <div style="font-size: 12px; color: var(--color-text-muted);">progress</div>
                                     </div>
                                 </div>
@@ -243,14 +243,14 @@
                                 <!-- Progress Bar -->
                                 <div style="margin-bottom: 12px;">
                                     <div style="width: 100%; height: 6px; background-color: var(--color-surface-active); border-radius: 3px; overflow: hidden;">
-                                        <div style="height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); width: {{ $goal->target_value > 0 ? min(($goal->current_value ?? 0) / $goal->target_value * 100, 100) : 0 }}%; transition: width 0.3s ease;"></div>
+                                        <div style="height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); width: {{ $goal->target_value > 0 ? min(($goal->current_progress ?? 0) / $goal->target_value * 100, 100) : 0 }}%; transition: width 0.3s ease;"></div>
                                     </div>
                                 </div>
 
                                 <div style="display: flex; justify-content: space-between; align-items: center;">
                                     <div style="font-size: 12px; color: var(--color-text-secondary);">
                                         {{ $goal->participants->count() ?? 0 }} participants •
-                                        {{ $goal->current_value ?? 0 }}/{{ $goal->target_value }}
+                                        {{ $goal->current_progress ?? 0 }}/{{ $goal->target_value }}
                                     </div>
                                     <a href="{{ route('server.show', $goal->server) }}#goals" class="btn btn-sm" style="background-color: #10b981; color: white; padding: 4px 8px; font-size: 11px;">View Goal</a>
                                 </div>

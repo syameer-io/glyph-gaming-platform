@@ -321,7 +321,7 @@ class MatchmakingController extends Controller
         $gameAppId = $request->input('game_appid');
 
         // Validate game is supported for skill calculation
-        $supportedGames = [730, 570, 230410]; // CS2, Dota 2, Warframe
+        $supportedGames = [730, 548430, 493520]; // CS2, Deep Rock Galactic, GTFO
         if (!in_array((int)$gameAppId, $supportedGames)) {
             return response()->json([
                 'success' => true,
@@ -623,13 +623,8 @@ class MatchmakingController extends Controller
     {
         $supportedGames = [
             '730' => 'Counter-Strike 2',
-            '570' => 'Dota 2',
-            '230410' => 'Warframe',
-            '1172470' => 'Apex Legends',
-            '252490' => 'Rust',
-            '578080' => 'PUBG',
-            '359550' => 'Rainbow Six Siege',
-            '433850' => 'Fall Guys',
+            '548430' => 'Deep Rock Galactic',
+            '493520' => 'GTFO',
         ];
 
         // Get active matchmaking requests count per game

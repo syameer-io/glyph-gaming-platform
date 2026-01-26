@@ -50,16 +50,13 @@
                     All Games & Servers
                 </option>
                 <option value="game:730" {{ old('applies_to', $configuration->applies_to) === 'game:730' ? 'selected' : '' }}>
-                    CS2 Only
+                    Counter-Strike 2 Only
                 </option>
-                <option value="game:570" {{ old('applies_to', $configuration->applies_to) === 'game:570' ? 'selected' : '' }}>
-                    Dota 2 Only
+                <option value="game:548430" {{ old('applies_to', $configuration->applies_to) === 'game:548430' ? 'selected' : '' }}>
+                    Deep Rock Galactic Only
                 </option>
-                <option value="game:230410" {{ old('applies_to', $configuration->applies_to) === 'game:230410' ? 'selected' : '' }}>
-                    Warframe Only
-                </option>
-                <option value="game:1172470" {{ old('applies_to', $configuration->applies_to) === 'game:1172470' ? 'selected' : '' }}>
-                    Apex Legends Only
+                <option value="game:493520" {{ old('applies_to', $configuration->applies_to) === 'game:493520' ? 'selected' : '' }}>
+                    GTFO Only
                 </option>
             </select>
         </div>

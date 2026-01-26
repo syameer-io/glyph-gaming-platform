@@ -52,13 +52,8 @@ class ServerTag extends Model
     {
         return [
             '730' => 'cs2',
-            '570' => 'dota2', 
-            '230410' => 'warframe',
-            '1172470' => 'apex_legends',
-            '252490' => 'rust',
-            '578080' => 'pubg',
-            '359550' => 'rainbow_six_siege',
-            '433850' => 'fall_guys',
+            '548430' => 'deep_rock_galactic',
+            '493520' => 'gtfo',
         ];
     }
 }

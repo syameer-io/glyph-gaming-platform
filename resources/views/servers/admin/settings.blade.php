@@ -142,6 +142,29 @@
         background-color: #dc2626;
         color: #ffffff;
     }
+
+    .back-to-server-link {
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        margin-bottom: 16px;
+        color: var(--color-text-secondary);
+        text-decoration: none;
+        border-radius: 8px;
+        transition: all 0.2s;
+        font-size: 14px;
+        border-bottom: 1px solid var(--color-border-primary);
+        padding-bottom: 16px;
+    }
+
+    .back-to-server-link:hover {
+        background-color: var(--color-surface-hover);
+        color: var(--color-text-primary);
+    }
+
+    .back-to-server-link svg {
+        flex-shrink: 0;
+    }
 </style>
 @endpush
 
@@ -167,6 +190,14 @@
         <div style="display: flex;">
             <!-- Settings Sidebar -->
             <div class="settings-sidebar">
+                <!-- Back to Server Link -->
+                <a href="{{ route('server.show', $server) }}" class="back-to-server-link">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                    Back to Server
+                </a>
+
                 <div class="sidebar-nav">
                     <a href="#overview" class="sidebar-link active" onclick="showTab('overview', this)">Overview</a>
                     <a href="#channels" class="sidebar-link" onclick="showTab('channels', this)">Channels</a>
@@ -690,11 +721,11 @@
                             @csrf
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                                 <div class="form-group" style="margin: 0;">
-                                    <label for="goal_title">Goal Title</label>
+                                    <label for="goal_title">Goal Title <span style="color: var(--accent-danger);">*</span></label>
                                     <input type="text" id="goal_title" name="title" placeholder="e.g., Reach 100 CS2 Wins" required>
                                 </div>
                                 <div class="form-group" style="margin: 0;">
-                                    <label for="goal_type">Goal Type</label>
+                                    <label for="goal_type">Goal Type <span style="color: var(--accent-danger);">*</span></label>
                                     <select id="goal_type" name="goal_type" required onchange="updateGoalFields()">
                                         <option value="">Select type...</option>
                                         <option value="achievement">Achievement Goal</option>
@@ -707,30 +738,27 @@
                             </div>
                             
                             <div class="form-group" style="margin: 0;">
-                                <label for="goal_description">Description</label>
-                                <textarea id="goal_description" name="description" rows="3" placeholder="Describe the goal and how members can contribute..."></textarea>
+                                <label for="goal_description">Description <span style="color: var(--accent-danger);">*</span></label>
+                                <textarea id="goal_description" name="description" rows="3" placeholder="Describe the goal and how members can contribute..." required></textarea>
                             </div>
                             
                             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
                                 <div class="form-group" style="margin: 0;">
-                                    <label for="target_value">Target Value</label>
+                                    <label for="target_value">Target Value <span style="color: var(--accent-danger);">*</span></label>
                                     <input type="number" id="target_value" name="target_value" placeholder="100" required>
                                 </div>
                                 <div class="form-group" style="margin: 0;">
-                                    <label for="game_appid">Game (Optional)</label>
-                                    <select id="game_appid" name="game_appid">
-                                        <option value="">Any Game</option>
+                                    <label for="game_appid">Game <span style="color: var(--accent-danger);">*</span></label>
+                                    <select id="game_appid" name="game_appid" required>
+                                        <option value="">Select a game...</option>
                                         <option value="730">Counter-Strike 2</option>
-                                        <option value="570">Dota 2</option>
-                                        <option value="230410">Warframe</option>
-                                        <option value="1172470">Apex Legends</option>
-                                        <option value="252490">Rust</option>
-                                        <option value="578080">PUBG</option>
+                                        <option value="548430">Deep Rock Galactic</option>
+                                        <option value="493520">GTFO</option>
                                     </select>
                                 </div>
                                 <div class="form-group" style="margin: 0;">
-                                    <label for="deadline">Deadline (Optional)</label>
-                                    <input type="date" id="deadline" name="deadline">
+                                    <label for="deadline">Deadline <span style="color: var(--accent-danger);">*</span></label>
+                                    <input type="date" id="deadline" name="deadline" required>
                                 </div>
                             </div>
 
@@ -790,13 +818,13 @@
                                         <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
                                             <span style="font-size: 14px; color: var(--color-text-secondary);">Progress</span>
                                             <span class="progress-text" style="font-size: 14px; color: var(--color-text-primary); font-weight: 600;" data-target="{{ $goal->target_value }}">
-                                                {{ $goal->current_value ?? 0 }} / {{ $goal->target_value }}
-                                                ({{ $goal->target_value > 0 ? round(($goal->current_value ?? 0) / $goal->target_value * 100, 1) : 0 }}%)
+                                                {{ $goal->current_progress ?? 0 }} / {{ $goal->target_value }}
+                                                ({{ $goal->target_value > 0 ? round(($goal->current_progress ?? 0) / $goal->target_value * 100, 1) : 0 }}%)
                                             </span>
                                         </div>
                                         <div style="width: 100%; height: 8px; background-color: var(--color-surface-active); border-radius: 4px; overflow: hidden;">
-                                            <div class="progress-bar" style="height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); width: {{ $goal->target_value > 0 ? min(($goal->current_value ?? 0) / $goal->target_value * 100, 100) : 0 }}%; transition: width 0.8s ease;" 
-                                                 aria-valuenow="{{ $goal->target_value > 0 ? round(($goal->current_value ?? 0) / $goal->target_value * 100, 1) : 0 }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                            <div class="progress-bar" style="height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); width: {{ $goal->target_value > 0 ? min(($goal->current_progress ?? 0) / $goal->target_value * 100, 100) : 0 }}%; transition: width 0.8s ease;" 
+                                                 aria-valuenow="{{ $goal->target_value > 0 ? round(($goal->current_progress ?? 0) / $goal->target_value * 100, 1) : 0 }}" aria-valuemin="0" aria-valuemax="100"></div>
                                         </div>
                                     </div>
 
@@ -819,7 +847,6 @@
                                             </div>
                                         </div>
                                         <div style="display: flex; gap: 8px;">
-                                            <button onclick="showGoalLeaderboard('{{ $goal->id }}')" class="btn btn-sm" style="background-color: var(--color-surface-active); color: var(--color-text-primary); padding: 4px 8px; font-size: 12px;">Leaderboard</button>
                                             <button onclick="showGoalDetails('{{ $goal->id }}')" class="btn btn-sm" style="background-color: var(--accent-primary); color: white; padding: 4px 8px; font-size: 12px;">View Details</button>
                                         </div>
                                     </div>
@@ -849,7 +876,7 @@
                                             </div>
                                         </div>
                                         <div style="text-align: right; color: var(--accent-success); font-weight: 600;">
-                                            {{ $goal->current_value }}/{{ $goal->target_value }}
+                                            {{ $goal->current_progress }}/{{ $goal->target_value }}
                                         </div>
                                     </div>
                                 @endforeach
@@ -1219,7 +1246,7 @@ window.addEventListener('hashchange', function() {
 
 // Tag management functions
 const tagOptions = {
-    game: ['cs2', 'dota2', 'warframe', 'apex_legends', 'rust', 'pubg', 'rainbow_six_siege', 'fall_guys', 'valorant', 'overwatch', 'league_of_legends', 'minecraft'],
+    game: ['cs2', 'deep_rock_galactic', 'gtfo'],
     skill_level: ['beginner', 'intermediate', 'advanced', 'expert', 'casual', 'competitive'],
     region: ['na_east', 'na_west', 'eu_west', 'eu_east', 'asia', 'oceania', 'south_america', 'africa'],
     language: ['english', 'spanish', 'french', 'german', 'russian', 'chinese', 'japanese', 'korean', 'portuguese', 'italian'],
@@ -1386,11 +1413,8 @@ function removeTag(tagId) {
 // Goals management functions
 const gameAppIdToName = {
     '730': 'Counter-Strike 2',
-    '570': 'Dota 2', 
-    '230410': 'Warframe',
-    '1172470': 'Apex Legends',
-    '252490': 'Rust',
-    '578080': 'PUBG'
+    '548430': 'Deep Rock Galactic',
+    '493520': 'GTFO'
 };
 
 function updateGoalFields() {
@@ -1563,34 +1587,8 @@ function deleteGoal(goalId) {
     }
 }
 
-function showGoalLeaderboard(goalId) {
-    fetch(`{{ url('api/goals') }}/${goalId}/leaderboard`, {
-        headers: {
-            'Accept': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            let leaderboardHtml = 'Leaderboard:\n\n';
-            data.leaderboard.forEach((participant, index) => {
-                leaderboardHtml += `${index + 1}. ${participant.user.display_name} - ${participant.contribution_percentage}%\n`;
-            });
-            alert(leaderboardHtml);
-        } else {
-            alert('Error loading leaderboard');
-        }
-    })
-    .catch(error => {
-        console.error('Error loading leaderboard:', error);
-        alert('Error loading leaderboard');
-    });
-}
-
 function showGoalDetails(goalId) {
-    // For now, just show basic info (could be enhanced with modal)
-    alert('Goal details view - this could open a detailed modal with statistics, participant list, and progress history.');
+    window.location.href = `{{ url('servers/' . $server->id . '/goals') }}/${goalId}`;
 }
 
 // Close goal action menus when clicking outside
