@@ -107,7 +107,10 @@ class MatchmakingApiController extends Controller
             $compatibleTeams = $this->matchmakingService->findCompatibleTeams($matchmakingRequest);
 
             // Calculate detailed compatibility scores
-            $teamsWithDetails = $compatibleTeams->map(function ($team) use ($matchmakingRequest) {
+            $teamsWithDetails = $compatibleTeams->filter(function ($team) {
+                // Only require creator - server is optional for independent teams
+                return $team->creator !== null;
+            })->map(function ($team) use ($matchmakingRequest) {
                 $compatibility = $this->matchmakingService->calculateDetailedCompatibility($team, $matchmakingRequest);
 
                 // Get needed roles
@@ -152,10 +155,10 @@ class MatchmakingApiController extends Controller
                     'activity_times' => $team->activity_times ?? ($team->activity_time ? [$team->activity_time] : []),
                     'languages' => $languages,
                     'communication_required' => $team->communication_required ?? false,
-                    'server' => [
+                    'server' => $team->server ? [
                         'id' => $team->server->id,
                         'name' => $team->server->name,
-                    ],
+                    ] : null,
                     'creator' => [
                         'id' => $team->creator->id,
                         'display_name' => $team->creator->display_name ?? $team->creator->name,
@@ -178,7 +181,7 @@ class MatchmakingApiController extends Controller
                 'cached' => false
             ]);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             \Log::error('Error finding compatible teams: ' . $e->getMessage(), [
                 'user_id' => auth()->id(),
                 'request_id' => $request->input('request_id'),

@@ -666,6 +666,7 @@ class Team extends Model
     public function scopeRecruiting($query)
     {
         return $query->where('status', 'recruiting')
+                    ->where('recruitment_status', 'open')
                     ->whereColumn('current_size', '<', 'max_size')
                     ->where(function($q) {
                         $q->whereNull('recruitment_deadline')
