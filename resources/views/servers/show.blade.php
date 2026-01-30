@@ -348,14 +348,43 @@
         
         <div style="flex: 1; overflow-y: auto; padding: 16px;">
             <!-- Welcome Section -->
-            <div style="text-align: center; margin-bottom: 32px; padding: 24px; background-color: var(--color-surface); border-radius: 12px;">
-                <h2 style="margin-bottom: 16px; color: var(--color-text-primary);">Welcome to {{ $server->name }}!</h2>
-                <p style="color: var(--color-text-secondary); margin-bottom: 24px;">{{ $server->description ?: 'This is the beginning of your server.' }}</p>
-                @if($defaultChannel)
-                    <a href="{{ route('channel.show', [$server, $defaultChannel]) }}" class="btn btn-primary">
-                        Open #{{ $defaultChannel->name }}
-                    </a>
-                @endif
+            <div class="server-welcome">
+                <div class="server-welcome-content">
+                    <div class="server-welcome-icon">
+                        @if($server->icon_url)
+                            <img src="{{ $server->icon_url }}" alt="{{ $server->name }}">
+                        @else
+                            <span class="server-welcome-icon-initial">{{ substr($server->name, 0, 1) }}</span>
+                        @endif
+                    </div>
+                    <div class="server-welcome-info">
+                        <h2 class="server-welcome-title">Welcome to {{ $server->name }}!</h2>
+                        <p class="server-welcome-description">{{ $server->description ?: 'This is the beginning of your server. Start chatting with your community!' }}</p>
+                        <div class="server-welcome-stats">
+                            <div class="server-welcome-stat">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                                </svg>
+                                <span class="server-welcome-stat-value">{{ $server->members->count() }}</span>
+                                <span>{{ $server->members->count() === 1 ? 'Member' : 'Members' }}</span>
+                            </div>
+                            <div class="server-welcome-stat">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/>
+                                </svg>
+                                <span class="server-welcome-stat-value">{{ $server->channels->count() }}</span>
+                                <span>{{ $server->channels->count() === 1 ? 'Channel' : 'Channels' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    @if($defaultChannel)
+                        <div class="server-welcome-actions">
+                            <a href="{{ route('channel.show', [$server, $defaultChannel]) }}" class="btn btn-primary">
+                                Open #{{ $defaultChannel->name }}
+                            </a>
+                        </div>
+                    @endif
+                </div>
             </div>
 
             <!-- Active Goals Section -->
@@ -368,7 +397,7 @@
 
                     <div style="display: grid; gap: 16px;">
                         @foreach($activeGoals as $goal)
-                            <div class="goal-card" data-goal-id="{{ $goal->id }}" style="background-color: var(--color-surface); border-radius: 12px; padding: 20px; border-left: 4px solid #667eea;">
+                            <div class="goal-card goal-card-enhanced" data-goal-id="{{ $goal->id }}">
                                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
                                     <div style="flex: 1;">
                                         <h4 style="margin: 0 0 8px 0; color: var(--color-text-primary); font-size: 18px; font-weight: 600;">{{ $goal->title }}</h4>
@@ -463,12 +492,16 @@
                     </div>
                 </div>
             @else
-                <div style="text-align: center; padding: 40px; background-color: var(--color-surface); border-radius: 12px; margin-bottom: 32px; border: 2px dashed var(--color-border-primary);">
-                    <div style="font-size: 48px; margin-bottom: 16px;">🎯</div>
-                    <h3 style="color: var(--color-text-muted); margin-bottom: 8px; font-weight: 600;">No Active Goals</h3>
-                    <p style="color: var(--color-text-secondary); font-size: 14px; margin-bottom: 20px;">This server doesn't have any community goals yet.</p>
+                <div class="empty-state" style="margin-bottom: 32px;">
+                    <div class="empty-state-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                        </svg>
+                    </div>
+                    <h3 class="empty-state-title">No Active Goals</h3>
+                    <p class="empty-state-description">Rally your community around shared objectives. Create goals to track progress together!</p>
                     @if(auth()->user()->isServerAdmin($server->id))
-                        <a href="{{ route('server.admin.settings', $server) }}#goals" class="btn btn-primary btn-sm">
+                        <a href="{{ route('server.admin.settings', $server) }}#goals" class="btn btn-primary">
                             Create Your First Goal
                         </a>
                     @endif

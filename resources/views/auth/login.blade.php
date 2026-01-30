@@ -6,8 +6,21 @@
 <div class="auth-container">
     <div class="auth-box">
         <div class="logo">
-            <h1 class="font-gristela text-5xl">Glyph</h1>
-            <p style="color: var(--color-text-secondary); margin-top: 8px;">Welcome back!</p>
+            {{-- Decorative accent --}}
+            <div class="logo-accent">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                    <rect x="8" y="8" width="24" height="24" rx="6" stroke="url(#logo-gradient)" stroke-width="2" opacity="0.5"/>
+                    <rect x="14" y="14" width="12" height="12" rx="3" fill="url(#logo-gradient)" opacity="0.3"/>
+                    <defs>
+                        <linearGradient id="logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#667eea"/>
+                            <stop offset="100%" stop-color="#764ba2"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <h1>GLYPH</h1>
+            <p class="logo-subtitle">Welcome back</p>
         </div>
 
         @if ($errors->any())
@@ -38,7 +51,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                     </svg>
                     <input :type="showPassword ? 'text' : 'password'" id="password" name="password" required placeholder="Enter your password">
-                    <button type="button" class="password-toggle" @click="showPassword = !showPassword" tabindex="-1">
+                    <button type="button" class="password-toggle" @click="showPassword = !showPassword" tabindex="-1" aria-label="Toggle password visibility">
                         <svg x-show="!showPassword" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
@@ -48,12 +61,12 @@
                         </svg>
                     </button>
                 </div>
-                <div style="text-align: right; margin-top: 8px;">
-                    <a href="{{ route('password.request') }}" class="link" style="font-size: 14px;">Forgot your password?</a>
+                <div class="forgot-password-link">
+                    <a href="{{ route('password.request') }}" class="link">Forgot your password?</a>
                 </div>
             </div>
 
-            <div class="form-group">
+            <div class="form-group" style="margin-top: 28px;">
                 <button type="submit" class="btn btn-primary btn-full" :disabled="isLoading">
                     <span x-show="!isLoading">Sign In</span>
                     <span x-show="isLoading" x-cloak class="btn-loading">
@@ -66,7 +79,9 @@
             </div>
         </form>
 
-        <p class="text-center mt-4" style="color: var(--color-text-secondary);">
+        <div class="form-divider"></div>
+
+        <p class="text-center auth-footer">
             Don't have an account? <a href="{{ route('register') }}" class="link">Create one</a>
         </p>
     </div>
@@ -91,5 +106,32 @@ function loginForm() {
 @push('styles')
 <style>
 [x-cloak] { display: none !important; }
+
+.logo-accent {
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: center;
+}
+
+.forgot-password-link {
+    text-align: right;
+    margin-top: 8px;
+}
+
+.forgot-password-link .link {
+    font-size: 13px;
+}
+
+.auth-footer {
+    color: var(--color-text-secondary, #a1a1aa);
+    font-size: 14px;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+    .logo-accent svg {
+        animation: none;
+    }
+}
 </style>
 @endpush

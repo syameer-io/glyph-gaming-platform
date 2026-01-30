@@ -6,6 +6,12 @@
 <x-navbar />
 
 <div class="profile-header">
+    {{-- Hero Background Effects --}}
+    <div class="profile-hero-bg">
+        <div class="profile-mesh-gradient"></div>
+        <div class="profile-glow-orb profile-glow-1"></div>
+        <div class="profile-glow-orb profile-glow-2"></div>
+    </div>
     <div class="container">
         <div class="profile-info">
             <img src="{{ $user->profile->avatar_url }}" alt="{{ $user->display_name }}" class="profile-avatar">
@@ -29,6 +35,7 @@
                         />
                     @endif
                 </div>
+
             </div>
             <div style="margin-left: auto;">
                 @if(auth()->check() && auth()->id() !== $user->id)
@@ -122,7 +129,7 @@
     <div class="container">
         <div class="grid grid-cols-2" style="grid-template-columns: 2fr 1fr;">
             <div>
-                <div class="profile-card">
+                <div class="profile-card" data-stagger="0">
                     <div class="profile-card-header">
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" style="color: #667eea;">
                             <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
@@ -135,7 +142,7 @@
                 </div>
 
                 @if($privacyContext['canSeeSteamData'] && $user->steam_id && $user->profile->steam_data)
-                    <div class="profile-card">
+                    <div class="profile-card" data-stagger="1">
                         <div class="profile-card-header">
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" style="color: #667eea;">
                                 <path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"/>
@@ -166,6 +173,11 @@
                                                             {{ round($preference->playtime_2weeks / 60, 1) }}h recent
                                                         </span>
                                                     @endif
+                                                    @if($preference->last_played)
+                                                        <span class="stat-item">
+                                                            Last played {{ \Carbon\Carbon::parse($preference->last_played)->diffForHumans() }}
+                                                        </span>
+                                                    @endif
                                                 </div>
                                             </div>
                                             <div class="game-preference-badges">
@@ -176,29 +188,6 @@
                                                 @elseif($preference->skill_level === 'unranked')
                                                     <span class="skill-badge skill-unranked">UNRANKED</span>
                                                 @endif
-                                            </div>
-                                        </div>
-
-                                        <!-- Gaming activity bar -->
-                                        <div class="game-activity-bar">
-                                            <div class="activity-bar-header">
-                                                <span class="activity-label">Gaming Activity</span>
-                                                <span class="activity-timestamp">
-                                                    @if($preference->last_played)
-                                                        Last played {{ \Carbon\Carbon::parse($preference->last_played)->diffForHumans() }}
-                                                    @else
-                                                        Recently active
-                                                    @endif
-                                                </span>
-                                            </div>
-                                            <div class="activity-progress-track">
-                                                @php
-                                                    $maxPlaytime = $user->gamingPreferences->max('playtime_forever');
-                                                    $activityPercentage = $maxPlaytime > 0 ? ($preference->playtime_forever / $maxPlaytime) * 100 : 0;
-                                                @endphp
-                                                <div class="activity-progress-fill" style="width: {{ $activityPercentage }}%">
-                                                    <div class="activity-glow"></div>
-                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -218,7 +207,7 @@
                         @endif
                     </div>
 
-                    <div class="profile-card">
+                    <div class="profile-card" data-stagger="2">
                         <div class="profile-card-header">
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" style="color: #667eea;">
                                 <path d="M2 6a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zm14.5 4.5a.5.5 0 10-1 0 .5.5 0 001 0zm-1.5 2a.5.5 0 100-1 .5.5 0 000 1zm-1.5-.5a.5.5 0 10-1 0 .5.5 0 001 0zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h1a1 1 0 001-1v-1H9.5a.5.5 0 010-1H10V8a1 1 0 00-1-1H8z"/>
@@ -259,7 +248,7 @@
                         @endforelse
                     </div>
                 @elseif($user->steam_id && !$privacyContext['canSeeSteamData'])
-                    <div class="profile-card">
+                    <div class="profile-card" data-stagger="1">
                         <div class="profile-card-header">
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" style="color: #52525b;">
                                 <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
@@ -281,7 +270,7 @@
                     </div>
                 @endif
 
-                <div class="profile-card">
+                <div class="profile-card" data-stagger="0">
                     <div class="profile-card-header">
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" style="color: #667eea;">
                             <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zm6-4a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zm6-3a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
@@ -328,7 +317,7 @@
                 </div>
 
                 @if($privacyContext['canSeeSteamFriends'] && $user->steam_id && isset($user->profile->steam_data['friends']) && $user->profile->steam_data['friends']['count'] > 0)
-                    <div class="profile-card">
+                    <div class="profile-card" data-stagger="1">
                         <div class="profile-card-header">
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" style="color: #667eea;">
                                 <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
@@ -368,7 +357,7 @@
                 @endif
 
                 @if($privacyContext['canSeeServers'])
-                    <div class="profile-card">
+                    <div class="profile-card" data-stagger="2">
                         <div class="profile-card-header">
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" style="color: #667eea;">
                                 <path fill-rule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm14 1a1 1 0 11-2 0 1 1 0 012 0zM2 13a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2zm14 1a1 1 0 11-2 0 1 1 0 012 0z" clip-rule="evenodd"/>

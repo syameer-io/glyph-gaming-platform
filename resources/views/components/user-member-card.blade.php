@@ -136,7 +136,7 @@
     x-data="memberCardData_{{ $user->id }}()"
     style="
         width: 340px;
-        background-color: #232428;
+        background-color: var(--modal-bg);
         border-radius: 8px;
         overflow: hidden;
         box-shadow: 0 8px 16px rgba(0, 0, 0, 0.24);
@@ -158,8 +158,8 @@
                 width: 80px;
                 height: 80px;
                 border-radius: 50%;
-                border: 6px solid #232428;
-                background-color: #232428;
+                border: 6px solid var(--modal-bg);
+                background-color: var(--modal-bg);
                 overflow: hidden;
                 position: relative;
                 cursor: pointer;
@@ -178,7 +178,7 @@
                     width: 20px;
                     height: 20px;
                     border-radius: 50%;
-                    border: 4px solid #232428;
+                    border: 4px solid var(--modal-bg);
                     background-color: {{ $statusColor }};
                 " title="{{ $statusLabel }}"></div>
             </div>
@@ -187,7 +187,7 @@
 
     {{-- Card Body --}}
     <div style="
-        background-color: #111214;
+        background-color: var(--color-bg-primary);
         margin: 12px;
         border-radius: 8px;
         padding: 12px;
@@ -196,28 +196,27 @@
         <div style="margin-bottom: 12px;">
             <a
                 href="{{ route('profile.show', $user->username) }}"
+                class="member-card-display-name"
                 style="
                     font-size: 20px;
                     font-weight: 600;
-                    color: #f2f3f5;
+                    color: var(--color-text-primary);
                     line-height: 1.2;
                     text-decoration: none;
                     display: inline-block;
                     transition: color 0.15s ease;
                 "
-                onmouseover="this.style.color='#00b0f4'; this.style.textDecoration='underline'"
-                onmouseout="this.style.color='#f2f3f5'; this.style.textDecoration='none'"
             >{{ $user->display_name }}</a>
             <div style="
                 font-size: 14px;
-                color: #b5bac1;
+                color: var(--color-text-secondary);
             ">{{ $user->username }}</div>
         </div>
 
         {{-- Custom Status Display --}}
         @if($customStatus || $activity)
             <div style="
-                background-color: #1e1f22;
+                background-color: var(--color-bg-secondary);
                 border-radius: 8px;
                 padding: 8px 12px;
                 margin-bottom: 12px;
@@ -230,7 +229,7 @@
                 @endif
                 <span style="
                     font-size: 13px;
-                    color: #b5bac1;
+                    color: var(--color-text-secondary);
                     overflow: hidden;
                     text-overflow: ellipsis;
                     white-space: nowrap;
@@ -291,7 +290,7 @@
         {{-- Active Lobby Section --}}
         @if($activeLobbies->isNotEmpty())
             <div style="
-                background-color: #1e1f22;
+                background-color: var(--color-bg-secondary);
                 border-radius: 8px;
                 padding: 12px;
                 margin-bottom: 12px;
@@ -299,7 +298,7 @@
                 <div style="
                     font-size: 12px;
                     font-weight: 700;
-                    color: #b5bac1;
+                    color: var(--color-text-secondary);
                     text-transform: uppercase;
                     margin-bottom: 8px;
                     letter-spacing: 0.02em;
@@ -314,7 +313,7 @@
                             border-radius: 8px;
                             overflow: hidden;
                             flex-shrink: 0;
-                            background-color: #2b2d31;
+                            background-color: var(--color-surface-hover);
                         ">
                             <img
                                 :src="lobby.game_icon"
@@ -329,12 +328,12 @@
                             <div style="
                                 font-size: 14px;
                                 font-weight: 600;
-                                color: #f2f3f5;
+                                color: var(--color-text-primary);
                                 margin-bottom: 2px;
                             " x-text="lobby.game_name"></div>
                             <div style="
                                 font-size: 12px;
-                                color: #b5bac1;
+                                color: var(--color-text-secondary);
                                 margin-bottom: 4px;
                             " x-text="lobby.display_format"></div>
                             <div style="
@@ -371,7 +370,7 @@
         @endif
 
         {{-- Divider --}}
-        <div style="height: 1px; background-color: #3f4147; margin-bottom: 12px;"></div>
+        <div style="height: 1px; background-color: var(--color-border-primary); margin-bottom: 12px;"></div>
 
         {{-- Roles Section --}}
         @if($userRoles->isNotEmpty())
@@ -379,7 +378,7 @@
                 <div style="
                     font-size: 12px;
                     font-weight: 700;
-                    color: #b5bac1;
+                    color: var(--color-text-secondary);
                     text-transform: uppercase;
                     margin-bottom: 8px;
                     letter-spacing: 0.02em;
@@ -391,12 +390,12 @@
                             display: inline-flex;
                             align-items: center;
                             gap: 6px;
-                            background-color: #2b2d31;
+                            background-color: var(--color-surface-hover);
                             padding: 4px 8px;
                             border-radius: 4px;
                             font-size: 12px;
                             font-weight: 500;
-                            color: #dbdee1;
+                            color: var(--color-text-primary);
                         ">
                             <span style="
                                 width: 12px;
@@ -415,18 +414,18 @@
                             justify-content: center;
                             width: 28px;
                             height: 24px;
-                            background-color: #2b2d31;
+                            background-color: var(--color-surface-hover);
                             border-radius: 4px;
                             font-size: 12px;
                             font-weight: 500;
-                            color: #b5bac1;
+                            color: var(--color-text-secondary);
                         ">+{{ $userRoles->count() - 5 }}</div>
                     @endif
                 </div>
             </div>
 
             {{-- Divider --}}
-            <div style="height: 1px; background-color: #3f4147; margin-bottom: 12px;"></div>
+            <div style="height: 1px; background-color: var(--color-border-primary); margin-bottom: 12px;"></div>
         @endif
 
         {{-- Member Since & Mutual Servers --}}
@@ -436,12 +435,12 @@
                 <div style="
                     font-size: 12px;
                     font-weight: 700;
-                    color: #b5bac1;
+                    color: var(--color-text-secondary);
                     text-transform: uppercase;
                     margin-bottom: 4px;
                     letter-spacing: 0.02em;
                 ">Member Since</div>
-                <div style="font-size: 13px; color: #dbdee1;">
+                <div style="font-size: 13px; color: var(--color-text-primary);">
                     {{ $memberSince?->format('M d, Y') ?? 'Unknown' }}
                 </div>
             </div>
@@ -452,12 +451,12 @@
                     <div style="
                         font-size: 12px;
                         font-weight: 700;
-                        color: #b5bac1;
+                        color: var(--color-text-secondary);
                         text-transform: uppercase;
                         margin-bottom: 4px;
                         letter-spacing: 0.02em;
                     ">Mutual Servers</div>
-                    <div style="font-size: 13px; color: #dbdee1;">
+                    <div style="font-size: 13px; color: var(--color-text-primary);">
                         {{ $mutualServersCount }} {{ $mutualServersCount === 1 ? 'server' : 'servers' }}
                     </div>
                 </div>

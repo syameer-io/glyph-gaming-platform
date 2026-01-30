@@ -22,6 +22,7 @@
             font-size: 32px;
             font-weight: bold;
             color: #667eea;
+            letter-spacing: 0.15em;
             margin-bottom: 24px;
         }
         .otp-code {
@@ -47,7 +48,7 @@
 </head>
 <body>
     <div class="container">
-        <div class="logo">Glyph</div>
+        <div class="logo">GLYPH</div>
         <h2>Verification Code</h2>
         <p class="message">Use this code to complete your login:</p>
         <div class="otp-code">{{ $otp }}</div>

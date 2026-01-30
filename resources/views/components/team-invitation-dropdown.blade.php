@@ -165,14 +165,14 @@
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    color: #a1a1aa;
+    color: var(--color-text-muted);
     position: relative;
     transition: all 0.2s ease;
 }
 
 .team-invitation-trigger:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: #ffffff;
+    background-color: var(--color-surface-hover);
+    color: var(--color-text-primary);
 }
 
 .team-invitation-badge {
@@ -199,8 +199,8 @@
     right: 0;
     width: 360px;
     max-height: 400px;
-    background-color: #18181b;
-    border: 1px solid #3f3f46;
+    background-color: var(--modal-bg);
+    border: 1px solid var(--modal-border);
     border-radius: 12px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
     z-index: 1000;
@@ -219,13 +219,13 @@
     align-items: center;
     justify-content: space-between;
     padding: 16px 16px 12px;
-    border-bottom: 1px solid #27272a;
+    border-bottom: 1px solid var(--color-border-secondary);
 }
 
 .invitation-panel-header h3 {
     font-size: 14px;
     font-weight: 600;
-    color: #fafafa;
+    color: var(--color-text-primary);
     margin: 0;
 }
 
@@ -238,14 +238,14 @@
     background: transparent;
     border: none;
     border-radius: 6px;
-    color: #71717a;
+    color: var(--color-text-muted);
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
 .invitation-refresh-btn:hover {
-    background-color: #27272a;
-    color: #fafafa;
+    background-color: var(--color-surface-hover);
+    color: var(--color-text-primary);
 }
 
 .invitation-refresh-btn.spinning svg {
@@ -270,7 +270,7 @@
     justify-content: center;
     padding: 40px 20px;
     text-align: center;
-    color: #71717a;
+    color: var(--color-text-muted);
 }
 
 .invitation-empty svg {
@@ -281,7 +281,7 @@
 .invitation-empty p {
     font-size: 14px;
     font-weight: 500;
-    color: #a1a1aa;
+    color: var(--color-text-secondary);
     margin: 0 0 4px;
 }
 
@@ -294,12 +294,12 @@
     align-items: flex-start;
     justify-content: space-between;
     padding: 14px 16px;
-    border-bottom: 1px solid #27272a;
+    border-bottom: 1px solid var(--color-border-secondary);
     transition: background-color 0.2s ease;
 }
 
 .invitation-item:hover {
-    background-color: #27272a;
+    background-color: var(--color-surface-hover);
 }
 
 .invitation-item:last-child {
@@ -318,7 +318,7 @@
 .invitation-team-name {
     font-size: 14px;
     font-weight: 600;
-    color: #fafafa;
+    color: var(--color-text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -326,7 +326,7 @@
 
 .invitation-game {
     font-size: 12px;
-    color: #a1a1aa;
+    color: var(--color-text-secondary);
     margin-top: 2px;
 }
 
@@ -365,7 +365,7 @@
     align-items: center;
     gap: 6px;
     font-size: 12px;
-    color: #71717a;
+    color: var(--color-text-muted);
 }
 
 .inviter-avatar {
@@ -380,7 +380,7 @@
     align-items: center;
     gap: 6px;
     font-size: 12px;
-    color: #a1a1aa;
+    color: var(--color-text-secondary);
     font-style: italic;
 }
 
@@ -400,7 +400,7 @@
     align-items: center;
     gap: 6px;
     font-size: 11px;
-    color: #71717a;
+    color: var(--color-text-muted);
 }
 
 .invitation-expires svg {
@@ -462,8 +462,8 @@
 
 .invitation-panel-footer {
     padding: 12px 16px;
-    border-top: 1px solid #27272a;
-    background-color: #0e0e10;
+    border-top: 1px solid var(--color-border-secondary);
+    background-color: var(--color-bg-primary);
 }
 
 .view-all-link {
@@ -488,7 +488,7 @@
     bottom: 24px;
     right: 24px;
     padding: 14px 20px;
-    background-color: #27272a;
+    background-color: var(--color-surface-hover);
     border-radius: 10px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
     z-index: 9999;
@@ -523,14 +523,14 @@
 
 .toast-notification .toast-message {
     font-size: 14px;
-    color: #fafafa;
+    color: var(--color-text-primary);
     flex: 1;
 }
 
 .toast-notification .toast-close {
     background: none;
     border: none;
-    color: #71717a;
+    color: var(--color-text-muted);
     cursor: pointer;
     padding: 4px;
     font-size: 18px;
@@ -539,7 +539,7 @@
 }
 
 .toast-notification .toast-close:hover {
-    color: #fafafa;
+    color: var(--color-text-primary);
 }
 
 @keyframes slideInRight {

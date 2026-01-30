@@ -10,7 +10,7 @@
     <div class="container">
         <div class="navbar-new-content">
             {{-- Brand Logo --}}
-            <a href="{{ route('dashboard') }}" class="navbar-new-brand">Glyph</a>
+            <a href="{{ route('dashboard') }}" class="navbar-new-brand">GLYPH</a>
 
             {{-- Desktop Navigation --}}
             <div class="navbar-new-nav">
@@ -171,7 +171,7 @@
 {{-- Mobile Drawer --}}
 <div class="mobile-drawer" aria-label="Navigation menu">
     <div class="mobile-drawer-header">
-        <span class="mobile-drawer-title">Glyph</span>
+        <span class="mobile-drawer-title">GLYPH</span>
         <button type="button" class="mobile-drawer-close" aria-label="Close menu">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="18" y1="6" x2="6" y2="18"></line>

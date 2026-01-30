@@ -1,0 +1,1169 @@
+/* =============================================================================
+   Discover Servers Page - Dashboard-Style Design System
+   Glassmorphism, animated gradients, micro-interactions
+   Matches teams/matchmaking/lobbies patterns for visual consistency
+   ============================================================================= */
+
+/* =============================================================================
+   Page Layout
+   ============================================================================= */
+
+.discover-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 24px 48px;
+}
+
+/* =============================================================================
+   Steam Recommendations CTA - Cyberpunk Dashboard Style
+   ============================================================================= */
+
+.discover-steam-cta {
+    position: relative;
+    border-radius: var(--radius-2xl);
+    overflow: hidden;
+    margin-bottom: 32px;
+    /* Glassmorphism base */
+    background: rgba(24, 24, 27, 0.8);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    box-shadow:
+        0 4px 32px rgba(102, 126, 234, 0.15),
+        0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+    /* Entrance animation */
+    opacity: 0;
+    animation: steamCtaEntrance 0.6s ease forwards;
+    animation-delay: 50ms;
+}
+
+@keyframes steamCtaEntrance {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Background Layer */
+.steam-cta-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+}
+
+/* Mesh Pattern */
+.steam-cta-mesh {
+    position: absolute;
+    inset: 0;
+    background-image:
+        radial-gradient(circle at 1px 1px, rgba(102, 126, 234, 0.2) 1px, transparent 0);
+    background-size: 20px 20px;
+}
+
+.steam-cta-mesh::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        135deg,
+        rgba(102, 126, 234, 0.15) 0%,
+        rgba(118, 75, 162, 0.1) 50%,
+        rgba(102, 126, 234, 0.05) 100%
+    );
+}
+
+/* Floating Glow Orbs */
+.steam-cta-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(50px);
+    opacity: 0.5;
+    animation: steamOrbFloat 10s ease-in-out infinite;
+}
+
+.steam-orb-1 {
+    width: 250px;
+    height: 250px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    top: -80px;
+    right: -40px;
+    animation-delay: 0s;
+}
+
+.steam-orb-2 {
+    width: 180px;
+    height: 180px;
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    bottom: -60px;
+    left: 15%;
+    animation-delay: -3s;
+}
+
+.steam-orb-3 {
+    width: 120px;
+    height: 120px;
+    background: linear-gradient(135deg, #a78bfa 0%, #667eea 100%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation-delay: -6s;
+    opacity: 0.3;
+}
+
+@keyframes steamOrbFloat {
+    0%, 100% {
+        transform: translate(0, 0) scale(1);
+    }
+    25% {
+        transform: translate(15px, -20px) scale(1.08);
+    }
+    50% {
+        transform: translate(-10px, 15px) scale(0.92);
+    }
+    75% {
+        transform: translate(-15px, -10px) scale(1.04);
+    }
+}
+
+/* Scan Line Effect */
+.steam-cta-scanline {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to bottom,
+        transparent 0%,
+        rgba(102, 126, 234, 0.03) 50%,
+        transparent 100%
+    );
+    background-size: 100% 4px;
+    animation: scanlineMove 8s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes scanlineMove {
+    0% {
+        transform: translateY(-100%);
+    }
+    100% {
+        transform: translateY(100%);
+    }
+}
+
+/* Content Layout */
+.steam-cta-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    padding: 32px 40px;
+}
+
+/* Icon Container */
+.steam-cta-icon-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.steam-cta-icon-ring {
+    position: relative;
+    width: 72px;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.steam-cta-icon-ring-inner {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    background:
+        linear-gradient(rgba(24, 24, 27, 0.9), rgba(24, 24, 27, 0.9)) padding-box,
+        linear-gradient(135deg, #667eea 0%, #764ba2 50%, #667eea 100%) border-box;
+    animation: ringRotate 4s linear infinite;
+}
+
+@keyframes ringRotate {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.steam-cta-icon {
+    width: 36px;
+    height: 36px;
+    color: #a78bfa;
+    filter: drop-shadow(0 0 8px rgba(167, 139, 250, 0.5));
+    position: relative;
+    z-index: 1;
+}
+
+/* Pulsing Ring */
+.steam-cta-pulse {
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 1px solid rgba(102, 126, 234, 0.4);
+    animation: pulseExpand 2s ease-out infinite;
+}
+
+@keyframes pulseExpand {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+/* Status Indicator */
+.steam-cta-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-radius: 20px;
+}
+
+.steam-cta-status-dot {
+    width: 6px;
+    height: 6px;
+    background: #10b981;
+    border-radius: 50%;
+    animation: statusPulse 2s ease-in-out infinite;
+}
+
+@keyframes statusPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+.steam-cta-status-text {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #10b981;
+}
+
+/* Text Content */
+.steam-cta-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.steam-cta-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #f59e0b;
+    margin-bottom: 8px;
+}
+
+.steam-cta-label-icon {
+    display: flex;
+    color: #f59e0b;
+}
+
+.steam-cta-title {
+    font-size: 26px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #ffffff 0%, #a78bfa 50%, #667eea 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0 0 8px 0;
+    line-height: 1.2;
+}
+
+.steam-cta-description {
+    font-size: 15px;
+    color: var(--color-text-secondary);
+    margin: 0;
+    line-height: 1.5;
+    max-width: 480px;
+}
+
+/* Action Section */
+.steam-cta-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+/* CTA Button */
+.steam-cta-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 28px;
+    border-radius: 12px;
+    text-decoration: none;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.steam-cta-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+}
+
+.steam-cta-btn-bg {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+}
+
+.steam-cta-btn-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.steam-cta-btn-icon {
+    width: 20px;
+    height: 20px;
+}
+
+/* Button Shine Effect */
+.steam-cta-btn-shine {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent
+    );
+    animation: btnShine 3s ease-in-out infinite;
+}
+
+@keyframes btnShine {
+    0%, 100% {
+        left: -100%;
+    }
+    50% {
+        left: 100%;
+    }
+}
+
+/* Privacy Note */
+.steam-cta-privacy {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--color-text-muted);
+}
+
+.steam-cta-privacy svg {
+    color: #10b981;
+}
+
+/* Data Points - Decorative */
+.steam-cta-data-points {
+    position: absolute;
+    bottom: 12px;
+    left: 40px;
+    display: flex;
+    gap: 24px;
+    z-index: 1;
+}
+
+.data-point {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--color-text-muted);
+    opacity: 0;
+    animation: dataPointFade 0.5s ease forwards;
+    animation-delay: var(--delay);
+}
+
+.data-point::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    margin-right: 6px;
+    background: rgba(102, 126, 234, 0.5);
+    border-radius: 2px;
+    transform: rotate(45deg);
+    vertical-align: middle;
+}
+
+@keyframes dataPointFade {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* =============================================================================
+   Filter Section - Glassmorphism Style
+   ============================================================================= */
+
+.discover-filter-section {
+    background: rgba(24, 24, 27, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    border-radius: var(--radius-2xl);
+    padding: 24px;
+    margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    animation: discoverWidgetEntrance 0.5s ease forwards;
+    animation-delay: 150ms;
+}
+
+.discover-filter-section::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-2xl);
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), transparent 50%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.discover-filter-section:hover::before {
+    opacity: 1;
+}
+
+@keyframes discoverWidgetEntrance {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.discover-filter-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.discover-filter-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.discover-filter-title-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--accent-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.discover-filter-title-icon svg {
+    width: 16px;
+    height: 16px;
+    stroke: white;
+    stroke-width: 2;
+    fill: none;
+}
+
+.discover-filter-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr auto;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.discover-filter-grid-second {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    gap: 16px;
+}
+
+.discover-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.discover-filter-group label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.discover-filter-group input[type="text"],
+.discover-filter-group select {
+    width: 100%;
+    padding: 10px 14px;
+    background-color: var(--color-bg-primary);
+    border: 1px solid var(--color-border-secondary);
+    border-radius: var(--radius-lg);
+    color: var(--color-text-primary);
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.discover-filter-group input[type="text"]:hover,
+.discover-filter-group select:hover {
+    border-color: var(--color-border-primary);
+}
+
+.discover-filter-group input[type="text"]:focus,
+.discover-filter-group select:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+}
+
+.discover-filter-btn {
+    align-self: end;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.discover-filter-btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.discover-filter-btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.discover-filter-btn-secondary {
+    background: var(--color-surface-active);
+    color: var(--color-text-primary);
+}
+
+.discover-filter-btn-secondary:hover {
+    background: var(--color-surface-hover);
+}
+
+/* =============================================================================
+   Results Section
+   ============================================================================= */
+
+.discover-results {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.discover-server-card {
+    background: rgba(24, 24, 27, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    border-radius: var(--radius-2xl);
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    animation: discoverWidgetEntrance 0.5s ease forwards;
+    transition: all 0.25s ease;
+}
+
+.discover-server-card:hover {
+    border-color: rgba(102, 126, 234, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.15);
+}
+
+.discover-server-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-2xl);
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), transparent 50%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.discover-server-card:hover::before {
+    opacity: 1;
+}
+
+/* Stagger animations for cards */
+.discover-server-card:nth-child(1) { animation-delay: 200ms; }
+.discover-server-card:nth-child(2) { animation-delay: 280ms; }
+.discover-server-card:nth-child(3) { animation-delay: 360ms; }
+.discover-server-card:nth-child(4) { animation-delay: 440ms; }
+.discover-server-card:nth-child(5) { animation-delay: 520ms; }
+
+/* Match Score Badge */
+.discover-match-badge {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+/* Server Header */
+.discover-server-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.discover-server-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    object-fit: cover;
+    border: 2px solid rgba(102, 126, 234, 0.2);
+}
+
+.discover-server-icon-placeholder {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 24px;
+}
+
+.discover-server-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.discover-server-name {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0 0 4px 0;
+    line-height: 1.3;
+}
+
+.discover-server-name a {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.discover-server-name a:hover {
+    color: var(--accent-primary);
+}
+
+.discover-server-description {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Server Body Grid */
+.discover-server-body {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+    margin-bottom: 20px;
+}
+
+/* Recommendation Reasons */
+.discover-reasons-title,
+.discover-tags-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0 0 10px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.discover-reasons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.discover-reason-tag {
+    font-size: 12px;
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-secondary);
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--color-border-primary);
+}
+
+/* Server Tags */
+.discover-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.discover-tag {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 4px;
+}
+
+.discover-tag-overflow {
+    font-size: 11px;
+    color: var(--color-text-muted);
+    padding: 4px 8px;
+}
+
+/* Server Stats Box */
+.discover-server-stats {
+    background-color: var(--color-bg-primary);
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.discover-server-stats-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0 0 12px 0;
+}
+
+.discover-stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--color-border-secondary);
+}
+
+.discover-stat-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.discover-stat-row:first-of-type {
+    padding-top: 0;
+}
+
+.discover-stat-label {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+}
+
+.discover-stat-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+/* Server Actions */
+.discover-server-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.discover-server-actions .btn {
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.discover-server-actions .btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.discover-server-actions .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.discover-server-actions .btn-secondary {
+    background: var(--color-surface-active);
+    color: var(--color-text-primary);
+}
+
+.discover-server-actions .btn-secondary:hover {
+    background: var(--color-surface-hover);
+}
+
+.discover-member-badge {
+    color: #10b981;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 16px;
+    background-color: rgba(16, 185, 129, 0.1);
+    border-radius: 8px;
+}
+
+/* =============================================================================
+   Empty State
+   ============================================================================= */
+
+.discover-empty {
+    text-align: center;
+    padding: 80px 32px;
+    background: rgba(24, 24, 27, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    border-radius: var(--radius-2xl);
+    opacity: 0;
+    animation: discoverWidgetEntrance 0.5s ease forwards;
+    animation-delay: 200ms;
+}
+
+.discover-empty-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0 0 12px 0;
+}
+
+.discover-empty-text {
+    font-size: 15px;
+    color: var(--color-text-secondary);
+    margin: 0 0 24px 0;
+}
+
+.discover-empty-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+/* =============================================================================
+   Light Theme Support
+   ============================================================================= */
+
+[data-theme="light"] .discover-steam-cta {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(102, 126, 234, 0.15);
+    box-shadow:
+        0 4px 32px rgba(102, 126, 234, 0.1),
+        0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .steam-cta-mesh::after {
+    background: linear-gradient(
+        135deg,
+        rgba(102, 126, 234, 0.08) 0%,
+        rgba(118, 75, 162, 0.05) 50%,
+        rgba(102, 126, 234, 0.03) 100%
+    );
+}
+
+[data-theme="light"] .steam-cta-orb {
+    opacity: 0.25;
+}
+
+[data-theme="light"] .steam-cta-icon-ring-inner {
+    background:
+        linear-gradient(rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.95)) padding-box,
+        linear-gradient(135deg, #667eea 0%, #764ba2 50%, #667eea 100%) border-box;
+}
+
+[data-theme="light"] .steam-cta-title {
+    background: linear-gradient(135deg, #1a1a2e 0%, #667eea 50%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+[data-theme="light"] .steam-cta-scanline {
+    background: linear-gradient(
+        to bottom,
+        transparent 0%,
+        rgba(102, 126, 234, 0.02) 50%,
+        transparent 100%
+    );
+}
+
+[data-theme="light"] .discover-filter-section,
+[data-theme="light"] .discover-server-card,
+[data-theme="light"] .discover-empty {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow:
+        0 4px 20px rgba(0, 0, 0, 0.06),
+        0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .discover-filter-section::before,
+[data-theme="light"] .discover-server-card::before {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), transparent 50%);
+}
+
+[data-theme="light"] .discover-server-card:hover {
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.1);
+}
+
+[data-theme="light"] .discover-server-stats {
+    background: rgba(245, 245, 245, 0.8);
+}
+
+[data-theme="light"] .discover-reason-tag {
+    background: rgba(245, 245, 245, 0.8);
+    border-color: var(--color-border-secondary);
+}
+
+/* =============================================================================
+   Responsive Design
+   ============================================================================= */
+
+@media (max-width: 1024px) {
+    .steam-cta-content {
+        flex-direction: column;
+        text-align: center;
+        padding: 32px 24px;
+    }
+
+    .steam-cta-text {
+        order: 1;
+    }
+
+    .steam-cta-icon-container {
+        order: 2;
+    }
+
+    .steam-cta-action {
+        order: 3;
+        width: 100%;
+    }
+
+    .steam-cta-btn {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .steam-cta-description {
+        max-width: none;
+    }
+
+    .steam-cta-data-points {
+        position: relative;
+        bottom: auto;
+        left: auto;
+        justify-content: center;
+        margin-top: 16px;
+        order: 4;
+    }
+
+    .discover-filter-grid,
+    .discover-filter-grid-second {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .discover-filter-btn {
+        grid-column: span 2;
+        justify-self: end;
+    }
+
+    .discover-server-body {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .discover-container {
+        padding: 0 16px 32px;
+    }
+
+    .steam-cta-content {
+        padding: 24px 20px;
+        gap: 20px;
+    }
+
+    .steam-cta-title {
+        font-size: 22px;
+    }
+
+    .steam-cta-description {
+        font-size: 14px;
+    }
+
+    .steam-cta-icon-ring {
+        width: 60px;
+        height: 60px;
+    }
+
+    .steam-cta-icon {
+        width: 28px;
+        height: 28px;
+    }
+
+    .steam-cta-data-points {
+        display: none;
+    }
+
+    .discover-filter-section {
+        padding: 20px;
+    }
+
+    .discover-filter-grid,
+    .discover-filter-grid-second {
+        grid-template-columns: 1fr;
+    }
+
+    .discover-filter-btn {
+        grid-column: auto;
+        width: 100%;
+    }
+
+    .discover-server-card {
+        padding: 20px;
+    }
+
+    .discover-server-header {
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+    }
+
+    .discover-match-badge {
+        position: relative;
+        top: auto;
+        right: auto;
+        align-self: flex-start;
+        margin-bottom: 12px;
+    }
+
+    .discover-server-actions {
+        flex-direction: column;
+    }
+
+    .discover-server-actions .btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .steam-cta-title {
+        font-size: 20px;
+    }
+
+    .steam-cta-btn {
+        padding: 12px 24px;
+    }
+
+    .steam-cta-btn-content {
+        font-size: 14px;
+    }
+
+    .discover-empty-actions {
+        flex-direction: column;
+    }
+
+    .discover-empty-actions .btn {
+        width: 100%;
+    }
+}
+
+/* =============================================================================
+   Accessibility - Reduced Motion
+   ============================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+    .discover-steam-cta,
+    .steam-cta-orb,
+    .steam-cta-scanline,
+    .steam-cta-icon-ring-inner,
+    .steam-cta-pulse,
+    .steam-cta-status-dot,
+    .steam-cta-btn-shine,
+    .data-point,
+    .discover-filter-section,
+    .discover-server-card,
+    .discover-empty {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+
+    .steam-cta-btn:hover,
+    .discover-server-card:hover {
+        transform: none;
+    }
+}

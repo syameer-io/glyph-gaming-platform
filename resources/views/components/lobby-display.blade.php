@@ -21,8 +21,8 @@
 >
     {{-- Header Section --}}
     <div class="card">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-            <h3 class="card-header" style="margin-bottom: 0;">
+        <div class="lobby-header-row">
+            <h3 class="card-header lobby-title">
                 @if($isOwnProfile)
                     Your Active Lobbies
                 @else
@@ -45,19 +45,19 @@
         </div>
 
         {{-- Loading State --}}
-        <div x-show="loading && activeLobbies.length === 0" x-cloak style="padding: 40px; text-align: center;">
+        <div x-show="loading && activeLobbies.length === 0" x-cloak class="lobby-loading-state">
             <div class="lobby-spinner"></div>
-            <p style="color: #71717a; margin-top: 12px;">Loading lobbies...</p>
+            <p class="lobby-loading-text">Loading lobbies...</p>
         </div>
 
         {{-- Empty State --}}
-        <div x-show="!loading && activeLobbies.length === 0" x-cloak style="text-align: center; padding: 40px; background-color: #0e0e10; border-radius: 8px; border: 2px dashed #3f3f46;">
-            <div style="margin-bottom: 12px;">
-                <svg width="48" height="48" fill="none" stroke="#3f3f46" viewBox="0 0 24 24" style="display: inline-block;">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
+        <div x-show="!loading && activeLobbies.length === 0" x-cloak class="lobby-empty-state">
+            <div class="lobby-empty-icon">
+                <svg width="48" height="48" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
                 </svg>
             </div>
-            <p style="color: #71717a; margin-bottom: 8px;">
+            <p class="lobby-empty-text">
                 @if($isOwnProfile)
                     No active lobbies yet
                 @else
@@ -65,19 +65,14 @@
                 @endif
             </p>
             @if($isOwnProfile)
-                <a
-                    href="{{ route('lobbies.index') }}"
-                    style="color: #667eea; font-size: 14px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;"
-                    onmouseover="this.style.textDecoration='underline'"
-                    onmouseout="this.style.textDecoration='none'"
-                >
+                <a href="{{ route('lobbies.index') }}" class="lobby-create-link">
                     <span>Create a lobby to get started</span>
                     <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
                     </svg>
                 </a>
             @else
-                <p style="color: #b3b3b5; font-size: 14px;">
+                <p class="lobby-check-back-text">
                     Check back later to join their games
                 </p>
             @endif
@@ -211,13 +206,84 @@
     display: inline-block;
     width: 40px;
     height: 40px;
-    border: 4px solid #3f3f46;
-    border-top-color: #667eea;
+    border: 4px solid var(--color-border-primary, #3f3f46);
+    border-top-color: var(--accent-primary, #667eea);
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
 
 [x-cloak] { display: none !important; }
+
+/* Header Row */
+.lobby-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.lobby-title {
+    margin-bottom: 0 !important;
+}
+
+/* Loading State */
+.lobby-loading-state {
+    padding: 40px;
+    text-align: center;
+}
+
+.lobby-loading-text {
+    color: var(--color-text-muted, #71717a);
+    margin-top: 12px;
+}
+
+/* Empty State */
+.lobby-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px;
+    background-color: var(--color-bg-primary, #0e0e10);
+    border-radius: 12px;
+    border: 2px dashed var(--color-border-primary, #3f3f46);
+}
+
+.lobby-empty-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+    color: var(--color-text-muted, #71717a);
+}
+
+.lobby-empty-text {
+    color: var(--color-text-muted, #71717a);
+    font-size: 15px;
+    margin: 0 0 12px 0;
+}
+
+.lobby-create-link {
+    color: var(--accent-primary, #667eea);
+    font-size: 14px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: color 0.2s ease;
+}
+
+.lobby-create-link:hover {
+    text-decoration: underline;
+    color: var(--accent-secondary, #818cf8);
+}
+
+.lobby-check-back-text {
+    color: var(--color-text-secondary, #b3b3b5);
+    font-size: 14px;
+    margin: 0;
+}
 
 /* Lobby Grid */
 .lobby-grid {
@@ -228,15 +294,17 @@
 
 /* Lobby Card */
 .lobby-card {
-    background-color: #111214;
-    border-radius: 8px;
+    background-color: var(--color-bg-primary, #111214);
+    border-radius: 14px;
     overflow: hidden;
     position: relative;
-    transition: all 0.2s ease;
+    transition: all 0.25s ease;
+    border: 1px solid var(--color-border-secondary, transparent);
 }
 
 .lobby-card-hover {
-    background-color: #1a1b1e;
+    background-color: var(--color-bg-secondary, #1a1b1e);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
 }
 
 /* Card Banner */
@@ -245,7 +313,7 @@
     width: 100%;
     height: 80px;
     overflow: hidden;
-    background-color: #2b2d31;
+    background-color: var(--color-bg-elevated, #2b2d31);
 }
 
 .lobby-card-banner-img {
@@ -261,7 +329,7 @@
     left: 0;
     right: 0;
     height: 40px;
-    background: linear-gradient(to top, #111214 0%, transparent 100%);
+    background: linear-gradient(to top, var(--color-bg-primary, #111214) 0%, transparent 100%);
 }
 
 /* Delete Button */
@@ -317,14 +385,14 @@
 
 /* Card Content */
 .lobby-card-content {
-    padding: 12px 16px 16px 16px;
+    padding: 14px 18px 18px 18px;
 }
 
 .lobby-game-name {
     margin: 0;
-    color: #f2f3f5;
+    color: var(--color-text-primary, #f2f3f5);
     font-weight: 600;
-    font-size: 16px;
+    font-size: 15px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -332,21 +400,22 @@
 
 .lobby-join-method {
     margin: 4px 0 0 0;
-    color: #b5bac1;
+    color: var(--color-text-muted, #b5bac1);
     font-size: 13px;
 }
 
 /* Join Info Box */
 .lobby-join-info {
-    background-color: #1e1f22;
+    background-color: var(--color-bg-secondary, #1e1f22);
     padding: 10px 12px;
-    border-radius: 6px;
+    border-radius: 10px;
     font-family: 'Consolas', 'Monaco', monospace;
     font-size: 11px;
-    color: #dbdee1;
+    color: var(--color-text-secondary, #dbdee1);
     word-break: break-all;
     position: relative;
     padding-right: 36px;
+    border: 1px solid var(--color-border-secondary, transparent);
 }
 
 .lobby-join-text {
@@ -362,9 +431,9 @@
     width: 26px;
     height: 26px;
     border-radius: 4px;
-    background-color: #2b2d31;
-    color: #b5bac1;
-    border: none;
+    background-color: var(--color-bg-elevated, #2b2d31);
+    color: var(--color-text-muted, #b5bac1);
+    border: 1px solid var(--color-border-secondary, transparent);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -373,8 +442,8 @@
 }
 
 .lobby-copy-btn:hover {
-    background-color: #4e5058;
-    color: #fff;
+    background-color: var(--color-surface-hover, #4e5058);
+    color: var(--color-text-primary, #fff);
 }
 
 .lobby-copy-btn-success {
@@ -394,7 +463,7 @@
     background-color: #23a559;
     color: white;
     padding: 10px 16px;
-    border-radius: 4px;
+    border-radius: 8px;
     font-size: 14px;
     font-weight: 500;
     transition: background-color 0.17s ease;
@@ -406,12 +475,13 @@
 
 /* Info Text */
 .lobby-info-text {
-    background-color: #1e1f22;
+    background-color: var(--color-bg-secondary, #1e1f22);
     padding: 10px 12px;
-    border-radius: 6px;
+    border-radius: 8px;
     text-align: center;
     font-size: 13px;
-    color: #b5bac1;
+    color: var(--color-text-muted, #b5bac1);
+    border: 1px solid var(--color-border-secondary, transparent);
 }
 
 /* Mobile Responsive Styles */
@@ -438,7 +508,7 @@
 /* Touch-friendly hover states (disable on touch devices) */
 @media (hover: none) {
     .lobby-card-hover {
-        background-color: #111214 !important;
+        background-color: var(--color-bg-primary, #111214) !important;
     }
 }
 
@@ -451,6 +521,40 @@
 @keyframes slideOutRight {
     from { transform: translateX(0); opacity: 1; }
     to { transform: translateX(100%); opacity: 0; }
+}
+
+/* =============================================================================
+   Light Theme Overrides for Lobby Display
+   ============================================================================= */
+
+[data-theme="light"] .lobby-empty-state {
+    background-color: var(--color-surface);
+    border-color: var(--color-border-primary);
+}
+
+[data-theme="light"] .lobby-card {
+    background-color: var(--color-surface) !important;
+    border-color: var(--color-border-secondary) !important;
+}
+
+[data-theme="light"] .lobby-card-hover {
+    background-color: var(--color-surface-hover) !important;
+}
+
+[data-theme="light"] .lobby-card-banner {
+    background-color: var(--color-bg-tertiary) !important;
+}
+
+[data-theme="light"] .lobby-card-banner-gradient {
+    background: linear-gradient(to top, var(--color-surface) 0%, transparent 100%) !important;
+}
+
+[data-theme="light"] .lobby-join-info {
+    background-color: var(--color-bg-tertiary) !important;
+}
+
+[data-theme="light"] .lobby-info-text {
+    background-color: var(--color-bg-tertiary) !important;
 }
 </style>
 

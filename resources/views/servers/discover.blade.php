@@ -6,24 +6,99 @@
 <x-navbar active-section="servers" />
 
 <main>
-    <div class="container">
-        <div style="margin-bottom: 32px;">
-            <h1 style="margin-bottom: 8px;">🔍 Discover Gaming Communities</h1>
-            <p style="color: var(--color-text-secondary); font-size: 16px;">Find your perfect gaming community based on your interests and preferences</p>
+    <div class="discover-container">
+        {{-- Page Header - Matches teams/matchmaking/lobbies pattern --}}
+        <div class="page-header">
+            <h1 class="page-title">Discover Gaming Communities</h1>
         </div>
 
-        <!-- Filter Controls -->
-        <div class="card" style="margin-bottom: 32px;">
-            <h3 class="card-header">Filter & Search</h3>
-            
+        {{-- Steam Recommendations CTA - Above filters for visibility --}}
+        @if(!auth()->user()->steam_id)
+            <div class="discover-steam-cta">
+                {{-- Animated Background Layer --}}
+                <div class="steam-cta-bg">
+                    <div class="steam-cta-mesh"></div>
+                    <div class="steam-cta-orb steam-orb-1"></div>
+                    <div class="steam-cta-orb steam-orb-2"></div>
+                    <div class="steam-cta-orb steam-orb-3"></div>
+                    <div class="steam-cta-scanline"></div>
+                </div>
+
+                {{-- Content --}}
+                <div class="steam-cta-content">
+                    {{-- Left: Icon & Status --}}
+                    <div class="steam-cta-icon-container">
+                        <div class="steam-cta-icon-ring">
+                            <div class="steam-cta-icon-ring-inner"></div>
+                            <svg class="steam-cta-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2a10 10 0 0 1 10 10 10 10 0 0 1-10 10c-4.6 0-8.45-3.08-9.64-7.27l3.83 1.58a2.84 2.84 0 0 0 2.78 2.27c1.56 0 2.83-1.27 2.83-2.83v-.13l3.4-2.43h.08a3.79 3.79 0 1 0-3.79-3.79v.08l-2.42 3.4-.14.01a2.82 2.82 0 0 0-2.79-2.4c-1.25 0-2.32.82-2.69 1.95L2.12 9.9A10 10 0 0 1 12 2m0 18a8 8 0 0 0 7.41-5h.01L12 18.41V20M4.34 14.93l1.94.8a2.84 2.84 0 0 0 1.47 2.86l-1.97-.82A8.04 8.04 0 0 1 4 12c0-.39.03-.77.09-1.15l2.19.91c-.18.38-.28.81-.28 1.26 0 .74.27 1.41.71 1.93l-2.37-.02m11.42-5.68a2.53 2.53 0 1 1 0 5.06 2.53 2.53 0 0 1 0-5.06m0 .94a1.58 1.58 0 1 0 0 3.16 1.58 1.58 0 0 0 0-3.16z"/>
+                            </svg>
+                            <div class="steam-cta-pulse"></div>
+                        </div>
+                    </div>
+
+                    {{-- Center: Text Content --}}
+                    <div class="steam-cta-text">
+                        <div class="steam-cta-label">
+                            <span class="steam-cta-label-icon">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                                </svg>
+                            </span>
+                            Unlock Smart Matching
+                        </div>
+                        <h3 class="steam-cta-title">Get Personalized Recommendations</h3>
+                        <p class="steam-cta-description">
+                            Connect Steam to discover communities that match your playstyle, games, and skill level
+                        </p>
+                    </div>
+
+                    {{-- Right: Action --}}
+                    <div class="steam-cta-action">
+                        <a href="{{ route('steam.link') }}" class="steam-cta-btn">
+                            <span class="steam-cta-btn-bg"></span>
+                            <span class="steam-cta-btn-content">
+                                <svg class="steam-cta-btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 2a10 10 0 0 1 10 10 10 10 0 0 1-10 10c-4.6 0-8.45-3.08-9.64-7.27l3.83 1.58a2.84 2.84 0 0 0 2.78 2.27c1.56 0 2.83-1.27 2.83-2.83v-.13l3.4-2.43h.08a3.79 3.79 0 1 0-3.79-3.79v.08l-2.42 3.4-.14.01a2.82 2.82 0 0 0-2.79-2.4c-1.25 0-2.32.82-2.69 1.95L2.12 9.9A10 10 0 0 1 12 2m0 18a8 8 0 0 0 7.41-5h.01L12 18.41V20M4.34 14.93l1.94.8a2.84 2.84 0 0 0 1.47 2.86l-1.97-.82A8.04 8.04 0 0 1 4 12c0-.39.03-.77.09-1.15l2.19.91c-.18.38-.28.81-.28 1.26 0 .74.27 1.41.71 1.93l-2.37-.02m11.42-5.68a2.53 2.53 0 1 1 0 5.06 2.53 2.53 0 0 1 0-5.06m0 .94a1.58 1.58 0 1 0 0 3.16 1.58 1.58 0 0 0 0-3.16z"/>
+                                </svg>
+                                <span>Link Steam Account</span>
+                            </span>
+                            <span class="steam-cta-btn-shine"></span>
+                        </a>
+                        <div class="steam-cta-privacy">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                            </svg>
+                            <span>Read-only access</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        @endif
+
+        {{-- Filter Controls --}}
+        <div class="discover-filter-section">
+            <div class="discover-filter-header">
+                <h3 class="discover-filter-title">
+                    <span class="discover-filter-title-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                        </svg>
+                    </span>
+                    Filter & Search
+                </h3>
+            </div>
+
             <form id="filterForm" method="GET" action="{{ route('servers.discover') }}">
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 16px; margin-bottom: 16px;">
-                    <div class="form-group" style="margin: 0;">
+                <div class="discover-filter-grid">
+                    <div class="discover-filter-group">
                         <label for="search">Search Servers</label>
                         <input type="text" id="search" name="search" placeholder="Server name or description..." value="{{ request('search') }}">
                     </div>
-                    
-                    <div class="form-group" style="margin: 0;">
+
+                    <div class="discover-filter-group">
                         <label for="game">Game</label>
                         <select id="game" name="game">
                             <option value="">All Games</option>
@@ -32,8 +107,8 @@
                             <option value="gtfo" {{ request('game') === 'gtfo' ? 'selected' : '' }}>GTFO</option>
                         </select>
                     </div>
-                    
-                    <div class="form-group" style="margin: 0;">
+
+                    <div class="discover-filter-group">
                         <label for="skill_level">Skill Level</label>
                         <select id="skill_level" name="skill_level">
                             <option value="">All Levels</option>
@@ -45,12 +120,12 @@
                             <option value="competitive" {{ request('skill_level') === 'competitive' ? 'selected' : '' }}>Competitive</option>
                         </select>
                     </div>
-                    
-                    <button type="submit" class="btn btn-primary" style="align-self: end;">Filter</button>
+
+                    <button type="submit" class="discover-filter-btn discover-filter-btn-primary">Filter</button>
                 </div>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 16px;">
-                    <div class="form-group" style="margin: 0;">
+
+                <div class="discover-filter-grid-second">
+                    <div class="discover-filter-group">
                         <label for="region">Region</label>
                         <select id="region" name="region">
                             <option value="">All Regions</option>
@@ -62,8 +137,8 @@
                             <option value="oceania" {{ request('region') === 'oceania' ? 'selected' : '' }}>Oceania</option>
                         </select>
                     </div>
-                    
-                    <div class="form-group" style="margin: 0;">
+
+                    <div class="discover-filter-group">
                         <label for="language">Language</label>
                         <select id="language" name="language">
                             <option value="">All Languages</option>
@@ -75,8 +150,8 @@
                             <option value="chinese" {{ request('language') === 'chinese' ? 'selected' : '' }}>Chinese</option>
                         </select>
                     </div>
-                    
-                    <div class="form-group" style="margin: 0;">
+
+                    <div class="discover-filter-group">
                         <label for="sort">Sort By</label>
                         <select id="sort" name="sort">
                             <option value="recommended" {{ request('sort') === 'recommended' ? 'selected' : '' }}>Recommended</option>
@@ -85,98 +160,94 @@
                             <option value="oldest" {{ request('sort') === 'oldest' ? 'selected' : '' }}>Oldest</option>
                         </select>
                     </div>
-                    
-                    <a href="{{ route('servers.discover') }}" class="btn btn-secondary" style="align-self: end;">Clear</a>
+
+                    <a href="{{ route('servers.discover') }}" class="discover-filter-btn discover-filter-btn-secondary">Clear</a>
                 </div>
             </form>
         </div>
 
-        <!-- Results -->
-        <div style="display: grid; gap: 24px;">
+        {{-- Results --}}
+        <div class="discover-results">
             @if(isset($servers) && $servers->count() > 0)
                 @foreach($servers as $server)
-                    <div class="card" style="position: relative;">
+                    <div class="discover-server-card">
                         @if(isset($serverRecommendations[$server->id]))
-                            <div style="position: absolute; top: 24px; right: 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 8px 12px; border-radius: 8px; font-weight: 600; font-size: 14px;">
+                            <div class="discover-match-badge">
                                 {{ number_format($serverRecommendations[$server->id]['score'], 1) }}% Match
                             </div>
                         @endif
 
-                        <div style="margin-bottom: 16px; padding-right: {{ isset($serverRecommendations[$server->id]) ? '120px' : '0' }};">
-                            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px;">
-                                @if($server->icon_url)
-                                    <img src="{{ $server->icon_url }}" alt="{{ $server->name }}" style="width: 48px; height: 48px; border-radius: 8px;">
-                                @else
-                                    <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 20px;">
-                                        {{ substr($server->name, 0, 1) }}
-                                    </div>
-                                @endif
-                                
-                                <div style="flex: 1;">
-                                    <h3 style="margin: 0 0 4px 0; color: var(--color-text-primary); font-weight: 600; font-size: 20px;">
-                                        <a href="{{ route('server.show', $server) }}" style="color: inherit; text-decoration: none;">
-                                            {{ $server->name }}
-                                        </a>
-                                    </h3>
-                                    @if($server->description)
-                                        <p style="margin: 0; color: var(--color-text-secondary); font-size: 14px; line-height: 1.4;">{{ Str::limit($server->description, 120) }}</p>
-                                    @endif
+                        <div class="discover-server-header" style="{{ isset($serverRecommendations[$server->id]) ? 'padding-right: 120px;' : '' }}">
+                            @if($server->icon_url)
+                                <img src="{{ $server->icon_url }}" alt="{{ $server->name }}" class="discover-server-icon">
+                            @else
+                                <div class="discover-server-icon-placeholder">
+                                    {{ strtoupper(substr($server->name, 0, 1)) }}
                                 </div>
+                            @endif
+
+                            <div class="discover-server-info">
+                                <h3 class="discover-server-name">
+                                    <a href="{{ route('server.show', $server) }}">
+                                        {{ $server->name }}
+                                    </a>
+                                </h3>
+                                @if($server->description)
+                                    <p class="discover-server-description">{{ Str::limit($server->description, 120) }}</p>
+                                @endif
                             </div>
                         </div>
 
-                        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 20px;">
+                        <div class="discover-server-body">
                             <div>
                                 @if(isset($serverRecommendations[$server->id]) && !empty($serverRecommendations[$server->id]['reasons']))
-                                    <h4 style="margin: 0 0 8px 0; color: var(--color-text-primary); font-size: 14px; font-weight: 600;">Recommended because:</h4>
-                                    <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px;">
+                                    <h4 class="discover-reasons-title">Recommended because:</h4>
+                                    <div class="discover-reasons">
                                         @foreach(array_slice($serverRecommendations[$server->id]['reasons'], 0, 3) as $reason)
-                                            <span style="font-size: 12px; background-color: var(--color-bg-primary); color: var(--color-text-secondary); padding: 4px 8px; border-radius: 4px; border: 1px solid var(--color-border-primary);">{{ $reason }}</span>
+                                            <span class="discover-reason-tag">{{ $reason }}</span>
                                         @endforeach
                                     </div>
                                 @endif
 
                                 @if($server->tags && $server->tags->count() > 0)
-                                    <h4 style="margin: 0 0 8px 0; color: var(--color-text-primary); font-size: 14px; font-weight: 600;">Server Tags</h4>
-                                    <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                                    <h4 class="discover-tags-title">Server Tags</h4>
+                                    <div class="discover-tags">
                                         @foreach($server->tags->take(6) as $tag)
-                                            <span style="font-size: 11px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 3px 8px; border-radius: 3px; text-transform: uppercase; font-weight: 600;">
+                                            <span class="discover-tag">
                                                 {{ ucfirst(str_replace('_', ' ', $tag->tag_value)) }}
                                             </span>
                                         @endforeach
                                         @if($server->tags->count() > 6)
-                                            <span style="font-size: 11px; color: var(--color-text-muted);">+{{ $server->tags->count() - 6 }}</span>
+                                            <span class="discover-tag-overflow">+{{ $server->tags->count() - 6 }}</span>
                                         @endif
                                     </div>
                                 @endif
                             </div>
 
-                            <div style="background-color: var(--color-bg-primary); border-radius: 8px; padding: 16px;">
-                                <h4 style="margin: 0 0 12px 0; color: var(--color-text-primary); font-size: 14px; font-weight: 600;">Server Info</h4>
-                                <div style="space-y: 8px;">
-                                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                                        <span style="color: var(--color-text-secondary); font-size: 13px;">Members</span>
-                                        <span style="color: var(--color-text-primary); font-weight: 600; font-size: 13px;">{{ $server->members()->count() }}</span>
-                                    </div>
-                                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                                        <span style="color: var(--color-text-secondary); font-size: 13px;">Channels</span>
-                                        <span style="color: var(--color-text-primary); font-weight: 600; font-size: 13px;">{{ $server->channels()->count() }}</span>
-                                    </div>
-                                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                                        <span style="color: var(--color-text-secondary); font-size: 13px;">Created</span>
-                                        <span style="color: var(--color-text-primary); font-weight: 600; font-size: 13px;">{{ $server->created_at->diffForHumans() }}</span>
-                                    </div>
-                                    @if($server->tags->where('tag_type', 'region')->first())
-                                        <div style="display: flex; justify-content: space-between;">
-                                            <span style="color: var(--color-text-secondary); font-size: 13px;">Region</span>
-                                            <span style="color: var(--color-text-primary); font-weight: 600; font-size: 13px;">{{ strtoupper($server->tags->where('tag_type', 'region')->first()->tag_value) }}</span>
-                                        </div>
-                                    @endif
+                            <div class="discover-server-stats">
+                                <h4 class="discover-server-stats-title">Server Info</h4>
+                                <div class="discover-stat-row">
+                                    <span class="discover-stat-label">Members</span>
+                                    <span class="discover-stat-value">{{ $server->members()->count() }}</span>
                                 </div>
+                                <div class="discover-stat-row">
+                                    <span class="discover-stat-label">Channels</span>
+                                    <span class="discover-stat-value">{{ $server->channels()->count() }}</span>
+                                </div>
+                                <div class="discover-stat-row">
+                                    <span class="discover-stat-label">Created</span>
+                                    <span class="discover-stat-value">{{ $server->created_at->diffForHumans() }}</span>
+                                </div>
+                                @if($server->tags->where('tag_type', 'region')->first())
+                                    <div class="discover-stat-row">
+                                        <span class="discover-stat-label">Region</span>
+                                        <span class="discover-stat-value">{{ strtoupper($server->tags->where('tag_type', 'region')->first()->tag_value) }}</span>
+                                    </div>
+                                @endif
                             </div>
                         </div>
 
-                        <div style="display: flex; gap: 12px; align-items: center;">
+                        <div class="discover-server-actions">
                             <a href="{{ route('server.show', $server) }}" class="btn btn-primary">View Server</a>
                             @if(!$server->members->contains(auth()->user()))
                                 <form method="POST" action="{{ route('server.join.direct', $server) }}" style="display: inline;">
@@ -184,37 +255,29 @@
                                     <button type="submit" class="btn btn-secondary">Join Server</button>
                                 </form>
                             @else
-                                <span style="color: #10b981; font-weight: 600; padding: 8px 16px; background-color: rgba(16, 185, 129, 0.1); border-radius: 6px; font-size: 14px;">Already a member</span>
+                                <span class="discover-member-badge">Already a member</span>
                             @endif
                         </div>
                     </div>
                 @endforeach
 
-                <!-- Pagination -->
+                {{-- Pagination --}}
                 @if(method_exists($servers, 'links'))
-                    <div style="margin-top: 32px;">
+                    <div style="margin-top: 16px;">
                         {{ $servers->links() }}
                     </div>
                 @endif
             @else
-                <div style="text-align: center; padding: 80px 20px; background-color: var(--color-surface); border-radius: 12px;">
-                    <h3 style="margin-bottom: 16px; color: var(--color-text-primary);">No servers found</h3>
-                    <p style="color: var(--color-text-secondary); margin-bottom: 24px;">Try adjusting your filters or search terms to find gaming communities.</p>
-                    <div style="display: flex; gap: 12px; justify-content: center;">
+                <div class="discover-empty">
+                    <h3 class="discover-empty-title">No servers found</h3>
+                    <p class="discover-empty-text">Try adjusting your filters or search terms to find gaming communities.</p>
+                    <div class="discover-empty-actions">
                         <a href="{{ route('server.create') }}" class="btn btn-primary">Create a Server</a>
                         <a href="{{ route('servers.discover') }}" class="btn btn-secondary">Clear Filters</a>
                     </div>
                 </div>
             @endif
         </div>
-
-        @if(!auth()->user()->steam_id)
-            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 32px; text-align: center; margin-top: 40px; color: white;">
-                <h3 style="margin-bottom: 16px;">🎮 Get Personalized Recommendations</h3>
-                <p style="margin-bottom: 24px; opacity: 0.9;">Link your Steam account to receive personalized server recommendations based on your gaming activity and preferences.</p>
-                <a href="{{ route('steam.link') }}" class="btn" style="background-color: white; color: #667eea; font-weight: 600;">Link Steam Account</a>
-            </div>
-        @endif
     </div>
 </main>
 
@@ -239,14 +302,14 @@ document.getElementById('search').addEventListener('input', function() {
 document.querySelectorAll('form[action*="join-direct"]').forEach(form => {
     form.addEventListener('submit', function(e) {
         e.preventDefault();
-        
+
         const button = form.querySelector('button[type="submit"]');
         const originalText = button.textContent;
-        
+
         // Show loading state
         button.disabled = true;
         button.textContent = 'Joining...';
-        
+
         fetch(form.action, {
             method: 'POST',
             headers: {
@@ -260,9 +323,9 @@ document.querySelectorAll('form[action*="join-direct"]').forEach(form => {
         .then(data => {
             if (data.success) {
                 // Show success state
-                button.textContent = '✓ Joined!';
+                button.textContent = 'Joined!';
                 button.style.backgroundColor = '#10b981';
-                
+
                 // Redirect after short delay
                 setTimeout(() => {
                     window.location.href = data.redirect_url;

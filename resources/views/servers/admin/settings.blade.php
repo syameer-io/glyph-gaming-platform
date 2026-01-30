@@ -165,6 +165,145 @@
     .back-to-server-link svg {
         flex-shrink: 0;
     }
+
+    /* Goal Form Enhanced Styles */
+    .goal-form-container {
+        background: var(--color-bg-primary);
+        border-radius: 12px;
+        padding: 28px;
+        margin-bottom: 32px;
+        position: relative;
+        border: 1px solid var(--color-border-primary);
+    }
+
+    .goal-form-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 12px 12px 0 0;
+    }
+
+    .goal-form-header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 24px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--color-border-primary);
+    }
+
+    .goal-form-header-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .goal-form-section {
+        margin-bottom: 24px;
+    }
+
+    .goal-form-section:last-of-type {
+        margin-bottom: 0;
+    }
+
+    .goal-form-section-title {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--color-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 14px;
+    }
+
+    .goal-form-row {
+        display: grid;
+        gap: 20px;
+    }
+
+    .goal-form-row-2 {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .goal-form-row-3 {
+        grid-template-columns: minmax(100px, 1fr) minmax(150px, 1.4fr) minmax(130px, 1fr);
+    }
+
+    .goal-form-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--color-text-secondary);
+    }
+
+    .goal-form-label svg {
+        width: 16px;
+        height: 16px;
+        color: var(--accent-primary);
+        flex-shrink: 0;
+    }
+
+    .goal-form-hint {
+        color: var(--color-text-muted);
+        font-size: 12px;
+        margin-top: 6px;
+        margin-bottom: 0;
+    }
+
+    .goal-form-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        padding-top: 24px;
+        border-top: 1px solid var(--color-border-primary);
+        margin-top: 28px;
+    }
+
+    .goal-form-actions .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .goal-form-actions .btn svg {
+        flex-shrink: 0;
+    }
+
+    @media (max-width: 768px) {
+        .goal-form-container {
+            padding: 20px;
+        }
+
+        .goal-form-row-2,
+        .goal-form-row-3 {
+            grid-template-columns: 1fr;
+        }
+
+        .goal-form-header {
+            flex-direction: column;
+            text-align: center;
+            gap: 12px;
+        }
+
+        .goal-form-actions {
+            flex-direction: column;
+        }
+
+        .goal-form-actions .btn {
+            width: 100%;
+        }
+    }
 </style>
 @endpush
 
@@ -712,67 +851,160 @@
                 <div id="goals" class="tab-content">
                     <h3 style="margin-bottom: 24px;">Community Goals</h3>
                     <p style="color: var(--color-text-secondary); margin-bottom: 24px; font-size: 14px;">Create and manage community goals to engage your members and track achievements together.</p>
-                    
-                    <!-- Create Goal Form -->
-                    <div style="background-color: var(--color-bg-primary); border-radius: 8px; padding: 20px; margin-bottom: 32px;">
-                        <h4 style="margin-bottom: 16px;">Create New Goal</h4>
-                        
-                        <form id="createGoalForm" style="display: grid; gap: 16px;">
+
+                    <!-- Create Goal Form - Enhanced UI -->
+                    <div class="goal-form-container">
+                        <!-- Form Header -->
+                        <div class="goal-form-header">
+                            <div class="goal-form-header-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="8" r="6"/>
+                                    <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 style="margin: 0; font-size: 16px; font-weight: 600; color: var(--color-text-primary);">Create New Goal</h4>
+                                <p style="margin: 2px 0 0 0; font-size: 13px; color: var(--color-text-muted);">Set up a community challenge for your members</p>
+                            </div>
+                        </div>
+
+                        <form id="createGoalForm">
                             @csrf
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                                <div class="form-group" style="margin: 0;">
-                                    <label for="goal_title">Goal Title <span style="color: var(--accent-danger);">*</span></label>
-                                    <input type="text" id="goal_title" name="title" placeholder="e.g., Reach 100 CS2 Wins" required>
-                                </div>
-                                <div class="form-group" style="margin: 0;">
-                                    <label for="goal_type">Goal Type <span style="color: var(--accent-danger);">*</span></label>
-                                    <select id="goal_type" name="goal_type" required onchange="updateGoalFields()">
-                                        <option value="">Select type...</option>
-                                        <option value="achievement">Achievement Goal</option>
-                                        <option value="playtime">Playtime Goal</option>
-                                        <option value="participation">Participation Goal</option>
-                                        <option value="community">Community Goal</option>
-                                        <option value="custom">Custom Goal</option>
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <div class="form-group" style="margin: 0;">
-                                <label for="goal_description">Description <span style="color: var(--accent-danger);">*</span></label>
-                                <textarea id="goal_description" name="description" rows="3" placeholder="Describe the goal and how members can contribute..." required></textarea>
-                            </div>
-                            
-                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
-                                <div class="form-group" style="margin: 0;">
-                                    <label for="target_value">Target Value <span style="color: var(--accent-danger);">*</span></label>
-                                    <input type="number" id="target_value" name="target_value" placeholder="100" required>
-                                </div>
-                                <div class="form-group" style="margin: 0;">
-                                    <label for="game_appid">Game <span style="color: var(--accent-danger);">*</span></label>
-                                    <select id="game_appid" name="game_appid" required>
-                                        <option value="">Select a game...</option>
-                                        <option value="730">Counter-Strike 2</option>
-                                        <option value="548430">Deep Rock Galactic</option>
-                                        <option value="493520">GTFO</option>
-                                    </select>
-                                </div>
-                                <div class="form-group" style="margin: 0;">
-                                    <label for="deadline">Deadline <span style="color: var(--accent-danger);">*</span></label>
-                                    <input type="date" id="deadline" name="deadline" required>
+
+                            <!-- Section 1: Basics -->
+                            <div class="goal-form-section">
+                                <div class="goal-form-section-title">Basic Information</div>
+                                <div class="goal-form-row goal-form-row-2">
+                                    <div class="form-group" style="margin: 0;">
+                                        <label for="goal_title" class="goal-form-label">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
+                                                <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
+                                                <path d="M4 22h16"/>
+                                                <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
+                                                <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
+                                                <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
+                                            </svg>
+                                            Goal Title <span style="color: var(--accent-danger);">*</span>
+                                        </label>
+                                        <input type="text" id="goal_title" name="title" placeholder="e.g., Reach 100 CS2 Wins" required>
+                                    </div>
+                                    <div class="form-group" style="margin: 0;">
+                                        <label for="goal_type" class="goal-form-label">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/>
+                                                <path d="M7 7h.01"/>
+                                            </svg>
+                                            Goal Type <span style="color: var(--accent-danger);">*</span>
+                                        </label>
+                                        <select id="goal_type" name="goal_type" required onchange="updateGoalFields()">
+                                            <option value="">Select type...</option>
+                                            <option value="achievement">Achievement Goal</option>
+                                            <option value="playtime">Playtime Goal</option>
+                                            <option value="participation">Participation Goal</option>
+                                            <option value="community">Community Goal</option>
+                                            <option value="custom">Custom Goal</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div id="achievementFields" style="display: none;">
+                            <!-- Section 2: Description -->
+                            <div class="goal-form-section">
+                                <div class="goal-form-section-title">Details</div>
                                 <div class="form-group" style="margin: 0;">
-                                    <label for="achievement_id">Steam Achievement</label>
-                                    <input type="text" id="achievement_id" name="achievement_id" placeholder="e.g., WIN_BOMB_PLANT">
-                                    <small style="color: var(--color-text-muted); font-size: 12px;">Steam achievement API name (will sync automatically)</small>
+                                    <label for="goal_description" class="goal-form-label">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <line x1="21" y1="6" x2="3" y2="6"/>
+                                            <line x1="17" y1="12" x2="3" y2="12"/>
+                                            <line x1="19" y1="18" x2="3" y2="18"/>
+                                        </svg>
+                                        Description <span style="color: var(--accent-danger);">*</span>
+                                    </label>
+                                    <textarea id="goal_description" name="description" rows="3" placeholder="Describe the goal and how members can contribute..." required></textarea>
                                 </div>
                             </div>
-                            
-                            <div style="display: flex; gap: 12px; justify-content: flex-end;">
-                                <button type="button" onclick="clearGoalForm()" class="btn btn-secondary">Clear</button>
-                                <button type="submit" class="btn btn-primary">Create Goal</button>
+
+                            <!-- Section 3: Target Configuration -->
+                            <div class="goal-form-section">
+                                <div class="goal-form-section-title">Target Configuration</div>
+                                <div class="goal-form-row goal-form-row-3">
+                                    <div class="form-group" style="margin: 0;">
+                                        <label for="target_value" class="goal-form-label">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="12" cy="12" r="10"/>
+                                                <circle cx="12" cy="12" r="6"/>
+                                                <circle cx="12" cy="12" r="2"/>
+                                            </svg>
+                                            Target Value <span style="color: var(--accent-danger);">*</span>
+                                        </label>
+                                        <input type="number" id="target_value" name="target_value" placeholder="100" required min="1">
+                                    </div>
+                                    <div class="form-group" style="margin: 0;">
+                                        <label for="game_appid" class="goal-form-label">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <line x1="6" y1="11" x2="10" y2="11"/>
+                                                <line x1="8" y1="9" x2="8" y2="13"/>
+                                                <line x1="15" y1="12" x2="15.01" y2="12"/>
+                                                <line x1="18" y1="10" x2="18.01" y2="10"/>
+                                                <path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z"/>
+                                            </svg>
+                                            Game <span style="color: var(--accent-danger);">*</span>
+                                        </label>
+                                        <select id="game_appid" name="game_appid" required>
+                                            <option value="">Select a game...</option>
+                                            <option value="730">Counter-Strike 2</option>
+                                            <option value="548430">Deep Rock Galactic</option>
+                                            <option value="493520">GTFO</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group" style="margin: 0;">
+                                        <label for="deadline" class="goal-form-label">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                                <line x1="8" y1="2" x2="8" y2="6"/>
+                                                <line x1="3" y1="10" x2="21" y2="10"/>
+                                            </svg>
+                                            Deadline <span style="color: var(--accent-danger);">*</span>
+                                        </label>
+                                        <input type="date" id="deadline" name="deadline" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Section 4: Achievement Fields (Conditional) -->
+                            <div id="achievementFields" class="goal-form-section" style="display: none;">
+                                <div class="goal-form-section-title">Achievement Settings</div>
+                                <div class="form-group" style="margin: 0;">
+                                    <label for="achievement_id" class="goal-form-label">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M12 15l-2 5l9-9l-9-9l2 5l-9 4l9 4z"/>
+                                        </svg>
+                                        Steam Achievement
+                                    </label>
+                                    <input type="text" id="achievement_id" name="achievement_id" placeholder="e.g., WIN_BOMB_PLANT">
+                                    <p class="goal-form-hint">Steam achievement API name (will sync automatically)</p>
+                                </div>
+                            </div>
+
+                            <!-- Form Actions -->
+                            <div class="goal-form-actions">
+                                <button type="button" onclick="clearGoalForm()" class="btn btn-secondary">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                                        <path d="M3 6h18"/>
+                                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                                    </svg>
+                                    Clear
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                                        <path d="M12 5v14"/>
+                                        <path d="M5 12h14"/>
+                                    </svg>
+                                    Create Goal
+                                </button>
                             </div>
                         </form>
                     </div>

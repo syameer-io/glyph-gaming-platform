@@ -2,551 +2,11 @@
 
 @section('title', 'Matchmaking - Glyph')
 
-@push('styles')
-<style>
-    .matchmaking-container {
-        display: grid;
-        grid-template-columns: 280px 1fr;
-        gap: 24px;
-        width: 100%;
-        max-width: 100%;
-        overflow: hidden;
-    }
-    
-    .matchmaking-sidebar {
-        background-color: var(--color-surface);
-        border-radius: 12px;
-        padding: 24px;
-        height: fit-content;
-        position: sticky;
-        top: 24px;
-    }
-    
-    .matchmaking-content {
-        display: flex;
-        flex-direction: column;
-        gap: 24px;
-        width: 100%;
-        max-width: 100%;
-        overflow: hidden;
-    }
-    
-    .filter-section {
-        margin-bottom: 24px;
-    }
-    
-    .filter-section h4 {
-        color: var(--color-text-primary);
-        font-size: 16px;
-        font-weight: 600;
-        margin-bottom: 12px;
-    }
-    
-    .filter-group {
-        margin-bottom: 16px;
-    }
-    
-    .filter-group label {
-        display: block;
-        font-size: 14px;
-        color: var(--color-text-secondary);
-        margin-bottom: 6px;
-    }
-    
-    .filter-group select,
-    .filter-group input {
-        width: 100%;
-        padding: 8px 12px;
-        background-color: var(--color-input-bg);
-        border: 1px solid var(--color-input-border);
-        border-radius: 6px;
-        color: var(--color-input-text);
-        font-size: 14px;
-    }
-    
-    .status-card {
-        background-color: var(--color-surface);
-        border-radius: 12px;
-        padding: 20px;
-        border: 1px solid var(--color-border-primary);
-    }
-    
-    .status-indicator {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 600;
-        text-transform: uppercase;
-        white-space: nowrap;
-        min-width: fit-content;
-    }
-    
-    .status-active {
-        background-color: rgba(16, 185, 129, 0.2);
-        color: #10b981;
-    }
-    
-    .status-searching {
-        background-color: rgba(102, 126, 234, 0.2);
-        color: #667eea;
-    }
-    
-    .status-in-team {
-        background-color: rgba(245, 158, 11, 0.2);
-        color: #f59e0b;
-    }
-    
-    .live-indicator {
-        display: inline-flex;
-        align-items: center;
-        padding: 6px 12px;
-        background-color: rgba(16, 185, 129, 0.2);
-        color: #10b981;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 600;
-        text-transform: uppercase;
-    }
-    
-    .live-indicator::before {
-        content: '';
-        width: 8px;
-        height: 8px;
-        background-color: #10b981;
-        border-radius: 50%;
-        margin-right: 8px;
-        animation: pulse 2s infinite;
-    }
-    
-    @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.5; }
-    }
-
-    /* Recommendation card fade-in + slide-up animation */
-    @keyframes fadeSlideUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    /* Skeleton loader shimmer animation */
-    @keyframes shimmer {
-        0% { background-position: -200% 0; }
-        100% { background-position: 200% 0; }
-    }
-
-    /* Staggered animation for recommendation cards */
-    .recommendation-card {
-        animation: fadeSlideUp 0.4s ease forwards;
-        opacity: 0;
-    }
-
-    .recommendation-card:nth-child(1) { animation-delay: 0.1s; }
-    .recommendation-card:nth-child(2) { animation-delay: 0.2s; }
-    .recommendation-card:nth-child(3) { animation-delay: 0.3s; }
-    .recommendation-card:nth-child(4) { animation-delay: 0.4s; }
-    .recommendation-card:nth-child(5) { animation-delay: 0.5s; }
-
-    /* Skeleton loader cards */
-    .skeleton-card {
-        background: linear-gradient(135deg, #18181b 0%, #27272a 100%);
-        border-radius: 8px;
-        padding: 16px;
-        border: 1px solid #3f3f46;
-        min-height: 280px;
-    }
-
-    .skeleton-element {
-        background: linear-gradient(90deg, #27272a 25%, #3f3f46 50%, #27272a 75%);
-        background-size: 200% 100%;
-        animation: shimmer 1.5s infinite;
-        border-radius: 4px;
-    }
-
-    .skeleton-header {
-        height: 24px;
-        width: 60%;
-        margin-bottom: 8px;
-    }
-
-    .skeleton-subheader {
-        height: 16px;
-        width: 40%;
-        margin-bottom: 16px;
-    }
-
-    .skeleton-score {
-        height: 40px;
-        width: 60px;
-        margin-left: auto;
-        border-radius: 8px;
-    }
-
-    .skeleton-breakdown {
-        height: 60px;
-        width: 100%;
-        margin-bottom: 16px;
-        border-radius: 8px;
-    }
-
-    .skeleton-tags {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 16px;
-    }
-
-    .skeleton-tag {
-        height: 24px;
-        width: 70px;
-        border-radius: 4px;
-    }
-
-    .skeleton-avatars {
-        display: flex;
-        gap: 4px;
-        margin-bottom: 16px;
-    }
-
-    .skeleton-avatar {
-        height: 28px;
-        width: 28px;
-        border-radius: 50%;
-    }
-
-    .skeleton-buttons {
-        display: flex;
-        gap: 8px;
-        justify-content: flex-end;
-    }
-
-    .skeleton-button {
-        height: 36px;
-        width: 100px;
-        border-radius: 6px;
-    }
-
-    /* Empty state styling */
-    .empty-recommendations {
-        text-align: center;
-        padding: 48px 24px;
-        background: linear-gradient(135deg, #18181b 0%, #27272a 100%);
-        border-radius: 12px;
-        border: 1px dashed #3f3f46;
-    }
-
-    .empty-recommendations .empty-icon {
-        font-size: 48px;
-        margin-bottom: 16px;
-        opacity: 0.6;
-    }
-
-    .empty-recommendations p {
-        color: #b3b3b5;
-        margin-bottom: 8px;
-    }
-
-    .empty-recommendations p:first-of-type {
-        font-size: 16px;
-        font-weight: 500;
-        color: #efeff1;
-    }
-
-    .empty-recommendations .text-muted {
-        font-size: 14px;
-        color: #71717a;
-    }
-
-    /* Live badge pulse on update */
-    .live-indicator.updating::before {
-        animation: pulse 0.5s infinite;
-    }
-
-    .team-card {
-        background-color: var(--card-bg);
-        border-radius: 12px;
-        padding: 20px;
-        border: 1px solid var(--card-border);
-        transition: all 0.2s;
-    }
-    
-    .team-card:hover {
-        border-color: #667eea;
-        transform: translateY(-2px);
-    }
-    
-    .team-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 16px;
-    }
-    
-    .team-name {
-        font-size: 18px;
-        font-weight: 600;
-        color: var(--color-text-primary);
-        margin-bottom: 4px;
-    }
-
-    .team-game {
-        font-size: 14px;
-        color: var(--color-text-secondary);
-    }
-    
-    .compatibility-score {
-        text-align: right;
-    }
-    
-    .score-value {
-        font-size: 24px;
-        font-weight: 700;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-    
-    .score-label {
-        font-size: 12px;
-        color: var(--color-text-secondary);
-        text-transform: uppercase;
-    }
-    
-    .team-members {
-        display: flex;
-        gap: 12px;
-        margin-bottom: 16px;
-    }
-    
-    .member-slot {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 8px;
-        flex: 1;
-        padding: 12px;
-        background-color: var(--color-bg-primary);
-        border-radius: 8px;
-        border: 1px solid var(--color-border-primary);
-    }
-
-    .member-slot.filled {
-        border-color: #10b981;
-    }
-
-    .member-slot.empty {
-        border: 2px dashed var(--color-border-primary);
-    }
-    
-    .member-avatar {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        object-fit: cover;
-    }
-    
-    .member-placeholder {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background-color: var(--color-surface-active);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--color-text-muted);
-        font-size: 18px;
-    }
-
-    .member-name {
-        font-size: 12px;
-        color: var(--color-text-secondary);
-        text-align: center;
-    }
-    
-    .member-role {
-        font-size: 10px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 2px 6px;
-        border-radius: 3px;
-        text-transform: uppercase;
-        font-weight: 600;
-    }
-    
-    .team-tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        margin-bottom: 16px;
-    }
-    
-    .team-tag {
-        font-size: 11px;
-        background-color: var(--color-surface-active);
-        color: var(--color-text-secondary);
-        padding: 4px 8px;
-        border-radius: 4px;
-        text-transform: uppercase;
-    }
-    
-    .team-actions {
-        display: flex;
-        gap: 8px;
-    }
-    
-    .card {
-        background-color: var(--card-bg);
-        border-radius: 12px;
-        padding: 24px;
-        border: 1px solid var(--card-border);
-        position: relative;
-        overflow: hidden;
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    .card-header {
-        color: var(--color-text-primary);
-        font-size: 18px;
-        font-weight: 600;
-        margin: 0 0 20px 0;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .request-card {
-        background-color: var(--color-surface);
-        border-radius: 12px;
-        padding: 20px;
-        border: 1px solid var(--color-border-primary);
-        position: relative;
-        width: 100%;
-        box-sizing: border-box;
-    }
-    
-    .request-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 8px;
-    }
-    
-    .request-status {
-        flex-shrink: 0;
-        margin-left: 16px;
-    }
-    
-    .request-game {
-        font-size: 16px;
-        font-weight: 600;
-        color: var(--color-text-primary);
-        flex: 1;
-        min-width: 0;
-    }
-    
-    .request-details {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-        margin-bottom: 16px;
-    }
-    
-    .request-detail {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-    }
-    
-    .request-detail-label {
-        font-size: 12px;
-        color: var(--color-text-muted);
-        text-transform: uppercase;
-    }
-
-    .request-detail-value {
-        font-size: 14px;
-        color: var(--color-text-primary);
-        font-weight: 500;
-    }
-    
-    .quick-actions {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-        margin-bottom: 24px;
-    }
-    
-    .quick-action {
-        background-color: var(--color-surface);
-        border: 1px solid var(--color-border-primary);
-        border-radius: 8px;
-        padding: 16px;
-        text-align: center;
-        text-decoration: none;
-        color: var(--color-text-primary);
-        transition: all 0.2s;
-    }
-    
-    .quick-action:hover {
-        border-color: #667eea;
-        transform: translateY(-1px);
-    }
-    
-    .quick-action-icon {
-        font-size: 24px;
-        margin-bottom: 8px;
-        display: block;
-    }
-    
-    .quick-action-title {
-        font-weight: 600;
-        margin-bottom: 4px;
-    }
-    
-    .quick-action-desc {
-        font-size: 12px;
-        color: var(--color-text-secondary);
-    }
-    
-    @media (max-width: 768px) {
-        .matchmaking-container {
-            grid-template-columns: 1fr;
-        }
-        
-        .matchmaking-sidebar {
-            position: static;
-        }
-        
-        .team-members {
-            flex-wrap: wrap;
-        }
-        
-        .quick-actions {
-            grid-template-columns: 1fr;
-        }
-        
-        .request-details {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
-@endpush
-
 @section('content')
 <x-navbar active-section="matchmaking" />
 
 <main>
-    <div class="container">
+    <div class="mm-container">
         @if (session('success'))
             <div class="alert alert-success">
                 {{ session('success') }}
@@ -559,25 +19,22 @@
             </div>
         @endif
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
-            <h1>🎮 Team Matchmaking</h1>
-            <div style="display: flex; gap: 12px; align-items: center;">
-                @if(auth()->user()->activeMatchmakingRequests()->exists())
-                    <span class="status-indicator status-searching">
-                        <span style="width: 8px; height: 8px; background-color: #667eea; border-radius: 50%; display: inline-block;"></span>
-                        Searching for teams
-                    </span>
-                @endif
-                <a href="#" class="btn btn-primary" onclick="showCreateRequestModal()">Create Request</a>
-            </div>
+        {{-- Page Header --}}
+        <div class="page-header">
+            <h1 class="page-title">Team Matchmaking</h1>
         </div>
 
-        <div class="matchmaking-container">
+        <div class="mm-main">
             <!-- Sidebar Filters -->
-            <div class="matchmaking-sidebar">
-                <div class="filter-section">
-                    <h4>Filters</h4>
-                    <div class="filter-group">
+            <aside class="mm-sidebar">
+                <div class="mm-filter-section" data-stagger="0">
+                    <h4 class="mm-filter-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                        </svg>
+                        Filters
+                    </h4>
+                    <div class="mm-filter-group">
                         <label for="game-filter">Game</label>
                         <select id="game-filter" onchange="filterTeams()">
                             <option value="">All Games</option>
@@ -586,7 +43,7 @@
                             <option value="493520">GTFO</option>
                         </select>
                     </div>
-                    <div class="filter-group">
+                    <div class="mm-filter-group">
                         <label for="skill-filter">Skill Level</label>
                         <select id="skill-filter" onchange="filterTeams()">
                             <option value="">Any Skill</option>
@@ -596,7 +53,7 @@
                             <option value="expert">Expert</option>
                         </select>
                     </div>
-                    <div class="filter-group">
+                    <div class="mm-filter-group">
                         <label for="region-filter">Region</label>
                         <select id="region-filter" onchange="filterTeams()">
                             <option value="">Any Region</option>
@@ -607,7 +64,7 @@
                             <option value="asia">Asia</option>
                         </select>
                     </div>
-                    <div class="filter-group">
+                    <div class="mm-filter-group">
                         <label for="activity-filter">Activity Time</label>
                         <select id="activity-filter" onchange="filterTeams()">
                             <option value="">Any Time</option>
@@ -620,69 +77,94 @@
                 </div>
 
                 @if(auth()->user()->activeMatchmakingRequests()->exists())
-                <div class="filter-section">
-                    <h4>Your Status</h4>
-                    <div class="status-card">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                            <span style="color: #efeff1; font-weight: 600;">Active Request</span>
-                            <span class="status-indicator status-active">Live</span>
-                        </div>
-                        @foreach(auth()->user()->activeMatchmakingRequests as $request)
-                            <div style="margin-bottom: 12px;">
-                                <div style="color: #b3b3b5; font-size: 14px;">{{ $request->game_name ?? 'Unknown Game' }}</div>
-                                <div style="color: #efeff1; font-size: 12px;">
-                                    {{ ucfirst($request->skill_level ?? 'any') }}
-                                    @if($request->preferred_roles && count($request->preferred_roles) > 0)
-                                        • {{ implode(', ', array_map('ucfirst', array_map(fn($role) => str_replace('_', ' ', $role), $request->preferred_roles))) }}
-                                    @endif
-                                </div>
-                                <div style="margin-top: 8px;">
-                                    <button onclick="cancelRequest({{ $request->id }})" class="btn btn-danger btn-sm" style="font-size: 12px; padding: 4px 8px;">Cancel Request</button>
-                                </div>
+                <div class="mm-filter-section" data-stagger="1">
+                    <h4 class="mm-filter-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        Your Status
+                    </h4>
+                    @foreach(auth()->user()->activeMatchmakingRequests as $request)
+                        <div class="mm-status-card">
+                            <div class="mm-status-header">
+                                <span class="mm-status-title">Active Request</span>
+                                <span class="mm-status-badge">
+                                    <span class="mm-status-dot"></span>
+                                    Live
+                                </span>
                             </div>
-                        @endforeach
-                    </div>
+                            <div class="mm-status-game">{{ $request->game_name ?? 'Unknown Game' }}</div>
+                            <div class="mm-status-details">
+                                {{ ucfirst($request->skill_level ?? 'any') }}
+                                @if($request->preferred_roles && count($request->preferred_roles) > 0)
+                                    &bull; {{ implode(', ', array_map('ucfirst', array_map(fn($role) => str_replace('_', ' ', $role), $request->preferred_roles))) }}
+                                @endif
+                            </div>
+                            <button onclick="cancelRequest({{ $request->id }})" class="mm-btn mm-btn-danger" style="width: 100%; font-size: 12px;">
+                                Cancel Request
+                            </button>
+                        </div>
+                    @endforeach
                 </div>
                 @endif
-            </div>
+            </aside>
 
             <!-- Main Content -->
-            <div class="matchmaking-content">
+            <div class="mm-content">
                 @if($matchmakingRequests->isEmpty())
                 <!-- Empty State -->
-                <div class="empty-state">
-                    <div style="font-size: 48px; margin-bottom: 16px;">🎮</div>
-                    <h3 style="margin-bottom: 12px; color: #efeff1;">No Active Teams</h3>
-                    <p style="color: #b3b3b5; margin-bottom: 24px;">
-                        Start your gaming journey by creating a matchmaking request or forming a new team.
-                    </p>
-                    <div style="display: flex; gap: 12px; justify-content: center;">
-                        <button onclick="showCreateRequestModal()" class="btn btn-primary">Find Teammates</button>
-                        <a href="{{ route('teams.create') }}" class="btn btn-secondary">Create Team</a>
+                <div class="mm-section" data-stagger="0">
+                    <div class="mm-empty-state">
+                        <div class="mm-empty-icon">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                            </svg>
+                        </div>
+                        <h3 class="mm-empty-title">No Active Requests</h3>
+                        <p class="mm-empty-text">Start your gaming journey by creating a matchmaking request or forming a new team.</p>
+                        <div class="mm-empty-actions">
+                            <button onclick="showCreateRequestModal()" class="btn btn-primary">Find Teammates</button>
+                            <a href="{{ route('teams.create') }}" class="btn btn-secondary">Create Team</a>
+                        </div>
                     </div>
                 </div>
                 @else
                     <!-- Active Matchmaking Requests -->
                     @if($matchmakingRequests->isNotEmpty())
-                    <div class="card">
-                        <h3 class="card-header">🔍 Looking for Teams</h3>
-                        <div style="display: grid; gap: 16px;">
+                    <div class="mm-section" data-stagger="0">
+                        <div class="mm-section-header">
+                            <h3 class="mm-section-title">
+                                <span class="mm-section-title-icon">
+                                    <svg viewBox="0 0 24 24">
+                                        <circle cx="11" cy="11" r="8"/>
+                                        <path d="m21 21-4.35-4.35"/>
+                                    </svg>
+                                </span>
+                                Looking for Teams
+                            </h3>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
                             @foreach($matchmakingRequests as $request)
-                                <div class="request-card">
-                                    <div class="request-header">
-                                        <div class="request-game">{{ $request->game_name ?? 'Unknown Game' }}</div>
-                                        <div class="request-status">
-                                            <span class="status-indicator status-searching">Searching</span>
-                                        </div>
+                                <div class="mm-request-card">
+                                    <div class="mm-request-header">
+                                        <div class="mm-request-game">{{ $request->game_name ?? 'Unknown Game' }}</div>
+                                        <span class="mm-request-status">
+                                            <span class="mm-status-dot"></span>
+                                            Searching
+                                        </span>
                                     </div>
-                                    <div class="request-details">
-                                        <div class="request-detail">
-                                            <span class="request-detail-label">Skill Level</span>
-                                            <span class="request-detail-value">{{ ucfirst($request->skill_level ?? 'any') }}</span>
+                                    <div class="mm-request-details">
+                                        <div class="mm-request-detail">
+                                            <span class="mm-request-detail-label">Skill Level</span>
+                                            <span class="mm-request-detail-value">{{ ucfirst($request->skill_level ?? 'any') }}</span>
                                         </div>
-                                        <div class="request-detail">
-                                            <span class="request-detail-label">Role</span>
-                                            <span class="request-detail-value">
+                                        <div class="mm-request-detail">
+                                            <span class="mm-request-detail-label">Role</span>
+                                            <span class="mm-request-detail-value">
                                                 @if($request->preferred_roles && count($request->preferred_roles) > 0)
                                                     {{ implode(', ', array_map('ucfirst', array_map(fn($role) => str_replace('_', ' ', $role), $request->preferred_roles))) }}
                                                 @else
@@ -690,14 +172,14 @@
                                                 @endif
                                             </span>
                                         </div>
-                                        <div class="request-detail">
-                                            <span class="request-detail-label">Created</span>
-                                            <span class="request-detail-value">{{ $request->created_at->diffForHumans() }}</span>
+                                        <div class="mm-request-detail">
+                                            <span class="mm-request-detail-label">Created</span>
+                                            <span class="mm-request-detail-value">{{ $request->created_at->diffForHumans() }}</span>
                                         </div>
                                     </div>
-                                    <div style="display: flex; gap: 8px;">
-                                        <button onclick="findTeams({{ $request->id }})" class="btn btn-primary btn-sm">Find Teams</button>
-                                        <button onclick="cancelRequest({{ $request->id }})" class="btn btn-secondary btn-sm">Cancel</button>
+                                    <div class="mm-card-actions">
+                                        <button onclick="findTeams({{ $request->id }})" class="mm-btn mm-btn-primary" style="flex: 1;">Find Teams</button>
+                                        <button onclick="cancelRequest({{ $request->id }})" class="mm-btn mm-btn-secondary">Cancel</button>
                                     </div>
                                 </div>
                             @endforeach
@@ -706,12 +188,20 @@
                     @endif
 
                     <!-- Live Team Recommendations -->
-                    <div class="card" id="live-recommendations">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                            <h3 class="card-header" style="margin: 0;">⚡ Live Recommendations</h3>
-                            <div class="live-indicator">
-                                <span>Live</span>
-                            </div>
+                    <div class="mm-section" data-stagger="1" id="live-recommendations">
+                        <div class="mm-section-header">
+                            <h3 class="mm-section-title">
+                                <span class="mm-section-title-icon">
+                                    <svg viewBox="0 0 24 24">
+                                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                                    </svg>
+                                </span>
+                                Live Recommendations
+                            </h3>
+                            <span class="mm-live-badge">
+                                <span class="mm-live-dot"></span>
+                                Live
+                            </span>
                         </div>
                         <div id="live-recommendations-content">
                             @php
@@ -732,30 +222,104 @@
                             @endphp
 
                             @if(empty($topRecommendations))
-                                <div style="text-align: center; padding: 40px; color: #b3b3b5;">
-                                    <div style="font-size: 24px; margin-bottom: 12px;">🎯</div>
-                                    <p>No compatible teams found</p>
-                                    <p style="font-size: 14px; margin-top: 8px;">Try adjusting your criteria or check back later for new teams</p>
-                                    <button onclick="showCreateRequestModal()" class="btn btn-primary" style="margin-top: 16px;">
-                                        Find Teammates
-                                    </button>
+                                <div class="mm-empty-state" style="border: none; background: transparent; padding: 32px;">
+                                    <div class="mm-empty-icon">
+                                        <svg viewBox="0 0 24 24">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <path d="M9 9h.01M15 9h.01M8 14s1.5 2 4 2 4-2 4-2"/>
+                                        </svg>
+                                    </div>
+                                    <h3 class="mm-empty-title">No Compatible Teams Found</h3>
+                                    <p class="mm-empty-text">Try adjusting your criteria or check back later for new teams</p>
                                 </div>
                             @else
-                                <div style="display: grid; gap: 16px;">
-                                    @foreach($topRecommendations as $recommendation)
+                                <div style="display: flex; flex-direction: column; gap: 12px;">
+                                    @foreach($topRecommendations as $index => $recommendation)
                                         @php
                                             $team = $recommendation['team'];
                                             $compatScore = $recommendation['compatibility_score'];
                                             $breakdown = $recommendation['breakdown'] ?? [];
+
+                                            // Determine score class
+                                            $scoreClass = $compatScore >= 70 ? 'score-high' : ($compatScore >= 50 ? 'score-medium' : 'score-low');
                                         @endphp
 
-                                        <x-team-card
-                                            :team="$team"
-                                            :showCompatibility="true"
-                                            :compatibilityScore="$compatScore"
-                                            :compatibilityDetails="$breakdown"
-                                            context="matchmaking"
-                                        />
+                                        <div class="mm-card" style="animation-delay: {{ ($index + 1) * 100 }}ms;">
+                                            <div class="mm-card-header">
+                                                <div class="mm-card-info">
+                                                    <h4 class="mm-card-name">
+                                                        <a href="{{ route('teams.show', $team) }}">{{ $team->name }}</a>
+                                                    </h4>
+                                                    <div class="mm-card-meta">{{ $team->game_name ?? 'Unknown Game' }}</div>
+                                                </div>
+
+                                                <!-- Match Score Ring -->
+                                                <div class="mm-match-ring">
+                                                    <svg viewBox="0 0 36 36" class="mm-match-ring-svg animated">
+                                                        <circle class="ring-bg" cx="18" cy="18" r="16"/>
+                                                        <circle class="ring-fill {{ $scoreClass }}" cx="18" cy="18" r="16"
+                                                                style="stroke-dasharray: {{ round($compatScore) }}, 100"/>
+                                                    </svg>
+                                                    <span class="mm-match-value">{{ round($compatScore) }}%</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Compatibility Breakdown -->
+                                            @if(!empty($breakdown))
+                                            <div class="mm-breakdown-grid">
+                                                @foreach($breakdown as $key => $value)
+                                                    @if(is_numeric($value))
+                                                    @php
+                                                        $barClass = $value >= 70 ? 'score-high' : ($value >= 50 ? 'score-medium' : 'score-low');
+                                                    @endphp
+                                                    <div class="mm-breakdown-item">
+                                                        <span class="mm-breakdown-label">{{ ucfirst($key) }}</span>
+                                                        <div class="mm-breakdown-bar">
+                                                            <div class="mm-breakdown-fill {{ $barClass }}" style="width: {{ min($value, 100) }}%"></div>
+                                                        </div>
+                                                        <span class="mm-breakdown-value">{{ round($value) }}%</span>
+                                                    </div>
+                                                    @endif
+                                                @endforeach
+                                            </div>
+                                            @endif
+
+                                            <!-- Team Tags -->
+                                            <div class="mm-tags">
+                                                @if($team->skill_level)
+                                                    <span class="mm-tag">{{ ucfirst($team->skill_level) }}</span>
+                                                @endif
+                                                @if($team->preferred_region)
+                                                    <span class="mm-tag mm-tag-secondary">{{ ucfirst(str_replace('_', ' ', $team->preferred_region)) }}</span>
+                                                @endif
+                                                <span class="mm-tag mm-tag-secondary">{{ $team->activeMembers->count() }}/{{ $team->max_size }} members</span>
+                                            </div>
+
+                                            <!-- Avatar Stack -->
+                                            <div class="mm-avatar-stack">
+                                                @foreach($team->activeMembers->take(5) as $member)
+                                                    <img
+                                                        src="{{ $member->user->profile->avatar_url ?? asset('images/default-avatar.png') }}"
+                                                        alt="{{ $member->user->display_name }}"
+                                                        title="{{ $member->user->display_name }}"
+                                                        class="mm-avatar"
+                                                    >
+                                                @endforeach
+                                                @if($team->activeMembers->count() > 5)
+                                                    <div class="mm-avatar-overflow">+{{ $team->activeMembers->count() - 5 }}</div>
+                                                @endif
+                                            </div>
+
+                                            <!-- Actions -->
+                                            <div class="mm-card-actions">
+                                                <a href="{{ route('teams.show', $team) }}" class="mm-btn mm-btn-secondary" style="flex: 1;">View Team</a>
+                                                @if($team->recruitment_status === 'open')
+                                                    <button onclick="joinTeamDirect({{ $team->id }}, event)" class="mm-btn mm-btn-success" style="flex: 1;">Join Team</button>
+                                                @else
+                                                    <button onclick="requestToJoin({{ $team->id }})" class="mm-btn mm-btn-primary" style="flex: 1;">Request to Join</button>
+                                                @endif
+                                            </div>
+                                        </div>
                                     @endforeach
                                 </div>
                             @endif
@@ -770,23 +334,31 @@
                 @endphp
 
                 @if($recruitingTeams->isNotEmpty())
-                <div class="card" id="players-looking-section" style="margin-top: 24px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h3 class="card-header" style="margin: 0;">
-                            <span style="margin-right: 8px;">&#128101;</span> Players Looking for Teams
+                <div class="mm-section" data-stagger="2" id="players-looking-section">
+                    <div class="mm-section-header">
+                        <h3 class="mm-section-title">
+                            <span class="mm-section-title-icon">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="9" cy="7" r="4"/>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                </svg>
+                            </span>
+                            Players Looking for Teams
                         </h3>
-                        <span class="live-badge" style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">
-                            <span style="display: inline-block; width: 8px; height: 8px; background: #10b981; border-radius: 50%; margin-right: 6px; animation: pulse 2s infinite;"></span>
-                            LIVE
+                        <span class="mm-live-badge">
+                            <span class="mm-live-dot"></span>
+                            Live
                         </span>
                     </div>
                     <p style="color: var(--color-text-muted); margin-bottom: 16px; font-size: 14px;">
                         Players with active matchmaking requests for your team's game. Invite them directly!
                     </p>
                     <div id="players-looking-content">
-                        <div style="text-align: center; padding: 40px; color: var(--color-text-muted);">
-                            <div class="loading-spinner" style="margin-bottom: 12px; width: 32px; height: 32px; border: 3px solid rgba(139, 92, 246, 0.2); border-top-color: #8b5cf6; border-radius: 50%; animation: spin 1s linear infinite; margin-left: auto; margin-right: auto;"></div>
-                            <p>Loading players...</p>
+                        <div style="text-align: center; padding: 40px;">
+                            <div style="width: 32px; height: 32px; border: 3px solid rgba(102, 126, 234, 0.2); border-top-color: var(--accent-primary); border-radius: 50%; animation: mmSpin 1s linear infinite; margin: 0 auto 12px;"></div>
+                            <p style="color: var(--color-text-muted); font-size: 14px;">Loading players...</p>
                         </div>
                     </div>
                 </div>
@@ -797,147 +369,205 @@
 </main>
 
 <!-- Create Request Modal -->
-<div id="createRequestModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); z-index: 1000; align-items: center; justify-content: center;">
-    <div style="background-color: var(--color-surface); border-radius: 12px; padding: 32px; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;">
-        <h3 style="margin-bottom: 24px; color: var(--color-text-primary);">Create Matchmaking Request</h3>
+<div id="createRequestModal" class="mm-modal-overlay">
+    <div class="mm-modal">
+        <div class="mm-modal-header">
+            <h3>Create Matchmaking Request</h3>
+            <button type="button" class="mm-modal-close" onclick="hideCreateRequestModal()" aria-label="Close">&times;</button>
+        </div>
+
         <form id="createRequestForm" action="{{ route('matchmaking.store') }}" method="POST">
             @csrf
-            <div class="form-group">
-                <label for="game_appid">Game *</label>
-                <select id="game_appid" name="game_appid" required onchange="updateGameName(); loadSkillPreview(this.value); updateRoleOptions(this.value);">
-                    <option value="">Select a game...</option>
-                    <option value="730" data-name="Counter-Strike 2">Counter-Strike 2</option>
-                    <option value="548430" data-name="Deep Rock Galactic">Deep Rock Galactic</option>
-                    <option value="493520" data-name="GTFO">GTFO</option>
-                </select>
-                <input type="hidden" id="game_name" name="game_name" value="">
-            </div>
-            <div class="form-group">
-                <label>Your Skill Level</label>
-                <div id="skill_display_container">
-                    <div id="skill_display" style="color: var(--color-text-muted); font-size: 14px; padding: 10px 0;">
-                        Select a game to see your skill level
+            <div class="mm-modal-body">
+                <!-- Game Selection Section -->
+                <div class="mm-form-section">
+                    <div class="mm-form-section-title">Game Selection</div>
+
+                    <div class="mm-form-group">
+                        <label>
+                            <span class="icon">&#127919;</span>
+                            Select Game
+                            <span class="required">*</span>
+                        </label>
+                        <select id="game_appid" name="game_appid" required onchange="updateGameName(); loadSkillPreview(this.value); updateRoleOptions(this.value);">
+                            <option value="">Choose a game to find teammates...</option>
+                            <option value="730" data-name="Counter-Strike 2">Counter-Strike 2</option>
+                            <option value="548430" data-name="Deep Rock Galactic">Deep Rock Galactic</option>
+                            <option value="493520" data-name="GTFO">GTFO</option>
+                        </select>
+                        <input type="hidden" id="game_name" name="game_name" value="">
+                    </div>
+
+                    <div class="mm-form-group">
+                        <label>
+                            <span class="icon">&#128200;</span>
+                            Your Skill Level
+                        </label>
+                        <div id="skill_display_container" class="mm-skill-display-box">
+                            <div id="skill_display" class="mm-skill-placeholder">
+                                Select a game to see your skill level
+                            </div>
+                        </div>
+                        <input type="hidden" id="skill_level" name="skill_level" value="unranked">
+                        <span class="hint">Automatically calculated from your Steam stats and playtime</span>
+                    </div>
+
+                    <div class="mm-form-group">
+                        <label>
+                            <span class="icon">&#127917;</span>
+                            Preferred Roles
+                        </label>
+                        <div id="role_selection_container" class="mm-role-selection-box">
+                            <div class="mm-role-placeholder">Select a game to see available roles</div>
+                        </div>
+                        <span class="hint">Hold Ctrl/Cmd to select multiple roles</span>
                     </div>
                 </div>
-                <input type="hidden" id="skill_level" name="skill_level" value="unranked">
-                <small style="color: var(--color-text-muted); font-size: 12px; margin-top: 4px; display: block;">
-                    Calculated automatically from your Steam stats
-                </small>
-            </div>
-            <div class="form-group">
-                <label for="preferred_roles">Preferred Roles</label>
-                <div id="role_selection_container">
-                    <p style="color: var(--color-text-muted); font-size: 14px; padding: 10px 0; margin: 0;">Select a game to see available roles</p>
+
+                <!-- Preferences Section -->
+                <div class="mm-form-section">
+                    <div class="mm-form-section-title">Your Preferences</div>
+
+                    <div class="mm-form-group">
+                        <label>
+                            <span class="icon">&#127758;</span>
+                            Preferred Regions
+                        </label>
+                        <select id="preferred_regions" name="preferred_regions[]" multiple>
+                            <option value="NA">North America</option>
+                            <option value="EU">Europe</option>
+                            <option value="ASIA">Asia</option>
+                            <option value="SA">South America</option>
+                            <option value="OCEANIA">Oceania</option>
+                            <option value="AFRICA">Africa</option>
+                            <option value="MIDDLE_EAST">Middle East</option>
+                        </select>
+                        <span class="hint">Select regions where you prefer to play (for latency)</span>
+                    </div>
+
+                    <div class="mm-form-group">
+                        <label>
+                            <span class="icon">&#128336;</span>
+                            When Can You Play?
+                        </label>
+                        <select id="availability_hours" name="availability_hours[]" multiple>
+                            <option value="morning">Morning (6AM-12PM)</option>
+                            <option value="afternoon">Afternoon (12PM-6PM)</option>
+                            <option value="evening">Evening (6PM-12AM)</option>
+                            <option value="night">Night (12AM-6AM)</option>
+                            <option value="flexible">Flexible Schedule</option>
+                        </select>
+                        <span class="hint">Select your typical gaming hours</span>
+                    </div>
+
+                    <div class="mm-form-group">
+                        <label>
+                            <span class="icon">&#128172;</span>
+                            Languages You Speak
+                        </label>
+                        <select id="languages" name="languages[]" multiple>
+                            <option value="en" selected>English</option>
+                            <option value="es">Spanish</option>
+                            <option value="zh">Chinese</option>
+                            <option value="fr">French</option>
+                            <option value="de">German</option>
+                            <option value="pt">Portuguese</option>
+                            <option value="ru">Russian</option>
+                            <option value="ja">Japanese</option>
+                            <option value="ko">Korean</option>
+                        </select>
+                        <span class="hint">Select languages for team communication</span>
+                    </div>
                 </div>
-                <small style="color: var(--color-text-secondary);">Hold Ctrl/Cmd to select multiple roles</small>
+
+                <!-- Additional Info Section -->
+                <div class="mm-form-section">
+                    <div class="mm-form-section-title">Additional Info</div>
+
+                    <div class="mm-form-group">
+                        <label>
+                            <span class="icon">&#128221;</span>
+                            Message (Optional)
+                        </label>
+                        <textarea id="message" name="message" rows="3" placeholder="Tell potential teammates more about yourself, your playstyle, or what you're looking for..."></textarea>
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="preferred_regions">Preferred Regions</label>
-                <select id="preferred_regions" name="preferred_regions[]" multiple>
-                    <option value="NA">North America</option>
-                    <option value="EU">Europe</option>
-                    <option value="ASIA">Asia</option>
-                    <option value="SA">South America</option>
-                    <option value="OCEANIA">Oceania</option>
-                    <option value="AFRICA">Africa</option>
-                    <option value="MIDDLE_EAST">Middle East</option>
-                </select>
-                <small style="color: var(--color-text-secondary);">Select your preferred gaming regions</small>
-            </div>
-            <div class="form-group">
-                <label for="availability_hours">When Can You Play?</label>
-                <select id="availability_hours" name="availability_hours[]" multiple>
-                    <option value="morning">Morning (6AM-12PM)</option>
-                    <option value="afternoon">Afternoon (12PM-6PM)</option>
-                    <option value="evening">Evening (6PM-12AM)</option>
-                    <option value="night">Night (12AM-6AM)</option>
-                    <option value="flexible">Flexible Schedule</option>
-                </select>
-                <small style="color: var(--color-text-secondary);">Select your typical gaming hours</small>
-            </div>
-            <div class="form-group">
-                <label for="languages">Languages You Speak</label>
-                <select id="languages" name="languages[]" multiple>
-                    <option value="en" selected>English</option>
-                    <option value="es">Spanish</option>
-                    <option value="zh">Chinese</option>
-                    <option value="fr">French</option>
-                    <option value="de">German</option>
-                    <option value="pt">Portuguese</option>
-                    <option value="ru">Russian</option>
-                    <option value="ja">Japanese</option>
-                    <option value="ko">Korean</option>
-                </select>
-                <small style="color: var(--color-text-secondary);">Select languages for team communication</small>
-            </div>
-            <div class="form-group">
-                <label for="message">Message (Optional)</label>
-                <textarea id="message" name="message" rows="3" placeholder="Add any additional details about your request..."></textarea>
-            </div>
-            <div style="display: flex; gap: 12px; margin-top: 24px;">
-                <button type="submit" class="btn btn-primary" style="flex: 1;">Create Request</button>
+
+            <div class="mm-modal-footer">
                 <button type="button" onclick="hideCreateRequestModal()" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn btn-primary">Create Request</button>
             </div>
         </form>
     </div>
 </div>
 
 <!-- Find Teams Results Modal -->
-<div id="findTeamsModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.8); z-index: 2000; align-items: center; justify-content: center;">
-    <div style="background-color: var(--color-surface); border-radius: 12px; padding: 32px; max-width: 900px; width: 90%; max-height: 90vh; overflow-y: auto;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-            <h3 style="margin: 0; color: var(--color-text-primary);">🎯 Compatible Teams Found</h3>
-            <button onclick="hideFindTeamsModal()" style="background: none; border: none; color: var(--color-text-muted); font-size: 24px; cursor: pointer; padding: 0; line-height: 1; transition: color 0.2s;">×</button>
+<div id="findTeamsModal" class="mm-modal-overlay" style="z-index: 2000;">
+    <div class="mm-modal" style="max-width: 900px;">
+        <div class="mm-modal-header">
+            <h3>Compatible Teams Found</h3>
+            <button type="button" class="mm-modal-close" onclick="hideFindTeamsModal()" aria-label="Close">&times;</button>
         </div>
-
-        <div id="findTeamsResults" style="display: grid; gap: 16px;">
+        <div class="mm-modal-body" id="findTeamsResults" style="max-height: calc(90vh - 120px);">
             <!-- Results will be populated here -->
         </div>
     </div>
 </div>
 
 <!-- Invite Player Modal -->
-<div id="invitePlayerModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); z-index: 2000; align-items: center; justify-content: center;">
-    <div style="background-color: var(--color-surface); border-radius: 12px; padding: 32px; max-width: 400px; width: 90%;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-            <h3 style="margin: 0; color: var(--color-text-primary);">Invite Player to Team</h3>
-            <button onclick="closeInviteModal()" style="background: none; border: none; color: var(--color-text-muted); font-size: 24px; cursor: pointer; padding: 0; line-height: 1;">&times;</button>
+<div id="invitePlayerModal" class="mm-modal-overlay" style="z-index: 2000;">
+    <div class="mm-modal" style="max-width: 400px;">
+        <div class="mm-modal-header">
+            <h3>Invite Player to Team</h3>
+            <button type="button" class="mm-modal-close" onclick="closeInviteModal()" aria-label="Close">&times;</button>
         </div>
-        <div id="invitePlayerInfo" style="margin-bottom: 20px;"></div>
+        <div class="mm-modal-body">
+            <div id="invitePlayerInfo" style="margin-bottom: 20px;"></div>
 
-        <div class="form-group" id="teamSelectGroup" style="display: none; margin-bottom: 16px;">
-            <label for="inviteTeamSelect" style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--color-text-primary);">Select Team</label>
-            <select id="inviteTeamSelect" style="width: 100%; padding: 10px 12px; background-color: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: 8px; color: var(--color-text-primary); font-size: 14px;"></select>
+            <div class="mm-form-group" id="teamSelectGroup" style="display: none;">
+                <label>Select Team</label>
+                <select id="inviteTeamSelect"></select>
+            </div>
+
+            <div class="mm-form-group">
+                <label>Role in Team</label>
+                <select id="inviteRole">
+                    <option value="member">Member</option>
+                    <option value="co_leader">Co-Leader</option>
+                </select>
+            </div>
+
+            <div class="mm-form-group">
+                <label>Message (Optional)</label>
+                <textarea id="inviteMessage" rows="2" placeholder="Found you through matchmaking! Would you like to join?"></textarea>
+            </div>
         </div>
-
-        <div class="form-group" style="margin-bottom: 16px;">
-            <label for="inviteRole" style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--color-text-primary);">Role in Team</label>
-            <select id="inviteRole" style="width: 100%; padding: 10px 12px; background-color: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: 8px; color: var(--color-text-primary); font-size: 14px;">
-                <option value="member">Member</option>
-                <option value="co_leader">Co-Leader</option>
-            </select>
-        </div>
-
-        <div class="form-group" style="margin-bottom: 20px;">
-            <label for="inviteMessage" style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--color-text-primary);">Message (Optional)</label>
-            <textarea id="inviteMessage" rows="2" style="width: 100%; padding: 10px 12px; background-color: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: 8px; color: var(--color-text-primary); font-size: 14px; resize: vertical;" placeholder="Found you through matchmaking! Would you like to join?"></textarea>
-        </div>
-
-        <div style="display: flex; gap: 12px;">
-            <button onclick="closeInviteModal()" class="btn btn-secondary" style="flex: 1;">Cancel</button>
-            <button id="sendInviteBtn" onclick="sendPlayerInvite()" class="btn btn-primary" style="flex: 1;">Send Invitation</button>
+        <div class="mm-modal-footer">
+            <button type="button" onclick="closeInviteModal()" class="btn btn-secondary">Cancel</button>
+            <button id="sendInviteBtn" onclick="sendPlayerInvite()" class="btn btn-primary">Send Invitation</button>
         </div>
     </div>
 </div>
 
+<style>
+@keyframes mmSpin {
+    to { transform: rotate(360deg); }
+}
+</style>
+
 <script>
 // Modal functions
 function showCreateRequestModal() {
-    document.getElementById('createRequestModal').style.display = 'flex';
+    const modal = document.getElementById('createRequestModal');
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
 }
 
 function hideCreateRequestModal() {
-    document.getElementById('createRequestModal').style.display = 'none';
+    const modal = document.getElementById('createRequestModal');
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
 }
 
 function updateGameName() {
@@ -984,11 +614,13 @@ function updateRoleOptions(gameAppId) {
     const roles = GAME_ROLES[gameAppId];
 
     if (!roles) {
-        container.innerHTML = '<p style="color: var(--color-text-muted); font-size: 14px; padding: 10px 0; margin: 0;">Select a game to see available roles</p>';
+        container.className = 'mm-role-selection-box';
+        container.innerHTML = '<div class="mm-role-placeholder">Select a game to see available roles</div>';
         return;
     }
 
-    let html = '<select id="preferred_roles" name="preferred_roles[]" multiple>';
+    container.className = '';
+    let html = '<select id="preferred_roles" name="preferred_roles[]" multiple style="width: 100%; padding: 12px 16px; background-color: var(--color-bg-primary); border: 1px solid var(--color-border-secondary); border-radius: 10px; color: var(--color-text-primary); font-size: 14px; min-height: 120px;">';
     roles.forEach(role => {
         html += `<option value="${role.value}">${role.label}</option>`;
     });
@@ -1000,24 +632,26 @@ function updateRoleOptions(gameAppId) {
 async function loadSkillPreview(gameAppId) {
     const skillDisplay = document.getElementById('skill_display');
     const skillLevelInput = document.getElementById('skill_level');
+    const skillContainer = document.getElementById('skill_display_container');
 
     if (!skillDisplay) return;
 
     if (!gameAppId) {
-        skillDisplay.innerHTML = `
-            <div style="color: #71717a; font-size: 14px; padding: 10px 0;">
-                Select a game to see your skill level
-            </div>
-        `;
+        if (skillContainer) skillContainer.className = 'mm-skill-display-box';
+        skillDisplay.className = 'mm-skill-placeholder';
+        skillDisplay.innerHTML = 'Select a game to see your skill level';
         if (skillLevelInput) skillLevelInput.value = 'unranked';
         return;
     }
 
     // Show loading state
+    if (skillContainer) skillContainer.className = 'mm-skill-display-box';
+    skillDisplay.className = 'mm-skill-placeholder';
     skillDisplay.innerHTML = `
-        <div style="color: #71717a; font-size: 14px; padding: 10px 0;">
-            <span style="display: inline-block; animation: spin 1s linear infinite;">⏳</span> Loading your skill level...
-        </div>
+        <span style="display: inline-flex; align-items: center; gap: 8px;">
+            <span style="display: inline-block; animation: mmSpin 1s linear infinite;">&#8987;</span>
+            Loading your skill level...
+        </span>
     `;
 
     try {
@@ -1038,8 +672,8 @@ async function loadSkillPreview(gameAppId) {
     } catch (error) {
         console.error('Error fetching skill:', error);
         skillDisplay.innerHTML = `
-            <div style="color: #ef4444; font-size: 14px; padding: 10px 0;">
-                ❌ Could not load skill level. Please try again.
+            <div style="color: var(--alert-error-text); font-size: 14px; padding: 10px 0;">
+                Could not load skill level. Please try again.
             </div>
         `;
         if (skillLevelInput) skillLevelInput.value = 'unranked';
@@ -1049,11 +683,14 @@ async function loadSkillPreview(gameAppId) {
 function updateSkillDisplay(data) {
     const skillDisplay = document.getElementById('skill_display');
     const skillLevelInput = document.getElementById('skill_level');
+    const skillContainer = document.getElementById('skill_display_container');
     if (!skillDisplay) return;
+
+    if (skillContainer) skillContainer.className = '';
+    skillDisplay.className = '';
 
     const { skill_level, skill_score, breakdown, is_unranked } = data;
 
-    // Update hidden input for form submission
     if (skillLevelInput) {
         skillLevelInput.value = skill_level || 'unranked';
     }
@@ -1067,21 +704,20 @@ function updateSkillDisplay(data) {
     };
 
     const levelIcons = {
-        'expert': '⭐',
-        'advanced': '🎯',
-        'intermediate': '📊',
-        'beginner': '🎮',
-        'unranked': '❓',
+        'expert': '&#11088;',
+        'advanced': '&#127919;',
+        'intermediate': '&#128200;',
+        'beginner': '&#127918;',
+        'unranked': '&#10067;',
     };
 
     const color = levelColors[skill_level] || '#71717a';
-    const icon = levelIcons[skill_level] || '❓';
+    const icon = levelIcons[skill_level] || '&#10067;';
 
     let breakdownHtml = '';
     if (!is_unranked && breakdown) {
-        breakdownHtml = `<div style="font-weight: 600; margin-bottom: 12px; color: #efeff1;">Skill Breakdown</div>`;
+        breakdownHtml = `<div style="font-weight: 600; margin-bottom: 12px; color: var(--color-text-primary);">Skill Breakdown</div>`;
         for (const [key, value] of Object.entries(breakdown)) {
-            // Skip 'note' (handled separately) and 'weights' (rendered as a special section)
             if (key !== 'note' && key !== 'weights') {
                 const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                 let displayValue = value;
@@ -1095,41 +731,28 @@ function updateSkillDisplay(data) {
                 }
 
                 breakdownHtml += `
-                    <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #27272a; font-size: 13px;">
-                        <span style="color: #a1a1aa;">${label}</span>
-                        <span style="color: #efeff1; font-weight: 500;">${displayValue}</span>
+                    <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid var(--color-border-secondary); font-size: 13px;">
+                        <span style="color: var(--color-text-secondary);">${label}</span>
+                        <span style="color: var(--color-text-primary); font-weight: 500;">${displayValue}</span>
                     </div>
                 `;
             }
         }
 
-        // Render weights as a formatted section if present
-        if (breakdown.weights && typeof breakdown.weights === 'object') {
-            const weightsFormatted = Object.entries(breakdown.weights)
-                .map(([k, v]) => `${k.replace(/_/g, ' ')}: ${(v * 100).toFixed(0)}%`)
-                .join(', ');
-            breakdownHtml += `
-                <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #27272a; font-size: 13px;">
-                    <span style="color: #a1a1aa;">Weights</span>
-                    <span style="color: #efeff1; font-weight: 500; font-size: 11px; text-align: right; max-width: 180px;">${weightsFormatted}</span>
-                </div>
-            `;
-        }
-
         if (breakdown && breakdown.note) {
             breakdownHtml += `
-                <div style="margin-top: 10px; padding: 8px; background: #0e0e10; border-radius: 4px; font-size: 12px; color: #71717a;">
-                    ℹ️ ${breakdown.note}
+                <div style="margin-top: 10px; padding: 8px; background: var(--color-bg-primary); border-radius: 4px; font-size: 12px; color: var(--color-text-muted);">
+                    ${breakdown.note}
                 </div>
             `;
         }
     } else {
         breakdownHtml = `
-            <div style="font-weight: 600; margin-bottom: 8px; color: #efeff1;">Why Unranked?</div>
-            <p style="font-size: 13px; color: #a1a1aa; margin: 0 0 8px 0;">
+            <div style="font-weight: 600; margin-bottom: 8px; color: var(--color-text-primary);">Why Unranked?</div>
+            <p style="font-size: 13px; color: var(--color-text-secondary); margin: 0 0 8px 0;">
                 We couldn't find enough game data.
             </p>
-            <ul style="font-size: 12px; color: #71717a; margin: 0; padding-left: 16px;">
+            <ul style="font-size: 12px; color: var(--color-text-muted); margin: 0; padding-left: 16px;">
                 <li>Haven't played this game yet</li>
                 <li>Steam profile is private</li>
                 <li>Less than 10 hours playtime</li>
@@ -1154,9 +777,9 @@ function updateSkillDisplay(data) {
                     <div style="font-size: 14px; font-weight: 600; color: ${color}; text-transform: uppercase;">
                         ${is_unranked ? 'Unranked' : skill_level.charAt(0).toUpperCase() + skill_level.slice(1)}
                     </div>
-                    ${!is_unranked && skill_score ? `<div style="font-size: 11px; color: #b3b3b5;">Score: ${Math.round(skill_score)}/100</div>` : ''}
+                    ${!is_unranked && skill_score ? `<div style="font-size: 11px; color: var(--color-text-secondary);">Score: ${Math.round(skill_score)}/100</div>` : ''}
                 </div>
-                <span style="margin-left: 4px; color: #71717a; font-size: 14px;">ℹ️</span>
+                <span style="margin-left: 4px; color: var(--color-text-muted); font-size: 14px;">&#9432;</span>
             </div>
 
             <div id="skill-tooltip" style="
@@ -1165,13 +788,13 @@ function updateSkillDisplay(data) {
                 top: 100%;
                 left: 0;
                 margin-top: 8px;
-                background-color: #18181b;
-                border: 1px solid #3f3f46;
+                background-color: var(--color-surface);
+                border: 1px solid var(--color-border-primary);
                 border-radius: 8px;
                 padding: 16px;
                 min-width: 280px;
                 z-index: 100;
-                box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+                box-shadow: var(--tooltip-shadow);
             ">
                 ${breakdownHtml}
             </div>
@@ -1253,6 +876,47 @@ function requestToJoin(teamId) {
     }
 }
 
+function joinTeamDirect(teamId, event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+
+    const btn = event?.target?.closest('button');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span style="display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: mmSpin 0.8s linear infinite;"></span>';
+    }
+
+    fetch(`{{ url('/teams') }}/${teamId}/join`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message || 'Error joining team');
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = 'Join Team';
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error joining team');
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Join Team';
+        }
+    });
+}
+
 function cancelRequest(requestId) {
     if (confirm('Cancel this matchmaking request?')) {
         fetch(`{{ url('/matchmaking/requests') }}/${requestId}`, {
@@ -1278,7 +942,6 @@ function cancelRequest(requestId) {
 }
 
 function findTeams(requestId) {
-    // Show loading state in modal
     showFindTeamsLoading();
 
     fetch(`{{ url('/matchmaking/find-teams') }}`, {
@@ -1310,124 +973,55 @@ function findTeams(requestId) {
     });
 }
 
-// Find Teams Modal Helper Functions
 function showFindTeamsLoading() {
     const modal = document.getElementById('findTeamsModal');
     const results = document.getElementById('findTeamsResults');
 
     results.innerHTML = `
-        <div style="text-align: center; padding: 60px 40px; color: #b3b3b5;">
-            <div style="width: 48px; height: 48px; border: 4px solid #3f3f46; border-top-color: #667eea; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+        <div style="text-align: center; padding: 60px 40px; color: var(--color-text-secondary);">
+            <div style="width: 48px; height: 48px; border: 4px solid var(--color-border-primary); border-top-color: var(--accent-primary); border-radius: 50%; animation: mmSpin 1s linear infinite; margin: 0 auto 20px;"></div>
             <p style="font-size: 16px; margin: 0;">Searching for compatible teams...</p>
-            <p style="font-size: 14px; color: #71717a; margin-top: 8px;">This may take a moment</p>
+            <p style="font-size: 14px; color: var(--color-text-muted); margin-top: 8px;">This may take a moment</p>
         </div>
     `;
 
-    modal.style.display = 'flex';
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
 }
 
 function displayFindTeamsResults(teams) {
     const results = document.getElementById('findTeamsResults');
 
-    let html = `<div style="margin-bottom: 16px; color: #10b981; font-size: 14px; font-weight: 600;">✓ Found ${teams.length} compatible team${teams.length !== 1 ? 's' : ''}</div>`;
+    let html = `<div style="margin-bottom: 16px; color: #10b981; font-size: 14px; font-weight: 600;">Found ${teams.length} compatible team${teams.length !== 1 ? 's' : ''}</div>`;
 
     teams.forEach(team => {
-        // Backend returns flat structure: { id, name, game_name, compatibility_score, match_reasons, role_needs, ... }
         const compatibility = team.compatibility_score || 0;
-        const matchReasons = team.match_reasons || [];
-        const roleNeeds = team.role_needs || [];
-
-        // Determine compatibility color
-        let compatColor = '#ef4444'; // red
-        if (compatibility >= 80) compatColor = '#10b981'; // green
-        else if (compatibility >= 60) compatColor = '#f59e0b'; // yellow
-        else if (compatibility >= 40) compatColor = '#f97316'; // orange
+        const scoreClass = compatibility >= 70 ? 'score-high' : (compatibility >= 50 ? 'score-medium' : 'score-low');
+        const scoreColor = compatibility >= 70 ? '#10b981' : (compatibility >= 50 ? '#f59e0b' : '#ef4444');
 
         html += `
-            <div class="team-card" style="padding: 20px; background-color: #0e0e10; border-radius: 8px; border: 1px solid #3f3f46; position: relative; overflow: hidden;">
-                <!-- Compatibility indicator bar -->
-                <div style="position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: ${compatColor};"></div>
-
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; padding-left: 12px;">
-                    <div style="flex: 1;">
-                        <div style="font-size: 18px; font-weight: 600; color: #efeff1; margin-bottom: 4px;">
-                            ${team.name}
-                        </div>
-                        <div style="font-size: 14px; color: #b3b3b5;">
-                            ${team.game_name || 'Unknown Game'}
-                        </div>
-                        <div style="display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap;">
-                            <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase;">
-                                ${team.skill_level ? team.skill_level.charAt(0).toUpperCase() + team.skill_level.slice(1) : 'Casual'}
-                            </span>
-                            <span style="background-color: #3f3f46; color: #b3b3b5; padding: 3px 8px; border-radius: 4px; font-size: 11px;">
-                                ${team.current_size || 0}/${team.max_size || 5} Members
-                            </span>
-                            ${team.preferred_region ? `
-                                <span style="background-color: #3f3f46; color: #b3b3b5; padding: 3px 8px; border-radius: 4px; font-size: 11px; text-transform: uppercase;">
-                                    ${team.preferred_region.replace(/_/g, ' ')}
-                                </span>
-                            ` : ''}
-                            ${team.required_roles && team.required_roles.length > 0 ?
-                                team.required_roles.map(role => `
-                                    <span style="background-color: rgba(102, 126, 234, 0.2); color: #8b9aef; padding: 3px 8px; border-radius: 4px; font-size: 11px; text-transform: uppercase; border: 1px solid rgba(102, 126, 234, 0.3);">
-                                        ${role.replace(/_/g, ' ')}
-                                    </span>
-                                `).join('')
-                            : ''}
-                            ${team.activity_times && team.activity_times.length > 0 ?
-                                team.activity_times.slice(0, 2).map(time => `
-                                    <span style="background-color: rgba(245, 158, 11, 0.2); color: #fbbf24; padding: 3px 8px; border-radius: 4px; font-size: 11px; text-transform: uppercase; border: 1px solid rgba(245, 158, 11, 0.3);">
-                                        ${time.replace(/_/g, ' ')}
-                                    </span>
-                                `).join('')
-                            : ''}
-                            ${team.activity_times && team.activity_times.length > 2 ? `
-                                <span style="background-color: rgba(245, 158, 11, 0.2); color: #fbbf24; padding: 3px 8px; border-radius: 4px; font-size: 11px; text-transform: uppercase; border: 1px solid rgba(245, 158, 11, 0.3);">
-                                    +${team.activity_times.length - 2} more
-                                </span>
-                            ` : ''}
-                            ${team.languages && team.languages.length > 0 ?
-                                (() => {
-                                    const languageMap = {
-                                        'en': 'English', 'es': 'Spanish', 'zh': 'Chinese',
-                                        'fr': 'French', 'de': 'German', 'pt': 'Portuguese',
-                                        'ru': 'Russian', 'ja': 'Japanese', 'ko': 'Korean'
-                                    };
-                                    return team.languages.slice(0, 2).map(lang => `
-                                        <span style="background-color: rgba(16, 185, 129, 0.2); color: #10b981; padding: 3px 8px; border-radius: 4px; font-size: 11px; text-transform: uppercase; border: 1px solid rgba(16, 185, 129, 0.3);">
-                                            ${languageMap[lang] || lang}
-                                        </span>
-                                    `).join('');
-                                })()
-                            : ''}
-                            ${team.languages && team.languages.length > 2 ? `
-                                <span style="background-color: rgba(16, 185, 129, 0.2); color: #10b981; padding: 3px 8px; border-radius: 4px; font-size: 11px; text-transform: uppercase; border: 1px solid rgba(16, 185, 129, 0.3);">
-                                    +${team.languages.length - 2} more
-                                </span>
-                            ` : ''}
-                        </div>
+            <div class="mm-card" style="margin-bottom: 12px;">
+                <div class="mm-card-header">
+                    <div class="mm-card-info">
+                        <h4 class="mm-card-name">${team.name}</h4>
+                        <div class="mm-card-meta">${team.game_name || 'Unknown Game'}</div>
                     </div>
-                    <div style="text-align: right;">
-                        <div style="font-size: 32px; font-weight: 700; color: ${compatColor}; line-height: 1;">
-                            ${Math.round(compatibility)}%
-                        </div>
-                        <div style="font-size: 12px; color: #b3b3b5; text-transform: uppercase; margin-top: 4px;">Match</div>
+                    <div class="mm-match-ring">
+                        <svg viewBox="0 0 36 36" class="mm-match-ring-svg animated">
+                            <circle class="ring-bg" cx="18" cy="18" r="16"/>
+                            <circle class="ring-fill ${scoreClass}" cx="18" cy="18" r="16" style="stroke-dasharray: ${Math.round(compatibility)}, 100"/>
+                        </svg>
+                        <span class="mm-match-value">${Math.round(compatibility)}%</span>
                     </div>
                 </div>
-
-                ${matchReasons.length > 0 ? `
-                    <div style="margin-bottom: 12px; padding: 10px; border-left: 3px solid ${compatColor}; background-color: rgba(102, 126, 234, 0.05);">
-                        <div style="font-size: 10px; color: #71717a; margin-bottom: 4px; font-weight: 600;">WHY IT'S A GOOD MATCH</div>
-                        <div style="font-size: 12px; color: #d4d4d8; line-height: 1.5;">
-                            ${matchReasons.slice(0, 3).join(' • ')}
-                        </div>
-                    </div>
-                ` : ''}
-
-                <div style="display: flex; gap: 8px; margin-top: 16px;">
-                    <a href="/teams/${team.id}" class="btn btn-secondary btn-sm" style="flex: 1;">View Team</a>
-                    <button onclick="requestToJoinFromModal(${team.id})" class="btn btn-primary btn-sm" style="flex: 1;">Request to Join</button>
+                <div class="mm-tags">
+                    <span class="mm-tag">${team.skill_level ? team.skill_level.charAt(0).toUpperCase() + team.skill_level.slice(1) : 'Casual'}</span>
+                    <span class="mm-tag mm-tag-secondary">${team.current_size || 0}/${team.max_size || 5} Members</span>
+                    ${team.preferred_region ? `<span class="mm-tag mm-tag-secondary">${team.preferred_region.replace(/_/g, ' ')}</span>` : ''}
+                </div>
+                <div class="mm-card-actions">
+                    <a href="/teams/${team.id}" class="mm-btn mm-btn-secondary" style="flex: 1;">View Team</a>
+                    <button onclick="requestToJoinFromModal(${team.id})" class="mm-btn mm-btn-primary" style="flex: 1;">Request to Join</button>
                 </div>
             </div>
         `;
@@ -1439,11 +1033,13 @@ function displayFindTeamsResults(teams) {
 function showNoTeamsFound() {
     const results = document.getElementById('findTeamsResults');
     results.innerHTML = `
-        <div style="text-align: center; padding: 60px 40px; color: #b3b3b5;">
-            <div style="font-size: 64px; margin-bottom: 20px; opacity: 0.5;">🔍</div>
-            <p style="font-size: 18px; color: #efeff1; margin-bottom: 8px; font-weight: 600;">No compatible teams found</p>
-            <p style="font-size: 14px; margin-bottom: 24px;">Try adjusting your matchmaking preferences or create your own team.</p>
-            <div style="display: flex; gap: 12px; justify-content: center;">
+        <div class="mm-empty-state" style="border: none; background: transparent;">
+            <div class="mm-empty-icon">
+                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            </div>
+            <h3 class="mm-empty-title">No Compatible Teams Found</h3>
+            <p class="mm-empty-text">Try adjusting your matchmaking preferences or create your own team.</p>
+            <div class="mm-empty-actions">
                 <button onclick="hideFindTeamsModal()" class="btn btn-secondary">Close</button>
                 <a href="{{ route('teams.create') }}" class="btn btn-primary">Create Team</a>
             </div>
@@ -1454,11 +1050,13 @@ function showNoTeamsFound() {
 function showFindTeamsError(errorMessage) {
     const results = document.getElementById('findTeamsResults');
     results.innerHTML = `
-        <div style="text-align: center; padding: 60px 40px;">
-            <div style="font-size: 64px; margin-bottom: 20px;">⚠️</div>
-            <p style="font-size: 18px; color: #ef4444; margin-bottom: 8px; font-weight: 600;">Error Finding Teams</p>
-            <p style="font-size: 14px; color: #b3b3b5; margin-bottom: 24px;">${errorMessage || 'An unexpected error occurred. Please try again.'}</p>
-            <div style="display: flex; gap: 12px; justify-content: center;">
+        <div class="mm-empty-state" style="border: none; background: transparent;">
+            <div class="mm-empty-icon" style="background: rgba(239, 68, 68, 0.1);">
+                <svg viewBox="0 0 24 24" style="stroke: #ef4444;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            </div>
+            <h3 class="mm-empty-title">Error Finding Teams</h3>
+            <p class="mm-empty-text">${errorMessage || 'An unexpected error occurred. Please try again.'}</p>
+            <div class="mm-empty-actions">
                 <button onclick="hideFindTeamsModal()" class="btn btn-secondary">Close</button>
                 <button onclick="location.reload()" class="btn btn-primary">Retry</button>
             </div>
@@ -1467,13 +1065,12 @@ function showFindTeamsError(errorMessage) {
 }
 
 function hideFindTeamsModal() {
-    document.getElementById('findTeamsModal').style.display = 'none';
+    document.getElementById('findTeamsModal').classList.remove('active');
+    document.body.style.overflow = '';
 }
 
 function requestToJoinFromModal(teamId) {
-    // Close the modal first
     hideFindTeamsModal();
-    // Call the existing requestToJoin function
     requestToJoin(teamId);
 }
 
@@ -1484,28 +1081,36 @@ document.getElementById('findTeamsModal')?.addEventListener('click', function(e)
     }
 });
 
-// Add spin animation for loading spinner
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
-`;
-document.head.appendChild(style);
-
-// Close modal when clicking outside
 document.getElementById('createRequestModal').addEventListener('click', function(e) {
     if (e.target === this) {
         hideCreateRequestModal();
     }
 });
 
+// Close modal with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const createModal = document.getElementById('createRequestModal');
+        if (createModal && createModal.classList.contains('active')) {
+            hideCreateRequestModal();
+        }
+        const findModal = document.getElementById('findTeamsModal');
+        if (findModal && findModal.classList.contains('active')) {
+            hideFindTeamsModal();
+        }
+        const inviteModal = document.getElementById('invitePlayerModal');
+        if (inviteModal && inviteModal.classList.contains('active')) {
+            closeInviteModal();
+        }
+    }
+});
+
 // Form submission
 document.getElementById('createRequestForm').addEventListener('submit', function(e) {
     e.preventDefault();
-    
+
     const formData = new FormData(this);
-    
+
     fetch(this.action, {
         method: 'POST',
         body: formData,
@@ -1524,7 +1129,7 @@ document.getElementById('createRequestForm').addEventListener('submit', function
     .then(data => {
         if (data.success) {
             hideCreateRequestModal();
-            alert('Matchmaking request created successfully! 🎮');
+            alert('Matchmaking request created successfully!');
             location.reload();
         } else {
             alert(data.error || data.message || 'Error creating request');
@@ -1536,20 +1141,6 @@ document.getElementById('createRequestForm').addEventListener('submit', function
     });
 });
 
-// Toggle "Why This Team?" expandable section
-function toggleWhyThisTeam(teamId) {
-    const section = document.getElementById('why-this-team-' + teamId);
-    const icon = document.getElementById('toggle-icon-' + teamId);
-
-    if (section.style.display === 'none') {
-        section.style.display = 'block';
-        icon.textContent = '▲';
-    } else {
-        section.style.display = 'none';
-        icon.textContent = '▼';
-    }
-}
-
 // ===============================
 // Players Looking for Teams Section
 // ===============================
@@ -1560,7 +1151,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadPlayersLooking();
 });
 
-// Expose loadPlayersLooking to window for real-time updates from LiveMatchmakingManager
+// Expose loadPlayersLooking to window for real-time updates
 window.loadPlayersLooking = loadPlayersLooking;
 
 function loadPlayersLooking() {
@@ -1579,10 +1170,12 @@ function loadPlayersLooking() {
             renderPlayersLooking(data.players);
         } else {
             container.innerHTML = `
-                <div style="text-align: center; padding: 40px; color: var(--color-text-muted);">
-                    <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">👥</div>
-                    <p style="font-size: 16px; margin-bottom: 8px;">No players currently looking for teams</p>
-                    <p style="font-size: 14px; color: #71717a;">Check back later for new matchmaking requests</p>
+                <div class="mm-empty-state" style="border: none; background: transparent; padding: 32px;">
+                    <div class="mm-empty-icon">
+                        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    </div>
+                    <h3 class="mm-empty-title">No Players Currently Looking</h3>
+                    <p class="mm-empty-text">Check back later for new matchmaking requests</p>
                 </div>
             `;
         }
@@ -1591,7 +1184,7 @@ function loadPlayersLooking() {
         console.error('Error loading players:', error);
         container.innerHTML = `
             <div style="text-align: center; padding: 40px; color: var(--color-text-muted);">
-                <p>Failed to load players. <a href="javascript:loadPlayersLooking()" style="color: #8b5cf6;">Retry</a></p>
+                <p>Failed to load players. <a href="javascript:loadPlayersLooking()" style="color: var(--accent-primary);">Retry</a></p>
             </div>
         `;
     });
@@ -1603,61 +1196,46 @@ function renderPlayersLooking(players) {
 }
 
 function createPlayerCard(player) {
-    const scoreColor = player.compatibility_score >= 80 ? '#10b981' :
-                       player.compatibility_score >= 60 ? '#f59e0b' : '#ef4444';
+    const scoreClass = player.compatibility_score >= 70 ? 'score-high' : (player.compatibility_score >= 50 ? 'score-medium' : 'score-low');
 
     const rolesHtml = (player.preferred_roles || []).slice(0, 3)
-        .map(r => `<span style="background-color: rgba(139, 92, 246, 0.2); color: #a78bfa; padding: 2px 8px; border-radius: 4px; font-size: 11px; text-transform: capitalize;">${r.replace(/_/g, ' ')}</span>`).join(' ');
+        .map(r => `<span class="mm-tag mm-tag-role">${r.replace(/_/g, ' ')}</span>`).join(' ');
 
     const regionsHtml = (player.preferred_regions || []).slice(0, 2)
-        .map(r => `<span style="background-color: rgba(59, 130, 246, 0.2); color: #60a5fa; padding: 2px 6px; border-radius: 4px; font-size: 10px;">${r}</span>`).join(' ');
+        .map(r => `<span class="mm-tag mm-tag-secondary">${r}</span>`).join(' ');
 
     const avatar = player.avatar || '/images/default-avatar.png';
-
-    // Escape player data for onclick
     const playerDataStr = JSON.stringify(player).replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
     return `
-        <div class="player-card" style="background: var(--color-bg-secondary); border-radius: 12px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--color-border); transition: border-color 0.2s;" onmouseover="this.style.borderColor='#8b5cf6'" onmouseout="this.style.borderColor='var(--color-border)'">
-            <div style="display: flex; align-items: center; gap: 16px; flex: 1;">
+        <div class="mm-player-card">
+            <div class="mm-player-info">
                 <img src="${avatar}"
-                     style="width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 2px solid ${scoreColor};"
+                     class="mm-player-avatar ${scoreClass}"
                      alt="${player.username}"
                      onerror="this.src='/images/default-avatar.png'">
-                <div style="flex: 1;">
-                    <div style="font-weight: 600; color: var(--color-text-primary); font-size: 16px; margin-bottom: 2px;">
-                        ${player.display_name || player.username}
-                    </div>
-                    <div style="font-size: 13px; color: var(--color-text-muted); margin-bottom: 6px;">
+                <div class="mm-player-details">
+                    <div class="mm-player-name">${player.display_name || player.username}</div>
+                    <div class="mm-player-game">
                         ${player.game_name}
-                        <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-left: 8px;">
-                            ${player.skill_level || 'Unranked'}
-                        </span>
+                        <span class="mm-tag" style="margin-left: 8px;">${player.skill_level || 'Unranked'}</span>
                     </div>
-                    <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+                    <div class="mm-player-tags">
                         ${rolesHtml}
                         ${regionsHtml}
                     </div>
                 </div>
             </div>
-            <div style="display: flex; align-items: center; gap: 20px;">
-                <div style="text-align: center;">
-                    <div style="font-size: 28px; font-weight: 700; color: ${scoreColor}; line-height: 1;">
-                        ${Math.round(player.compatibility_score)}%
-                    </div>
-                    <div style="font-size: 10px; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Match</div>
-                </div>
-                <button class="btn btn-primary" style="padding: 10px 20px; font-weight: 600;"
-                        onclick='openInviteModal(${playerDataStr})'>
-                    Invite
-                </button>
+            <div class="mm-player-score">
+                <div class="mm-player-score-value ${scoreClass}">${Math.round(player.compatibility_score)}%</div>
+                <div class="mm-player-score-label">Match</div>
             </div>
+            <button class="mm-btn mm-btn-primary" onclick='openInviteModal(${playerDataStr})'>Invite</button>
         </div>
     `;
 }
 
 function openInviteModal(player) {
-    // Handle if player is passed as string (from onclick)
     if (typeof player === 'string') {
         try {
             player = JSON.parse(player);
@@ -1671,7 +1249,7 @@ function openInviteModal(player) {
 
     const avatar = player.avatar || '/images/default-avatar.png';
     document.getElementById('invitePlayerInfo').innerHTML = `
-        <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--color-bg-secondary); border-radius: 8px;">
+        <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--color-bg-primary); border-radius: 8px;">
             <img src="${avatar}"
                  style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover;"
                  onerror="this.src='/images/default-avatar.png'">
@@ -1682,7 +1260,6 @@ function openInviteModal(player) {
         </div>
     `;
 
-    // Team selection
     const teamSelectGroup = document.getElementById('teamSelectGroup');
     const teamSelect = document.getElementById('inviteTeamSelect');
 
@@ -1699,11 +1276,13 @@ function openInviteModal(player) {
         }
     }
 
-    document.getElementById('invitePlayerModal').style.display = 'flex';
+    document.getElementById('invitePlayerModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
 }
 
 function closeInviteModal() {
-    document.getElementById('invitePlayerModal').style.display = 'none';
+    document.getElementById('invitePlayerModal').classList.remove('active');
+    document.body.style.overflow = '';
     currentInvitePlayer = null;
     document.getElementById('inviteMessage').value = '';
     document.getElementById('inviteRole').value = 'member';
@@ -1739,7 +1318,6 @@ function sendPlayerInvite() {
         if (data.success) {
             alert('Invitation sent successfully!');
             closeInviteModal();
-            // Refresh players list to update UI
             loadPlayersLooking();
         } else {
             alert(data.message || 'Failed to send invitation');

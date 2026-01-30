@@ -46,18 +46,23 @@
    ============================================================================= */
 
 .navbar-new-brand {
+    font-family: 'Orbitron', sans-serif;
     font-size: 24px;
-    font-weight: 700;
+    font-weight: 900;
+    letter-spacing: 0.15em;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     text-decoration: none;
     flex-shrink: 0;
+    filter: drop-shadow(0 0 20px rgba(102, 126, 234, 0.3));
+    transition: transform 0.2s ease, filter 0.2s ease;
 }
 
 .navbar-new-brand:hover {
-    opacity: 0.9;
+    transform: scale(1.02);
+    filter: drop-shadow(0 0 25px rgba(102, 126, 234, 0.4)) brightness(1.1);
 }
 
 /* =============================================================================
@@ -438,12 +443,15 @@
 }
 
 .mobile-drawer-title {
+    font-family: 'Orbitron', sans-serif;
     font-size: 18px;
-    font-weight: 700;
+    font-weight: 900;
+    letter-spacing: 0.15em;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    filter: drop-shadow(0 0 15px rgba(102, 126, 234, 0.3));
 }
 
 .mobile-drawer-close {

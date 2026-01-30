@@ -1,0 +1,1466 @@
+/* =============================================================================
+   Lobbies Page - Dashboard-Style Design System
+   Glassmorphism, animated gradients, micro-interactions
+   Matches dashboard/matchmaking/teams patterns for visual consistency
+   ============================================================================= */
+
+/* =============================================================================
+   Page Layout
+   ============================================================================= */
+
+.lobby-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 24px 48px;
+}
+
+.lobby-main {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 32px;
+    margin-top: 32px;
+}
+
+@media (max-width: 1024px) {
+    .lobby-main {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* =============================================================================
+   Hero Section
+   ============================================================================= */
+
+.lobby-hero {
+    position: relative;
+    padding: 48px 32px;
+    border-radius: var(--radius-2xl);
+    overflow: hidden;
+    margin-bottom: 32px;
+}
+
+.lobby-hero-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}
+
+/* Mesh dot pattern */
+.lobby-hero-mesh {
+    position: absolute;
+    inset: 0;
+    background-image:
+        radial-gradient(circle at 1px 1px, rgba(102, 126, 234, 0.15) 1px, transparent 0);
+    background-size: 24px 24px;
+}
+
+.lobby-hero-mesh::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        135deg,
+        rgba(102, 126, 234, 0.12) 0%,
+        rgba(118, 75, 162, 0.08) 50%,
+        rgba(102, 126, 234, 0.06) 100%
+    );
+}
+
+/* Floating glow orbs */
+.lobby-glow-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.4;
+    animation: lobbyOrbFloat 8s ease-in-out infinite;
+}
+
+.lobby-glow-1 {
+    width: 300px;
+    height: 300px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    top: -100px;
+    right: -50px;
+    animation-delay: 0s;
+}
+
+.lobby-glow-2 {
+    width: 200px;
+    height: 200px;
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    bottom: -80px;
+    left: 20%;
+    animation-delay: -4s;
+}
+
+@keyframes lobbyOrbFloat {
+    0%, 100% {
+        transform: translate(0, 0) scale(1);
+    }
+    25% {
+        transform: translate(10px, -15px) scale(1.05);
+    }
+    50% {
+        transform: translate(-5px, 10px) scale(0.95);
+    }
+    75% {
+        transform: translate(-10px, -5px) scale(1.02);
+    }
+}
+
+.lobby-hero-content {
+    position: relative;
+    z-index: 1;
+}
+
+.lobby-hero-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
+}
+
+.lobby-hero-title {
+    font-size: 48px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #667eea 0%, #a78bfa 50%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0 0 24px 0;
+    line-height: 1.1;
+}
+
+@media (max-width: 768px) {
+    .lobby-hero-title {
+        font-size: 32px;
+    }
+}
+
+.lobby-hero-stats {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.lobby-hero-stat {
+    display: flex;
+    flex-direction: column;
+    padding: 16px 24px;
+    background: rgba(24, 24, 27, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(102, 126, 234, 0.15);
+    border-radius: var(--radius-xl);
+}
+
+.lobby-stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+}
+
+.lobby-stat-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* =============================================================================
+   Sidebar (Glassmorphism Style)
+   ============================================================================= */
+
+.lobby-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    position: sticky;
+    top: 24px;
+    height: fit-content;
+}
+
+.lobby-sidebar-section {
+    background: rgba(24, 24, 27, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    border-radius: var(--radius-2xl);
+    padding: 20px;
+    opacity: 0;
+    animation: lobbyWidgetEntrance 0.5s ease forwards;
+}
+
+.lobby-sidebar-section[data-stagger="0"] { animation-delay: 100ms; }
+.lobby-sidebar-section[data-stagger="1"] { animation-delay: 180ms; }
+.lobby-sidebar-section[data-stagger="2"] { animation-delay: 260ms; }
+
+.lobby-sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.lobby-sidebar-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.lobby-sidebar-title svg {
+    width: 16px;
+    height: 16px;
+    stroke: var(--accent-primary);
+}
+
+.lobby-count-badge {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 12px;
+}
+
+/* =============================================================================
+   Active Lobby Items in Sidebar
+   ============================================================================= */
+
+.lobby-active-item {
+    background: var(--color-bg-primary);
+    border: 1px solid var(--color-border-secondary);
+    border-radius: var(--radius-lg);
+    padding: 12px;
+    margin-bottom: 12px;
+    transition: all 0.2s ease;
+    border-left: 3px solid var(--accent-primary);
+}
+
+.lobby-active-item:last-child {
+    margin-bottom: 0;
+}
+
+.lobby-active-item:hover {
+    border-color: var(--accent-primary);
+    transform: translateX(4px);
+}
+
+.lobby-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.lobby-game-name {
+    color: var(--color-text-primary);
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.lobby-join-method-label {
+    color: var(--color-text-secondary);
+    font-size: 12px;
+    margin: 4px 0 0 0;
+}
+
+.lobby-delete-btn {
+    background: none;
+    border: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.lobby-delete-btn:hover {
+    background-color: #ef4444;
+    color: white;
+}
+
+.lobby-time-remaining {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    margin-bottom: 8px;
+    color: #10b981;
+}
+
+.lobby-time-remaining.expiring {
+    color: #ef4444;
+}
+
+.lobby-join-info {
+    background: var(--color-bg-secondary);
+    padding: 8px 10px;
+    border-radius: 4px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    word-break: break-all;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.lobby-copy-btn {
+    background: none;
+    border: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    transition: all 0.2s;
+}
+
+.lobby-copy-btn:hover {
+    color: var(--accent-primary);
+}
+
+/* Empty Lobbies State */
+.lobby-empty-sidebar {
+    text-align: center;
+    padding: 24px 16px;
+    color: var(--color-text-muted);
+    font-size: 14px;
+}
+
+.lobby-empty-sidebar p {
+    margin: 0 0 12px 0;
+}
+
+.lobby-create-link {
+    color: var(--accent-primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.lobby-create-link:hover {
+    text-decoration: underline;
+}
+
+/* =============================================================================
+   Content Widgets (Glassmorphism Style)
+   ============================================================================= */
+
+.lobby-content {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.lobby-section {
+    background: rgba(24, 24, 27, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    border-radius: var(--radius-2xl);
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    animation: lobbyWidgetEntrance 0.5s ease forwards;
+}
+
+.lobby-section::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-2xl);
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), transparent 50%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.lobby-section:hover::before {
+    opacity: 1;
+}
+
+/* Stagger delays for widgets */
+.lobby-section[data-stagger="0"] { animation-delay: 100ms; }
+.lobby-section[data-stagger="1"] { animation-delay: 180ms; }
+.lobby-section[data-stagger="2"] { animation-delay: 260ms; }
+.lobby-section[data-stagger="3"] { animation-delay: 340ms; }
+.lobby-section[data-stagger="4"] { animation-delay: 420ms; }
+
+@keyframes lobbyWidgetEntrance {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.lobby-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.lobby-section-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+}
+
+.lobby-section-title-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--accent-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lobby-section-title-icon svg {
+    width: 16px;
+    height: 16px;
+    stroke: white;
+    stroke-width: 2;
+    fill: none;
+}
+
+/* =============================================================================
+   Step Indicator
+   ============================================================================= */
+
+.lobby-step-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 32px;
+    padding: 0 20px;
+}
+
+.lobby-step-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    cursor: default;
+}
+
+.lobby-step-item.active {
+    background: rgba(102, 126, 234, 0.15);
+}
+
+.lobby-step-item.completed {
+    cursor: pointer;
+}
+
+.lobby-step-item.completed:hover {
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.lobby-step-number {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.lobby-step-item.pending .lobby-step-number {
+    background: var(--color-surface-active);
+    color: var(--color-text-muted);
+}
+
+.lobby-step-item.active .lobby-step-number {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.lobby-step-item.completed .lobby-step-number {
+    background: #10b981;
+    color: white;
+}
+
+.lobby-step-label {
+    font-size: 14px;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.lobby-step-item.pending .lobby-step-label {
+    color: var(--color-text-muted);
+}
+
+.lobby-step-item.active .lobby-step-label {
+    color: var(--color-text-primary);
+}
+
+.lobby-step-item.completed .lobby-step-label {
+    color: #10b981;
+}
+
+.lobby-step-connector {
+    width: 40px;
+    height: 2px;
+    background: var(--color-surface-active);
+    transition: background-color 0.3s ease;
+}
+
+.lobby-step-connector.completed {
+    background: #10b981;
+}
+
+/* =============================================================================
+   Game Cards Grid
+   ============================================================================= */
+
+.lobby-games-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.lobby-game-card {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: var(--color-bg-primary);
+}
+
+.lobby-game-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent-primary);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+}
+
+.lobby-game-card:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+}
+
+.lobby-game-card.selected {
+    border-color: #10b981;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+}
+
+.lobby-game-card img {
+    width: 100%;
+    aspect-ratio: 460/215;
+    object-fit: cover;
+    display: block;
+}
+
+.lobby-game-card-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.7) 50%, transparent 100%);
+    padding: 24px 12px 12px 12px;
+}
+
+.lobby-game-card-name {
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+/* =============================================================================
+   Join Method Cards Grid
+   ============================================================================= */
+
+.lobby-methods-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.lobby-method-card {
+    background: var(--color-bg-primary);
+    border: 2px solid var(--color-border-secondary);
+    border-radius: 12px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+}
+
+.lobby-method-card:hover {
+    border-color: var(--accent-primary);
+    background: var(--color-bg-tertiary);
+    transform: translateY(-2px);
+}
+
+.lobby-method-card.selected {
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.lobby-method-icon {
+    width: 48px;
+    height: 48px;
+    color: var(--accent-primary);
+    transition: color 0.2s ease;
+}
+
+.lobby-method-card.selected .lobby-method-icon {
+    color: #10b981;
+}
+
+.lobby-method-name {
+    color: var(--color-text-primary);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.lobby-method-desc {
+    color: var(--color-text-muted);
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+/* =============================================================================
+   Form Controls
+   ============================================================================= */
+
+.lobby-form-group {
+    margin-bottom: 20px;
+}
+
+.lobby-form-group:last-of-type {
+    margin-bottom: 0;
+}
+
+.lobby-form-label {
+    display: block;
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.lobby-form-control {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--color-input-bg);
+    border: 2px solid var(--color-input-border);
+    border-radius: 8px;
+    color: var(--color-input-text);
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.lobby-form-control:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+}
+
+.lobby-form-control:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.lobby-form-help {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    margin-top: 6px;
+}
+
+/* =============================================================================
+   Feed Section
+   ============================================================================= */
+
+.lobby-feed-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.lobby-feed-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.lobby-feed-filter {
+    padding: 10px 14px;
+    background: var(--color-bg-primary);
+    border: 1px solid var(--color-border-secondary);
+    border-radius: var(--radius-lg);
+    color: var(--color-text-primary);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 140px;
+}
+
+.lobby-feed-filter:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+}
+
+.lobby-feed-filter option {
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+}
+
+.lobby-refresh-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 16px;
+    background: var(--color-surface-active);
+    color: var(--color-text-secondary);
+    border: none;
+    border-radius: var(--radius-lg);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.lobby-refresh-btn:hover {
+    background: var(--color-surface-hover);
+    color: var(--color-text-primary);
+}
+
+.lobby-refresh-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.lobby-refresh-btn svg {
+    transition: transform 0.3s ease;
+}
+
+.lobby-refresh-btn.loading svg {
+    animation: lobbySpin 1s linear infinite;
+}
+
+@keyframes lobbySpin {
+    to { transform: rotate(360deg); }
+}
+
+/* =============================================================================
+   Feed Grid & Cards
+   ============================================================================= */
+
+.lobby-feed-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+}
+
+.lobby-feed-card {
+    background: var(--color-bg-primary);
+    border: 1px solid var(--color-border-secondary);
+    border-radius: var(--radius-xl);
+    padding: 16px;
+    border-left: 3px solid var(--accent-primary);
+    transition: all 0.2s ease;
+}
+
+.lobby-feed-card:hover {
+    border-color: var(--accent-primary);
+    transform: translateX(4px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.lobby-feed-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.lobby-feed-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--color-border-secondary);
+}
+
+.lobby-feed-user-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.lobby-feed-user-name {
+    color: var(--color-text-primary);
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lobby-feed-user-source {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    margin: 2px 0 0 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.lobby-feed-source-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+}
+
+.lobby-feed-source-badge.friend {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+}
+
+.lobby-feed-source-badge.server {
+    background: rgba(102, 126, 234, 0.15);
+    color: #667eea;
+}
+
+.lobby-feed-card-body {
+    margin-bottom: 12px;
+}
+
+.lobby-feed-game-name {
+    color: var(--color-text-primary);
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 6px 0;
+}
+
+.lobby-feed-join-method {
+    color: var(--color-text-secondary);
+    font-size: 13px;
+    margin: 0 0 8px 0;
+}
+
+.lobby-feed-time {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #10b981;
+}
+
+.lobby-feed-time.expiring {
+    color: #ef4444;
+}
+
+.lobby-feed-card-footer {
+    display: flex;
+    gap: 8px;
+}
+
+.lobby-feed-join-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.lobby-feed-join-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.lobby-feed-copy-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 14px;
+    background: var(--color-surface-active);
+    color: var(--color-text-secondary);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.lobby-feed-copy-btn:hover {
+    background: var(--color-surface-hover);
+    color: var(--color-text-primary);
+}
+
+.lobby-feed-copy-btn.copied {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+}
+
+/* =============================================================================
+   Loading & Empty States
+   ============================================================================= */
+
+.lobby-loading {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--color-text-muted);
+}
+
+.lobby-loading-spinner {
+    display: inline-block;
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--color-border-secondary);
+    border-radius: 50%;
+    border-top-color: var(--accent-primary);
+    animation: lobbySpin 1s ease-in-out infinite;
+    margin-bottom: 16px;
+}
+
+.lobby-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--color-text-muted);
+}
+
+.lobby-empty svg {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+    flex-shrink: 0;
+}
+
+.lobby-empty p {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+}
+
+.lobby-empty-subtitle {
+    font-size: 13px;
+    color: var(--color-text-faint);
+}
+
+/* =============================================================================
+   Alert Messages
+   ============================================================================= */
+
+.lobby-alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+
+.lobby-alert-error {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid #ef4444;
+    color: #ef4444;
+}
+
+.lobby-alert-success {
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid #10b981;
+    color: #10b981;
+}
+
+/* =============================================================================
+   Button Styles
+   ============================================================================= */
+
+.lobby-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    text-decoration: none;
+}
+
+.lobby-btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.lobby-btn-primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.lobby-btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.lobby-btn-secondary {
+    background: var(--color-surface-active);
+    color: var(--color-text-primary);
+}
+
+.lobby-btn-secondary:hover {
+    background: var(--color-surface-hover);
+}
+
+.lobby-btn-ghost {
+    background: transparent;
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border-primary);
+}
+
+.lobby-btn-ghost:hover {
+    background: var(--color-surface-active);
+    color: var(--color-text-primary);
+}
+
+/* =============================================================================
+   Back Button & Selected Summary
+   ============================================================================= */
+
+.lobby-back-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: var(--color-surface-active);
+    color: var(--color-text-secondary);
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.lobby-back-button:hover {
+    background: var(--color-surface-hover);
+    color: var(--color-text-primary);
+}
+
+.lobby-selected-summary {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: var(--color-bg-primary);
+    border-radius: 8px;
+    margin: 16px 0 20px 0;
+}
+
+.lobby-selected-banner {
+    width: 120px;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.lobby-selected-banner img {
+    width: 100%;
+    display: block;
+}
+
+.lobby-selected-info {
+    flex: 1;
+}
+
+.lobby-selected-info h4 {
+    color: var(--color-text-primary);
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 4px 0;
+}
+
+.lobby-selected-info p {
+    color: #10b981;
+    font-size: 13px;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.lobby-change-link {
+    color: var(--accent-primary);
+    font-size: 13px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.lobby-change-link:hover {
+    text-decoration: underline;
+}
+
+/* =============================================================================
+   Accessibility - Reduced Motion
+   ============================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+    .lobby-glow-orb,
+    .lobby-sidebar-section,
+    .lobby-section,
+    .lobby-loading-spinner,
+    .lobby-refresh-btn svg {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+
+    .lobby-active-item:hover,
+    .lobby-game-card:hover,
+    .lobby-method-card:hover,
+    .lobby-feed-card:hover {
+        transform: none;
+    }
+}
+
+/* =============================================================================
+   Light Theme Adjustments
+   ============================================================================= */
+
+[data-theme="light"] .lobby-hero-mesh::after {
+    background: linear-gradient(
+        135deg,
+        rgba(102, 126, 234, 0.06) 0%,
+        rgba(118, 75, 162, 0.04) 50%,
+        rgba(102, 126, 234, 0.03) 100%
+    );
+}
+
+[data-theme="light"] .lobby-glow-orb {
+    opacity: 0.15;
+}
+
+[data-theme="light"] .lobby-hero-stat {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    box-shadow:
+        0 4px 16px rgba(102, 126, 234, 0.08),
+        0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .lobby-sidebar-section,
+[data-theme="light"] .lobby-section {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow:
+        0 4px 20px rgba(0, 0, 0, 0.06),
+        0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .lobby-section::before {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), transparent 50%);
+}
+
+[data-theme="light"] .lobby-active-item,
+[data-theme="light"] .lobby-feed-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-secondary);
+    border-left: 3px solid var(--accent-primary);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .lobby-active-item:hover,
+[data-theme="light"] .lobby-feed-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .lobby-game-card {
+    background: var(--color-surface);
+    border: 2px solid var(--color-border-secondary);
+}
+
+[data-theme="light"] .lobby-game-card:hover {
+    border-color: var(--accent-primary);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.12);
+}
+
+[data-theme="light"] .lobby-method-card {
+    background: var(--color-surface);
+    border: 2px solid var(--color-border-secondary);
+}
+
+[data-theme="light"] .lobby-method-card:hover {
+    background: var(--color-surface-active);
+    border-color: var(--accent-primary);
+}
+
+[data-theme="light"] .lobby-feed-filter {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-secondary);
+}
+
+[data-theme="light"] .lobby-feed-filter:focus {
+    border-color: var(--accent-primary);
+}
+
+[data-theme="light"] .lobby-refresh-btn {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-secondary);
+}
+
+[data-theme="light"] .lobby-refresh-btn:hover {
+    background: var(--color-surface-active);
+}
+
+[data-theme="light"] .lobby-form-control {
+    background: var(--color-surface);
+    border: 2px solid var(--color-border-secondary);
+}
+
+[data-theme="light"] .lobby-form-control:focus {
+    border-color: var(--accent-primary);
+}
+
+[data-theme="light"] .lobby-join-info {
+    background: var(--color-surface-active);
+}
+
+[data-theme="light"] .lobby-selected-summary {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-secondary);
+}
+
+[data-theme="light"] .lobby-step-item.active {
+    background: rgba(102, 126, 234, 0.08);
+}
+
+[data-theme="light"] .lobby-step-item.completed:hover {
+    background: rgba(16, 185, 129, 0.08);
+}
+
+[data-theme="light"] .lobby-step-item.pending .lobby-step-number {
+    background: var(--color-surface-active);
+}
+
+[data-theme="light"] .lobby-step-connector {
+    background: var(--color-border-secondary);
+}
+
+[data-theme="light"] .lobby-empty {
+    background: var(--color-surface);
+    border: 1px dashed var(--color-border-primary);
+    border-radius: var(--radius-xl);
+}
+
+[data-theme="light"] .lobby-feed-avatar {
+    border-color: var(--color-border-primary);
+}
+
+[data-theme="light"] .lobby-feed-copy-btn {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-secondary);
+}
+
+[data-theme="light"] .lobby-feed-copy-btn:hover {
+    background: var(--color-surface-active);
+}
+
+[data-theme="light"] .lobby-btn-secondary {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-secondary);
+}
+
+[data-theme="light"] .lobby-btn-secondary:hover {
+    background: var(--color-surface-active);
+}
+
+[data-theme="light"] .lobby-btn-ghost {
+    border-color: var(--color-border-secondary);
+}
+
+[data-theme="light"] .lobby-btn-ghost:hover {
+    background: var(--color-surface);
+}
+
+[data-theme="light"] .lobby-back-button {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-secondary);
+}
+
+[data-theme="light"] .lobby-back-button:hover {
+    background: var(--color-surface-active);
+}
+
+/* =============================================================================
+   Mobile Responsiveness
+   ============================================================================= */
+
+@media (max-width: 1024px) {
+    .lobby-main {
+        grid-template-columns: 1fr;
+    }
+
+    .lobby-sidebar {
+        position: static;
+        order: 2;
+    }
+
+    .lobby-content {
+        order: 1;
+    }
+
+    .lobby-games-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+
+    .lobby-methods-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .lobby-hero {
+        padding: 32px 20px;
+    }
+
+    .lobby-hero-stats {
+        gap: 16px;
+    }
+
+    .lobby-hero-stat {
+        padding: 12px 16px;
+    }
+
+    .lobby-stat-value {
+        font-size: 24px;
+    }
+
+    .lobby-container {
+        padding: 0 16px 32px;
+    }
+
+    .lobby-section {
+        padding: 20px;
+    }
+
+    .lobby-step-indicator {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .lobby-step-connector {
+        display: none;
+    }
+
+    .lobby-step-item {
+        padding: 8px 12px;
+    }
+
+    .lobby-games-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .lobby-methods-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .lobby-selected-summary {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .lobby-selected-banner {
+        width: 160px;
+    }
+
+    .lobby-feed-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .lobby-feed-controls {
+        width: 100%;
+    }
+
+    .lobby-feed-filter {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .lobby-feed-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .lobby-hero-title {
+        font-size: 28px;
+    }
+
+    .lobby-games-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .lobby-methods-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .lobby-step-item .lobby-step-label {
+        display: none;
+    }
+
+    .lobby-step-item.active .lobby-step-label {
+        display: block;
+    }
+}

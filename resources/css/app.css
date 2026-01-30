@@ -9,11 +9,157 @@
 @import './profile.css';
 @import './navbar.css';
 @import './gaming-status.css';
+@import './dashboard.css';
+@import './matchmaking.css';
+@import './teams.css';
+@import './lobbies.css';
+@import './discover.css';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
 @source '../**/*.js';
+
+/* =============================================================================
+   Steam Reminder Modal - Theme-aware styles
+   ============================================================================= */
+
+.steam-reminder-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--modal-overlay);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+.steam-reminder-modal {
+    background-color: var(--modal-bg);
+    border-radius: 16px;
+    padding: 32px;
+    width: 100%;
+    max-width: 440px;
+    margin: 20px;
+    border: 1px solid var(--modal-border);
+    box-shadow: var(--shadow-xl);
+    position: relative;
+}
+
+.steam-reminder-close-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: none;
+    border: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    padding: 4px;
+    transition: color var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.steam-reminder-close-btn:hover {
+    color: var(--color-text-primary);
+}
+
+.steam-reminder-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.steam-reminder-logo {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 16px;
+    background: linear-gradient(135deg, #1b2838 0%, #2a475e 100%);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.steam-reminder-title {
+    color: var(--color-text-primary);
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0 0 8px;
+}
+
+.steam-reminder-subtitle {
+    color: var(--color-text-secondary);
+    font-size: 14px;
+    margin: 0;
+}
+
+.steam-reminder-benefits {
+    background-color: var(--color-bg-primary);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+}
+
+.steam-reminder-benefits-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.steam-reminder-benefit {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.steam-reminder-benefit-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.steam-reminder-benefit-title {
+    color: var(--color-text-primary);
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.steam-reminder-benefit-desc {
+    color: var(--color-text-muted);
+    font-size: 12px;
+}
+
+.steam-reminder-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.steam-reminder-actions .btn {
+    width: 100%;
+}
+
+.steam-reminder-actions .btn-primary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
+}
 
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
@@ -21,7 +167,233 @@
 }
 
 /* =============================================================================
+   Page Header - Minimal header for content pages
+   ============================================================================= */
+
+.page-header {
+    padding: 24px 0 16px;
+}
+
+.page-title {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0;
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+@media (max-width: 768px) {
+    .page-header {
+        padding: 16px 0 12px;
+    }
+
+    .page-title {
+        font-size: 24px;
+    }
+}
+
+/* =============================================================================
    CSS Custom Properties are now defined in themes.css
    This file imports themes.css which contains all design system variables
    with support for both dark and light themes.
    ============================================================================= */
+
+/* =============================================================================
+   Member Card - Theme-aware styles
+   ============================================================================= */
+
+.member-card-display-name:hover {
+    color: #00b0f4 !important;
+    text-decoration: underline;
+}
+
+/* =============================================================================
+   Server View Page - Enhanced Welcome Section & Goals
+   ============================================================================= */
+
+/* Welcome Section */
+.server-welcome {
+    position: relative;
+    background: var(--color-surface);
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 32px;
+    border: 1px solid var(--color-border-primary);
+    overflow: hidden;
+}
+
+.server-welcome::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--accent-gradient);
+}
+
+.server-welcome-content {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.server-welcome-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 16px;
+    background: var(--accent-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.25);
+}
+
+.server-welcome-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 16px;
+}
+
+.server-welcome-icon-initial {
+    font-size: 32px;
+    font-weight: 700;
+    color: #ffffff;
+    text-transform: uppercase;
+}
+
+.server-welcome-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.server-welcome-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin: 0 0 8px 0;
+    line-height: 1.3;
+}
+
+.server-welcome-description {
+    font-size: 15px;
+    color: var(--color-text-secondary);
+    margin: 0 0 16px 0;
+    line-height: 1.5;
+}
+
+.server-welcome-stats {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.server-welcome-stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--color-text-muted);
+}
+
+.server-welcome-stat svg {
+    width: 18px;
+    height: 18px;
+    color: var(--accent-primary);
+}
+
+.server-welcome-stat-value {
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.server-welcome-actions {
+    flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+    .server-welcome {
+        padding: 24px;
+    }
+
+    .server-welcome-content {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .server-welcome-stats {
+        justify-content: center;
+    }
+
+    .server-welcome-actions {
+        width: 100%;
+    }
+
+    .server-welcome-actions .btn {
+        width: 100%;
+    }
+}
+
+/* Empty State */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 32px;
+    background: var(--color-surface);
+    border-radius: 16px;
+    border: 1px solid var(--color-border-primary);
+    text-align: center;
+}
+
+.empty-state-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--color-surface-hover);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.empty-state-icon svg {
+    width: 32px;
+    height: 32px;
+    color: var(--color-text-muted);
+}
+
+.empty-state-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0 0 8px 0;
+}
+
+.empty-state-description {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    margin: 0 0 24px 0;
+    max-width: 320px;
+}
+
+/* Goal Card Enhancement */
+.goal-card-enhanced {
+    background: var(--color-surface);
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid var(--color-border-primary);
+    border-left: 4px solid #667eea;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.goal-card-enhanced:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--color-border-subtle);
+}

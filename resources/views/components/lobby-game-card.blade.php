@@ -12,7 +12,7 @@
 @endphp
 
 <div
-    class="game-card"
+    class="lobby-game-card"
     :class="{ 'selected': selectedGame == '{{ $gameId }}' }"
     @click="selectGame('{{ $gameId }}', '{{ addslashes($gameName) }}', '{{ $bannerUrl }}')"
     tabindex="0"
@@ -50,7 +50,7 @@
     </div>
 
     {{-- Game Name Overlay --}}
-    <div class="game-card-overlay">
-        <span class="game-card-name">{{ $gameName }}</span>
+    <div class="lobby-game-card-overlay">
+        <span class="lobby-game-card-name">{{ $gameName }}</span>
     </div>
 </div>

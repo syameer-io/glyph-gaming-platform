@@ -22,6 +22,7 @@
             font-size: 32px;
             font-weight: bold;
             color: #667eea;
+            letter-spacing: 0.15em;
             margin-bottom: 24px;
         }
         .message {
@@ -67,7 +68,7 @@
 </head>
 <body>
     <div class="container">
-        <div class="logo">Glyph</div>
+        <div class="logo">GLYPH</div>
         <h2>Reset Your Password</h2>
         <p class="message">We received a request to reset your password. Click the button below to create a new password:</p>
 

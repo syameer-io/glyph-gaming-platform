@@ -1,0 +1,1666 @@
+/* =============================================================================
+   Dashboard - Premium Gaming Command Center
+   Glassmorphism, animated gradients, micro-interactions
+   ============================================================================= */
+
+/* =============================================================================
+   Dashboard Layout
+   ============================================================================= */
+
+.dashboard-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 24px 48px;
+}
+
+.dashboard-main {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 32px;
+    margin-top: 32px;
+}
+
+@media (max-width: 1024px) {
+    .dashboard-main {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* =============================================================================
+   Hero Section
+   ============================================================================= */
+
+.dashboard-hero {
+    position: relative;
+    padding: 48px 32px;
+    border-radius: var(--radius-2xl);
+    overflow: hidden;
+    margin-bottom: 32px;
+}
+
+.dashboard-hero-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}
+
+/* Mesh dot pattern */
+.hero-mesh-gradient {
+    position: absolute;
+    inset: 0;
+    background-image:
+        radial-gradient(circle at 1px 1px, rgba(102, 126, 234, 0.15) 1px, transparent 0);
+    background-size: 24px 24px;
+}
+
+.hero-mesh-gradient::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        135deg,
+        rgba(102, 126, 234, 0.12) 0%,
+        rgba(118, 75, 162, 0.08) 50%,
+        rgba(102, 126, 234, 0.06) 100%
+    );
+}
+
+/* Floating glow orbs */
+.hero-glow-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.4;
+    animation: orbFloat 8s ease-in-out infinite;
+}
+
+.hero-glow-1 {
+    width: 300px;
+    height: 300px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    top: -100px;
+    right: -50px;
+    animation-delay: 0s;
+}
+
+.hero-glow-2 {
+    width: 200px;
+    height: 200px;
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    bottom: -80px;
+    left: 20%;
+    animation-delay: -4s;
+}
+
+@keyframes orbFloat {
+    0%, 100% {
+        transform: translate(0, 0) scale(1);
+    }
+    25% {
+        transform: translate(10px, -15px) scale(1.05);
+    }
+    50% {
+        transform: translate(-5px, 10px) scale(0.95);
+    }
+    75% {
+        transform: translate(-10px, -5px) scale(1.02);
+    }
+}
+
+.dashboard-hero-content {
+    position: relative;
+    z-index: 1;
+}
+
+.hero-greeting {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
+}
+
+.hero-username {
+    font-size: 48px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #667eea 0%, #a78bfa 50%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0 0 24px 0;
+    line-height: 1.1;
+}
+
+@media (max-width: 768px) {
+    .hero-username {
+        font-size: 32px;
+    }
+}
+
+.hero-stats {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+}
+
+.hero-stat {
+    display: flex;
+    flex-direction: column;
+    padding: 16px 24px;
+    background: rgba(24, 24, 27, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(102, 126, 234, 0.15);
+    border-radius: var(--radius-xl);
+}
+
+.hero-stat .stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+}
+
+.hero-stat .stat-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* =============================================================================
+   Quick Actions Section
+   ============================================================================= */
+
+.dashboard-actions {
+    margin-bottom: 32px;
+}
+
+.action-group {
+    margin-bottom: 24px;
+}
+
+.action-group-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+}
+
+.action-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+}
+
+.action-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: rgba(24, 24, 27, 0.5);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    border-radius: var(--radius-xl);
+    text-decoration: none;
+    transition: all 0.25s ease;
+    opacity: 0;
+    animation: actionEntrance 0.4s ease forwards;
+}
+
+.action-card[data-stagger="0"] { animation-delay: 0ms; }
+.action-card[data-stagger="1"] { animation-delay: 60ms; }
+.action-card[data-stagger="2"] { animation-delay: 120ms; }
+.action-card[data-stagger="3"] { animation-delay: 180ms; }
+.action-card[data-stagger="4"] { animation-delay: 240ms; }
+.action-card[data-stagger="5"] { animation-delay: 300ms; }
+.action-card[data-stagger="6"] { animation-delay: 360ms; }
+
+@keyframes actionEntrance {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.action-card:hover {
+    background: rgba(24, 24, 27, 0.7);
+    border-color: rgba(102, 126, 234, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
+}
+
+.action-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--accent-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.action-icon svg {
+    width: 20px;
+    height: 20px;
+    stroke: white;
+    stroke-width: 2;
+    fill: none;
+}
+
+/* Steam logo uses fill instead of stroke */
+.action-icon--steam svg.steam-logo {
+    stroke: none;
+    stroke-width: 0;
+    fill: white;
+}
+
+.action-icon--steam svg.steam-logo path {
+    fill: white;
+}
+
+.action-content {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.action-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.action-desc {
+    font-size: 11px;
+    color: var(--color-text-muted);
+}
+
+/* =============================================================================
+   Widget Card System (Glassmorphism)
+   ============================================================================= */
+
+.dashboard-widget {
+    background: rgba(24, 24, 27, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    border-radius: var(--radius-2xl);
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    animation: widgetEntrance 0.5s ease forwards;
+    margin-bottom: 24px;
+}
+
+.dashboard-widget::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-2xl);
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), transparent 50%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.dashboard-widget:hover::before {
+    opacity: 1;
+}
+
+/* Stagger delays for widgets */
+.dashboard-widget[data-stagger="0"] { animation-delay: 100ms; }
+.dashboard-widget[data-stagger="1"] { animation-delay: 180ms; }
+.dashboard-widget[data-stagger="2"] { animation-delay: 260ms; }
+.dashboard-widget[data-stagger="3"] { animation-delay: 340ms; }
+.dashboard-widget[data-stagger="4"] { animation-delay: 420ms; }
+.dashboard-widget[data-stagger="5"] { animation-delay: 500ms; }
+
+@keyframes widgetEntrance {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.widget-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.widget-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.widget-title-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--accent-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.widget-title-icon svg {
+    width: 16px;
+    height: 16px;
+    stroke: white;
+    stroke-width: 2;
+    fill: none;
+}
+
+.widget-subtitle {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    margin-bottom: 20px;
+}
+
+.widget-link {
+    font-size: 13px;
+    color: var(--accent-primary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.widget-link:hover {
+    color: var(--accent-primary-hover);
+}
+
+/* =============================================================================
+   Server Recommendation Cards
+   ============================================================================= */
+
+.server-card {
+    padding: 16px;
+    background: var(--color-bg-primary);
+    border-radius: var(--radius-xl);
+    margin-bottom: 12px;
+    border-left: 3px solid var(--accent-primary);
+    transition: all 0.25s ease;
+}
+
+.server-card:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.server-card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.server-icon-wrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: var(--accent-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.server-icon {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.server-icon-placeholder {
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+}
+
+.server-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.server-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0 0 4px 0;
+}
+
+.server-name a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.server-name a:hover {
+    color: var(--accent-primary);
+}
+
+.server-meta {
+    font-size: 12px;
+    color: var(--color-text-muted);
+}
+
+/* Match Score Ring */
+.server-match-ring {
+    position: relative;
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+}
+
+.match-ring-svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.match-ring-svg .ring-bg {
+    fill: none;
+    stroke: var(--color-surface-active);
+    stroke-width: 3;
+}
+
+.match-ring-svg .ring-fill {
+    fill: none;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-dasharray: 0, 100;
+    transition: stroke-dasharray 1s ease-out;
+}
+
+.match-ring-svg .ring-fill.score-high {
+    stroke: #10b981;
+}
+
+.match-ring-svg .ring-fill.score-medium {
+    stroke: #f59e0b;
+}
+
+.match-ring-svg .ring-fill.score-low {
+    stroke: #ef4444;
+}
+
+.match-ring-svg.animated .ring-fill {
+    animation: ringFillAnim 1s ease-out forwards;
+}
+
+@keyframes ringFillAnim {
+    from {
+        stroke-dasharray: 0, 100;
+    }
+}
+
+.match-value {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+}
+
+.server-description {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin: 0 0 12px 0;
+    line-height: 1.5;
+}
+
+.server-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.server-tag {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: var(--accent-gradient);
+    color: white;
+}
+
+.server-reason {
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: var(--color-surface-active);
+    color: var(--color-text-secondary);
+}
+
+.server-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-server-view,
+.btn-server-join {
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.btn-server-view {
+    background: var(--accent-primary);
+    color: white;
+}
+
+.btn-server-view:hover {
+    background: var(--accent-primary-hover);
+}
+
+.btn-server-join {
+    background: #10b981;
+    color: white;
+}
+
+.btn-server-join:hover {
+    background: #059669;
+}
+
+/* =============================================================================
+   Team Cards with Avatar Stack
+   ============================================================================= */
+
+.team-card {
+    padding: 16px;
+    background: var(--color-bg-primary);
+    border-radius: var(--radius-xl);
+    margin-bottom: 12px;
+    border-left: 3px solid var(--accent-primary);
+    transition: all 0.25s ease;
+}
+
+.team-card:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.team-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.team-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.team-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0 0 4px 0;
+}
+
+.team-name a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.team-name a:hover {
+    color: var(--accent-primary);
+}
+
+.team-game {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+}
+
+.team-size {
+    text-align: right;
+}
+
+.team-size-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #10b981;
+}
+
+.team-size-label {
+    font-size: 11px;
+    color: var(--color-text-muted);
+}
+
+/* Avatar Stack */
+.team-members-stack {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.team-member-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--color-bg-secondary);
+    margin-left: -8px;
+    transition: transform 0.2s ease, z-index 0s;
+    object-fit: cover;
+}
+
+.team-member-avatar:first-child {
+    margin-left: 0;
+}
+
+.team-member-avatar:hover {
+    transform: translateY(-4px);
+    z-index: 10;
+}
+
+.team-overflow {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--accent-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 600;
+    color: white;
+    margin-left: -8px;
+    border: 2px solid var(--color-bg-secondary);
+}
+
+.team-leader-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    background: var(--accent-gradient);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-left: 12px;
+}
+
+.team-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.team-recruiting-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    padding: 6px 10px;
+    border-radius: 6px;
+}
+
+/* =============================================================================
+   Matchmaking Cards
+   ============================================================================= */
+
+.matchmaking-card {
+    padding: 16px;
+    background: var(--color-bg-primary);
+    border-radius: var(--radius-xl);
+    margin-bottom: 12px;
+    border-left: 3px solid #f59e0b;
+    transition: all 0.25s ease;
+}
+
+.matchmaking-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.matchmaking-info h4 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0 0 4px 0;
+}
+
+.matchmaking-criteria {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+}
+
+.matchmaking-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: rgba(102, 126, 234, 0.15);
+    color: var(--accent-primary);
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.matchmaking-pulse {
+    width: 6px;
+    height: 6px;
+    background: var(--accent-primary);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.9); }
+}
+
+.matchmaking-time {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    margin-bottom: 12px;
+}
+
+.matchmaking-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-matchmaking-view {
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 8px;
+    background: var(--accent-primary);
+    color: white;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-matchmaking-view:hover {
+    background: var(--accent-primary-hover);
+}
+
+.btn-matchmaking-cancel {
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 8px;
+    background: #ef4444;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-matchmaking-cancel:hover {
+    background: #dc2626;
+}
+
+/* =============================================================================
+   Goal Cards with Progress Rings
+   ============================================================================= */
+
+.goal-card {
+    padding: 16px;
+    background: var(--color-bg-primary);
+    border-radius: var(--radius-xl);
+    margin-bottom: 12px;
+    border-left: 3px solid #10b981;
+    transition: all 0.25s ease;
+}
+
+.goal-card:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.goal-header {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.goal-ring {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    flex-shrink: 0;
+}
+
+.goal-ring svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.goal-ring-bg {
+    fill: none;
+    stroke: var(--color-surface-active);
+    stroke-width: 6;
+}
+
+.goal-ring-fill {
+    fill: none;
+    stroke: url(#goalGradient);
+    stroke-width: 6;
+    stroke-linecap: round;
+    stroke-dasharray: 0, 282.7;
+    animation: goalRingFill 1.5s ease-out forwards;
+    animation-delay: 0.5s;
+}
+
+@keyframes goalRingFill {
+    to {
+        stroke-dasharray: calc(var(--progress) * 2.827), 282.7;
+    }
+}
+
+.goal-ring-value {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+}
+
+.goal-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.goal-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0 0 4px 0;
+}
+
+.goal-server {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+}
+
+.goal-progress-text {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    margin-top: 8px;
+}
+
+.goal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.goal-participants {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+}
+
+.goal-link {
+    font-size: 12px;
+    font-weight: 600;
+    color: #10b981;
+    text-decoration: none;
+    padding: 6px 12px;
+    background: rgba(16, 185, 129, 0.1);
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.goal-link:hover {
+    background: rgba(16, 185, 129, 0.2);
+}
+
+/* =============================================================================
+   Activity Timeline
+   ============================================================================= */
+
+.activity-timeline {
+    position: relative;
+}
+
+.activity-item {
+    position: relative;
+    padding-left: 28px;
+    padding-bottom: 16px;
+}
+
+.activity-item:last-child {
+    padding-bottom: 0;
+}
+
+.activity-line {
+    position: absolute;
+    left: 7px;
+    top: 16px;
+    bottom: 0;
+    width: 2px;
+    background: var(--color-border-secondary);
+}
+
+.activity-item:last-child .activity-line {
+    display: none;
+}
+
+.activity-dot {
+    position: absolute;
+    left: 0;
+    top: 6px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--color-bg-secondary);
+    border: 3px solid var(--accent-primary);
+}
+
+.activity-item[data-type="message"] .activity-dot {
+    border-color: #a78bfa;
+}
+
+.activity-item[data-type="join"] .activity-dot {
+    border-color: #10b981;
+}
+
+.activity-item[data-type="team_join"] .activity-dot {
+    border-color: #f59e0b;
+}
+
+.activity-item[data-type="friend_accept"] .activity-dot {
+    border-color: #ec4899;
+}
+
+.activity-content {
+    background: var(--color-bg-primary);
+    padding: 12px 16px;
+    border-radius: var(--radius-lg);
+}
+
+.activity-text {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin: 0;
+    line-height: 1.5;
+}
+
+.activity-text strong {
+    color: var(--color-text-primary);
+    font-weight: 600;
+}
+
+.activity-highlight {
+    font-weight: 500;
+}
+
+.activity-highlight.message {
+    color: #a78bfa;
+}
+
+.activity-highlight.join {
+    color: #10b981;
+}
+
+.activity-highlight.team_join {
+    color: #f59e0b;
+}
+
+.activity-highlight.friend_accept {
+    color: #ec4899;
+}
+
+.activity-server {
+    font-size: 11px;
+    color: var(--color-text-faint);
+    margin-top: 4px;
+}
+
+.activity-time {
+    font-size: 11px;
+    color: var(--color-text-muted);
+    margin-top: 6px;
+    display: block;
+}
+
+.activity-empty {
+    text-align: center;
+    padding: 32px 16px;
+    color: var(--color-text-muted);
+    font-size: 14px;
+}
+
+/* =============================================================================
+   Dashboard Sidebar
+   ============================================================================= */
+
+.dashboard-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.sidebar-section {
+    background: rgba(24, 24, 27, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    border-radius: var(--radius-2xl);
+    padding: 20px;
+    opacity: 0;
+    animation: widgetEntrance 0.5s ease forwards;
+}
+
+.sidebar-section[data-stagger="0"] { animation-delay: 200ms; }
+.sidebar-section[data-stagger="1"] { animation-delay: 280ms; }
+
+.sidebar-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0 0 16px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Friends List */
+.friends-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.friend-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.friend-card:hover {
+    background: var(--color-surface-hover);
+}
+
+.friend-avatar-wrapper {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+}
+
+.friend-avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.friend-status-dot {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--status-online);
+    border: 2px solid var(--color-bg-secondary);
+}
+
+.friend-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.friend-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    display: block;
+}
+
+.friend-activity {
+    font-size: 12px;
+    color: #10b981;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.friends-empty {
+    text-align: center;
+    padding: 24px 16px;
+    background: var(--color-bg-primary);
+    border-radius: var(--radius-lg);
+    border: 2px dashed var(--color-border-secondary);
+}
+
+.friends-empty-icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 12px;
+    background: var(--accent-primary-light);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.friends-empty-icon svg {
+    width: 24px;
+    height: 24px;
+    stroke: var(--accent-primary);
+    stroke-width: 2;
+    fill: none;
+}
+
+.friends-empty p {
+    color: var(--color-text-secondary);
+    font-size: 14px;
+    margin: 0 0 12px 0;
+}
+
+.friends-empty a {
+    color: var(--accent-primary);
+    font-size: 13px;
+    text-decoration: none;
+}
+
+/* Server List */
+.servers-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.sidebar-server-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.sidebar-server-link:hover {
+    background: var(--color-surface-hover);
+}
+
+.sidebar-server-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.sidebar-server-icon-placeholder {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--accent-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.sidebar-server-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.sidebar-server-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sidebar-server-members {
+    font-size: 11px;
+    color: var(--color-text-muted);
+}
+
+/* =============================================================================
+   Widget Footer
+   ============================================================================= */
+
+.widget-footer {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--color-border-secondary);
+}
+
+/* =============================================================================
+   Accessibility - Reduced Motion
+   ============================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-glow-orb,
+    .action-card,
+    .dashboard-widget,
+    .sidebar-section,
+    .goal-ring-fill,
+    .match-ring-svg .ring-fill,
+    .matchmaking-pulse {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+
+    .action-card:hover,
+    .server-card:hover,
+    .team-card:hover,
+    .goal-card:hover {
+        transform: none;
+    }
+}
+
+/* =============================================================================
+   Light Theme Adjustments
+   ============================================================================= */
+
+[data-theme="light"] .dashboard-hero-bg {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.03) 100%);
+}
+
+[data-theme="light"] .hero-mesh-gradient {
+    background-image:
+        radial-gradient(circle at 1px 1px, rgba(102, 126, 234, 0.1) 1px, transparent 0);
+}
+
+[data-theme="light"] .hero-glow-orb {
+    opacity: 0.2;
+}
+
+[data-theme="light"] .dashboard-widget,
+[data-theme="light"] .sidebar-section {
+    background: rgba(255, 255, 255, 0.8);
+    border-color: rgba(102, 126, 234, 0.15);
+}
+
+[data-theme="light"] .action-card {
+    background: rgba(255, 255, 255, 0.7);
+}
+
+[data-theme="light"] .action-card:hover {
+    background: rgba(255, 255, 255, 0.9);
+}
+
+/* =============================================================================
+   Enhanced Light Theme - Comprehensive Overrides
+   ============================================================================= */
+
+/* -----------------------------------------------------------------------------
+   1. Hero Stat Cards - Main visual fix for dark boxes in light theme
+   ----------------------------------------------------------------------------- */
+
+[data-theme="light"] .hero-stat {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    box-shadow:
+        0 4px 16px rgba(102, 126, 234, 0.08),
+        0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .hero-stat .stat-value {
+    color: var(--color-text-primary);
+}
+
+[data-theme="light"] .hero-stat .stat-label {
+    color: var(--color-text-secondary);
+}
+
+[data-theme="light"] .hero-stat .stat-icon {
+    color: var(--color-accent);
+}
+
+/* -----------------------------------------------------------------------------
+   2. Hero Background Enhancements - Soften mesh gradient for light theme
+   ----------------------------------------------------------------------------- */
+
+[data-theme="light"] .hero-mesh-gradient::after {
+    background: linear-gradient(
+        135deg,
+        rgba(102, 126, 234, 0.06) 0%,
+        rgba(118, 75, 162, 0.04) 50%,
+        rgba(102, 126, 234, 0.03) 100%
+    );
+}
+
+[data-theme="light"] .hero-glow-orb {
+    opacity: 0.15;
+}
+
+/* -----------------------------------------------------------------------------
+   3. Action Cards Enhancement - Add depth and better hover states
+   ----------------------------------------------------------------------------- */
+
+[data-theme="light"] .action-card {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(102, 126, 234, 0.12);
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.04),
+        0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+[data-theme="light"] .action-card:hover {
+    background: rgba(255, 255, 255, 1);
+    border-color: rgba(102, 126, 234, 0.25);
+    box-shadow:
+        0 8px 24px rgba(102, 126, 234, 0.12),
+        0 4px 8px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .action-title {
+    color: var(--color-text-primary);
+}
+
+[data-theme="light"] .action-desc {
+    color: var(--color-text-secondary);
+}
+
+[data-theme="light"] .action-group-label {
+    color: var(--color-text-secondary);
+}
+
+[data-theme="light"] .action-icon-wrapper {
+    background: rgba(102, 126, 234, 0.1);
+}
+
+/* -----------------------------------------------------------------------------
+   4. Widget Cards Enhancement - Add shadows for proper elevation
+   ----------------------------------------------------------------------------- */
+
+[data-theme="light"] .dashboard-widget {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow:
+        0 4px 20px rgba(0, 0, 0, 0.06),
+        0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .dashboard-widget::before {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), transparent 50%);
+}
+
+[data-theme="light"] .sidebar-section {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow:
+        0 4px 20px rgba(0, 0, 0, 0.06),
+        0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+/* -----------------------------------------------------------------------------
+   5. Inner Content Cards - Server, team, goal cards inside widgets
+   ----------------------------------------------------------------------------- */
+
+[data-theme="light"] .server-card,
+[data-theme="light"] .team-card,
+[data-theme="light"] .goal-card,
+[data-theme="light"] .matchmaking-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-secondary);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .server-card:hover,
+[data-theme="light"] .team-card:hover,
+[data-theme="light"] .goal-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .match-ring-svg .ring-bg,
+[data-theme="light"] .goal-ring-bg {
+    stroke: var(--color-border-secondary);
+}
+
+[data-theme="light"] .server-reason {
+    background: var(--color-surface-active);
+    color: var(--color-text-primary);
+}
+
+[data-theme="light"] .server-name,
+[data-theme="light"] .team-name,
+[data-theme="light"] .goal-name {
+    color: var(--color-text-primary);
+}
+
+[data-theme="light"] .server-description,
+[data-theme="light"] .team-game,
+[data-theme="light"] .goal-desc {
+    color: var(--color-text-secondary);
+}
+
+/* -----------------------------------------------------------------------------
+   6. Activity Timeline
+   ----------------------------------------------------------------------------- */
+
+[data-theme="light"] .activity-content {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-secondary);
+}
+
+[data-theme="light"] .activity-line {
+    background: var(--color-border-primary);
+}
+
+[data-theme="light"] .activity-dot {
+    background: var(--color-surface);
+}
+
+[data-theme="light"] .activity-text {
+    color: var(--color-text-primary);
+}
+
+[data-theme="light"] .activity-time {
+    color: var(--color-text-tertiary);
+}
+
+/* -----------------------------------------------------------------------------
+   7. Sidebar Lists - Friends & Servers
+   ----------------------------------------------------------------------------- */
+
+[data-theme="light"] .friend-card:hover,
+[data-theme="light"] .sidebar-server-link:hover {
+    background: var(--color-surface-hover);
+}
+
+[data-theme="light"] .friends-empty {
+    background: var(--color-surface);
+    border-color: var(--color-border-primary);
+}
+
+[data-theme="light"] .friend-status-dot,
+[data-theme="light"] .team-member-avatar,
+[data-theme="light"] .team-overflow {
+    border-color: var(--color-surface);
+}
+
+[data-theme="light"] .friend-name {
+    color: var(--color-text-primary);
+}
+
+[data-theme="light"] .friend-activity {
+    color: var(--color-text-secondary);
+}
+
+[data-theme="light"] .sidebar-server-name {
+    color: var(--color-text-primary);
+}
+
+/* -----------------------------------------------------------------------------
+   8. Button Shadows
+   ----------------------------------------------------------------------------- */
+
+[data-theme="light"] .btn-server-view {
+    box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+}
+
+[data-theme="light"] .btn-server-view:hover {
+    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.25);
+}
+
+[data-theme="light"] .btn-server-join {
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+}
+
+[data-theme="light"] .btn-server-join:hover {
+    box-shadow: 0 4px 8px rgba(16, 185, 129, 0.25);
+}
+
+[data-theme="light"] .btn-team-view,
+[data-theme="light"] .btn-goal-view {
+    box-shadow: 0 2px 4px rgba(102, 126, 234, 0.15);
+}
+
+[data-theme="light"] .btn-team-view:hover,
+[data-theme="light"] .btn-goal-view:hover {
+    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
+}
+
+/* -----------------------------------------------------------------------------
+   9. Widget Text Elements
+   ----------------------------------------------------------------------------- */
+
+[data-theme="light"] .widget-title {
+    color: var(--color-text-primary);
+}
+
+[data-theme="light"] .widget-subtitle {
+    color: var(--color-text-secondary);
+}
+
+[data-theme="light"] .widget-footer {
+    border-top-color: var(--color-border-secondary);
+}
+
+[data-theme="light"] .widget-header {
+    border-bottom-color: var(--color-border-secondary);
+}
+
+/* -----------------------------------------------------------------------------
+   10. Matchmaking & Team Specific Elements
+   ----------------------------------------------------------------------------- */
+
+[data-theme="light"] .matchmaking-status {
+    color: var(--color-text-secondary);
+}
+
+[data-theme="light"] .match-score-value {
+    color: var(--color-text-primary);
+}
+
+[data-theme="light"] .team-skill-badge {
+    background: var(--color-surface-active);
+    color: var(--color-text-primary);
+}
+
+[data-theme="light"] .team-status-badge {
+    background: rgba(102, 126, 234, 0.1);
+}
+
+/* -----------------------------------------------------------------------------
+   11. Goal Progress Elements
+   ----------------------------------------------------------------------------- */
+
+[data-theme="light"] .goal-progress-text {
+    color: var(--color-text-secondary);
+}
+
+[data-theme="light"] .goal-milestone {
+    background: var(--color-surface);
+    border-color: var(--color-border-secondary);
+}
+
+[data-theme="light"] .goal-milestone.completed {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+/* -----------------------------------------------------------------------------
+   12. Empty States & Placeholders
+   ----------------------------------------------------------------------------- */
+
+[data-theme="light"] .empty-state {
+    color: var(--color-text-tertiary);
+}
+
+[data-theme="light"] .empty-state-icon {
+    color: var(--color-text-tertiary);
+    opacity: 0.5;
+}
+
+[data-theme="light"] .widget-empty {
+    background: var(--color-surface);
+    border: 1px dashed var(--color-border-primary);
+}
+
+/* -----------------------------------------------------------------------------
+   13. Hover & Interactive States Enhancement
+   ----------------------------------------------------------------------------- */
+
+[data-theme="light"] .dashboard-widget:hover {
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.08),
+        0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .sidebar-section:hover {
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.08),
+        0 2px 8px rgba(0, 0, 0, 0.04);
+}

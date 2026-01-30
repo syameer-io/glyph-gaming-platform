@@ -1,10 +1,102 @@
 /* =============================================================================
    Profile Page Styles
-   Comprehensive UI enhancement for the profile page
+   Premium glassmorphism UI with refined typography and polished interactions
+
+   Design Direction: Refined luxury gaming aesthetic
+   - Soft glassmorphism with depth
+   - Subtle gradient accents
+   - Smooth micro-interactions
+   - Premium typography hierarchy
    ============================================================================= */
 
 /* =============================================================================
-   1. HEADER SECTION - Glass Morphism Buttons
+   1. PROFILE HERO SECTION - Mesh Pattern & Glow Orbs
+   ============================================================================= */
+
+/* Hero background container for effects */
+.profile-hero-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+/* Mesh dot pattern overlay */
+.profile-mesh-gradient {
+    position: absolute;
+    inset: 0;
+    background-image:
+        radial-gradient(circle at 1px 1px, rgba(102, 126, 234, 0.15) 1px, transparent 0);
+    background-size: 24px 24px;
+}
+
+.profile-mesh-gradient::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        135deg,
+        rgba(102, 126, 234, 0.12) 0%,
+        rgba(118, 75, 162, 0.08) 50%,
+        rgba(102, 126, 234, 0.06) 100%
+    );
+}
+
+/* Floating glow orbs */
+.profile-glow-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.4;
+    animation: profileOrbFloat 10s ease-in-out infinite;
+}
+
+.profile-glow-1 {
+    width: 200px;
+    height: 200px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    top: -80px;
+    right: 10%;
+    animation-delay: 0s;
+}
+
+.profile-glow-2 {
+    width: 150px;
+    height: 150px;
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    bottom: -60px;
+    left: 15%;
+    animation-delay: -5s;
+}
+
+@keyframes profileOrbFloat {
+    0%, 100% {
+        transform: translate(0, 0) scale(1);
+    }
+    25% {
+        transform: translate(10px, -15px) scale(1.05);
+    }
+    50% {
+        transform: translate(-5px, 10px) scale(0.95);
+    }
+    75% {
+        transform: translate(-10px, -5px) scale(1.02);
+    }
+}
+
+/* Profile header needs relative positioning for background effects */
+.profile-header {
+    position: relative;
+}
+
+.profile-header > .container {
+    position: relative;
+    z-index: 1;
+}
+
+/* =============================================================================
+   2. HEADER SECTION - Glass Morphism Buttons
    ============================================================================= */
 
 /* Profile Actions Container */
@@ -31,20 +123,20 @@
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.25);
-    border-radius: 8px;
+    border-radius: 10px;
     color: white;
     font-size: 14px;
     font-weight: 600;
     text-decoration: none;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-profile-primary:hover {
     background: rgba(255, 255, 255, 0.25);
     border-color: rgba(255, 255, 255, 0.4);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
 }
 
 .btn-profile-primary:active {
@@ -66,18 +158,19 @@
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 8px;
+    border-radius: 10px;
     color: rgba(255, 255, 255, 0.9);
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-profile-secondary:hover {
     background: rgba(0, 0, 0, 0.35);
     border-color: rgba(255, 255, 255, 0.25);
     color: white;
+    transform: translateY(-1px);
 }
 
 .btn-profile-secondary:disabled {
@@ -156,7 +249,7 @@
     background: rgba(0, 0, 0, 0.35);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    border-radius: 8px;
+    border-radius: 10px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     max-width: 340px;
     font-size: 12px;
@@ -171,40 +264,106 @@
 }
 
 /* =============================================================================
-   2. ENHANCED CARD SYSTEM
+   3. WIDGET CARD SYSTEM - Glassmorphism
    ============================================================================= */
 
 .profile-card {
-    background-color: var(--color-surface);
-    border-radius: 12px;
+    background: rgba(24, 24, 27, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(102, 126, 234, 0.12);
+    border-radius: 20px;
     padding: 24px;
-    border: 1px solid var(--color-bg-elevated);
+    position: relative;
+    overflow: hidden;
     margin-bottom: 24px;
-    transition: all 0.2s ease;
+    opacity: 0;
+    animation: profileWidgetEntrance 0.5s ease forwards;
+}
+
+/* Gradient border on hover using mask technique */
+.profile-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.4), transparent 60%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.profile-card:hover::before {
+    opacity: 1;
 }
 
 .profile-card:hover {
-    border-color: var(--color-border-primary);
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+    border-color: rgba(102, 126, 234, 0.25);
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.2),
+        0 0 0 1px rgba(102, 126, 234, 0.1);
+    transform: translateY(-2px);
+}
+
+/* Staggered animation delays for widgets */
+.profile-card[data-stagger="0"] { animation-delay: 100ms; }
+.profile-card[data-stagger="1"] { animation-delay: 180ms; }
+.profile-card[data-stagger="2"] { animation-delay: 260ms; }
+.profile-card[data-stagger="3"] { animation-delay: 340ms; }
+.profile-card[data-stagger="4"] { animation-delay: 420ms; }
+.profile-card[data-stagger="5"] { animation-delay: 500ms; }
+
+@keyframes profileWidgetEntrance {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .profile-card-header {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     margin-bottom: 20px;
     padding-bottom: 16px;
-    border-bottom: 1px solid var(--color-bg-elevated);
+    border-bottom: 1px solid rgba(102, 126, 234, 0.1);
+}
+
+/* Widget title icon badge with gradient */
+.profile-card-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--accent-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
+}
+
+.profile-card-icon svg {
+    width: 18px;
+    height: 18px;
+    color: white;
 }
 
 .profile-card-title {
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 600;
     color: var(--color-text-primary);
     margin: 0;
+    letter-spacing: -0.01em;
 }
 
 .profile-card-title svg,
@@ -232,15 +391,15 @@
 }
 
 /* =============================================================================
-   3. GAMING PREFERENCES - Enhanced Cards
+   4. GAMING PREFERENCES - Enhanced Cards
    ============================================================================= */
 
 .game-preference-card {
     padding: 20px;
-    background: linear-gradient(135deg, var(--color-bg-primary) 0%, var(--color-bg-secondary) 100%);
-    border-radius: 10px;
-    border-left: 4px solid #667eea;
-    transition: all 0.25s ease;
+    background: var(--color-bg-primary);
+    border-radius: 14px;
+    border-left: 3px solid var(--accent-primary);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
 }
@@ -252,14 +411,21 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.03) 0%, transparent 50%);
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.04) 0%, transparent 50%);
     pointer-events: none;
+    transition: opacity 0.3s ease;
 }
 
 .game-preference-card:hover {
     border-left-color: #818cf8;
-    transform: translateX(4px);
-    box-shadow: -4px 0 20px rgba(102, 126, 234, 0.15);
+    transform: translateX(6px);
+    box-shadow:
+        -6px 0 20px rgba(102, 126, 234, 0.15),
+        0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.game-preference-card:hover::before {
+    opacity: 1.5;
 }
 
 .game-preference-header {
@@ -282,6 +448,7 @@
     font-weight: 600;
     font-size: 16px;
     margin-bottom: 6px;
+    letter-spacing: -0.01em;
 }
 
 .game-preference-stats {
@@ -300,6 +467,7 @@
 
 .stat-item svg {
     color: var(--color-text-muted);
+    opacity: 0.7;
 }
 
 .stat-item.stat-recent {
@@ -308,6 +476,7 @@
 
 .stat-item.stat-recent svg {
     color: #10b981;
+    opacity: 1;
 }
 
 /* Skill Badges with Color Coding */
@@ -321,12 +490,13 @@
 .skill-badge {
     display: inline-flex;
     align-items: center;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 11px;
-    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    transition: all 0.2s ease;
 }
 
 .skill-badge.skill-beginner {
@@ -418,7 +588,88 @@
 }
 
 /* =============================================================================
-   4. STATS SECTION - Icon-Based Cards
+   5. STEAM GAMES SECTION - Game Cards
+   ============================================================================= */
+
+.game-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px;
+    background: var(--color-bg-primary);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    border-left: 3px solid transparent;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.game-card:hover {
+    border-left-color: var(--accent-primary);
+    transform: translateX(4px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    background: var(--color-bg-secondary);
+}
+
+.game-card:last-child {
+    margin-bottom: 0;
+}
+
+.game-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 10px;
+    background: var(--accent-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+.game-icon svg {
+    width: 28px;
+    height: 28px;
+    color: white;
+    opacity: 0.9;
+}
+
+.game-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.game-name {
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--color-text-primary);
+    margin-bottom: 4px;
+    letter-spacing: -0.01em;
+}
+
+.game-playtime {
+    font-size: 13px;
+    color: var(--color-text-muted);
+}
+
+/* Achievement Progress Bar */
+.achievement-progress {
+    height: 6px;
+    background-color: var(--color-bg-elevated);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 4px;
+}
+
+.achievement-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+    border-radius: 3px;
+    transition: width 0.5s ease;
+}
+
+/* =============================================================================
+   6. STATS SECTION - Enhanced Cards with Left Border
    ============================================================================= */
 
 .stats-grid {
@@ -432,21 +683,23 @@
     align-items: center;
     gap: 14px;
     padding: 14px 16px;
-    background-color: var(--color-bg-primary);
-    border-radius: 8px;
-    border: 1px solid transparent;
-    transition: all 0.2s ease;
+    background: var(--color-bg-primary);
+    border-radius: 12px;
+    border-left: 3px solid var(--accent-primary);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .stat-item-card:hover {
-    border-color: var(--color-border-primary);
-    background-color: var(--color-bg-secondary);
+    transform: translateX(4px);
+    box-shadow:
+        -4px 0 16px rgba(102, 126, 234, 0.12),
+        0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .stat-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -459,17 +712,17 @@
 }
 
 .stat-icon-calendar {
-    background: rgba(102, 126, 234, 0.15);
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(102, 126, 234, 0.1) 100%);
     color: #818cf8;
 }
 
 .stat-icon-time {
-    background: rgba(16, 185, 129, 0.15);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.1) 100%);
     color: #34d399;
 }
 
 .stat-icon-server {
-    background: rgba(245, 158, 11, 0.15);
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(245, 158, 11, 0.1) 100%);
     color: #fbbf24;
 }
 
@@ -483,33 +736,38 @@
     font-size: 12px;
     color: var(--color-text-muted);
     font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .stat-value {
-    font-size: 16px;
+    font-size: 17px;
     font-weight: 600;
     color: var(--color-text-primary);
+    letter-spacing: -0.01em;
 }
 
 /* =============================================================================
-   5. STEAM FRIENDS & SERVERS STYLING
+   7. STEAM FRIENDS & SERVERS STYLING
    ============================================================================= */
 
 .friend-item {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 10px 12px;
-    background-color: var(--color-bg-primary);
-    border-radius: 8px;
-    margin-bottom: 8px;
-    border: 1px solid transparent;
-    transition: all 0.2s ease;
+    padding: 12px 14px;
+    background: var(--color-bg-primary);
+    border-radius: 12px;
+    margin-bottom: 10px;
+    border-left: 3px solid transparent;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .friend-item:hover {
-    border-color: var(--color-border-primary);
+    border-left-color: var(--accent-primary);
     transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    background: var(--color-bg-secondary);
 }
 
 .friend-item:last-child {
@@ -522,24 +780,26 @@
 }
 
 .friend-avatar {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     object-fit: cover;
+    border: 2px solid var(--color-border-secondary);
 }
 
 .friend-status {
     position: absolute;
-    bottom: -2px;
-    right: -2px;
-    width: 12px;
-    height: 12px;
+    bottom: -1px;
+    right: -1px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
     border: 2px solid var(--color-bg-primary);
 }
 
 .friend-status.status-online {
     background-color: #10b981;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
 }
 
 .friend-status.status-offline {
@@ -566,6 +826,9 @@
     font-size: 12px;
     color: var(--color-text-muted);
     margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .friend-playing {
@@ -579,33 +842,41 @@
     color: #34d399;
 }
 
-/* Server Item Styling */
-.server-item {
+/* Server Item Styling - Scoped to profile-card to avoid conflicts with dashboard.css */
+.profile-card .server-item {
     display: flex;
     align-items: center;
     gap: 12px;
     padding: 12px 14px;
-    background-color: var(--color-bg-primary);
-    border-radius: 8px;
-    margin-bottom: 8px;
-    border: 1px solid transparent;
-    transition: all 0.2s ease;
+    background: var(--color-bg-primary);
+    border-radius: 12px;
+    margin-bottom: 10px;
+    border-left: 3px solid transparent;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
 }
 
-.server-item:hover {
-    border-color: #667eea;
-    background-color: var(--color-bg-secondary);
+.profile-card .server-item:hover {
+    border-left-color: var(--accent-primary);
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    background: var(--color-bg-secondary);
 }
 
-.server-item:last-child {
+.profile-card .server-item:last-child {
     margin-bottom: 0;
 }
 
-.server-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+/* Server icon - must be more specific to override dashboard.css width: 100% */
+.profile-card .server-icon {
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px;
+    min-height: 42px;
+    max-width: 42px;
+    max-height: 42px;
+    border-radius: 12px;
+    background: var(--accent-gradient);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -613,30 +884,37 @@
     font-size: 16px;
     color: white;
     flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
+    object-fit: unset;
 }
 
-.server-info {
+.profile-card .server-info {
     flex: 1;
     min-width: 0;
+    overflow: hidden;
 }
 
-.server-name {
+.profile-card .server-name {
     display: block;
     font-weight: 600;
     font-size: 14px;
     color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0;
 }
 
-.server-members {
+.profile-card .server-members {
     display: inline-flex;
     align-items: center;
     gap: 4px;
     font-size: 12px;
     color: var(--color-text-muted);
-    margin-top: 2px;
+    margin-top: 3px;
 }
 
-.server-members svg {
+.profile-card .server-members svg {
     width: 12px;
     height: 12px;
 }
@@ -647,19 +925,20 @@
     align-items: center;
     justify-content: center;
     gap: 6px;
-    padding: 10px;
+    padding: 12px;
     margin-top: 12px;
     text-align: center;
     color: #667eea;
     font-size: 13px;
     font-weight: 500;
     text-decoration: none;
-    border-radius: 6px;
+    border-radius: 10px;
     transition: all 0.2s ease;
+    background: rgba(102, 126, 234, 0.05);
 }
 
 .see-more-link:hover {
-    background-color: rgba(102, 126, 234, 0.1);
+    background-color: rgba(102, 126, 234, 0.12);
     color: #818cf8;
 }
 
@@ -672,49 +951,141 @@
 }
 
 /* =============================================================================
-   6. ANIMATIONS & POLISH
+   8. LOBBY DISPLAY COMPONENT - Theme-aware styling
    ============================================================================= */
 
-/* Fade-in animations */
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(12px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+/* Main lobby display container */
+.lobby-display .card {
+    background: rgba(24, 24, 27, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(102, 126, 234, 0.12);
+    border-radius: 20px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
 }
 
-.profile-card,
-.game-preference-card {
-    animation: fadeInUp 0.4s ease-out;
+.lobby-display .card-header {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    letter-spacing: -0.01em;
 }
 
-/* Staggered animation delays for cards */
-.profile-card:nth-child(1) { animation-delay: 0.05s; }
-.profile-card:nth-child(2) { animation-delay: 0.1s; }
-.profile-card:nth-child(3) { animation-delay: 0.15s; }
-.profile-card:nth-child(4) { animation-delay: 0.2s; }
+/* Empty state styling for lobby display */
+.lobby-display [style*="background-color: #0e0e10"] {
+    background-color: var(--color-bg-primary) !important;
+    border-color: var(--color-border-primary) !important;
+}
 
-/* Reduced motion preference */
+/* Override hardcoded lobby colors for theme compatibility */
+.lobby-card {
+    background-color: var(--color-bg-primary) !important;
+    border-radius: 14px !important;
+    border: 1px solid var(--color-border-secondary) !important;
+    transition: all 0.25s ease !important;
+}
+
+.lobby-card:hover,
+.lobby-card-hover {
+    background-color: var(--color-bg-secondary) !important;
+    border-color: var(--color-border-primary) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
+}
+
+.lobby-card-banner {
+    background-color: var(--color-bg-elevated) !important;
+}
+
+.lobby-card-banner-gradient {
+    background: linear-gradient(to top, var(--color-bg-primary) 0%, transparent 100%) !important;
+}
+
+.lobby-card-content {
+    padding: 14px 18px 18px 18px !important;
+}
+
+.lobby-game-name {
+    color: var(--color-text-primary) !important;
+    font-weight: 600 !important;
+    font-size: 15px !important;
+}
+
+.lobby-join-method {
+    color: var(--color-text-muted) !important;
+    font-size: 13px !important;
+}
+
+.lobby-join-info {
+    background-color: var(--color-bg-secondary) !important;
+    border: 1px solid var(--color-border-secondary) !important;
+    border-radius: 10px !important;
+}
+
+.lobby-join-text {
+    color: var(--color-text-secondary) !important;
+}
+
+.lobby-copy-btn {
+    background-color: var(--color-bg-elevated) !important;
+    color: var(--color-text-muted) !important;
+    border: 1px solid var(--color-border-secondary) !important;
+}
+
+.lobby-copy-btn:hover {
+    background-color: var(--color-surface-hover) !important;
+    color: var(--color-text-primary) !important;
+}
+
+.lobby-info-text {
+    background-color: var(--color-bg-secondary) !important;
+    color: var(--color-text-muted) !important;
+    border: 1px solid var(--color-border-secondary) !important;
+}
+
+/* Lobby spinner */
+.lobby-spinner {
+    border-color: var(--color-border-primary) !important;
+    border-top-color: var(--accent-primary) !important;
+}
+
+/* =============================================================================
+   9. ACCESSIBILITY - Reduced Motion
+   ============================================================================= */
+
 @media (prefers-reduced-motion: reduce) {
+    .profile-glow-orb,
     .profile-card,
     .game-preference-card,
     .friend-item,
-    .server-item,
+    .profile-card .server-item,
     .stat-item-card,
+    .game-card,
     .activity-progress-fill .activity-glow,
     .btn-profile-primary,
     .btn-profile-secondary {
         animation: none !important;
-        transition: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+
+    .profile-card:hover,
+    .game-preference-card:hover,
+    .friend-item:hover,
+    .profile-card .server-item:hover,
+    .stat-item-card:hover,
+    .game-card:hover {
+        transform: none !important;
+    }
+
+    .profile-card::before {
+        display: none;
     }
 }
 
 /* =============================================================================
-   7. RESPONSIVE DESIGN
+   10. RESPONSIVE DESIGN
    ============================================================================= */
 
 @media (max-width: 768px) {
@@ -753,6 +1124,7 @@
 
     .profile-card {
         padding: 20px;
+        border-radius: 16px;
     }
 }
 
@@ -774,16 +1146,27 @@
     .stat-value {
         font-size: 15px;
     }
+
+    .game-card {
+        padding: 14px;
+    }
+
+    .game-icon {
+        width: 48px;
+        height: 48px;
+    }
 }
 
 /* =============================================================================
-   8. PRINT STYLES
+   11. PRINT STYLES
    ============================================================================= */
 
 @media print {
     .profile-actions,
     .btn-profile-primary,
-    .btn-profile-secondary {
+    .btn-profile-secondary,
+    .profile-hero-bg,
+    .lobby-display {
         display: none !important;
     }
 
@@ -791,9 +1174,1075 @@
         break-inside: avoid;
         border: 1px solid #ccc;
         box-shadow: none;
+        background: white;
+        backdrop-filter: none;
     }
 
-    .game-preference-card {
+    .game-preference-card,
+    .game-card {
         break-inside: avoid;
+    }
+}
+
+/* =============================================================================
+   12. LIGHT THEME COMPREHENSIVE OVERRIDES
+   ============================================================================= */
+
+/* -----------------------------------------------------------------------------
+   12.1 Hero Section - Soften glow orbs and mesh
+   ----------------------------------------------------------------------------- */
+
+[data-theme="light"] .profile-mesh-gradient {
+    background-image:
+        radial-gradient(circle at 1px 1px, rgba(102, 126, 234, 0.08) 1px, transparent 0);
+}
+
+[data-theme="light"] .profile-mesh-gradient::after {
+    background: linear-gradient(
+        135deg,
+        rgba(102, 126, 234, 0.06) 0%,
+        rgba(118, 75, 162, 0.04) 50%,
+        rgba(102, 126, 234, 0.03) 100%
+    );
+}
+
+[data-theme="light"] .profile-glow-orb {
+    opacity: 0.15;
+}
+
+/* -----------------------------------------------------------------------------
+   12.2 Widget Cards - White glassmorphism with soft shadows
+   ----------------------------------------------------------------------------- */
+
+[data-theme="light"] .profile-card {
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow:
+        0 4px 24px rgba(0, 0, 0, 0.06),
+        0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .profile-card::before {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), transparent 60%);
+}
+
+[data-theme="light"] .profile-card:hover {
+    box-shadow:
+        0 12px 40px rgba(0, 0, 0, 0.1),
+        0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .profile-card-header {
+    border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .profile-card-title {
+    color: var(--color-text-primary);
+}
+
+[data-theme="light"] .profile-card-subtitle {
+    color: var(--color-text-secondary);
+}
+
+[data-theme="light"] .profile-bio {
+    color: var(--color-text-secondary);
+}
+
+[data-theme="light"] .profile-bio-empty {
+    color: var(--color-text-muted);
+}
+
+/* -----------------------------------------------------------------------------
+   12.3 Interior Cards - Light surfaces with subtle borders
+   ----------------------------------------------------------------------------- */
+
+[data-theme="light"] .game-preference-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-secondary);
+    border-left: 3px solid var(--accent-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .game-preference-card::before {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.03) 0%, transparent 50%);
+}
+
+[data-theme="light"] .game-preference-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .game-preference-name {
+    color: var(--color-text-primary);
+}
+
+[data-theme="light"] .stat-item {
+    color: var(--color-text-secondary);
+}
+
+[data-theme="light"] .stat-item svg {
+    color: var(--color-text-muted);
+}
+
+[data-theme="light"] .activity-label,
+[data-theme="light"] .activity-timestamp {
+    color: var(--color-text-secondary);
+}
+
+[data-theme="light"] .activity-progress-track {
+    background-color: var(--color-border-secondary);
+}
+
+/* -----------------------------------------------------------------------------
+   12.4 Game Cards - Light theme
+   ----------------------------------------------------------------------------- */
+
+[data-theme="light"] .game-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-secondary);
+    border-left: 3px solid transparent;
+}
+
+[data-theme="light"] .game-card:hover {
+    background: var(--color-surface-hover);
+    border-left-color: var(--accent-primary);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .game-name {
+    color: var(--color-text-primary);
+}
+
+[data-theme="light"] .game-playtime {
+    color: var(--color-text-secondary);
+}
+
+[data-theme="light"] .achievement-progress {
+    background-color: var(--color-border-secondary);
+}
+
+/* -----------------------------------------------------------------------------
+   12.5 Stat Icon Backgrounds - Lighter gradient backgrounds
+   ----------------------------------------------------------------------------- */
+
+[data-theme="light"] .stat-item-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-secondary);
+    border-left: 3px solid var(--accent-primary);
+}
+
+[data-theme="light"] .stat-item-card:hover {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .stat-icon-calendar {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(102, 126, 234, 0.08) 100%);
+    color: #5a6fd6;
+}
+
+[data-theme="light"] .stat-icon-time {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.08) 100%);
+    color: #059669;
+}
+
+[data-theme="light"] .stat-icon-server {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.08) 100%);
+    color: #d97706;
+}
+
+[data-theme="light"] .stat-label {
+    color: var(--color-text-secondary);
+}
+
+[data-theme="light"] .stat-value {
+    color: var(--color-text-primary);
+}
+
+/* -----------------------------------------------------------------------------
+   12.6 Skill Badges - Adjusted colors for light contrast
+   ----------------------------------------------------------------------------- */
+
+[data-theme="light"] .skill-badge.skill-beginner {
+    background: rgba(59, 130, 246, 0.1);
+    color: #2563eb;
+    border-color: rgba(59, 130, 246, 0.25);
+}
+
+[data-theme="light"] .skill-badge.skill-intermediate {
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+    border-color: rgba(16, 185, 129, 0.25);
+}
+
+[data-theme="light"] .skill-badge.skill-advanced {
+    background: rgba(245, 158, 11, 0.1);
+    color: #d97706;
+    border-color: rgba(245, 158, 11, 0.25);
+}
+
+[data-theme="light"] .skill-badge.skill-expert {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+    border-color: rgba(239, 68, 68, 0.25);
+}
+
+[data-theme="light"] .skill-badge.skill-unranked {
+    background: rgba(107, 114, 128, 0.1);
+    color: #4b5563;
+    border-color: rgba(107, 114, 128, 0.25);
+}
+
+/* -----------------------------------------------------------------------------
+   12.7 Friends & Servers - Proper text color hierarchy
+   ----------------------------------------------------------------------------- */
+
+[data-theme="light"] .friend-item {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-secondary);
+    border-left: 3px solid transparent;
+}
+
+[data-theme="light"] .friend-item:hover {
+    border-left-color: var(--accent-primary);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    background: var(--color-surface-hover);
+}
+
+[data-theme="light"] .friend-avatar {
+    border-color: var(--color-border-primary);
+}
+
+[data-theme="light"] .friend-status {
+    border-color: var(--color-surface);
+}
+
+[data-theme="light"] .friend-name {
+    color: var(--color-text-primary);
+}
+
+[data-theme="light"] .friend-activity {
+    color: var(--color-text-secondary);
+}
+
+[data-theme="light"] .friend-playing {
+    color: #059669;
+}
+
+[data-theme="light"] .friend-playing svg {
+    color: #10b981;
+}
+
+[data-theme="light"] .profile-card .server-item {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-secondary);
+    border-left: 3px solid transparent;
+}
+
+[data-theme="light"] .profile-card .server-item:hover {
+    border-left-color: var(--accent-primary);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    background: var(--color-surface-hover);
+}
+
+[data-theme="light"] .profile-card .server-name {
+    color: var(--color-text-primary);
+}
+
+[data-theme="light"] .profile-card .server-members {
+    color: var(--color-text-secondary);
+}
+
+/* -----------------------------------------------------------------------------
+   12.8 See More Link
+   ----------------------------------------------------------------------------- */
+
+[data-theme="light"] .see-more-link {
+    color: #5a6fd6;
+    background: rgba(102, 126, 234, 0.05);
+}
+
+[data-theme="light"] .see-more-link:hover {
+    background-color: rgba(102, 126, 234, 0.1);
+    color: #4a5fc6;
+}
+
+/* -----------------------------------------------------------------------------
+   12.9 Lobby Display - Light Theme
+   ----------------------------------------------------------------------------- */
+
+[data-theme="light"] .lobby-display .card {
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow:
+        0 4px 24px rgba(0, 0, 0, 0.06),
+        0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .lobby-display [style*="background-color: #0e0e10"],
+[data-theme="light"] .lobby-display [style*="background: #0e0e10"] {
+    background-color: var(--color-surface) !important;
+    background: var(--color-surface) !important;
+}
+
+[data-theme="light"] .lobby-card {
+    background-color: var(--color-surface) !important;
+    border-color: var(--color-border-secondary) !important;
+}
+
+[data-theme="light"] .lobby-card:hover,
+[data-theme="light"] .lobby-card-hover {
+    background-color: var(--color-surface-hover) !important;
+}
+
+[data-theme="light"] .lobby-card-banner {
+    background-color: var(--color-bg-tertiary) !important;
+}
+
+[data-theme="light"] .lobby-card-banner-gradient {
+    background: linear-gradient(to top, var(--color-surface) 0%, transparent 100%) !important;
+}
+
+[data-theme="light"] .lobby-game-name {
+    color: var(--color-text-primary) !important;
+}
+
+[data-theme="light"] .lobby-join-method {
+    color: var(--color-text-secondary) !important;
+}
+
+[data-theme="light"] .lobby-join-info {
+    background-color: var(--color-bg-tertiary) !important;
+    border-color: var(--color-border-secondary) !important;
+}
+
+[data-theme="light"] .lobby-join-text {
+    color: var(--color-text-primary) !important;
+}
+
+[data-theme="light"] .lobby-copy-btn {
+    background-color: var(--color-surface) !important;
+    border-color: var(--color-border-primary) !important;
+    color: var(--color-text-secondary) !important;
+}
+
+[data-theme="light"] .lobby-copy-btn:hover {
+    background-color: var(--color-surface-hover) !important;
+    color: var(--color-text-primary) !important;
+}
+
+[data-theme="light"] .lobby-info-text {
+    background-color: var(--color-bg-tertiary) !important;
+    color: var(--color-text-secondary) !important;
+}
+
+[data-theme="light"] .lobby-spinner {
+    border-color: var(--color-border-primary) !important;
+    border-top-color: var(--accent-primary) !important;
+}
+
+/* Empty state text in lobby */
+[data-theme="light"] .lobby-display p[style*="color: #71717a"] {
+    color: var(--color-text-muted) !important;
+}
+
+[data-theme="light"] .lobby-display svg[stroke="#3f3f46"] {
+    stroke: var(--color-border-primary) !important;
+}
+
+/* -----------------------------------------------------------------------------
+   12.10 Empty States
+   ----------------------------------------------------------------------------- */
+
+[data-theme="light"] .profile-empty-state {
+    background: var(--color-surface);
+    border: 2px dashed var(--color-border-primary);
+}
+
+[data-theme="light"] .profile-empty-state p {
+    color: var(--color-text-secondary);
+}
+
+/* Lobby empty state - ensure proper centering */
+.lobby-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.lobby-empty-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Lobby empty state light theme */
+[data-theme="light"] .lobby-empty-state {
+    background-color: var(--color-surface) !important;
+    border-color: var(--color-border-primary) !important;
+}
+
+[data-theme="light"] .lobby-empty-icon {
+    color: var(--color-text-muted);
+}
+
+[data-theme="light"] .lobby-empty-text {
+    color: var(--color-text-secondary) !important;
+}
+
+[data-theme="light"] .lobby-loading-text {
+    color: var(--color-text-secondary) !important;
+}
+
+[data-theme="light"] .lobby-create-link {
+    color: #5a6fd6;
+}
+
+[data-theme="light"] .lobby-create-link:hover {
+    color: #4a5fc6;
+}
+
+[data-theme="light"] .lobby-check-back-text {
+    color: var(--color-text-secondary) !important;
+}
+
+/* =============================================================================
+   13. HERO STATS ROW - Inline stats below username
+   ============================================================================= */
+
+.profile-hero-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 24px;
+}
+
+.profile-hero-stat {
+    display: flex;
+    flex-direction: column;
+    padding: 16px 24px;
+    background: rgba(24, 24, 27, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(102, 126, 234, 0.15);
+    border-radius: 16px;
+    min-width: 100px;
+    opacity: 0;
+    animation: heroStatEntrance 0.5s ease forwards;
+}
+
+.profile-hero-stat[data-stagger="0"] { animation-delay: 200ms; }
+.profile-hero-stat[data-stagger="1"] { animation-delay: 280ms; }
+.profile-hero-stat[data-stagger="2"] { animation-delay: 360ms; }
+.profile-hero-stat[data-stagger="3"] { animation-delay: 440ms; }
+
+@keyframes heroStatEntrance {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.profile-hero-stat .stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: white;
+    line-height: 1.1;
+}
+
+.profile-hero-stat .stat-value.stat-animated {
+    animation: countUp 0.8s ease-out forwards;
+}
+
+@keyframes countUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.profile-hero-stat .stat-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.7);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+}
+
+/* Larger avatar with gradient glow */
+.profile-avatar-large {
+    width: 120px;
+    height: 120px;
+    border-radius: 24px;
+    object-fit: cover;
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    box-shadow:
+        0 0 0 4px rgba(102, 126, 234, 0.3),
+        0 8px 32px rgba(0, 0, 0, 0.4);
+    transition: all 0.3s ease;
+}
+
+.profile-avatar-large:hover {
+    transform: scale(1.02);
+    box-shadow:
+        0 0 0 4px rgba(102, 126, 234, 0.5),
+        0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* Light theme hero stats */
+[data-theme="light"] .profile-hero-stat {
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    box-shadow:
+        0 4px 16px rgba(102, 126, 234, 0.08),
+        0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .profile-hero-stat .stat-value {
+    color: var(--color-text-primary);
+}
+
+[data-theme="light"] .profile-hero-stat .stat-label {
+    color: var(--color-text-secondary);
+}
+
+/* =============================================================================
+   14. QUICK ACTIONS GRID - Profile owner actions
+   ============================================================================= */
+
+.profile-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 32px;
+}
+
+.profile-action-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 18px;
+    background: rgba(24, 24, 27, 0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    border-radius: 16px;
+    text-decoration: none;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0;
+    animation: actionEntrance 0.4s ease forwards;
+}
+
+.profile-action-card[data-stagger="0"] { animation-delay: 80ms; }
+.profile-action-card[data-stagger="1"] { animation-delay: 160ms; }
+.profile-action-card[data-stagger="2"] { animation-delay: 240ms; }
+.profile-action-card[data-stagger="3"] { animation-delay: 320ms; }
+
+@keyframes profileActionEntrance {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.profile-action-card:hover {
+    background: rgba(24, 24, 27, 0.7);
+    border-color: rgba(102, 126, 234, 0.3);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(102, 126, 234, 0.2);
+}
+
+.profile-action-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--accent-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.profile-action-icon svg {
+    width: 22px;
+    height: 22px;
+    color: white;
+}
+
+.profile-action-content {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.profile-action-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.profile-action-desc {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    margin-top: 2px;
+}
+
+/* Light theme quick actions */
+[data-theme="light"] .profile-action-card {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(102, 126, 234, 0.12);
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.04),
+        0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+[data-theme="light"] .profile-action-card:hover {
+    background: rgba(255, 255, 255, 1);
+    border-color: rgba(102, 126, 234, 0.25);
+    box-shadow:
+        0 12px 32px rgba(102, 126, 234, 0.15),
+        0 4px 8px rgba(0, 0, 0, 0.04);
+}
+
+/* =============================================================================
+   15. SKILL RINGS - Circular SVG skill indicators
+   ============================================================================= */
+
+.skill-ring-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.skill-ring {
+    position: relative;
+    width: 52px;
+    height: 52px;
+    flex-shrink: 0;
+}
+
+.skill-ring-svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.skill-ring-svg .ring-bg {
+    fill: none;
+    stroke: var(--color-surface-active);
+    stroke-width: 4;
+}
+
+.skill-ring-svg .ring-fill {
+    fill: none;
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 0, 138.2;
+    transition: stroke-dasharray 1s ease-out;
+}
+
+/* Skill level colors */
+.skill-ring-svg .ring-fill.skill-beginner {
+    stroke: #3b82f6;
+}
+
+.skill-ring-svg .ring-fill.skill-intermediate {
+    stroke: #10b981;
+}
+
+.skill-ring-svg .ring-fill.skill-advanced {
+    stroke: #f59e0b;
+}
+
+.skill-ring-svg .ring-fill.skill-expert {
+    stroke: #ef4444;
+}
+
+.skill-ring-svg .ring-fill.skill-unranked {
+    stroke: #6b7280;
+}
+
+/* Animated ring fill */
+.skill-ring-svg.animated .ring-fill {
+    animation: skillRingFillAnimation 1.2s ease-out forwards;
+    animation-delay: var(--ring-delay, 0ms);
+}
+
+@keyframes skillRingFillAnimation {
+    from {
+        stroke-dasharray: 0, 138.2;
+    }
+}
+
+.skill-ring-value {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.skill-ring-value.skill-beginner { color: #60a5fa; }
+.skill-ring-value.skill-intermediate { color: #34d399; }
+.skill-ring-value.skill-advanced { color: #fbbf24; }
+.skill-ring-value.skill-expert { color: #f87171; }
+.skill-ring-value.skill-unranked { color: #9ca3af; }
+
+/* Light theme skill rings */
+[data-theme="light"] .skill-ring-svg .ring-bg {
+    stroke: var(--color-border-secondary);
+}
+
+[data-theme="light"] .skill-ring-value.skill-beginner { color: #2563eb; }
+[data-theme="light"] .skill-ring-value.skill-intermediate { color: #059669; }
+[data-theme="light"] .skill-ring-value.skill-advanced { color: #d97706; }
+[data-theme="light"] .skill-ring-value.skill-expert { color: #dc2626; }
+[data-theme="light"] .skill-ring-value.skill-unranked { color: #4b5563; }
+
+/* =============================================================================
+   16. TEAM AFFILIATIONS SECTION
+   ============================================================================= */
+
+.profile-team-card {
+    padding: 16px;
+    background: var(--color-bg-primary);
+    border-radius: 14px;
+    border-left: 3px solid var(--accent-primary);
+    margin-bottom: 12px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.profile-team-card:last-child {
+    margin-bottom: 0;
+}
+
+.profile-team-card:hover {
+    transform: translateX(4px);
+    box-shadow:
+        -4px 0 16px rgba(102, 126, 234, 0.12),
+        0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.profile-team-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.profile-team-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.profile-team-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0 0 4px 0;
+}
+
+.profile-team-name a {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.profile-team-name a:hover {
+    color: var(--accent-primary);
+}
+
+.profile-team-game {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+}
+
+.profile-team-role {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: var(--accent-gradient);
+    color: white;
+}
+
+.profile-team-role.role-leader {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.profile-team-role.role-member {
+    background: rgba(102, 126, 234, 0.15);
+    color: var(--accent-primary);
+}
+
+.profile-team-members {
+    display: flex;
+    align-items: center;
+    margin-top: 8px;
+}
+
+.profile-team-member-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--color-bg-primary);
+    margin-left: -8px;
+    object-fit: cover;
+    transition: transform 0.2s ease;
+}
+
+.profile-team-member-avatar:first-child {
+    margin-left: 0;
+}
+
+.profile-team-member-avatar:hover {
+    transform: translateY(-3px);
+    z-index: 10;
+}
+
+.profile-team-overflow {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--accent-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 600;
+    color: white;
+    margin-left: -8px;
+    border: 2px solid var(--color-bg-primary);
+}
+
+.profile-team-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(102, 126, 234, 0.1);
+}
+
+.profile-team-stat {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--color-text-muted);
+}
+
+.profile-team-stat svg {
+    width: 14px;
+    height: 14px;
+    color: var(--color-text-muted);
+}
+
+/* Light theme team cards */
+[data-theme="light"] .profile-team-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-secondary);
+    border-left: 3px solid var(--accent-primary);
+}
+
+[data-theme="light"] .profile-team-card:hover {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .profile-team-member-avatar {
+    border-color: var(--color-surface);
+}
+
+[data-theme="light"] .profile-team-overflow {
+    border-color: var(--color-surface);
+}
+
+[data-theme="light"] .profile-team-meta {
+    border-top-color: var(--color-border-secondary);
+}
+
+[data-theme="light"] .profile-team-role.role-member {
+    background: rgba(102, 126, 234, 0.1);
+    color: #5a6fd6;
+}
+
+/* =============================================================================
+   17. ENHANCED STATS CARD - Larger values with animations
+   ============================================================================= */
+
+.stat-value-large {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    letter-spacing: -0.02em;
+}
+
+.stat-item-card.stat-item-enhanced {
+    padding: 18px 20px;
+}
+
+.stat-item-card.stat-item-enhanced .stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+}
+
+.stat-item-card.stat-item-enhanced .stat-icon svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* Stat icon variants */
+.stat-icon-teams {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(168, 85, 247, 0.1) 100%);
+    color: #a855f7;
+}
+
+.stat-icon-games {
+    background: linear-gradient(135deg, rgba(236, 72, 153, 0.2) 0%, rgba(236, 72, 153, 0.1) 100%);
+    color: #ec4899;
+}
+
+[data-theme="light"] .stat-icon-teams {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(168, 85, 247, 0.08) 100%);
+    color: #9333ea;
+}
+
+[data-theme="light"] .stat-icon-games {
+    background: linear-gradient(135deg, rgba(236, 72, 153, 0.15) 0%, rgba(236, 72, 153, 0.08) 100%);
+    color: #db2777;
+}
+
+/* =============================================================================
+   18. RESPONSIVE ADJUSTMENTS FOR NEW ELEMENTS
+   ============================================================================= */
+
+@media (max-width: 768px) {
+    .profile-hero-stats {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .profile-hero-stat {
+        padding: 14px 20px;
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .profile-hero-stat .stat-value {
+        font-size: 22px;
+    }
+
+    .profile-hero-stat .stat-label {
+        margin-top: 0;
+    }
+
+    .profile-avatar-large {
+        width: 100px;
+        height: 100px;
+        border-radius: 20px;
+    }
+
+    .profile-actions-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .profile-action-card {
+        padding: 14px;
+    }
+
+    .profile-action-icon {
+        width: 38px;
+        height: 38px;
+    }
+
+    .profile-action-icon svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .profile-action-desc {
+        display: none;
+    }
+
+    .skill-ring {
+        width: 44px;
+        height: 44px;
+    }
+
+    .skill-ring-value {
+        font-size: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .profile-actions-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-action-desc {
+        display: block;
+    }
+
+    .profile-hero-stat .stat-value {
+        font-size: 20px;
+    }
+
+    .skill-ring-container {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .profile-team-header {
+        flex-direction: column;
+        gap: 8px;
+    }
+}
+
+/* =============================================================================
+   19. ACCESSIBILITY - Reduced Motion for New Elements
+   ============================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+    .profile-hero-stat,
+    .profile-action-card,
+    .skill-ring-svg .ring-fill,
+    .profile-team-card {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+
+    .profile-hero-stat:hover,
+    .profile-action-card:hover,
+    .profile-team-card:hover {
+        transform: none !important;
     }
 }

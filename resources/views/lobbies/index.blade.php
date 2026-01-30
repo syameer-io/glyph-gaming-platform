@@ -4,465 +4,31 @@
 
 @push('styles')
 <style>
-    .lobbies-container {
-        display: grid;
-        grid-template-columns: 280px 1fr;
-        gap: 24px;
+    /* Minimal inline styles for Alpine.js specific behaviors */
+    [x-cloak] { display: none !important; }
+
+    /* Step Section Animation */
+    .step-section {
+        animation: fadeIn 0.3s ease;
     }
 
-    .lobbies-sidebar {
-        background-color: var(--color-surface);
-        border-radius: 12px;
-        padding: 24px;
-        height: fit-content;
-        position: sticky;
-        top: 24px;
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 
-    .lobbies-content {
-        display: flex;
-        flex-direction: column;
-        gap: 24px;
-    }
-
-    .sidebar-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-    }
-
-    .sidebar-header h3 {
-        color: var(--color-text-primary);
-        font-size: 16px;
-        font-weight: 600;
-        margin: 0;
-    }
-
-    .lobby-count-badge {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        font-size: 12px;
-        font-weight: 600;
-        padding: 4px 10px;
-        border-radius: 12px;
-    }
-
-    .active-lobby-item {
-        background-color: var(--color-bg-primary);
-        border: 1px solid var(--color-border-primary);
-        border-radius: 8px;
-        padding: 12px;
-        margin-bottom: 12px;
-        transition: all 0.2s;
-    }
-
-    .active-lobby-item:hover {
-        border-color: #667eea;
-    }
-
-    .lobby-item-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 8px;
-    }
-
-    .lobby-game-name {
-        color: var(--color-text-primary);
-        font-size: 14px;
-        font-weight: 600;
-        margin: 0;
-    }
-
-    .lobby-join-method {
-        color: var(--color-text-secondary);
-        font-size: 12px;
-        margin: 4px 0 0 0;
-    }
-
-    .lobby-delete-btn {
-        background: none;
-        border: none;
-        color: var(--color-text-muted);
-        cursor: pointer;
-        padding: 4px;
-        border-radius: 4px;
-        transition: all 0.2s;
-    }
-
-    .lobby-delete-btn:hover {
-        background-color: #ef4444;
-        color: white;
-    }
-
-    .lobby-time-remaining {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 12px;
-        margin-bottom: 8px;
-    }
-
-    .lobby-time-remaining.expiring {
-        color: #ef4444;
-    }
-
-    .lobby-time-remaining.active {
-        color: #10b981;
-    }
-
-    .lobby-join-info {
-        background-color: var(--color-bg-secondary);
-        padding: 8px 10px;
-        border-radius: 4px;
-        font-family: 'Consolas', 'Monaco', monospace;
-        font-size: 11px;
-        color: var(--color-text-secondary);
-        word-break: break-all;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .lobby-copy-btn {
-        background: none;
-        border: none;
-        color: var(--color-text-muted);
-        cursor: pointer;
-        padding: 4px;
-        border-radius: 4px;
-        flex-shrink: 0;
-        transition: all 0.2s;
-    }
-
-    .lobby-copy-btn:hover {
-        color: #667eea;
-    }
-
-    .empty-lobbies {
-        text-align: center;
-        padding: 24px;
-        color: var(--color-text-muted);
-        font-size: 14px;
-    }
-
-    .empty-lobbies p {
-        margin: 0 0 12px 0;
-    }
-
-    .create-lobby-link {
-        color: #667eea;
-        text-decoration: none;
-        font-weight: 500;
-    }
-
-    .create-lobby-link:hover {
-        text-decoration: underline;
-    }
-
-    /* Main content styles */
-    .content-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 24px;
-    }
-
-    .content-header h1 {
-        color: var(--color-text-primary);
-        font-size: 28px;
-        font-weight: 700;
-        margin: 0;
-    }
-
-    .creation-card {
-        background-color: var(--color-surface);
-        border-radius: 12px;
-        padding: 24px;
-        border: 1px solid var(--color-border-primary);
-    }
-
-    .creation-card h2 {
-        color: var(--color-text-primary);
-        font-size: 20px;
-        font-weight: 600;
-        margin: 0 0 20px 0;
-    }
-
-    .form-group {
-        margin-bottom: 20px;
-    }
-
-    .form-label {
-        display: block;
-        font-size: 14px;
-        color: var(--color-text-secondary);
-        margin-bottom: 8px;
-        font-weight: 500;
-    }
-
-    .form-control {
-        width: 100%;
-        padding: 12px 16px;
-        background-color: var(--color-input-bg);
-        border: 2px solid var(--color-input-border);
-        border-radius: 8px;
-        color: var(--color-input-text);
-        font-size: 14px;
-        transition: border-color 0.2s;
-    }
-
-    .form-control:focus {
-        outline: none;
-        border-color: #667eea;
-    }
-
-    .form-control:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
-
-    .form-help {
-        font-size: 12px;
-        color: var(--color-text-muted);
-        margin-top: 6px;
-    }
-
-    .btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        padding: 12px 24px;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s;
-        border: none;
-        text-decoration: none;
-    }
-
-    .btn-primary {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-    }
-
-    .btn-primary:hover:not(:disabled) {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-    }
-
-    .btn-primary:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-        transform: none;
-    }
-
-    .btn-secondary {
-        background-color: var(--color-surface-active);
-        color: var(--color-text-primary);
-    }
-
-    .btn-secondary:hover {
-        background-color: var(--color-border-subtle);
-    }
-
-    .btn-ghost {
-        background: transparent;
-        color: var(--color-text-secondary);
-        border: 1px solid var(--color-border-primary);
-    }
-
-    .btn-ghost:hover {
-        background-color: var(--color-surface-active);
-        color: var(--color-text-primary);
-    }
-
-    .alert {
-        padding: 12px 16px;
-        border-radius: 8px;
-        margin-bottom: 16px;
-        font-size: 14px;
-    }
-
-    .alert-error {
-        background-color: rgba(239, 68, 68, 0.15);
-        border: 1px solid #ef4444;
-        color: #ef4444;
-    }
-
-    .alert-success {
-        background-color: rgba(16, 185, 129, 0.15);
-        border: 1px solid #10b981;
-        color: #10b981;
-    }
-
-    .loading-spinner {
+    /* Loading spinner for inline use */
+    .loading-spinner-small {
         display: inline-block;
         width: 16px;
         height: 16px;
         border: 2px solid var(--color-border-primary);
         border-radius: 50%;
         border-top-color: #667eea;
-        animation: spin 1s ease-in-out infinite;
+        animation: lobbySpin 1s ease-in-out infinite;
     }
 
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
-
-    /* =====================================================
-       STEP INDICATOR STYLES
-       ===================================================== */
-    .step-indicator {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0;
-        margin-bottom: 32px;
-        padding: 0 20px;
-    }
-
-    .step-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 12px 16px;
-        border-radius: 8px;
-        transition: all 0.3s ease;
-        cursor: default;
-    }
-
-    .step-item.active {
-        background-color: rgba(102, 126, 234, 0.15);
-    }
-
-    .step-item.completed {
-        cursor: pointer;
-    }
-
-    .step-item.completed:hover {
-        background-color: rgba(16, 185, 129, 0.1);
-    }
-
-    .step-number {
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 12px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-    }
-
-    .step-item.pending .step-number {
-        background-color: var(--color-surface-active);
-        color: var(--color-text-muted);
-    }
-
-    .step-item.active .step-number {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-    }
-
-    .step-item.completed .step-number {
-        background-color: #10b981;
-        color: white;
-    }
-
-    .step-label {
-        font-size: 14px;
-        font-weight: 500;
-        transition: color 0.3s ease;
-    }
-
-    .step-item.pending .step-label {
-        color: var(--color-text-muted);
-    }
-
-    .step-item.active .step-label {
-        color: var(--color-text-primary);
-    }
-
-    .step-item.completed .step-label {
-        color: #10b981;
-    }
-
-    .step-connector {
-        width: 40px;
-        height: 2px;
-        background-color: var(--color-surface-active);
-        transition: background-color 0.3s ease;
-    }
-
-    .step-connector.completed {
-        background-color: #10b981;
-    }
-
-    /* =====================================================
-       GAME CARD STYLES
-       ===================================================== */
-    .games-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-        gap: 16px;
-        margin-top: 20px;
-    }
-
-    .game-card {
-        position: relative;
-        border-radius: 8px;
-        overflow: hidden;
-        border: 2px solid transparent;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        background-color: var(--color-bg-primary);
-    }
-
-    .game-card:hover {
-        transform: translateY(-4px);
-        border-color: #667eea;
-        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
-    }
-
-    .game-card:focus {
-        outline: none;
-        border-color: #667eea;
-    }
-
-    .game-card.selected {
-        border-color: #10b981;
-        box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
-    }
-
-    .game-card img {
-        width: 100%;
-        aspect-ratio: 460/215;
-        object-fit: cover;
-        display: block;
-    }
-
-    .game-card-overlay {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.7) 50%, transparent 100%);
-        padding: 24px 12px 12px 12px;
-    }
-
-    .game-card-name {
-        color: var(--color-text-primary);
-        font-size: 14px;
-        font-weight: 600;
-        line-height: 1.3;
-    }
-
+    /* Owned badge for game cards */
     .owned-badge {
         position: absolute;
         top: 8px;
@@ -489,553 +55,10 @@
         z-index: 2;
     }
 
-    /* =====================================================
-       JOIN METHOD CARD STYLES
-       ===================================================== */
-    .methods-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-        gap: 16px;
-        margin-top: 20px;
+    /* Game card name color fix for light theme */
+    .lobby-game-card-name {
+        color: white !important;
     }
-
-    .method-card {
-        background-color: var(--color-bg-primary);
-        border: 2px solid var(--color-border-primary);
-        border-radius: 12px;
-        padding: 20px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        gap: 12px;
-    }
-
-    .method-card:hover {
-        border-color: #667eea;
-        background-color: var(--color-bg-tertiary);
-        transform: translateY(-2px);
-    }
-
-    .method-card.selected {
-        border-color: #10b981;
-        background-color: rgba(16, 185, 129, 0.1);
-    }
-
-    .method-card-icon {
-        width: 48px;
-        height: 48px;
-        color: #667eea;
-        transition: color 0.2s ease;
-    }
-
-    .method-card.selected .method-card-icon {
-        color: #10b981;
-    }
-
-    .method-card-name {
-        color: var(--color-text-primary);
-        font-size: 14px;
-        font-weight: 600;
-    }
-
-    .method-card-desc {
-        color: var(--color-text-muted);
-        font-size: 12px;
-        line-height: 1.4;
-    }
-
-    /* =====================================================
-       STEP SECTION STYLES
-       ===================================================== */
-    .step-section {
-        animation: fadeIn 0.3s ease;
-    }
-
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .step-header {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 8px;
-    }
-
-    .step-header h3 {
-        color: var(--color-text-primary);
-        font-size: 18px;
-        font-weight: 600;
-        margin: 0;
-    }
-
-    .step-subtitle {
-        color: var(--color-text-muted);
-        font-size: 14px;
-        margin: 0 0 16px 0;
-    }
-
-    .back-button {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 8px 14px;
-        background-color: var(--color-surface-active);
-        color: var(--color-text-secondary);
-        border: none;
-        border-radius: 6px;
-        font-size: 13px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .back-button:hover {
-        background-color: var(--color-border-subtle);
-        color: var(--color-text-primary);
-    }
-
-    .selected-summary {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        padding: 16px;
-        background-color: var(--color-bg-primary);
-        border-radius: 8px;
-        margin-bottom: 20px;
-    }
-
-    .selected-game-banner {
-        width: 120px;
-        border-radius: 6px;
-        overflow: hidden;
-    }
-
-    .selected-game-banner img {
-        width: 100%;
-        display: block;
-    }
-
-    .selected-info {
-        flex: 1;
-    }
-
-    .selected-info h4 {
-        color: var(--color-text-primary);
-        font-size: 16px;
-        font-weight: 600;
-        margin: 0 0 4px 0;
-    }
-
-    .selected-info p {
-        color: #10b981;
-        font-size: 13px;
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .change-link {
-        color: #667eea;
-        font-size: 13px;
-        cursor: pointer;
-        text-decoration: none;
-    }
-
-    .change-link:hover {
-        text-decoration: underline;
-    }
-
-    /* =====================================================
-       RESPONSIVE STYLES
-       ===================================================== */
-    @media (max-width: 1024px) {
-        .games-grid {
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        }
-
-        .methods-grid {
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-        }
-    }
-
-    @media (max-width: 768px) {
-        .lobbies-container {
-            grid-template-columns: 1fr;
-        }
-
-        .lobbies-sidebar {
-            position: static;
-            order: 2;
-        }
-
-        .lobbies-content {
-            order: 1;
-        }
-
-        .content-header h1 {
-            font-size: 24px;
-        }
-
-        .step-indicator {
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .step-connector {
-            display: none;
-        }
-
-        .step-item {
-            padding: 8px 12px;
-        }
-
-        .games-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-
-        .methods-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-
-        .selected-summary {
-            flex-direction: column;
-            text-align: center;
-        }
-
-        .selected-game-banner {
-            width: 160px;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .games-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .methods-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .step-item .step-label {
-            display: none;
-        }
-
-        .step-item.active .step-label {
-            display: block;
-        }
-    }
-
-    /* =====================================================
-       FEED SECTION STYLES (Phase 3)
-       ===================================================== */
-    .feed-section {
-        background-color: #18181b;
-        border-radius: 12px;
-        padding: 24px;
-        border: 1px solid #3f3f46;
-    }
-
-    .feed-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-        flex-wrap: wrap;
-        gap: 12px;
-    }
-
-    .feed-header h2 {
-        color: #efeff1;
-        font-size: 20px;
-        font-weight: 600;
-        margin: 0;
-    }
-
-    .feed-controls {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        flex-wrap: wrap;
-    }
-
-    .feed-filter {
-        padding: 8px 12px;
-        background-color: #0e0e10;
-        border: 1px solid #3f3f46;
-        border-radius: 6px;
-        color: #efeff1;
-        font-size: 13px;
-        cursor: pointer;
-        transition: border-color 0.2s;
-        min-width: 140px;
-    }
-
-    .feed-filter:focus {
-        outline: none;
-        border-color: #667eea;
-    }
-
-    .feed-filter option {
-        background-color: #18181b;
-        color: #efeff1;
-    }
-
-    .refresh-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        padding: 8px 14px;
-        background-color: #3f3f46;
-        color: #b3b3b5;
-        border: none;
-        border-radius: 6px;
-        font-size: 13px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .refresh-btn:hover {
-        background-color: #52525b;
-        color: #efeff1;
-    }
-
-    .refresh-btn:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-
-    .refresh-btn svg {
-        transition: transform 0.3s ease;
-    }
-
-    .refresh-btn.loading svg {
-        animation: spin 1s linear infinite;
-    }
-
-    .feed-loading {
-        text-align: center;
-        padding: 48px 24px;
-        color: #71717a;
-    }
-
-    .feed-loading .loading-spinner {
-        width: 32px;
-        height: 32px;
-        margin: 0 auto 16px;
-    }
-
-    .feed-empty {
-        text-align: center;
-        padding: 48px 24px;
-        color: #71717a;
-    }
-
-    .feed-empty svg {
-        width: 48px;
-        height: 48px;
-        margin-bottom: 16px;
-        opacity: 0.5;
-    }
-
-    .feed-empty p {
-        margin: 0 0 8px 0;
-        font-size: 14px;
-    }
-
-    .feed-empty-subtitle {
-        font-size: 13px;
-        color: #52525b;
-    }
-
-    .feed-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-        gap: 16px;
-    }
-
-    .feed-card {
-        background-color: #0e0e10;
-        border: 1px solid #3f3f46;
-        border-radius: 10px;
-        padding: 16px;
-        transition: all 0.2s ease;
-    }
-
-    .feed-card:hover {
-        border-color: #667eea;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    }
-
-    .feed-card-header {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 12px;
-    }
-
-    .feed-user-avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 2px solid #3f3f46;
-    }
-
-    .feed-user-info {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .feed-user-name {
-        color: #efeff1;
-        font-size: 14px;
-        font-weight: 600;
-        margin: 0;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .feed-user-source {
-        font-size: 12px;
-        color: #71717a;
-        margin: 2px 0 0 0;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .feed-source-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        font-size: 10px;
-        font-weight: 600;
-        padding: 2px 6px;
-        border-radius: 4px;
-        text-transform: uppercase;
-    }
-
-    .feed-source-badge.friend {
-        background-color: rgba(16, 185, 129, 0.15);
-        color: #10b981;
-    }
-
-    .feed-source-badge.server {
-        background-color: rgba(102, 126, 234, 0.15);
-        color: #667eea;
-    }
-
-    .feed-card-body {
-        margin-bottom: 12px;
-    }
-
-    .feed-game-name {
-        color: #efeff1;
-        font-size: 16px;
-        font-weight: 600;
-        margin: 0 0 6px 0;
-    }
-
-    .feed-join-method {
-        color: #b3b3b5;
-        font-size: 13px;
-        margin: 0 0 8px 0;
-    }
-
-    .feed-time-remaining {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 12px;
-        color: #10b981;
-    }
-
-    .feed-time-remaining.expiring {
-        color: #ef4444;
-    }
-
-    .feed-card-footer {
-        display: flex;
-        gap: 8px;
-    }
-
-    .feed-join-btn {
-        flex: 1;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        padding: 10px 16px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        border-radius: 6px;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-        text-decoration: none;
-        transition: all 0.2s ease;
-    }
-
-    .feed-join-btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-    }
-
-    .feed-copy-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 10px 14px;
-        background-color: #3f3f46;
-        color: #b3b3b5;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .feed-copy-btn:hover {
-        background-color: #52525b;
-        color: #efeff1;
-    }
-
-    .feed-copy-btn.copied {
-        background-color: rgba(16, 185, 129, 0.15);
-        color: #10b981;
-    }
-
-    @media (max-width: 768px) {
-        .feed-header {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .feed-controls {
-            width: 100%;
-        }
-
-        .feed-filter {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .feed-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    [x-cloak] { display: none !important; }
 </style>
 @endpush
 
@@ -1043,106 +66,128 @@
 <x-navbar active-section="lobbies" />
 
 <main>
-    <div class="container" x-data="lobbyPage({{ $user->id }}, {{ json_encode($combinedGames) }}, {{ json_encode($friendIds) }})">
+    <div class="lobby-container" x-data="lobbyPage({{ $user->id }}, {{ json_encode($combinedGames) }}, {{ json_encode($friendIds) }})">
+        {{-- Session Alerts --}}
         @if (session('success'))
-            <div class="alert alert-success">
+            <div class="lobby-alert lobby-alert-success">
                 {{ session('success') }}
             </div>
         @endif
 
         @if (session('error'))
-            <div class="alert alert-error">
+            <div class="lobby-alert lobby-alert-error">
                 {{ session('error') }}
             </div>
         @endif
 
-        <div class="lobbies-container">
-            <!-- Sidebar: Your Active Lobbies -->
-            <div class="lobbies-sidebar">
-                <div class="sidebar-header">
-                    <h3>Your Active Lobbies</h3>
-                    <span class="lobby-count-badge" x-text="activeLobbies.length"></span>
-                </div>
+        {{-- Page Header --}}
+        <div class="page-header">
+            <h1 class="page-title">Game Lobbies</h1>
+        </div>
 
-                <!-- Active Lobbies List -->
-                <div x-ref="lobbiesList">
-                    <template x-if="activeLobbies.length === 0">
-                        <div class="empty-lobbies">
-                            <p>No active lobbies</p>
-                            <a href="#create-form" class="create-lobby-link">Create your first lobby</a>
-                        </div>
-                    </template>
+        {{-- Main Layout --}}
+        <div class="lobby-main">
+            {{-- Sidebar: Your Active Lobbies --}}
+            <div class="lobby-sidebar">
+                <div class="lobby-sidebar-section" data-stagger="0">
+                    <div class="lobby-sidebar-header">
+                        <h3 class="lobby-sidebar-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12,6 12,12 16,14"/>
+                            </svg>
+                            Your Active Lobbies
+                        </h3>
+                        <span class="lobby-count-badge" x-text="activeLobbies.length"></span>
+                    </div>
 
-                    <template x-for="lobby in activeLobbies" :key="lobby.id">
-                        <div class="active-lobby-item">
-                            <div class="lobby-item-header">
-                                <div>
-                                    <p class="lobby-game-name" x-text="lobby.gaming_preference?.game_name || 'Unknown Game'"></p>
-                                    <p class="lobby-join-method" x-text="formatJoinMethod(lobby.join_method)"></p>
+                    {{-- Active Lobbies List --}}
+                    <div x-ref="lobbiesList">
+                        <template x-if="activeLobbies.length === 0">
+                            <div class="lobby-empty-sidebar">
+                                <p>No active lobbies</p>
+                                <a href="#create-form" class="lobby-create-link">Create your first lobby</a>
+                            </div>
+                        </template>
+
+                        <template x-for="lobby in activeLobbies" :key="lobby.id">
+                            <div class="lobby-active-item">
+                                <div class="lobby-item-header">
+                                    <div>
+                                        <p class="lobby-game-name" x-text="lobby.gaming_preference?.game_name || 'Unknown Game'"></p>
+                                        <p class="lobby-join-method-label" x-text="formatJoinMethod(lobby.join_method)"></p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        class="lobby-delete-btn"
+                                        @click="deleteLobby(lobby.id)"
+                                        title="Delete lobby"
+                                    >
+                                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </button>
                                 </div>
-                                <button
-                                    type="button"
-                                    class="lobby-delete-btn"
-                                    @click="deleteLobby(lobby.id)"
-                                    title="Delete lobby"
-                                >
-                                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                    </svg>
-                                </button>
-                            </div>
 
-                            <!-- Time Remaining -->
-                            <div
-                                class="lobby-time-remaining"
-                                :class="lobby.expires_at && getTimeRemainingMinutes(lobby.expires_at) < 5 ? 'expiring' : 'active'"
-                            >
-                                <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
-                                </svg>
-                                <span
-                                    :data-expires="lobby.expires_at"
-                                    x-text="formatTimeRemaining(lobby.expires_at)"
-                                ></span>
-                            </div>
-
-                            <!-- Join Info -->
-                            <div class="lobby-join-info">
-                                <span x-text="getJoinInfo(lobby)"></span>
-                                <button
-                                    type="button"
-                                    class="lobby-copy-btn"
-                                    @click="copyToClipboard(getJoinInfo(lobby), lobby.id)"
-                                    :title="copiedLobbyId === lobby.id ? 'Copied!' : 'Copy'"
+                                {{-- Time Remaining --}}
+                                <div
+                                    class="lobby-time-remaining"
+                                    :class="lobby.expires_at && getTimeRemainingMinutes(lobby.expires_at) < 5 ? 'expiring' : ''"
                                 >
-                                    <svg x-show="copiedLobbyId !== lobby.id" width="14" height="14" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/>
-                                        <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"/>
+                                    <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
                                     </svg>
-                                    <svg x-show="copiedLobbyId === lobby.id" x-cloak width="14" height="14" fill="currentColor" viewBox="0 0 20 20" style="color: #10b981;">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                    </svg>
-                                </button>
+                                    <span
+                                        :data-expires="lobby.expires_at"
+                                        x-text="formatTimeRemaining(lobby.expires_at)"
+                                    ></span>
+                                </div>
+
+                                {{-- Join Info --}}
+                                <div class="lobby-join-info">
+                                    <span x-text="getJoinInfo(lobby)"></span>
+                                    <button
+                                        type="button"
+                                        class="lobby-copy-btn"
+                                        @click="copyToClipboard(getJoinInfo(lobby), lobby.id)"
+                                        :title="copiedLobbyId === lobby.id ? 'Copied!' : 'Copy'"
+                                    >
+                                        <svg x-show="copiedLobbyId !== lobby.id" width="14" height="14" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/>
+                                            <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"/>
+                                        </svg>
+                                        <svg x-show="copiedLobbyId === lobby.id" x-cloak width="14" height="14" fill="currentColor" viewBox="0 0 20 20" style="color: #10b981;">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    </template>
+                        </template>
+                    </div>
                 </div>
             </div>
 
-            <!-- Main Content: Create Lobby -->
-            <div class="lobbies-content">
-                <div class="content-header">
-                    <h1>Game Lobbies</h1>
-                </div>
+            {{-- Main Content --}}
+            <div class="lobby-content">
+                {{-- Create Lobby Section --}}
+                <div class="lobby-section" data-stagger="0" id="create-form">
+                    <div class="lobby-section-header">
+                        <h2 class="lobby-section-title">
+                            <span class="lobby-section-title-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="12" y1="5" x2="12" y2="19"/>
+                                    <line x1="5" y1="12" x2="19" y2="12"/>
+                                </svg>
+                            </span>
+                            Create a Game Lobby
+                        </h2>
+                    </div>
 
-                <div class="creation-card" id="create-form">
-                    <h2>Create a Game Lobby</h2>
-
-                    <!-- Step Indicator -->
-                    <div class="step-indicator">
-                        <!-- Step 1 -->
+                    {{-- Step Indicator --}}
+                    <div class="lobby-step-indicator">
+                        {{-- Step 1 --}}
                         <div
-                            class="step-item"
+                            class="lobby-step-item"
                             :class="{
                                 'active': currentStep === 1,
                                 'completed': currentStep > 1,
@@ -1150,7 +195,7 @@
                             }"
                             @click="currentStep > 1 && goToStep(1)"
                         >
-                            <div class="step-number">
+                            <div class="lobby-step-number">
                                 <template x-if="currentStep > 1">
                                     <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
@@ -1160,14 +205,14 @@
                                     <span>1</span>
                                 </template>
                             </div>
-                            <span class="step-label">Select Game</span>
+                            <span class="lobby-step-label">Select Game</span>
                         </div>
 
-                        <div class="step-connector" :class="{ 'completed': currentStep > 1 }"></div>
+                        <div class="lobby-step-connector" :class="{ 'completed': currentStep > 1 }"></div>
 
-                        <!-- Step 2 -->
+                        {{-- Step 2 --}}
                         <div
-                            class="step-item"
+                            class="lobby-step-item"
                             :class="{
                                 'active': currentStep === 2,
                                 'completed': currentStep > 2,
@@ -1175,7 +220,7 @@
                             }"
                             @click="currentStep > 2 && goToStep(2)"
                         >
-                            <div class="step-number">
+                            <div class="lobby-step-number">
                                 <template x-if="currentStep > 2">
                                     <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
@@ -1185,74 +230,74 @@
                                     <span>2</span>
                                 </template>
                             </div>
-                            <span class="step-label">Join Method</span>
+                            <span class="lobby-step-label">Join Method</span>
                         </div>
 
-                        <div class="step-connector" :class="{ 'completed': currentStep > 2 }"></div>
+                        <div class="lobby-step-connector" :class="{ 'completed': currentStep > 2 }"></div>
 
-                        <!-- Step 3 -->
+                        {{-- Step 3 --}}
                         <div
-                            class="step-item"
+                            class="lobby-step-item"
                             :class="{
                                 'active': currentStep === 3,
                                 'completed': currentStep > 3,
                                 'pending': currentStep < 3
                             }"
                         >
-                            <div class="step-number">
+                            <div class="lobby-step-number">
                                 <span>3</span>
                             </div>
-                            <span class="step-label">Enter Details</span>
+                            <span class="lobby-step-label">Enter Details</span>
                         </div>
                     </div>
 
-                    <!-- Error Alert -->
-                    <div x-show="error" x-cloak class="alert alert-error">
+                    {{-- Error Alert --}}
+                    <div x-show="error" x-cloak class="lobby-alert lobby-alert-error">
                         <span x-text="error"></span>
                     </div>
 
-                    <!-- Success Alert -->
-                    <div x-show="success" x-cloak class="alert alert-success">
+                    {{-- Success Alert --}}
+                    <div x-show="success" x-cloak class="lobby-alert lobby-alert-success">
                         <span x-text="success"></span>
                     </div>
 
-                    <!-- =====================================================
-                         STEP 1: SELECT GAME
-                         ===================================================== -->
+                    {{-- STEP 1: SELECT GAME --}}
                     <div x-show="currentStep === 1" class="step-section">
-                        <div class="step-header">
-                            <h3>Select a Game</h3>
+                        <div style="margin-bottom: 8px;">
+                            <h3 style="color: var(--color-text-primary); font-size: 18px; font-weight: 600; margin: 0;">Select a Game</h3>
                         </div>
-                        <p class="step-subtitle">Choose the game you want to create a lobby for. Games you own are marked with a badge.</p>
+                        <p style="color: var(--color-text-muted); font-size: 14px; margin: 0 0 16px 0;">Choose the game you want to create a lobby for. Games you own are marked with a badge.</p>
 
-                        <div class="games-grid">
+                        <div class="lobby-games-grid">
                             @forelse($combinedGames as $game)
                                 <x-lobby-game-card :game="$game" />
                             @empty
-                                <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #71717a;">
-                                    <p>No games with lobby support found. Connect your Steam account to see your games.</p>
+                                <div class="lobby-empty" style="grid-column: 1 / -1;">
+                                    <svg width="48" height="48" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <p>No games with lobby support found.</p>
+                                    <p class="lobby-empty-subtitle">Connect your Steam account to see your games.</p>
                                 </div>
                             @endforelse
                         </div>
                     </div>
 
-                    <!-- =====================================================
-                         STEP 2: SELECT JOIN METHOD
-                         ===================================================== -->
+                    {{-- STEP 2: SELECT JOIN METHOD --}}
                     <div x-show="currentStep === 2" x-cloak class="step-section">
-                        <button type="button" class="back-button" @click="goBack()">
+                        <button type="button" class="lobby-back-button" @click="goBack()">
                             <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
                             </svg>
                             Back to Games
                         </button>
 
-                        <!-- Selected Game Summary -->
-                        <div class="selected-summary" style="margin-top: 16px;">
-                            <div class="selected-game-banner">
+                        {{-- Selected Game Summary --}}
+                        <div class="lobby-selected-summary">
+                            <div class="lobby-selected-banner">
                                 <img :src="selectedGameImg" :alt="selectedGameName">
                             </div>
-                            <div class="selected-info">
+                            <div class="lobby-selected-info">
                                 <h4 x-text="selectedGameName"></h4>
                                 <p>
                                     <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20">
@@ -1261,99 +306,97 @@
                                     Game Selected
                                 </p>
                             </div>
-                            <a class="change-link" @click="goToStep(1)">Change</a>
+                            <a class="lobby-change-link" @click="goToStep(1)">Change</a>
                         </div>
 
-                        <div class="step-header">
-                            <h3>Choose Join Method</h3>
+                        <div style="margin-bottom: 8px;">
+                            <h3 style="color: var(--color-text-primary); font-size: 18px; font-weight: 600; margin: 0;">Choose Join Method</h3>
                         </div>
-                        <p class="step-subtitle">Select how other players will join your lobby.</p>
+                        <p style="color: var(--color-text-muted); font-size: 14px; margin: 0 0 16px 0;">Select how other players will join your lobby.</p>
 
-                        <!-- Loading State -->
-                        <div x-show="loading" x-cloak style="text-align: center; padding: 40px;">
-                            <div class="loading-spinner"></div>
-                            <p style="color: #71717a; margin-top: 12px;">Loading join methods...</p>
+                        {{-- Loading State --}}
+                        <div x-show="loading" x-cloak class="lobby-loading">
+                            <div class="lobby-loading-spinner"></div>
+                            <p>Loading join methods...</p>
                         </div>
 
-                        <!-- Join Method Cards Grid -->
-                        <div x-show="!loading && availableJoinMethods.length > 0" class="methods-grid">
+                        {{-- Join Method Cards Grid --}}
+                        <div x-show="!loading && availableJoinMethods.length > 0" class="lobby-methods-grid">
                             <template x-for="method in availableJoinMethods" :key="method.join_method">
                                 <div
-                                    class="method-card"
+                                    class="lobby-method-card"
                                     :class="{ 'selected': selectedJoinMethod === method.join_method }"
                                     @click="selectJoinMethod(method)"
                                 >
-                                    <div class="method-card-icon" x-html="getMethodIcon(method.join_method)"></div>
-                                    <div class="method-card-name" x-text="method.display_name"></div>
-                                    <div class="method-card-desc" x-text="getMethodDescription(method.join_method)"></div>
+                                    <div class="lobby-method-icon" x-html="getMethodIcon(method.join_method)"></div>
+                                    <div class="lobby-method-name" x-text="method.display_name"></div>
+                                    <div class="lobby-method-desc" x-text="getMethodDescription(method.join_method)"></div>
                                 </div>
                             </template>
                         </div>
 
-                        <!-- No Methods Available -->
-                        <div x-show="!loading && availableJoinMethods.length === 0" x-cloak style="text-align: center; padding: 40px; color: #71717a;">
+                        {{-- No Methods Available --}}
+                        <div x-show="!loading && availableJoinMethods.length === 0" x-cloak class="lobby-empty">
                             <p>No join methods available for this game.</p>
-                            <button type="button" class="btn btn-ghost" style="margin-top: 12px;" @click="goToStep(1)">Select a Different Game</button>
+                            <button type="button" class="lobby-btn lobby-btn-ghost" style="margin-top: 12px;" @click="goToStep(1)">Select a Different Game</button>
                         </div>
                     </div>
 
-                    <!-- =====================================================
-                         STEP 3: ENTER DETAILS
-                         ===================================================== -->
+                    {{-- STEP 3: ENTER DETAILS --}}
                     <div x-show="currentStep === 3" x-cloak class="step-section">
-                        <button type="button" class="back-button" @click="goBack()">
+                        <button type="button" class="lobby-back-button" @click="goBack()">
                             <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
                             </svg>
                             Back to Join Methods
                         </button>
 
-                        <!-- Selected Summary -->
-                        <div class="selected-summary" style="margin-top: 16px;">
-                            <div class="selected-game-banner">
+                        {{-- Selected Summary --}}
+                        <div class="lobby-selected-summary">
+                            <div class="lobby-selected-banner">
                                 <img :src="selectedGameImg" :alt="selectedGameName">
                             </div>
-                            <div class="selected-info">
+                            <div class="lobby-selected-info">
                                 <h4 x-text="selectedGameName"></h4>
                                 <p>
                                     <span x-text="selectedMethodData?.display_name || formatJoinMethod(selectedJoinMethod)"></span>
                                 </p>
                             </div>
-                            <a class="change-link" @click="goToStep(1)">Start Over</a>
+                            <a class="lobby-change-link" @click="goToStep(1)">Start Over</a>
                         </div>
 
-                        <div class="step-header" style="margin-top: 24px;">
-                            <h3>Enter Details</h3>
+                        <div style="margin: 24px 0 8px 0;">
+                            <h3 style="color: var(--color-text-primary); font-size: 18px; font-weight: 600; margin: 0;">Enter Details</h3>
                         </div>
-                        <p class="step-subtitle">Provide the information needed for players to join your lobby.</p>
+                        <p style="color: var(--color-text-muted); font-size: 14px; margin: 0 0 16px 0;">Provide the information needed for players to join your lobby.</p>
 
-                        <!-- Steam Lobby Link -->
-                        <div x-show="selectedJoinMethod === 'steam_lobby'" x-cloak class="form-group">
-                            <label class="form-label">Steam Lobby Link</label>
+                        {{-- Steam Lobby Link --}}
+                        <div x-show="selectedJoinMethod === 'steam_lobby'" x-cloak class="lobby-form-group">
+                            <label class="lobby-form-label">Steam Lobby Link</label>
                             <input
                                 type="text"
                                 x-model="formData.steam_lobby_link"
                                 placeholder="steam://joinlobby/..."
                                 :disabled="loading"
-                                class="form-control"
+                                class="lobby-form-control"
                             >
-                            <p class="form-help">Get your lobby link from Steam overlay (Shift+Tab) > View Players > Right-click lobby > Copy Lobby ID</p>
+                            <p class="lobby-form-help">Get your lobby link from Steam overlay (Shift+Tab) > View Players > Right-click lobby > Copy Lobby ID</p>
                         </div>
 
-                        <!-- Steam Connect / Server Address -->
+                        {{-- Steam Connect / Server Address --}}
                         <div x-show="selectedJoinMethod === 'steam_connect' || selectedJoinMethod === 'server_address'" x-cloak>
-                            <div class="form-group">
-                                <label class="form-label">Server IP or Domain</label>
+                            <div class="lobby-form-group">
+                                <label class="lobby-form-label">Server IP or Domain</label>
                                 <input
                                     type="text"
                                     x-model="formData.server_ip"
                                     placeholder="e.g., 192.168.1.1 or play.server.com"
                                     :disabled="loading"
-                                    class="form-control"
+                                    class="lobby-form-control"
                                 >
                             </div>
-                            <div class="form-group">
-                                <label class="form-label">Port (Optional)</label>
+                            <div class="lobby-form-group">
+                                <label class="lobby-form-label">Port (Optional)</label>
                                 <input
                                     type="number"
                                     x-model="formData.server_port"
@@ -1361,97 +404,97 @@
                                     :disabled="loading"
                                     min="1"
                                     max="65535"
-                                    class="form-control"
+                                    class="lobby-form-control"
                                 >
                             </div>
-                            <div class="form-group">
-                                <label class="form-label">Server Password (Optional)</label>
+                            <div class="lobby-form-group">
+                                <label class="lobby-form-label">Server Password (Optional)</label>
                                 <input
                                     type="password"
                                     x-model="formData.server_password"
                                     placeholder="Leave empty if no password"
                                     :disabled="loading"
-                                    class="form-control"
+                                    class="lobby-form-control"
                                 >
                             </div>
                         </div>
 
-                        <!-- Lobby Code -->
-                        <div x-show="selectedJoinMethod === 'lobby_code'" x-cloak class="form-group">
-                            <label class="form-label">Lobby/Party Code</label>
+                        {{-- Lobby Code --}}
+                        <div x-show="selectedJoinMethod === 'lobby_code'" x-cloak class="lobby-form-group">
+                            <label class="lobby-form-label">Lobby/Party Code</label>
                             <input
                                 type="text"
                                 x-model="formData.lobby_code"
                                 placeholder="e.g., AB12CD"
                                 :disabled="loading"
                                 maxlength="50"
-                                class="form-control"
+                                class="lobby-form-control"
                                 style="text-transform: uppercase;"
                             >
-                            <p class="form-help">Enter the party code from your game</p>
+                            <p class="lobby-form-help">Enter the party code from your game</p>
                         </div>
 
-                        <!-- Join Command -->
-                        <div x-show="selectedJoinMethod === 'join_command'" x-cloak class="form-group">
-                            <label class="form-label">Join Command</label>
+                        {{-- Join Command --}}
+                        <div x-show="selectedJoinMethod === 'join_command'" x-cloak class="lobby-form-group">
+                            <label class="lobby-form-label">Join Command</label>
                             <input
                                 type="text"
                                 x-model="formData.join_command"
                                 placeholder="e.g., /join player123"
                                 :disabled="loading"
-                                class="form-control"
+                                class="lobby-form-control"
                             >
-                            <p class="form-help">Enter the in-game command others will use to join</p>
+                            <p class="lobby-form-help">Enter the in-game command others will use to join</p>
                         </div>
 
-                        <!-- Private Match -->
+                        {{-- Private Match --}}
                         <div x-show="selectedJoinMethod === 'private_match'" x-cloak>
-                            <div class="form-group">
-                                <label class="form-label">Match/Room Name</label>
+                            <div class="lobby-form-group">
+                                <label class="lobby-form-label">Match/Room Name</label>
                                 <input
                                     type="text"
                                     x-model="formData.match_name"
                                     placeholder="Your match or room name"
                                     :disabled="loading"
-                                    class="form-control"
+                                    class="lobby-form-control"
                                 >
                             </div>
-                            <div class="form-group">
-                                <label class="form-label">Match Password (Optional)</label>
+                            <div class="lobby-form-group">
+                                <label class="lobby-form-label">Match Password (Optional)</label>
                                 <input
                                     type="password"
                                     x-model="formData.match_password"
                                     placeholder="Leave empty if no password"
                                     :disabled="loading"
-                                    class="form-control"
+                                    class="lobby-form-control"
                                 >
                             </div>
                         </div>
 
-                        <!-- Manual Invite -->
-                        <div x-show="selectedJoinMethod === 'manual_invite'" x-cloak class="form-group">
-                            <label class="form-label">Join Instructions</label>
+                        {{-- Manual Invite --}}
+                        <div x-show="selectedJoinMethod === 'manual_invite'" x-cloak class="lobby-form-group">
+                            <label class="lobby-form-label">Join Instructions</label>
                             <textarea
                                 x-model="formData.manual_instructions"
                                 placeholder="Enter instructions for joining (e.g., 'Add me on Steam and I'll invite you')"
                                 :disabled="loading"
-                                class="form-control"
+                                class="lobby-form-control"
                                 rows="3"
                             ></textarea>
                         </div>
 
-                        <!-- Action Buttons -->
-                        <div class="form-group" style="margin-top: 24px; display: flex; gap: 12px;">
+                        {{-- Action Buttons --}}
+                        <div class="lobby-form-group" style="margin-top: 24px; display: flex; gap: 12px;">
                             <button
                                 type="button"
                                 @click="saveLobby()"
                                 :disabled="loading || !canSave()"
-                                class="btn btn-primary"
+                                class="lobby-btn lobby-btn-primary"
                                 style="flex: 1;"
                             >
                                 <span x-show="!loading">Create Lobby</span>
                                 <span x-show="loading" x-cloak>
-                                    <span class="loading-spinner"></span>
+                                    <span class="loading-spinner-small"></span>
                                     Creating...
                                 </span>
                             </button>
@@ -1459,35 +502,43 @@
                                 type="button"
                                 @click="resetForm()"
                                 :disabled="loading"
-                                class="btn btn-ghost"
+                                class="lobby-btn lobby-btn-ghost"
                             >
                                 Cancel
                             </button>
                         </div>
                     </div>
 
-                    <!-- Initial State (Step 1 visible by default) -->
+                    {{-- Initial State (Step 1 visible by default) --}}
                     <template x-if="currentStep === 1 && games.length === 0">
-                        <div style="text-align: center; padding: 40px 20px; color: #71717a;">
-                            <svg width="48" height="48" fill="currentColor" viewBox="0 0 20 20" style="margin: 0 auto 16px; opacity: 0.5;">
+                        <div class="lobby-empty">
+                            <svg width="48" height="48" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
                             </svg>
-                            <p>No games available. Connect your Steam account to get started.</p>
+                            <p>No games available.</p>
+                            <p class="lobby-empty-subtitle">Connect your Steam account to get started.</p>
                         </div>
                     </template>
                 </div>
 
-                <!-- =====================================================
-                     PHASE 3: ACTIVE LOBBIES FEED
-                     ===================================================== -->
-                <div class="feed-section">
-                    <!-- Feed Header -->
-                    <div class="feed-header">
-                        <h2>Active Lobbies from Your Network</h2>
-                        <div class="feed-controls">
-                            <!-- Game Filter -->
+                {{-- Active Lobbies Feed Section --}}
+                <div class="lobby-section" data-stagger="1">
+                    <div class="lobby-feed-header">
+                        <h2 class="lobby-section-title">
+                            <span class="lobby-section-title-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="9" cy="7" r="4"/>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                </svg>
+                            </span>
+                            Active Lobbies from Your Network
+                        </h2>
+                        <div class="lobby-feed-controls">
+                            {{-- Game Filter --}}
                             <select
-                                class="feed-filter"
+                                class="lobby-feed-filter"
                                 x-model="feedFilter.game"
                                 @change="loadFeed()"
                             >
@@ -1497,9 +548,9 @@
                                 @endforeach
                             </select>
 
-                            <!-- Source Filter -->
+                            {{-- Source Filter --}}
                             <select
-                                class="feed-filter"
+                                class="lobby-feed-filter"
                                 x-model="feedFilter.source"
                                 @change="loadFeed()"
                             >
@@ -1508,10 +559,10 @@
                                 <option value="servers">Server Members</option>
                             </select>
 
-                            <!-- Refresh Button -->
+                            {{-- Refresh Button --}}
                             <button
                                 type="button"
-                                class="refresh-btn"
+                                class="lobby-refresh-btn"
                                 :class="{ 'loading': feedLoading }"
                                 @click="loadFeed()"
                                 :disabled="feedLoading"
@@ -1525,19 +576,19 @@
                         </div>
                     </div>
 
-                    <!-- Loading State -->
-                    <div x-show="feedLoading && feedLobbies.length === 0" x-cloak class="feed-loading">
-                        <div class="loading-spinner"></div>
+                    {{-- Loading State --}}
+                    <div x-show="feedLoading && feedLobbies.length === 0" x-cloak class="lobby-loading">
+                        <div class="lobby-loading-spinner"></div>
                         <p>Loading lobbies from your network...</p>
                     </div>
 
-                    <!-- Empty State -->
-                    <div x-show="!feedLoading && feedLobbies.length === 0" x-cloak class="feed-empty">
+                    {{-- Empty State --}}
+                    <div x-show="!feedLoading && feedLobbies.length === 0" x-cloak class="lobby-empty">
                         <svg fill="currentColor" viewBox="0 0 20 20">
                             <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/>
                         </svg>
                         <p>No active lobbies from your network</p>
-                        <p class="feed-empty-subtitle">
+                        <p class="lobby-empty-subtitle">
                             <template x-if="feedFilter.source === 'friends'">
                                 <span>Your friends haven't created any lobbies yet.</span>
                             </template>
@@ -1550,22 +601,22 @@
                         </p>
                     </div>
 
-                    <!-- Feed Grid -->
-                    <div x-show="feedLobbies.length > 0" class="feed-grid">
+                    {{-- Feed Grid --}}
+                    <div x-show="feedLobbies.length > 0" class="lobby-feed-grid">
                         <template x-for="lobby in feedLobbies" :key="lobby.id">
-                            <div class="feed-card">
-                                <!-- Card Header: User Info -->
-                                <div class="feed-card-header">
+                            <div class="lobby-feed-card">
+                                {{-- Card Header: User Info --}}
+                                <div class="lobby-feed-card-header">
                                     <img
                                         :src="lobby.user.avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(lobby.user.display_name) + '&background=667eea&color=fff'"
                                         :alt="lobby.user.display_name"
-                                        class="feed-user-avatar"
+                                        class="lobby-feed-avatar"
                                     >
-                                    <div class="feed-user-info">
-                                        <p class="feed-user-name" x-text="lobby.user.display_name"></p>
-                                        <p class="feed-user-source">
+                                    <div class="lobby-feed-user-info">
+                                        <p class="lobby-feed-user-name" x-text="lobby.user.display_name"></p>
+                                        <p class="lobby-feed-user-source">
                                             <span
-                                                class="feed-source-badge"
+                                                class="lobby-feed-source-badge"
                                                 :class="lobby.source"
                                                 x-text="lobby.source === 'friend' ? 'Friend' : 'Server'"
                                             ></span>
@@ -1573,12 +624,12 @@
                                     </div>
                                 </div>
 
-                                <!-- Card Body: Game & Lobby Info -->
-                                <div class="feed-card-body">
-                                    <h3 class="feed-game-name" x-text="lobby.game_name"></h3>
-                                    <p class="feed-join-method" x-text="lobby.display_format"></p>
+                                {{-- Card Body: Game & Lobby Info --}}
+                                <div class="lobby-feed-card-body">
+                                    <h3 class="lobby-feed-game-name" x-text="lobby.game_name"></h3>
+                                    <p class="lobby-feed-join-method" x-text="lobby.display_format"></p>
                                     <div
-                                        class="feed-time-remaining"
+                                        class="lobby-feed-time"
                                         :class="{ 'expiring': lobby.expires_at && getTimeRemainingMinutes(lobby.expires_at) < 5 }"
                                     >
                                         <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20">
@@ -1588,13 +639,13 @@
                                     </div>
                                 </div>
 
-                                <!-- Card Footer: Actions -->
-                                <div class="feed-card-footer">
-                                    <!-- Direct Join (for steam:// links) -->
+                                {{-- Card Footer: Actions --}}
+                                <div class="lobby-feed-card-footer">
+                                    {{-- Direct Join (for steam:// links) --}}
                                     <template x-if="canDirectJoin(lobby)">
                                         <a
                                             :href="lobby.join_link"
-                                            class="feed-join-btn"
+                                            class="lobby-feed-join-btn"
                                             target="_blank"
                                         >
                                             <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
@@ -1604,11 +655,11 @@
                                         </a>
                                     </template>
 
-                                    <!-- Copy Info (for non-steam links) -->
+                                    {{-- Copy Info (for non-steam links) --}}
                                     <template x-if="!canDirectJoin(lobby)">
                                         <button
                                             type="button"
-                                            class="feed-join-btn"
+                                            class="lobby-feed-join-btn"
                                             @click="copyFeedJoinInfo(lobby)"
                                         >
                                             <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
@@ -1619,10 +670,10 @@
                                         </button>
                                     </template>
 
-                                    <!-- Copy Button -->
+                                    {{-- Copy Button --}}
                                     <button
                                         type="button"
-                                        class="feed-copy-btn"
+                                        class="lobby-feed-copy-btn"
                                         :class="{ 'copied': copiedFeedLobbyId === lobby.id }"
                                         @click="copyFeedJoinInfo(lobby)"
                                         :title="copiedFeedLobbyId === lobby.id ? 'Copied!' : 'Copy to clipboard'"
